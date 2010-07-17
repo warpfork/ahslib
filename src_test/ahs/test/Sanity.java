@@ -143,6 +143,7 @@ public class Sanity extends TestCase {
 	
 	
 	
+	//CONCLUSION: within a single function, if arguments have to be evaluated recursively, it goes left to right
 	public void testEvalOrderInNestedCalls() {
 		int $x = 0;
 		testEvalOrderInNestedCalls_helper($x++,$x++);
@@ -150,5 +151,22 @@ public class Sanity extends TestCase {
 	private void testEvalOrderInNestedCalls_helper(int $a, int $b) {
 		assertEquals(0, $a);
 		assertEquals(1, $b);
+	}
+	
+	
+	
+	
+	//CONCLUSION: yes, you CAN select which method to use by limiting the type information of its arguments.
+	//   ...you can do a LOT of magic with interfaces here if you're into that sort of thing.
+	public void testArgsOverriding() {
+		OverrideSub $x = new OverrideSub();
+		assertEquals(1, OverrideChooser.yayy($x));
+		assertEquals(0, OverrideChooser.yayy((OverrideSup)$x));
+	}
+	private class OverrideSub extends OverrideSup {}
+	private class OverrideSup {}
+	private static class OverrideChooser {
+		public static int yayy(OverrideSup $sup) { return 0; }
+		public static int yayy(OverrideSub $sup) { return 1; }
 	}
 }
