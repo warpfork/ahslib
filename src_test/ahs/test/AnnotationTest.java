@@ -96,8 +96,6 @@ public class AnnotationTest extends TestCase {
 				return $jo;
 			} catch (IllegalAccessException $e) {
 				throw new UnencodableException("reflection problem",$e);
-			} catch (SecurityException $e) {
-				throw new UnencodableException("reflection problem",$e);
 			}
 		}
 	}
