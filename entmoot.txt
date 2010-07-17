@@ -1,0 +1,56 @@
+// ENT stands for ENqueued Task, or possibly just ENTry.  Or Existing isN't Tolerable?
+
+ENT: update arrangement of libraries within svn and workspace.
+	- require keeping data separately per codebase (rather than lumping inside of projects).
+	- require separate codebases (i.e. source folders in eclipse parlance) within the ahs.* tree.
+		- test cases in particular become more organized when they can exist in a separate directory structure but parallel package.
+	- projects should be able to check in extremely local symlinks in their source setup (i.e. "../?") which anyone can conveniently arrange their workspace to accomodate by simply checking out the the relevant library source into the up-one directory, or using more complicated symlinks in that up-one directory as befits their personal local configuration.
+		- if anyone complains about the machine time wasted resolving symlinks (possibly recursively) just to get library code, those individuals should be informed that they are Doing It Wrong -- if that kind of dire efficiency is needed, you should be working with compiled jar files already anyway, and those can contain the entire relevant library code.
+		- if anyone complains about the fragility of checking in symlinks as part of core code, those individuals should be informed that they are Doing It Wrong -- as long as every symlink points to a consistent relative location just outside the project space, everything is easy -- no matter what your personal organizational preferences, you can daisy-chain symlinks together outside of the shared version-controlled area to acheive whatever effect you desire.
+		- if anyone complains about the danger of symlinking an entire library, especially one that's undergoing active modification... well, that's almost sane.
+			- but still Doing It Wrong, because any included libraries should be under version control as well, and any sane version control system supports getting revisions by date... thus, it's trivial to check out sets of things from a single date; at worst you've hit one of the small windows where one repo is updated and another is pending, in which case you can just try again with a date a few seconds in the future.
+			- but still Doing It Wrong, because remember how you can daisy chain symlinks to do whatever you want?  You can use that to point to the checkout of a specific revision of the library if you have that need (and subversion will note as much if you do the version-numbered link within your project).
+		- also, see points about the benefits of all this on the below item.
+	- even when dealing with an external library that we wish to view as essentially static, jars (especially compiled ones containing only .class files) should not be used.  The entire source should be placed handily within the workspace and symlinked into every relevant project (just like everything else, i.e. libraries we're actively developing such as the ahs).
+		- this makes consulting the source easier (including eclipse's autogeneration of docs on the fly with zero configuration).
+		- this allows compilation of any "final product" jars to compile their own .class files for only those classes needed, minimizing jar size and avoiding the clusterfuck of nested jars (and eliding the alternate option of needing multiple jars to constitute a workable program).
+
+ENT: upgrade ahs.io.codec.* interfaces to fully support a "hint"able system for decoding.
+	- This may be limited to using tricks with subclasses (or preferably but transparently subinterfaces) and Class<?>.cast(Object), and thus still require instanceof conditional blocks outside of the codec.  Still, that's better than having all of the decoding muxes be decentralized and wily.
+	- A more convoluted system of Map<Hint<?>,Pair<Class<?>,Listener<?>>> may still be possible, but is... well, convoluted.  If it is implemented, it should probably be optional for Codec implementers to provide.
+
+ENT: unify a helper library for applying bouncy castle crypto.
+	- draw this from the experimental pool in the secserv project when it reaches greater maturity.
+
+ENT: create a new encoding format more sympathetic to binary than JSON.
+	- We desperately need a scheme which does not suffer from data expansion when storing raw bytes (JSON, like any scheme that attempts to stay class to ascii, has this problem in spades because it has no alternative recourse to Base64 or its ilk).
+	- Want all fields headed by length parameters instead of using schemes involving special characters and escaping.
+		- Want alternate options for serialization that do in fact do some minimal escaping so that we can have single top-level entries representable without any line breaks.
+	- Whether or not fully binary key names should be acceptable is highly debatable.  It's not really something I can ever see "need"ing, and it would draw a serious schism in its ability to be easily translatable to JSON.
+		- I'm leaning towards no, because I don't want to incur more length fields if I can help it when keys are often going to be single-byte to begin with, and also because simply agreeing to always force binaryish keys to be b64 seems acceptable (keys should always be a relatively small constant in practice, so I'm not so worried about data expansion here; compatablity is far more important (which is a concern that is also mitigated when it comes to values because I don't mind having methods to get a value as string and another method to get the value as if it were binary, whereas that would piss me off for keys)).
+		- Cassondra accepts fully binary keys, but... well, so?  They actually keep their keys as more of a value that's just called a key anyway, ironically.
+	- I was also considering having length fields default to an actual base-10-in-ascii encoding, but I'm beginning to regard that as having been retarded.
+		- Pussyfooting around with binary is kinda stupid.  You've already lost the ability to edit in any normal plain-text form, so what have you got to lose by making all your length fields a joyfully constant four bytes? 
+			- (Keys are again different, since they want to be somewhat translatable to different formats, and I don't expect all formats to accept binary keys (and whether or not to translate any particular key into Base64 would be unpleasantly ambiguous).)
+
+ENT: keep a unified interface to both JSON and the new binary encoding scheme.
+	- Abstract all existing methods that have been tacked on to JSONObject like getByteData as well as all the convenience constructors into factory methods, as well as move the MAGICWORD_* stuff in the JSON interface to a central agnostic location within the codec package.
+	- Move the ahs.json.* package to a more logical location underneath ahs.io.codec.*
+
+ENT: revisit existing methods for building JSONObject and JSONArray instances from strings.
+	- Inline comments must be handled correctly (since we will always want this to comprise our configuration file format, and thus be extremely human-friendly).
+
+ENT: complete the new *[Read/Write]Head systems for dealing with "big" IO and standardized chunking of streams.
+
+ENT: lay out a simple set of convenience functions for more "transaction"-like file system interaction.
+	- We're not aiming for anything like a full versioned filesystem or even necessarily guarantees of atomicity on a greater than one file scale; just jumping around so that if a write fails to complete, the old file is still somewhere handy and so is the partial write.
+
+ENT: consider an eventual name change for the entire ahs library.
+	- It's displeasing to be associated with the American Horticultural Society, the Animal Humane Society, or the The Vertical Flight Society (which is obviously composed of people who can't spell).
+	- Albany High School, The American Headache Society®, The American Hemerocallis Society (...that sounds like a horrible disease, not a flower), the American Hanoverian Society, American Home Shield, and Alberta Health Services are all also distasteful.
+	- It's also pretty much unpronouncable (obviously), and it's impossible to get a three letter domain name.
+
+ENT: consider a generic Map implementation that enforces a bound on Map<Thing1<?>, Thing2<?>> so that the wildcard classes for each entry must align at runtime.
+	- This is something that's been showing up a lot inside the implementations of generic Codec stuff.
+
+
