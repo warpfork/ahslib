@@ -22,19 +22,19 @@ import ahs.io.*;
  * 
  */
 public class UnencodableException extends TranslationException {
-	private UnencodableException() {
+	public UnencodableException() {
 		super();
 	}
 	
-	private UnencodableException(String $arg0, Throwable $arg1) {
+	public UnencodableException(String $arg0, Throwable $arg1) {
 		super($arg0, $arg1);
 	}
 	
-	private UnencodableException(String $arg0) {
+	public UnencodableException(String $arg0) {
 		super($arg0);
 	}
 	
-	private UnencodableException(Throwable $arg0) {
+	public UnencodableException(Throwable $arg0) {
 		super($arg0);
 	}
 }

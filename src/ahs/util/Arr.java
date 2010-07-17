@@ -17,7 +17,18 @@ public class Arr {
 	}
 	
 	
-
+	
+	
+	
+	//MAKEMORE
+	public static boolean contains(String[] $arr, String $x) {
+		for (int $i = 0; $i < $arr.length; $i++)
+			if ($arr[$i].equals($x)) return true;
+		return false;
+	}
+	
+	
+	
 	/**
 	 * After this method returns, the given ByteBuffer's position will match its limit.
 	 * 
