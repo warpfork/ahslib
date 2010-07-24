@@ -1,4 +1,4 @@
-package ahs.json;
+package ahs.io.codec.json;
 
 /**
  * The JSONException is thrown by the JSON.org classes then things are amiss.

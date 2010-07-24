@@ -1,4 +1,4 @@
-package ahs.json;
+package ahs.io.codec.json;
 
 public interface JSON {
 	public static final String MAGICWORD_NAME = "$";

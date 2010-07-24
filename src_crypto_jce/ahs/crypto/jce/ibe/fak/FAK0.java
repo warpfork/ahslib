@@ -2,7 +2,7 @@ package ahs.crypto.jce.ibe.fak;
 
 import ahs.crypto.jce.dig.*;
 import ahs.io.*;
-import ahs.json.*;
+import ahs.io.codec.json.*;
 import ahs.util.*;
 
 public class FAK0 implements KeySystemIbeFak {

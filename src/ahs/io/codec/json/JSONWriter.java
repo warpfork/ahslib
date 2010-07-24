@@ -1,4 +1,4 @@
-package ahs.json;
+package ahs.io.codec.json;
 
 import java.io.IOException;
 import java.io.Writer;

@@ -1,6 +1,6 @@
 package ahs.test;
 
-import ahs.json.*;
+import ahs.io.codec.json.*;
 import ahs.util.*;
 
 import java.nio.charset.*;

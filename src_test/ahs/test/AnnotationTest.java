@@ -2,7 +2,7 @@ package ahs.test;
 
 import ahs.io.*;
 import ahs.io.codec.*;
-import ahs.json.*;
+import ahs.io.codec.json.*;
 import ahs.util.*;
 
 import java.lang.annotation.*;

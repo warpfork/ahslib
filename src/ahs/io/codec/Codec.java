@@ -1,7 +1,7 @@
 package ahs.io.codec;
 
 import ahs.io.*;
-import ahs.json.*;
+import ahs.io.codec.json.*;
 import java.util.*;
 
 /**

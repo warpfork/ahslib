@@ -1,4 +1,4 @@
-package ahs.json;
+package ahs.io.codec.json;
 
 /*
  * Copyright (c) 2002 JSON.org
