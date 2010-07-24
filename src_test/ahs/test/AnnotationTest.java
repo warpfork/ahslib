@@ -123,6 +123,54 @@ public class AnnotationTest extends TestCase {
 		}
 	}
 	
+	/**
+	 * <p>
+	 * Note that it's impossible for this class to provide any sort of validation that
+	 * the object it returns obeys any sort of invariants, since it operates entirely
+	 * through mindless reflection instead of any controlled pattern of constructors
+	 * or factory methods. In particular, it's trivially possible for the encoded form
+	 * to have been modified to, for example, exclude fields (which will likely result
+	 * in the decoded object having unexpected null values), or modify values to
+	 * invalid combinations.
+	 * </p>
+	 * 
+	 * <p>
+	 * It's also impossible to use one instance of this class a decoder for multiple
+	 * classes, unfortunately -- note the constructor.
+	 * </p>
+	 */
+	private static class ReflectiveAnnotatedDecoder<$T> implements Decoder<JSONObject,$T> {
+		/**
+		 * <p>
+		 * This constructor is awkward and somewhat redundant-sounding, but
+		 * unfortunately there's no other way to get a reference to the Class<?>
+		 * object for the generic type, and that reference is needed at runtime
+		 * for critical reflection operations.
+		 * </p>
+		 * 
+		 * @throws UnencodableException
+		 *                 if the class is not annotated with the Encodable
+		 *                 interface.
+		 */
+		public ReflectiveAnnotatedDecoder(Class<$T> $class) throws UnencodableException {
+			this.$class = $class;
+			
+			// check if the class will allow itself to be dencoded like this
+			Encodable $cenc = $class.getAnnotation(Encodable.class);
+			if ($cenc == null)
+				throw new UnencodableException("Class to be decoded must be annotated with the @Encodable interface.");
+		}
+		
+		private Class<$T> $class;
+		
+		public $T decode(Codec<JSONObject> $codec, JSONObject $x) throws TranslationException {
+			Class<Encable> $c = Encable.class;
+			// oh my god at no point did we indicate what kind of get should be used here
+			return null;
+		}
+		
+	}
+	
 	public void testEncodeDefault() throws TranslationException {
 		Encable $e = new Encable("pub","priv");
 		
