@@ -29,6 +29,8 @@ public class AnnotationTest extends TestCase {
 		String[] styles() default { DEFAULT };
 		public static final String DEFAULT = "$";
 		public static final String NONE = "!";
+		
+		boolean all_fields() default false;
 	}
 	
 	
@@ -63,6 +65,12 @@ public class AnnotationTest extends TestCase {
 	
 	
 	
+	/**
+	 * Always respects the value given for classname encoding preferences as given in
+	 * the Encodable annotation.
+	 * 
+	 * @param <$T>
+	 */
 	private static class ReflectiveAnnotatedEncoder<$T> implements Encoder<JSONObject,$T> {
 		public ReflectiveAnnotatedEncoder(String $selector) {
 			this.$selector = $selector;
@@ -94,7 +102,10 @@ public class AnnotationTest extends TestCase {
 						$jo.putKlass($key);
 				}
 				
+				boolean $allFields = $cenc.all_fields();
+				
 				// walk across fields and serialize the non-static annotated ones
+				// this code will want pretty serious refactoring for effic in the production branch
 				for (Field $f : $class.getDeclaredFields()) {
 					$f.setAccessible(true);
 					X.saye("FIELD: "+$f);
@@ -110,6 +121,13 @@ public class AnnotationTest extends TestCase {
 							
 							$jo.put($key, $f.get($x));
 						}
+					} else if ($allFields) {
+						X.saye("isn't annotated, but class wants all fields");
+						if ($enc == null || $enc.key().isEmpty())
+							$key = $f.getName();
+						else $key = $enc.key(); 
+						
+						$jo.put($key, $f.get($x));
 					} else {
 						X.saye("is NOT annotated");
 						X.saye(Arr.toString($f.getAnnotations()));
@@ -163,9 +181,25 @@ public class AnnotationTest extends TestCase {
 		
 		private Class<$T> $class;
 		
-		public $T decode(Codec<JSONObject> $codec, JSONObject $x) throws TranslationException {
-			Class<Encable> $c = Encable.class;
-			// oh my god at no point did we indicate what kind of get should be used here
+		public $T decode(Codec<JSONObject> $codec, JSONObject $jo) throws TranslationException {
+			String $key;
+			
+			//$class.
+			
+			// also, check if that class should have a name including in it's encoding
+			// make assertions for sanity if it does
+			Encodable $cenc = $class.getAnnotation(Encodable.class);
+			
+			$key = $cenc.value();
+			if ($key.equals(Encodable.NONE))
+				; /* no checks */
+			else if ($key.equals(Encodable.DEFAULT))
+				$jo.assertKlass($class);
+			else
+				$jo.assertKlass($key);
+			
+			// we're going to have FUN with reflection to figure out decoding types
+			// use the isPrimitive method as a presort, and go to string compares after that (hopefully intern is an option)
 			return null;
 		}
 		
