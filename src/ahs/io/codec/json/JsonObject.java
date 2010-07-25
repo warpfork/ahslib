@@ -12,6 +12,9 @@ package ahs.io.codec.json;
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import ahs.io.codec.*;
+import ahs.io.codec.eon.*;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Field;
@@ -29,7 +32,7 @@ import java.util.TreeSet;
  * between the values and names. The internal form is an object having <code>get</code>
  * and <code>opt</code> methods for accessing the values by name, and <code>put</code>
  * methods for adding or replacing values by name. The values can be any of these types:
- * <code>Boolean</code>, <code>JSONArray</code>, <code>JSONObject</code>,
+ * <code>Boolean</code>, <code>JsonArray</code>, <code>JSONObject</code>,
  * <code>Number</code>, <code>String</code>, or the <code>JSONObject.NULL</code> object. A
  * JSONObject constructor can be used to convert an external form JSON text into an
  * internal form whose values can be retrieved with the <code>get</code> and
@@ -74,14 +77,13 @@ import java.util.TreeSet;
  * @version 2008-09-18
  */
 @SuppressWarnings("unchecked")
-public class HarshJSONObject implements JSON {
+public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	/**
 	 * JSONObject.NULL is equivalent to the value that JavaScript calls null, whilst
 	 * Java's null is equivalent to the value that JavaScript calls undefined.
 	 */
 	private static final class Null {
-		
 		/**
 		 * There is only intended to be a single instance of the NULL object, so
 		 * the clone method returns itself.
@@ -136,7 +138,7 @@ public class HarshJSONObject implements JSON {
 	/**
 	 * Construct an empty JSONObject.
 	 */
-	public HarshJSONObject() {
+	public JsonObject() {
 		this.map = new HashMap<String, Object>();
 	}
 	
@@ -153,7 +155,7 @@ public class HarshJSONObject implements JSON {
 	 *                    If a value is a non-finite number or if a name is
 	 *                    duplicated.
 	 */
-	public HarshJSONObject(HarshJSONObject jo, String[] names) throws JSONException {
+	public JsonObject(JsonObject jo, String[] names) throws JSONException {
 		this();
 		for (int i = 0; i < names.length; i += 1) {
 			putOnce(names[i], jo.opt(names[i]));
@@ -170,7 +172,7 @@ public class HarshJSONObject implements JSON {
 	 *                 If there is a syntax error in the source string or a duplicated
 	 *                 key.
 	 */
-	public HarshJSONObject(JSONTokener x) throws JSONException {
+	public JsonObject(JSONTokener x) throws JSONException {
 		this();
 		char c;
 		String key;
@@ -226,7 +228,7 @@ public class HarshJSONObject implements JSON {
 	 *                A map object that can be used to initialize the contents of the
 	 *                JSONObject.
 	 */
-	public HarshJSONObject(Map<String, Object> map) {
+	public JsonObject(Map<String, Object> map) {
 		this.map = (map == null) ? new HashMap<String, Object>() : map;
 	}
 	
@@ -240,12 +242,12 @@ public class HarshJSONObject implements JSON {
 	 * @param includeSuperClass
 	 *                - Tell whether to include the super class properties.
 	 */
-	public HarshJSONObject(Map<String, Object> map, boolean includeSuperClass) {
+	public JsonObject(Map<String, Object> map, boolean includeSuperClass) {
 		this.map = new HashMap<String, Object>();
 		if (map != null) {
 			for (Iterator i = map.entrySet().iterator(); i.hasNext();) {
 				Map.Entry e = (Map.Entry) i.next();
-				this.map.put((String)e.getKey(), new HarshJSONObject(e.getValue(), includeSuperClass));
+				this.map.put((String)e.getKey(), new JsonObject(e.getValue(), includeSuperClass));
 			}
 		}
 	}
@@ -270,7 +272,7 @@ public class HarshJSONObject implements JSON {
 	 *                An object that has getter methods that should be used to make a
 	 *                JSONObject.
 	 */
-	public HarshJSONObject(Object bean) {
+	public JsonObject(Object bean) {
 		this();
 		populateInternalMap(bean, false);
 	}
@@ -288,7 +290,7 @@ public class HarshJSONObject implements JSON {
 	 * @param includeSuperClass
 	 *                - Tell whether to include the super class properties.
 	 */
-	public HarshJSONObject(Object bean, boolean includeSuperClass) {
+	public JsonObject(Object bean, boolean includeSuperClass) {
 		this();
 		populateInternalMap(bean, includeSuperClass);
 	}
@@ -324,18 +326,18 @@ public class HarshJSONObject implements JSON {
 					if (result == null) {
 						map.put(key, NULL);
 					} else if (result.getClass().isArray()) {
-						map.put(key, new JSONArray(result, includeSuperClass));
+						map.put(key, new JsonArray(result, includeSuperClass));
 					} else if (result instanceof Collection) { // List or Set
-						map.put(key, new JSONArray((Collection) result, includeSuperClass));
+						map.put(key, new JsonArray((Collection) result, includeSuperClass));
 					} else if (result instanceof Map) {
-						map.put(key, new HarshJSONObject((Map) result, includeSuperClass));
+						map.put(key, new JsonObject((Map) result, includeSuperClass));
 					} else if (isStandardProperty(result.getClass())) { // Primitives, String and Wrapper
 						map.put(key, result);
 					} else {
 						if (result.getClass().getPackage().getName().startsWith("java") || result.getClass().getClassLoader() == null) {
 							map.put(key, result.toString());
 						} else { // User defined Objects
-							map.put(key, new HarshJSONObject(result, includeSuperClass));
+							map.put(key, new JsonObject(result, includeSuperClass));
 						}
 					}
 				}
@@ -345,7 +347,7 @@ public class HarshJSONObject implements JSON {
 		}
 	}
 	
-	private boolean isStandardProperty(Class clazz) {
+	private boolean isStandardProperty(Class<?> clazz) {
 		return clazz.isPrimitive() || clazz.isAssignableFrom(Byte.class) || clazz.isAssignableFrom(Short.class) || clazz.isAssignableFrom(Integer.class) || clazz.isAssignableFrom(Long.class) || clazz.isAssignableFrom(Float.class) || clazz.isAssignableFrom(Double.class) || clazz.isAssignableFrom(Character.class) || clazz.isAssignableFrom(String.class) || clazz.isAssignableFrom(Boolean.class);
 	}
 	
@@ -363,9 +365,9 @@ public class HarshJSONObject implements JSON {
 	 *                An array of strings, the names of the fields to be obtained from
 	 *                the object.
 	 */
-	public HarshJSONObject(Object object, String names[]) {
+	public JsonObject(Object object, String names[]) {
 		this();
-		Class c = object.getClass();
+		Class<?> c = object.getClass();
 		for (int i = 0; i < names.length; i += 1) {
 			String name = names[i];
 			try {
@@ -389,16 +391,16 @@ public class HarshJSONObject implements JSON {
 	 *                    If there is a syntax error in the source string or a
 	 *                    duplicated key.
 	 */
-	public HarshJSONObject(String source) throws JSONException {
+	public JsonObject(String source) throws JSONException {
 		this(new JSONTokener(source));
 	}
 	
 	
 	/**
 	 * Accumulate values under a key. It is similar to the put method except that if
-	 * there is already an object stored under the key then a JSONArray is stored
+	 * there is already an object stored under the key then a JsonArray is stored
 	 * under the key to hold all of the accumulated values. If there is already a
-	 * JSONArray, then the new value is appended to it. In contrast, the put method
+	 * JsonArray, then the new value is appended to it. In contrast, the put method
 	 * replaces the previous value.
 	 * 
 	 * @param key
@@ -408,16 +410,17 @@ public class HarshJSONObject implements JSON {
 	 * @return this.
 	 * @throws JSONException
 	 *                 If the value is an invalid number or if the key is null.
+	 * @throws UnencodableException 
 	 */
-	public HarshJSONObject accumulate(String key, Object value) throws JSONException {
+	public JsonObject accumulate(String key, Object value) throws JSONException, UnencodableException {
 		testValidity(value);
 		Object o = opt(key);
 		if (o == null) {
-			put(key, value instanceof JSONArray ? new JSONArray().put(value) : value);
-		} else if (o instanceof JSONArray) {
-			((JSONArray) o).put(value);
+			put(key, value instanceof JsonArray ? new JsonArray().put(value) : value);
+		} else if (o instanceof JsonArray) {
+			((JsonArray) o).put(value);
 		} else {
-			put(key, new JSONArray().put(o).put(value));
+			put(key, new JsonArray().put(o).put(value));
 		}
 		return this;
 	}
@@ -426,8 +429,8 @@ public class HarshJSONObject implements JSON {
 	/**
 	 * Append values to the array under a key. If the key does not exist in the
 	 * JSONObject, then the key is put in the JSONObject with its value being a
-	 * JSONArray containing the value parameter. If the key was already associated
-	 * with a JSONArray, then the value parameter is appended to it.
+	 * JsonArray containing the value parameter. If the key was already associated
+	 * with a JsonArray, then the value parameter is appended to it.
 	 * 
 	 * @param key
 	 *                A key string.
@@ -436,17 +439,18 @@ public class HarshJSONObject implements JSON {
 	 * @return this.
 	 * @throws JSONException
 	 *                 If the key is null or if the current value associated with the
-	 *                 key is not a JSONArray.
+	 *                 key is not a JsonArray.
+	 * @throws UnencodableException 
 	 */
-	public HarshJSONObject append(String key, Object value) throws JSONException {
+	public JsonObject append(String key, Object value) throws JSONException, UnencodableException {
 		testValidity(value);
 		Object o = opt(key);
 		if (o == null) {
-			put(key, new JSONArray().put(value));
-		} else if (o instanceof JSONArray) {
-			put(key, ((JSONArray) o).put(value));
+			put(key, new JsonArray().put(value));
+		} else if (o instanceof JsonArray) {
+			put(key, ((JsonArray) o).put(value));
 		} else {
-			throw new JSONException("JSONObject[" + key + "] is not a JSONArray.");
+			throw new JSONException("JSONObject[" + key + "] is not a JsonArray.");
 		}
 		return this;
 	}
@@ -460,7 +464,7 @@ public class HarshJSONObject implements JSON {
 	 *                A double.
 	 * @return A String.
 	 */
-	static public String doubleToString(double d) {
+	static protected String doubleToString(double d) {
 		if (Double.isInfinite(d) || Double.isNaN(d)) { return "null"; }
 		
 		// Shave off trailing zeros and decimal point, if possible.
@@ -487,7 +491,7 @@ public class HarshJSONObject implements JSON {
 	 * @throws JSONException
 	 *                 if the key is not found.
 	 */
-	public Object get(String key) throws JSONException {
+	protected Object get(String key) throws JSONException {
 		Object o = opt(key);
 		if (o == null) { throw new JSONException("JSONObject[" + quote(key) + "] not found."); }
 		return o;
@@ -550,18 +554,18 @@ public class HarshJSONObject implements JSON {
 	
 	
 	/**
-	 * Get the JSONArray value associated with a key.
+	 * Get the JsonArray value associated with a key.
 	 * 
 	 * @param key
 	 *                A key string.
-	 * @return A JSONArray which is the value.
+	 * @return A JsonArray which is the value.
 	 * @throws JSONException
-	 *                 if the key is not found or if the value is not a JSONArray.
+	 *                 if the key is not found or if the value is not a JsonArray.
 	 */
-	public JSONArray getJSONArray(String key) throws JSONException {
+	public JsonArray getArr(String key) throws JSONException {
 		Object o = get(key);
-		if (o instanceof JSONArray) { return (JSONArray) o; }
-		throw new JSONException("JSONObject[" + quote(key) + "] is not a JSONArray.");
+		if (o instanceof JsonArray) { return (JsonArray) o; }
+		throw new JSONException("JsonObject[" + quote(key) + "] is not a JsonArray.");
 	}
 	
 	
@@ -574,11 +578,10 @@ public class HarshJSONObject implements JSON {
 	 * @throws JSONException
 	 *                 if the key is not found or if the value is not a JSONObject.
 	 */
-	public JSONObject getJSONObject(String key) throws JSONException {
+	public JsonObject getObj(String key) throws JSONException {
 		Object o = get(key);
-		if (o instanceof JSONObject) { return (JSONObject) o; }
-		//XXX:AHS: deal with harshness
-		throw new JSONException("JSONObject[" + quote(key) + "] is not a JSONObject.");
+		if (o instanceof JsonObject) { return (JsonObject) o; }
+		throw new JSONException("JsonObject[" + quote(key) + "] is not a JsonObject.");
 	}
 	
 	
@@ -604,10 +607,10 @@ public class HarshJSONObject implements JSON {
 	 * 
 	 * @return An array of field names, or null if there are no names.
 	 */
-	public static String[] getNames(HarshJSONObject jo) {
+	public static String[] getNames(JsonObject jo) {
 		int length = jo.length();
 		if (length == 0) { return null; }
-		Iterator i = jo.keys();
+		Iterator<String> i = jo.keys();
 		String[] names = new String[length];
 		int j = 0;
 		while (i.hasNext()) {
@@ -623,9 +626,9 @@ public class HarshJSONObject implements JSON {
 	 * 
 	 * @return An array of field names, or null if there are no names.
 	 */
-	public static String[] getNames(Object object) {
+	protected static String[] getNames(Object object) {
 		if (object == null) { return null; }
-		Class klass = object.getClass();
+		Class<?> klass = object.getClass();
 		Field[] fields = klass.getFields();
 		int length = fields.length;
 		if (length == 0) { return null; }
@@ -672,7 +675,7 @@ public class HarshJSONObject implements JSON {
 	 *         the JSONObject.NULL object.
 	 */
 	public boolean isNull(String key) {
-		return HarshJSONObject.NULL.equals(opt(key));
+		return JsonObject.NULL.equals(opt(key));
 	}
 	
 	
@@ -690,7 +693,7 @@ public class HarshJSONObject implements JSON {
 	 * 
 	 * @return An iterator of the values.
 	 */
-	public Iterator<Object> values() {
+	protected Iterator<Object> values() {
 		return this.map.values().iterator();
 	}
 	
@@ -706,14 +709,14 @@ public class HarshJSONObject implements JSON {
 	
 	
 	/**
-	 * Produce a JSONArray containing the names of the elements of this JSONObject.
+	 * Produce a JsonArray containing the names of the elements of this JSONObject.
 	 * 
-	 * @return A JSONArray containing the key strings, or null if the JSONObject is
+	 * @return A JsonArray containing the key strings, or null if the JSONObject is
 	 *         empty.
 	 */
-	public JSONArray names() {
-		JSONArray ja = new JSONArray();
-		Iterator keys = keys();
+	public JsonArray names() {
+		JsonArray ja = new JsonArray();
+		Iterator<String> keys = keys();
 		while (keys.hasNext()) {
 			ja.put(keys.next());
 		}
@@ -726,12 +729,28 @@ public class HarshJSONObject implements JSON {
 	 * @param n
 	 *                A Number
 	 * @return A String.
-	 * @throws JSONException
+	 * @throws UnencodableException
 	 *                 If n is a non-finite number.
 	 */
-	static public String numberToString(Number n) throws JSONException {
-		if (n == null) { throw new JSONException("Null pointer"); }
+	static public String numberToString(Number n) throws UnencodableException {
+		if (n == null) { throw new NullPointerException(); }
 		testValidity(n);
+		
+		// Shave off trailing zeros and decimal point, if possible.
+		
+		String s = n.toString();
+		if (s.indexOf('.') > 0 && s.indexOf('e') < 0 && s.indexOf('E') < 0) {
+			while (s.endsWith("0")) {
+				s = s.substring(0, s.length() - 1);
+			}
+			if (s.endsWith(".")) {
+				s = s.substring(0, s.length() - 1);
+			}
+		}
+		return s;
+	}
+	static private String numberToStringUnchecked(Number n) {
+		if (n == null) { throw new NullPointerException(); }
 		
 		// Shave off trailing zeros and decimal point, if possible.
 		
@@ -755,21 +774,8 @@ public class HarshJSONObject implements JSON {
 	 *                A key string.
 	 * @return An object which is the value, or null if there is no value.
 	 */
-	public Object opt(String key) {
+	protected Object opt(String key) {
 		return key == null ? null : this.map.get(key);
-	}
-	
-	
-	/**
-	 * Get an optional boolean associated with a key. It returns false if there is no
-	 * such key, or if the value is not Boolean.TRUE or the String "true".
-	 * 
-	 * @param key
-	 *                A key string.
-	 * @return The truth.
-	 */
-	public boolean optBoolean(String key) {
-		return optBoolean(key, false);
 	}
 	
 	
@@ -790,23 +796,6 @@ public class HarshJSONObject implements JSON {
 		} catch (Exception e) {
 			return defaultValue;
 		}
-	}
-	
-	
-	/**
-	 * Put a key/value pair in the JSONObject, where the value will be a JSONArray
-	 * which is produced from a Collection.
-	 * 
-	 * @param key
-	 *                A key string.
-	 * @param value
-	 *                A Collection value.
-	 * @return this.
-	 * @throws JSONException
-	 */
-	public HarshJSONObject put(String key, Collection value) throws JSONException {
-		put(key, new JSONArray(value));
-		return this;
 	}
 	
 	
@@ -880,16 +869,16 @@ public class HarshJSONObject implements JSON {
 	
 	
 	/**
-	 * Get an optional JSONArray associated with a key. It returns null if there is no
-	 * such key, or if its value is not a JSONArray.
+	 * Get an optional JsonArray associated with a key. It returns null if there is no
+	 * such key, or if its value is not a JsonArray.
 	 * 
 	 * @param key
 	 *                A key string.
-	 * @return A JSONArray which is the value.
+	 * @return A JsonArray which is the value.
 	 */
-	public JSONArray optJSONArray(String key) {
+	public JsonArray optArr(String key) {
 		Object o = opt(key);
-		return o instanceof JSONArray ? (JSONArray) o : null;
+		return o instanceof JsonArray ? (JsonArray) o : null;
 	}
 	
 	
@@ -900,27 +889,10 @@ public class HarshJSONObject implements JSON {
 	 * @param key
 	 *                A key string.
 	 * @return A JSONObject which is the value.
-	 * @throws JSONException 
 	 */
-	public JSONObject optJSONObject(String key) throws JSONException {
+	public JsonObject optObj(String key) {
 		Object o = opt(key);
-		if (o instanceof JSONObject) { return (JSONObject) o; }
-		//XXX:AHS: deal with harshness
-		throw new JSONException("JSONObject[" + quote(key) + "] is not a JSONObject.");
-	}
-	
-	
-	/**
-	 * Get an optional long value associated with a key, or zero if there is no such
-	 * key or if the value is not a number. If the value is a string, an attempt will
-	 * be made to evaluate it as a number.
-	 * 
-	 * @param key
-	 *                A key string.
-	 * @return An object which is the value.
-	 */
-	public long optLong(String key) {
-		return optLong(key, 0);
+		return o instanceof JsonObject ? (JsonObject) o : null;
 	}
 	
 	
@@ -943,21 +915,6 @@ public class HarshJSONObject implements JSON {
 		}
 	}
 	
-	
-	/**
-	 * Get an optional string associated with a key. It returns an empty string if
-	 * there is no such key. If the value is not a string and is not null, then it is
-	 * coverted to a string.
-	 * 
-	 * @param key
-	 *                A key string.
-	 * @return A string which is the value.
-	 */
-	public String optString(String key) {
-		return optString(key, "");
-	}
-	
-	
 	/**
 	 * Get an optional string associated with a key. It returns the defaultValue if
 	 * there is no such key.
@@ -975,36 +932,19 @@ public class HarshJSONObject implements JSON {
 	
 	
 	/**
-	 * Put a key/boolean pair in the JSONObject.
-	 * 
-	 * @param key
-	 *                A key string.
-	 * @param value
-	 *                A boolean which is the value.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the key is null.
-	 */
-	public HarshJSONObject put(String key, boolean value) throws JSONException {
-		put(key, value ? Boolean.TRUE : Boolean.FALSE);
-		return this;
-	}
-	
-	
-	/**
 	 * Put a key/double pair in the JSONObject.
 	 * 
 	 * @param key
 	 *                A key string.
 	 * @param value
 	 *                A double which is the value.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the key is null or if the number is invalid.
+	 * @throws UnencodableException
+	 *                 If the number is invalid.
+	 * @throws NullPointerException
+	 *                 If the key is null.
 	 */
-	public HarshJSONObject put(String key, double value) throws JSONException {
-		put(key, new Double(value));
-		return this;
+	public void put(String key, double value) throws UnencodableException {
+		putQuestionable(key, new Double(value));
 	}
 	
 	
@@ -1015,13 +955,11 @@ public class HarshJSONObject implements JSON {
 	 *                A key string.
 	 * @param value
 	 *                An int which is the value.
-	 * @return this.
-	 * @throws JSONException
+	 * @throws NullPointerException
 	 *                 If the key is null.
 	 */
-	public HarshJSONObject put(String key, int value) throws JSONException {
+	public void put(String key, int value) {
 		put(key, new Integer(value));
-		return this;
 	}
 	
 	
@@ -1032,30 +970,11 @@ public class HarshJSONObject implements JSON {
 	 *                A key string.
 	 * @param value
 	 *                A long which is the value.
-	 * @return this.
-	 * @throws JSONException
+	 * @throws NullPointerException
 	 *                 If the key is null.
 	 */
-	public HarshJSONObject put(String key, long value) throws JSONException {
+	public void put(String key, long value) {
 		put(key, new Long(value));
-		return this;
-	}
-	
-	
-	/**
-	 * Put a key/value pair in the JSONObject, where the value will be a JSONObject
-	 * which is produced from a Map.
-	 * 
-	 * @param key
-	 *                A key string.
-	 * @param value
-	 *                A Map value.
-	 * @return this.
-	 * @throws JSONException
-	 */
-	public HarshJSONObject put(String key, Map<Object,Object> value) throws JSONException {
-		put(key, new HarshJSONObject(value));
-		return this;
 	}
 	
 	
@@ -1067,14 +986,39 @@ public class HarshJSONObject implements JSON {
 	 *                A key string.
 	 * @param value
 	 *                An object which is the value. It should be of one of these
-	 *                types: Boolean, Double, Integer, JSONArray, JSONObject, Long,
-	 *                String, or the JSONObject.NULL object.
+	 *                types: Boolean, Integer, JsonArray, JSONObject, Long,
+	 *                String, null.
 	 * @return this.
-	 * @throws JSONException
-	 *                 If the value is non-finite number or if the key is null.
+	 * @throws NullPointerException
+	 *                 If the key is null.
 	 */
-	public HarshJSONObject put(String key, Object value) throws JSONException {
-		if (key == null) { throw new JSONException("Null key."); }
+	protected JsonObject put(String key, Object value) {
+		if (key == null) { throw new NullPointerException("JSON cannot accept null key."); }
+		if (value != null) {
+			this.map.put(key, value);
+		} else {
+			remove(key);
+		}
+		return this;
+	}
+	
+	
+	/**
+	 * Put a key/value pair in the JSONObject, checking numerical types for values not
+	 * valid in JSON and throwing exceptions where necessary. If the value is null,
+	 * then the key will be removed from the JSONObject if it is present.
+	 * 
+	 * @param key
+	 *                A key string.
+	 * @param value
+	 *                An object which is the value. It should be of one of these
+	 *                types: Double, null.
+	 * @return this.
+	 * @throws UnencodableException
+	 *                 If the value is non-finite number.
+	 */
+	protected JsonObject putQuestionable(String key, Object value) throws UnencodableException {
+		if (key == null) { throw new NullPointerException("JSON cannot accept null key."); }
 		if (value != null) {
 			testValidity(value);
 			this.map.put(key, value);
@@ -1112,13 +1056,13 @@ public class HarshJSONObject implements JSON {
 	 *                A key string.
 	 * @param value
 	 *                An object which is the value. It should be of one of these
-	 *                types: Boolean, Double, Integer, JSONArray, JSONObject, Long,
+	 *                types: Boolean, Double, Integer, JsonArray, JSONObject, Long,
 	 *                String, or the JSONObject.NULL object.
 	 * @return this.
 	 * @throws JSONException
 	 *                 If the value is a non-finite number.
 	 */
-	public HarshJSONObject putOpt(String key, Object value) throws JSONException {
+	public JsonObject putOpt(String key, Object value) throws JSONException {
 		if (key != null && value != null) {
 			put(key, value);
 		}
@@ -1208,8 +1152,8 @@ public class HarshJSONObject implements JSON {
 	 * 
 	 * @return An iterator of the keys.
 	 */
-	public Iterator sortedKeys() {
-		return new TreeSet(this.map.keySet()).iterator();
+	public Iterator<String> sortedKeys() {
+		return new TreeSet<String>(this.map.keySet()).iterator();
 	}
 	
 	/**
@@ -1224,7 +1168,7 @@ public class HarshJSONObject implements JSON {
 		if (s.equals("")) { return s; }
 		if (s.equalsIgnoreCase("true")) { return Boolean.TRUE; }
 		if (s.equalsIgnoreCase("false")) { return Boolean.FALSE; }
-		if (s.equalsIgnoreCase("null")) { return HarshJSONObject.NULL; }
+		if (s.equalsIgnoreCase("null")) { return JsonObject.NULL; }
 		
 		/*
 		 * If it might be a number, try converting it. We support the 0- and 0x- conventions. If a number cannot be produced, then the value will just be a string. Note that the 0-, 0x-, plus, and implied string conventions are non-standard. A JSON parser is free to accept non-JSON forms as long as it accepts all correct JSON forms.
@@ -1268,17 +1212,17 @@ public class HarshJSONObject implements JSON {
 	/**
 	 * Throw an exception if the object is an NaN or infinite number.
 	 * 
-	 * @param o
+	 * @param $o
 	 *                The object to test.
-	 * @throws JSONException
-	 *                 If o is a non-finite number.
+	 * @throws UnencodableException
+	 *                 If $o is a non-finite number.
 	 */
-	static boolean testValidity(Object o) throws JSONException {
-		if (o != null) {
-			if (o instanceof Double) {
-				if (((Double) o).isInfinite() || ((Double) o).isNaN()) { throw new JSONException("JSON does not allow non-finite numbers."); }
-			} else if (o instanceof Float) {
-				if (((Float) o).isInfinite() || ((Float) o).isNaN()) { throw new JSONException("JSON does not allow non-finite numbers."); }
+	static boolean testValidity(Object $o) throws UnencodableException {
+		if ($o != null) {
+			if ($o instanceof Double) {
+				if (((Double) $o).isInfinite() || ((Double) $o).isNaN()) { throw new UnencodableException("JSON does not allow non-finite numbers."); }
+			} else if ($o instanceof Float) {
+				if (((Float) $o).isInfinite() || ((Float) $o).isNaN()) { throw new UnencodableException("JSON does not allow non-finite numbers."); }
 			}
 		}
 		return true;
@@ -1286,18 +1230,18 @@ public class HarshJSONObject implements JSON {
 	
 	
 	/**
-	 * Produce a JSONArray containing the values of the members of this JSONObject.
+	 * Produce a JsonArray containing the values of the members of this JSONObject.
 	 * 
 	 * @param names
-	 *                A JSONArray containing a list of key strings. This determines
+	 *                A JsonArray containing a list of key strings. This determines
 	 *                the sequence of the values in the result.
-	 * @return A JSONArray of values.
+	 * @return A JsonArray of values.
 	 * @throws JSONException
 	 *                 If any of the values are non-finite numbers.
 	 */
-	public JSONArray toJSONArray(JSONArray names) throws JSONException {
+	public JsonArray toJsonArray(JsonArray names) throws JSONException {
 		if (names == null || names.length() == 0) { return null; }
-		JSONArray ja = new JSONArray();
+		JsonArray ja = new JsonArray();
 		for (int i = 0; i < names.length(); i += 1) {
 			ja.put(this.opt(names.getString(i)));
 		}
@@ -1317,7 +1261,7 @@ public class HarshJSONObject implements JSON {
 	 */
 	public String toString() {
 		try {
-			Iterator keys = keys();
+			Iterator<String> keys = keys();
 			StringBuffer sb = new StringBuffer("{");
 			
 			while (keys.hasNext()) {
@@ -1377,7 +1321,7 @@ public class HarshJSONObject implements JSON {
 		int j;
 		int n = length();
 		if (n == 0) { return "{}"; }
-		Iterator keys = sortedKeys();
+		Iterator<String> keys = sortedKeys();
 		StringBuffer sb = new StringBuffer("{");
 		int newindent = indent + indentFactor;
 		Object o;
@@ -1385,7 +1329,7 @@ public class HarshJSONObject implements JSON {
 			o = keys.next();
 			sb.append(quote(o.toString()));
 			sb.append(": ");
-			sb.append(valueToString(this.map.get(o), indentFactor, indent));
+			sb.append(valueToStringUnchecked(this.map.get(o), indentFactor, indent));
 		} else {
 			while (keys.hasNext()) {
 				o = keys.next();
@@ -1399,7 +1343,7 @@ public class HarshJSONObject implements JSON {
 				}
 				sb.append(quote(o.toString()));
 				sb.append(": ");
-				sb.append(valueToString(this.map.get(o), indentFactor, newindent));
+				sb.append(valueToStringUnchecked(this.map.get(o), indentFactor, newindent));
 			}
 			if (sb.length() > 1) {
 				sb.append('\n');
@@ -1419,7 +1363,7 @@ public class HarshJSONObject implements JSON {
 	 * required to produce a strictly conforming text. If the object does not contain
 	 * a toJSONString method (which is the most common case), then a text will be
 	 * produced by other means. If the value is an array or Collection, then a
-	 * JSONArray will be made from it and its toJSONString method will be called. If
+	 * JsonArray will be made from it and its toJSONString method will be called. If
 	 * the value is a MAP, then a JSONObject will be made from it and its toJSONString
 	 * method will be called. Otherwise, the value's toString method will be called,
 	 * and the result will be quoted.
@@ -1434,8 +1378,9 @@ public class HarshJSONObject implements JSON {
 	 *         ending with <code>}</code>&nbsp;<small>(right brace)</small>.
 	 * @throws JSONException
 	 *                 If the value is or contains an invalid number.
+	 * @throws UnencodableException 
 	 */
-	static String valueToString(Object value) throws JSONException {
+	static String valueToString(Object value) throws JSONException, UnencodableException {
 		if (value == null || value.equals(null)) { return "null"; }
 		if (value instanceof JSONString) {
 			Object o;
@@ -1448,10 +1393,10 @@ public class HarshJSONObject implements JSON {
 			throw new JSONException("Bad value from toJSONString: " + o);
 		}
 		if (value instanceof Number) { return numberToString((Number) value); }
-		if (value instanceof Boolean || value instanceof HarshJSONObject || value instanceof JSONArray) { return value.toString(); }
-		if (value instanceof Map) { return new HarshJSONObject((Map) value).toString(); }
-		if (value instanceof Collection) { return new JSONArray((Collection) value).toString(); }
-		if (value.getClass().isArray()) { return new JSONArray(value).toString(); }
+		if (value instanceof Boolean || value instanceof JsonObject || value instanceof JsonArray) { return value.toString(); }
+		if (value instanceof Map) { return new JsonObject((Map) value).toString(); }
+		if (value instanceof Collection) { return new JsonArray((Collection) value).toString(); }
+		if (value.getClass().isArray()) { return new JsonArray(value).toString(); }
 		return quote(value.toString());
 	}
 	
@@ -1472,8 +1417,9 @@ public class HarshJSONObject implements JSON {
 	 *         ending with <code>}</code>&nbsp;<small>(right brace)</small>.
 	 * @throws JSONException
 	 *                 If the object contains an invalid number.
+	 * @throws UnencodableException 
 	 */
-	static String valueToString(Object value, int indentFactor, int indent) throws JSONException {
+	static String valueToString(Object value, int indentFactor, int indent) throws JSONException, UnencodableException {
 		if (value == null || value.equals(null)) { return "null"; }
 		try {
 			if (value instanceof JSONString) {
@@ -1485,11 +1431,30 @@ public class HarshJSONObject implements JSON {
 		}
 		if (value instanceof Number) { return numberToString((Number) value); }
 		if (value instanceof Boolean) { return value.toString(); }
-		if (value instanceof HarshJSONObject) { return ((HarshJSONObject) value).toString(indentFactor, indent); }
-		if (value instanceof JSONArray) { return ((JSONArray) value).toString(indentFactor, indent); }
-		if (value instanceof Map) { return new HarshJSONObject((Map) value).toString(indentFactor, indent); }
-		if (value instanceof Collection) { return new JSONArray((Collection) value).toString(indentFactor, indent); }
-		if (value.getClass().isArray()) { return new JSONArray(value).toString(indentFactor, indent); }
+		if (value instanceof JsonObject) { return ((JsonObject) value).toString(indentFactor, indent); }
+		if (value instanceof JsonArray) { return ((JsonArray) value).toString(indentFactor, indent); }
+		if (value instanceof Map) { return new JsonObject((Map) value).toString(indentFactor, indent); }
+		if (value instanceof Collection) { return new JsonArray((Collection) value).toString(indentFactor, indent); }
+		if (value.getClass().isArray()) { return new JsonArray(value).toString(indentFactor, indent); }
+		return quote(value.toString());
+	}
+	static String valueToStringUnchecked(Object value, int indentFactor, int indent) throws JSONException {
+		if (value == null || value.equals(null)) { return "null"; }
+		try {
+			if (value instanceof JSONString) {
+				Object o = ((JSONString) value).toJSONString();
+				if (o instanceof String) { return (String) o; }
+			}
+		} catch (Exception e) {
+			/* forget about it */
+		}
+		if (value instanceof Number) { return numberToStringUnchecked((Number) value); }
+		if (value instanceof Boolean) { return value.toString(); }
+		if (value instanceof JsonObject) { return ((JsonObject) value).toString(indentFactor, indent); }
+		if (value instanceof JsonArray) { return ((JsonArray) value).toString(indentFactor, indent); }
+		if (value instanceof Map) { return new JsonObject((Map) value).toString(indentFactor, indent); }
+		if (value instanceof Collection) { return new JsonArray((Collection) value).toString(indentFactor, indent); }
+		if (value.getClass().isArray()) { return new JsonArray(value).toString(indentFactor, indent); }
 		return quote(value.toString());
 	}
 	
@@ -1502,11 +1467,12 @@ public class HarshJSONObject implements JSON {
 	 * 
 	 * @return The writer.
 	 * @throws JSONException
+	 * @throws UnencodableException 
 	 */
-	public Writer write(Writer writer) throws JSONException {
+	public Writer write(Writer writer) throws JSONException, UnencodableException {
 		try {
 			boolean b = false;
-			Iterator keys = keys();
+			Iterator<String> keys = keys();
 			writer.write('{');
 			
 			while (keys.hasNext()) {
@@ -1517,10 +1483,10 @@ public class HarshJSONObject implements JSON {
 				writer.write(quote(k.toString()));
 				writer.write(':');
 				Object v = this.map.get(k);
-				if (v instanceof HarshJSONObject) {
-					((HarshJSONObject) v).write(writer);
-				} else if (v instanceof JSONArray) {
-					((JSONArray) v).write(writer);
+				if (v instanceof JsonObject) {
+					((JsonObject) v).write(writer);
+				} else if (v instanceof JsonArray) {
+					((JsonArray) v).write(writer);
 				} else {
 					writer.write(valueToString(v));
 				}
@@ -1533,7 +1499,7 @@ public class HarshJSONObject implements JSON {
 		}
 	}
 
-	protected HarshJSONObject uncheckedPut(String key, Object value) {
+	protected JsonObject uncheckedPut(String key, Object value) {
 		this.map.put(key, value);
 		return this;
 	}

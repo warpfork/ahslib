@@ -310,11 +310,11 @@ public class JSONTokener {
 				return nextString(c);
 			case '{':
 				back();
-				return new JSONObject(this);
+				return new JsonObject(this);
 			case '[':
 			case '(':
 				back();
-				return new JSONArray(this);
+				return new JsonArray(this);
 		}
 		
 		/*
@@ -332,7 +332,7 @@ public class JSONTokener {
 		
 		s = sb.toString().trim();
 		if (s.equals("")) { throw syntaxError("Missing value"); }
-		return HarshJSONObject.stringToValue(s);
+		return JsonObject.stringToValue(s);
 	}
 	
 	

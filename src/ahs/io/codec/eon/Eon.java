@@ -1,7 +1,68 @@
 package ahs.io.codec.eon;
 
-public interface Eon {
+import ahs.io.codec.*;
+import ahs.io.codec.json.*;
+
+import java.util.*;
+
+public final class Eon {
+	private Eon() {}	// thou shalt not instantiate me
+	
 	public static final String MAGICWORD_NAME = "$";
 	public static final String MAGICWORD_CLASS = "#";
 	public static final String MAGICWORD_DATA = "%";
+
+	public static <$TM extends EonObject<$TM,?>, $T extends EonObject<$TM,?>> $T fill($T $holder, Object $class, String $name, $TM $data) {
+		if ($class != null) $holder.putKlass($class);
+		if ($name != null)  $holder.putName($name);
+		if ($data != null)  $holder.putData($data);
+		return $holder;
+	}
+	public static <$TM extends EonObject<$TM,?>, $T extends EonObject<$TM,?>> $T fill($T $holder, String $class, String $name, $TM $data) {
+		if ($class != null) $holder.putKlass($class);
+		if ($name != null)  $holder.putName($name);
+		if ($data != null)  $holder.putData($data);
+		return $holder;
+	}
+	public static <$TA extends EonArray, $T extends EonObject<?,$TA>> $T fill($T $holder, Object $class, String $name, $TA $data) {
+		if ($class != null) $holder.putKlass($class);
+		if ($name != null)  $holder.putName($name);
+		if ($data != null)  $holder.putData($data);
+		return $holder;
+	}
+	public static <$TA extends EonArray, $T extends EonObject<?,$TA>> $T fill($T $holder, String $class, String $name, $TA $data) {
+		if ($class != null) $holder.putKlass($class);
+		if ($name != null)  $holder.putName($name);
+		if ($data != null)  $holder.putData($data);
+		return $holder;
+	}
+	public static <$T extends EonObject<?,?>> $T fill($T $holder, Object $class, String $name, String $data) {
+		if ($class != null) $holder.putKlass($class);
+		if ($name != null)  $holder.putName($name);
+		if ($data != null)  $holder.putData($data);
+		return $holder;
+	}
+	public static <$T extends EonObject<?,?>> $T fill($T $holder, String $class, String $name, String $data) {
+		if ($class != null) $holder.putKlass($class);
+		if ($name != null)  $holder.putName($name);
+		if ($data != null)  $holder.putData($data);
+		return $holder;
+	}
+	public static <$T extends EonObject<?,?>> $T fill($T $holder, Object $class, String $name, byte[] $data) {
+		if ($class != null) $holder.putKlass($class);
+		if ($name != null)  $holder.putName($name);
+		if ($data != null)  $holder.putData($data);
+		return $holder;
+	}
+	public static <$T extends EonObject<?,?>> $T fill($T $holder, String $class, String $name, byte[] $data) {
+		if ($class != null) $holder.putKlass($class);
+		if ($name != null)  $holder.putName($name);
+		if ($data != null)  $holder.putData($data);
+		return $holder;
+	}
+	public static <$T extends EonObject<?,?>> $T fill($T $holder, Map<String,String> $map) throws UnencodableException {
+		for (Map.Entry<String,String> $ent : $map.entrySet())
+			$holder.put($ent.getKey(),$ent.getValue());
+		return $holder;
+	}
 }

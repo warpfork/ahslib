@@ -1,5 +1,5 @@
 package ahs.io.codec.eon;
 
-public class EonArray {
+public interface EonArray {
 	
 }

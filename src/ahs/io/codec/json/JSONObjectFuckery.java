@@ -1,5 +1,6 @@
 package ahs.io.codec.json;
 
+import ahs.io.codec.eon.*;
 import ahs.util.*;
 
 import java.util.Map;
@@ -11,9 +12,9 @@ import java.util.Map;
  * @author hash
  * 
  */
-public class JSONObject extends HarshJSONObject {
+public class JSONObjectFuckery extends HarshJSONObject implements EonObject<JSONObject,JSONArray> {
 	public String getKlass() {
-		return optString(MAGICWORD_CLASS,null);
+		return optString(Eon.MAGICWORD_CLASS,null);
 	}
 	
 	public static String getKlass(Object $x) {
@@ -38,45 +39,45 @@ public class JSONObject extends HarshJSONObject {
 	}
 	
 	public void putKlass(Object $x) {
-		put(MAGICWORD_CLASS,getKlass($x));
+		put(Eon.MAGICWORD_CLASS,getKlass($x));
 	}
 	public void putKlass(Class<?> $x) {
-		put(MAGICWORD_CLASS,getKlass($x));
+		put(Eon.MAGICWORD_CLASS,getKlass($x));
 	}
 	public void putKlass(String $x) {
-		put(MAGICWORD_CLASS,$x);
+		put(Eon.MAGICWORD_CLASS,$x);
 	}
 	
 	public void putName(String $x) {
-		put(MAGICWORD_NAME,$x);
+		put(Eon.MAGICWORD_NAME,$x);
 	}
 	public String getName() throws JSONException {
-		return getString(MAGICWORD_NAME);
+		return getString(Eon.MAGICWORD_NAME);
 	}
 	
 	public void putData(JSONObject $x) {
-		put(MAGICWORD_DATA,$x);
+		put(Eon.MAGICWORD_DATA,$x);
 	}
 	public void putData(JSONArray $x) {
-		put(MAGICWORD_DATA,$x);
+		put(Eon.MAGICWORD_DATA,$x);
 	}
 	public void putData(String $x) {
-		put(MAGICWORD_DATA,$x);
+		put(Eon.MAGICWORD_DATA,$x);
 	}
 	public void putData(byte[] $x) {
-		put(MAGICWORD_DATA,$x);
+		put(Eon.MAGICWORD_DATA,$x);
 	}
 	public JSONObject getData() throws JSONException {
-		return getJSONObject(MAGICWORD_DATA);
+		return getJSONObject(Eon.MAGICWORD_DATA);
 	}
 	public JSONArray getArrayData() throws JSONException {
-		return getJSONArray(MAGICWORD_DATA);
+		return getJSONArray(Eon.MAGICWORD_DATA);
 	}
 	public String getStringData() throws JSONException {
-		return getString(MAGICWORD_DATA);
+		return getString(Eon.MAGICWORD_DATA);
 	}
 	public byte[] getByteData() throws JSONException {
-		return getBytes(MAGICWORD_DATA);
+		return getBytes(Eon.MAGICWORD_DATA);
 	}
 	
 	public JSONObject(Object $class, String $name, JSONObject $data) {
@@ -323,11 +324,9 @@ public class JSONObject extends HarshJSONObject {
 	 *                A key string.
 	 * @param value
 	 *                A boolean which is the value.
-	 * @return this.
 	 */
-	public HarshJSONObject put(String key, boolean value)  {
+	public void put(String key, boolean value)  {
 		put(key, value ? Boolean.TRUE : Boolean.FALSE);
-		return this;
 	}
 	
 	
