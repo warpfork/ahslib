@@ -12,6 +12,7 @@ package ahs.io.codec.json;
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import ahs.io.*;
 import ahs.io.codec.*;
 import ahs.io.codec.eon.*;
 
@@ -394,7 +395,33 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	public JsonObject(String source) throws JSONException {
 		this(new JSONTokener(source));
 	}
+
 	
+	public String getKlass() {
+		return optString(Eon.MAGICWORD_CLASS,null);
+	}
+
+	public void assertKlass(Object $x) throws TranslationException {
+		assertKlass(Eon.getKlass($x));
+	}
+	public void assertKlass(Class<?> $x) throws TranslationException {
+		assertKlass(Eon.getKlass($x));
+	}
+	public void assertKlass(String $x) throws TranslationException {
+		String $klass = getKlass();
+		if ($klass == null) throw new JSONException("Class of JSONObject is not declared.");
+		if (!$x.equals($klass)) throw new JSONException("JSONObject class \""+$klass+"\" does not match desired class \""+$x+"\".");
+	}
+	
+	public void putKlass(Object $x) {
+		
+	}
+	public void putKlass(Class<?> $x) {
+		
+	}
+	public void putKlass(String $x) {
+		
+	}
 	
 	/**
 	 * Accumulate values under a key. It is similar to the put method except that if
@@ -497,6 +524,25 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		return o;
 	}
 	
+	public void    putName(String $x);
+	public String  getName() throws TranslationException;
+	
+	public void    putData(JsonObject $x);
+	public void    putData(JsonArray $x);
+	public void    putData(String $x);
+	public void    putData(byte[] $x);
+	public JsonObject   getData      () throws TranslationException;
+	public JsonArray   getArrayData () throws TranslationException;
+	public String  getStringData() throws TranslationException;
+	public byte[]  getByteData  () throws TranslationException;
+	
+	public void    put(String $key, byte[] $val);
+	public byte[]  getBytes(String $key) throws TranslationException;
+	public byte[]  optBytes(String $key);
+	public void    put(String $key, boolean $val);
+	public void    put(String $key, String $val);
+	public void    put(String $key, JsonObject $val);
+	public void    put(String $key, JsonArray $val);
 	
 	/**
 	 * Get the boolean value associated with a key.

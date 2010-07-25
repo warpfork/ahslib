@@ -11,6 +11,14 @@ public final class Eon {
 	public static final String MAGICWORD_NAME = "$";
 	public static final String MAGICWORD_CLASS = "#";
 	public static final String MAGICWORD_DATA = "%";
+	
+	public static String getKlass(Class<?> $c) {
+		String[] $arrg = $c.getCanonicalName().split("\\Q.\\E");
+		return $arrg[$arrg.length-1];
+	}
+	public static String getKlass(Object $x) {
+		return getKlass($x.getClass());
+	}
 
 	public static <$TM extends EonObject<$TM,?>, $T extends EonObject<$TM,?>> $T fill($T $holder, Object $class, String $name, $TM $data) {
 		if ($class != null) $holder.putKlass($class);
