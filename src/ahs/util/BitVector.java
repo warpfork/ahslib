@@ -2,6 +2,7 @@ package ahs.util;
 
 import ahs.io.*;
 import ahs.io.codec.*;
+import ahs.io.codec.eon.*;
 import ahs.io.codec.json.*;
 
 import java.util.BitSet;
@@ -88,26 +89,30 @@ public class BitVector {
 	private int	$len;
 	
 	@Deprecated
-	public BitVector(JSONObject $jo) throws JSONException {
+	public BitVector(JsonObject $jo) throws JSONException {
 		$jo.assertKlass(BitVector.class);
 		$len = $jo.getInt("l");
 		$bs = BitSet.valueOf($jo.getByteData());
 	}
 
 	@Deprecated
-	public JSONObject toJSON() {
-		return new JSONObject(this, null, $bs.toByteArray()).put("l", $len);
+	public JsonObject toJSON() {
+		JsonObject $jo = Eon.fill(new JsonObject(), this, null, $bs.toByteArray());
+		$jo.put("l", $len);
+		return $jo;
 	}
 	
 	/* BEGIN JSON CODEC BLOCK */
-	public static final Encoder<JSONObject,BitVector> ENCODER_JSON;
-	public static final Decoder<JSONObject,BitVector> DECODER_JSON;
+	public static final Encoder<JsonObject,BitVector> ENCODER_JSON;
+	public static final Decoder<JsonObject,BitVector> DECODER_JSON;
 	static { JsonDencoder $t = new JsonDencoder(); ENCODER_JSON = $t; DECODER_JSON = $t; }
-	public static class JsonDencoder implements ahs.io.codec.Dencoder<JSONObject,BitVector> {
-		public JSONObject encode(Codec<JSONObject> $codec, BitVector $x) throws TranslationException {
-			return new JSONObject("BiV", null, $x.toByteArray()).put("l", $x.$len);
+	public static class JsonDencoder implements ahs.io.codec.Dencoder<JsonObject,BitVector> {
+		public JsonObject encode(Codec<JsonObject> $codec, BitVector $x) throws TranslationException {
+			JsonObject $jo = Eon.fill(new JsonObject(), "BiV", null, $x.$bs.toByteArray());
+			$jo.put("l", $x.$len);
+			return $jo;
 		}
-		public BitVector decode(Codec<JSONObject> $codec, JSONObject $x) throws TranslationException {
+		public BitVector decode(Codec<JsonObject> $codec, JsonObject $x) throws TranslationException {
 			$x.assertKlass("BiV");
 			return new BitVector($x.getByteData(),0,$x.getInt("l"));
 		}

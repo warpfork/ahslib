@@ -12,6 +12,7 @@ package ahs.io.codec.json;
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import ahs.io.codec.*;
 import ahs.io.codec.eon.*;
 
 import java.io.IOException;
@@ -366,7 +367,7 @@ public class JsonArray implements EonArray {
 	 * @throws JSONException
 	 *                 If the array contains an invalid number.
 	 */
-	public String join(String separator) throws JSONException {
+	public String join(String separator) throws JSONException, UnencodableException {
 		int len = length();
 		StringBuffer sb = new StringBuffer();
 		
@@ -629,11 +630,11 @@ public class JsonArray implements EonArray {
 	 * 
 	 * @param value
 	 *                A double value.
-	 * @throws JSONException
+	 * @throws UnencodableException
 	 *                 if the value is not finite.
 	 * @return this.
 	 */
-	public JsonArray put(double value) throws JSONException {
+	public JsonArray put(double value) throws UnencodableException {
 		Double d = new Double(value);
 		JsonObject.testValidity(d);
 		put(d);

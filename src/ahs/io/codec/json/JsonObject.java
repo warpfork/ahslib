@@ -15,6 +15,7 @@ package ahs.io.codec.json;
 import ahs.io.*;
 import ahs.io.codec.*;
 import ahs.io.codec.eon.*;
+import ahs.util.*;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -28,14 +29,14 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * A JSONObject is an unordered collection of name/value pairs. Its external form is a
+ * A JsonObject is an unordered collection of name/value pairs. Its external form is a
  * string wrapped in curly braces with colons between the names and values, and commas
  * between the values and names. The internal form is an object having <code>get</code>
  * and <code>opt</code> methods for accessing the values by name, and <code>put</code>
  * methods for adding or replacing values by name. The values can be any of these types:
- * <code>Boolean</code>, <code>JsonArray</code>, <code>JSONObject</code>,
- * <code>Number</code>, <code>String</code>, or the <code>JSONObject.NULL</code> object. A
- * JSONObject constructor can be used to convert an external form JSON text into an
+ * <code>Boolean</code>, <code>JsonArray</code>, <code>JsonObject</code>,
+ * <code>Number</code>, <code>String</code>, or the <code>JsonObject.NULL</code> object. A
+ * JsonObject constructor can be used to convert an external form JSON text into an
  * internal form whose values can be retrieved with the <code>get</code> and
  * <code>opt</code> methods, or to convert values into a JSON text using the
  * <code>put</code> and <code>toString</code> methods. A <code>get</code> method returns a
@@ -50,7 +51,7 @@ import java.util.TreeSet;
  * The <code>put</code> methods adds values to an object. For example,
  * 
  * <pre>
- * myString = new JSONObject().put(&quot;JSON&quot;, &quot;Hello, World!&quot;).toString();
+ * myString = new JsonObject().put(&quot;JSON&quot;, &quot;Hello, World!&quot;).toString();
  * </pre>
  * 
  * produces the string <code>{"JSON": "Hello, World"}</code>.
@@ -81,7 +82,7 @@ import java.util.TreeSet;
 public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	/**
-	 * JSONObject.NULL is equivalent to the value that JavaScript calls null, whilst
+	 * JsonObject.NULL is equivalent to the value that JavaScript calls null, whilst
 	 * Java's null is equivalent to the value that JavaScript calls undefined.
 	 */
 	private static final class Null {
@@ -101,7 +102,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		 * 
 		 * @param object
 		 *                An object to test for nullness.
-		 * @return true if the object parameter is the JSONObject.NULL object or
+		 * @return true if the object parameter is the JsonObject.NULL object or
 		 *         null.
 		 */
 		public boolean equals(Object object) {
@@ -122,7 +123,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * The map where the JSONObject's properties are kept.
+	 * The map where the JsonObject's properties are kept.
 	 */
 	private Map<String, Object>	map;
 	
@@ -130,14 +131,14 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	/**
 	 * It is sometimes more convenient and less ambiguous to have a <code>NULL</code>
 	 * object than to use Java's <code>null</code> value.
-	 * <code>JSONObject.NULL.equals(null)</code> returns <code>true</code>.
-	 * <code>JSONObject.NULL.toString()</code> returns <code>"null"</code>.
+	 * <code>JsonObject.NULL.equals(null)</code> returns <code>true</code>.
+	 * <code>JsonObject.NULL.toString()</code> returns <code>"null"</code>.
 	 */
 	public static final Object	NULL	= new Null();
 	
 	
 	/**
-	 * Construct an empty JSONObject.
+	 * Construct an empty JsonObject.
 	 */
 	public JsonObject() {
 		this.map = new HashMap<String, Object>();
@@ -145,11 +146,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Construct a JSONObject from a subset of another JSONObject. An array of strings
+	 * Construct a JsonObject from a subset of another JsonObject. An array of strings
 	 * is used to identify the keys that should be copied. Missing keys are ignored.
 	 * 
 	 * @param jo
-	 *                A JSONObject.
+	 *                A JsonObject.
 	 * @param names
 	 *                An array of strings.
 	 * @exception JSONException
@@ -165,7 +166,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Construct a JSONObject from a JSONTokener.
+	 * Construct a JsonObject from a JSONTokener.
 	 * 
 	 * @param x
 	 *                A JSONTokener object containing the source string.
@@ -178,12 +179,12 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		char c;
 		String key;
 		
-		if (x.nextClean() != '{') { throw x.syntaxError("A JSONObject text must begin with '{'"); }
+		if (x.nextClean() != '{') { throw x.syntaxError("A JsonObject text must begin with '{'"); }
 		for (;;) {
 			c = x.nextClean();
 			switch (c) {
 				case 0:
-					throw x.syntaxError("A JSONObject text must end with '}'");
+					throw x.syntaxError("A JsonObject text must end with '}'");
 				case '}':
 					return;
 				default:
@@ -223,18 +224,18 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Construct a JSONObject from a Map.
+	 * Construct a JsonObject from a Map.
 	 * 
 	 * @param map
 	 *                A map object that can be used to initialize the contents of the
-	 *                JSONObject.
+	 *                JsonObject.
 	 */
 	public JsonObject(Map<String, Object> map) {
 		this.map = (map == null) ? new HashMap<String, Object>() : map;
 	}
 	
 	/**
-	 * Construct a JSONObject from a Map.
+	 * Construct a JsonObject from a Map.
 	 * 
 	 * Note: Use this constructor when the map contains <key,bean>.
 	 * 
@@ -255,11 +256,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Construct a JSONObject from an Object using bean getters. It reflects on all of
+	 * Construct a JsonObject from an Object using bean getters. It reflects on all of
 	 * the public methods of the object. For each of the methods with no parameters
 	 * and a name starting with <code>"get"</code> or <code>"is"</code> followed by an
 	 * uppercase letter, the method is invoked, and a key and the value returned from
-	 * the getter method are put into the new JSONObject.
+	 * the getter method are put into the new JsonObject.
 	 * 
 	 * The key is formed by removing the <code>"get"</code> or <code>"is"</code>
 	 * prefix. If the second remaining character is not upper case, then the first
@@ -267,11 +268,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * 
 	 * For example, if an object has a method named <code>"getName"</code>, and if the
 	 * result of calling <code>object.getName()</code> is <code>"Larry Fine"</code>,
-	 * then the JSONObject will contain <code>"name": "Larry Fine"</code>.
+	 * then the JsonObject will contain <code>"name": "Larry Fine"</code>.
 	 * 
 	 * @param bean
 	 *                An object that has getter methods that should be used to make a
-	 *                JSONObject.
+	 *                JsonObject.
 	 */
 	public JsonObject(Object bean) {
 		this();
@@ -280,14 +281,14 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Construct JSONObject from the given bean. This will also create JSONObject for
+	 * Construct JsonObject from the given bean. This will also create JsonObject for
 	 * all internal object (List, Map, Inner Objects) of the provided bean.
 	 * 
-	 * -- See Documentation of JSONObject(Object bean) also.
+	 * -- See Documentation of JsonObject(Object bean) also.
 	 * 
 	 * @param bean
 	 *                An object that has getter methods that should be used to make a
-	 *                JSONObject.
+	 *                JsonObject.
 	 * @param includeSuperClass
 	 *                - Tell whether to include the super class properties.
 	 */
@@ -353,15 +354,15 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	}
 	
 	/**
-	 * Construct a JSONObject from an Object, using reflection to find the public
-	 * members. The resulting JSONObject's keys will be the strings from the names
+	 * Construct a JsonObject from an Object, using reflection to find the public
+	 * members. The resulting JsonObject's keys will be the strings from the names
 	 * array, and the values will be the field values associated with those keys in
 	 * the object. If a key is not found or not visible, then it will not be copied
-	 * into the new JSONObject.
+	 * into the new JsonObject.
 	 * 
 	 * @param object
 	 *                An object that has fields that should be used to make a
-	 *                JSONObject.
+	 *                JsonObject.
 	 * @param names
 	 *                An array of strings, the names of the fields to be obtained from
 	 *                the object.
@@ -381,8 +382,8 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Construct a JSONObject from a source JSON text string. This is the most
-	 * commonly used JSONObject constructor.
+	 * Construct a JsonObject from a source JSON text string. This is the most
+	 * commonly used JsonObject constructor.
 	 * 
 	 * @param source
 	 *                A string beginning with <code>{</code>&nbsp;<small>(left
@@ -396,31 +397,81 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		this(new JSONTokener(source));
 	}
 
+
+	
+	public JsonObject(Object $class, String $name, JsonObject $data) {
+		this();
+		if ($class != null) putKlass($class);
+		if ($name != null)  putName($name);
+		if ($data != null)  putData($data);
+	}
+	public JsonObject(String $class, String $name, JsonObject $data) {
+		this();
+		if ($class != null) putKlass($class);
+		if ($name != null)  putName($name);
+		if ($data != null)  putData($data);
+	}
+	public JsonObject(Object $class, String $name, JsonArray $data) {
+		this();
+		if ($class != null) putKlass($class);
+		if ($name != null)  putName($name);
+		if ($data != null)  putData($data);
+	}
+	public JsonObject(String $class, String $name, JsonArray $data) {
+		this();
+		if ($class != null) putKlass($class);
+		if ($name != null)  putName($name);
+		if ($data != null)  putData($data);
+	}
+	public JsonObject(String $class, String $name, String $data) {
+		this();
+		if ($class != null) putKlass($class);
+		if ($name != null)  putName($name);
+		if ($data != null)  putData($data);
+	}
+	public JsonObject(Object $class, String $name, String $data) {
+		this();
+		if ($class != null) putKlass($class);
+		if ($name != null)  putName($name);
+		if ($data != null)  putData($data);
+	}
+	public JsonObject(String $class, String $name, byte[] $data) {
+		this();
+		if ($class != null) putKlass($class);
+		if ($name != null)  putName($name);
+		if ($data != null)  putData($data);
+	}
+	public JsonObject(Object $class, String $name, byte[] $data) {
+		this();
+		if ($class != null) putKlass($class);
+		if ($name != null)  putName($name);
+		if ($data != null)  putData($data);
+	}
 	
 	public String getKlass() {
 		return optString(Eon.MAGICWORD_CLASS,null);
 	}
 
-	public void assertKlass(Object $x) throws TranslationException {
+	public void assertKlass(Object $x) throws JSONException {
 		assertKlass(Eon.getKlass($x));
 	}
-	public void assertKlass(Class<?> $x) throws TranslationException {
+	public void assertKlass(Class<?> $x) throws JSONException {
 		assertKlass(Eon.getKlass($x));
 	}
-	public void assertKlass(String $x) throws TranslationException {
+	public void assertKlass(String $x) throws JSONException {
 		String $klass = getKlass();
-		if ($klass == null) throw new JSONException("Class of JSONObject is not declared.");
-		if (!$x.equals($klass)) throw new JSONException("JSONObject class \""+$klass+"\" does not match desired class \""+$x+"\".");
+		if ($klass == null) throw new JSONException("Class of JsonObject is not declared.");
+		if (!$x.equals($klass)) throw new JSONException("JsonObject class \""+$klass+"\" does not match desired class \""+$x+"\".");
 	}
 	
 	public void putKlass(Object $x) {
-		
+		put(Eon.MAGICWORD_CLASS,Eon.getKlass($x));	
 	}
 	public void putKlass(Class<?> $x) {
-		
+		put(Eon.MAGICWORD_CLASS,Eon.getKlass($x));
 	}
 	public void putKlass(String $x) {
-		
+		put(Eon.MAGICWORD_CLASS,$x);
 	}
 	
 	/**
@@ -455,7 +506,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	/**
 	 * Append values to the array under a key. If the key does not exist in the
-	 * JSONObject, then the key is put in the JSONObject with its value being a
+	 * JsonObject, then the key is put in the JsonObject with its value being a
 	 * JsonArray containing the value parameter. If the key was already associated
 	 * with a JsonArray, then the value parameter is appended to it.
 	 * 
@@ -477,7 +528,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		} else if (o instanceof JsonArray) {
 			put(key, ((JsonArray) o).put(value));
 		} else {
-			throw new JSONException("JSONObject[" + key + "] is not a JsonArray.");
+			throw new JSONException("JsonObject[" + key + "] is not a JsonArray.");
 		}
 		return this;
 	}
@@ -520,30 +571,79 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 */
 	protected Object get(String key) throws JSONException {
 		Object o = opt(key);
-		if (o == null) { throw new JSONException("JSONObject[" + quote(key) + "] not found."); }
+		if (o == null) { throw new JSONException("JsonObject[" + quote(key) + "] not found."); }
 		return o;
 	}
 	
-	public void    putName(String $x);
-	public String  getName() throws TranslationException;
+	public void putName(String $x) {
+		put(Eon.MAGICWORD_NAME, $x);
+	}
 	
-	public void    putData(JsonObject $x);
-	public void    putData(JsonArray $x);
-	public void    putData(String $x);
-	public void    putData(byte[] $x);
-	public JsonObject   getData      () throws TranslationException;
-	public JsonArray   getArrayData () throws TranslationException;
-	public String  getStringData() throws TranslationException;
-	public byte[]  getByteData  () throws TranslationException;
+	public String getName() throws JSONException {
+		return getString(Eon.MAGICWORD_NAME);
+	}
 	
-	public void    put(String $key, byte[] $val);
-	public byte[]  getBytes(String $key) throws TranslationException;
-	public byte[]  optBytes(String $key);
-	public void    put(String $key, boolean $val);
-	public void    put(String $key, String $val);
-	public void    put(String $key, JsonObject $val);
-	public void    put(String $key, JsonArray $val);
+	public void putData(JsonObject $x) {
+		put(Eon.MAGICWORD_DATA, $x);
+	}
 	
+	public void putData(JsonArray $x) {
+		put(Eon.MAGICWORD_DATA, $x);
+	}
+	
+	public void putData(String $x) {
+		put(Eon.MAGICWORD_DATA, $x);
+	}
+	
+	public void putData(byte[] $x) {
+		put(Eon.MAGICWORD_DATA, $x);
+	}
+	
+	public JsonObject getData() throws JSONException {
+		return getObj(Eon.MAGICWORD_DATA);
+	}
+	
+	public JsonArray getArrayData() throws JSONException {
+		return getArr(Eon.MAGICWORD_DATA);
+	}
+	
+	public String getStringData() throws JSONException {
+		return getString(Eon.MAGICWORD_DATA);
+	}
+	
+	public byte[] getByteData() throws JSONException {
+		return getBytes(Eon.MAGICWORD_DATA);
+	}
+	
+	public void put(String $key, byte[] $val) {
+		put($key, Base64.encode($val));
+	}
+	
+	public byte[] getBytes(String $key) throws JSONException {
+		return Base64.decode(getString($key));
+	}
+	
+	public byte[] optBytes(String $key) {
+		String $s = optString($key);
+		return $s == null ? Primitives.EMPTY_BYTE : Base64.decode($s);
+	}
+	
+	public void put(String $key, boolean $val) {
+		put($key, new Boolean($val));
+	}
+	
+	public void put(String $key, String $val) {
+		put($key, (Object) $val);
+	}
+	
+	public void put(String $key, JsonObject $val) {
+		put($key, (Object) $val);
+	}
+	
+	public void put(String $key, JsonArray $val) {
+		put($key, (Object) $val);
+	}
+
 	/**
 	 * Get the boolean value associated with a key.
 	 * 
@@ -558,7 +658,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		if (o.equals(Boolean.FALSE) || (o instanceof String && ((String) o).equalsIgnoreCase("false"))) {
 			return false;
 		} else if (o.equals(Boolean.TRUE) || (o instanceof String && ((String) o).equalsIgnoreCase("true"))) { return true; }
-		throw new JSONException("JSONObject[" + quote(key) + "] is not a Boolean.");
+		throw new JSONException("JsonObject[" + quote(key) + "] is not a Boolean.");
 	}
 	
 	
@@ -577,7 +677,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		try {
 			return o instanceof Number ? ((Number) o).doubleValue() : Double.valueOf((String) o).doubleValue();
 		} catch (Exception e) {
-			throw new JSONException("JSONObject[" + quote(key) + "] is not a number.");
+			throw new JSONException("JsonObject[" + quote(key) + "] is not a number.");
 		}
 	}
 	
@@ -616,13 +716,13 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Get the JSONObject value associated with a key.
+	 * Get the JsonObject value associated with a key.
 	 * 
 	 * @param key
 	 *                A key string.
-	 * @return A JSONObject which is the value.
+	 * @return A JsonObject which is the value.
 	 * @throws JSONException
-	 *                 if the key is not found or if the value is not a JSONObject.
+	 *                 if the key is not found or if the value is not a JsonObject.
 	 */
 	public JsonObject getObj(String key) throws JSONException {
 		Object o = get(key);
@@ -649,7 +749,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Get an array of field names from a JSONObject.
+	 * Get an array of field names from a JsonObject.
 	 * 
 	 * @return An array of field names, or null if there are no names.
 	 */
@@ -701,11 +801,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Determine if the JSONObject contains a specific key.
+	 * Determine if the JsonObject contains a specific key.
 	 * 
 	 * @param key
 	 *                A key string.
-	 * @return true if the key exists in the JSONObject.
+	 * @return true if the key exists in the JsonObject.
 	 */
 	public boolean has(String key) {
 		return this.map.containsKey(key);
@@ -718,7 +818,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return true if there is no value associated with the key or if the value is
-	 *         the JSONObject.NULL object.
+	 *         the JsonObject.NULL object.
 	 */
 	public boolean isNull(String key) {
 		return JsonObject.NULL.equals(opt(key));
@@ -726,7 +826,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Get an enumeration of the keys of the JSONObject.
+	 * Get an enumeration of the keys of the JsonObject.
 	 * 
 	 * @return An iterator of the keys.
 	 */
@@ -735,7 +835,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	}
 	
 	/**
-	 * Get an enumeration of the values of the JSONObject.
+	 * Get an enumeration of the values of the JsonObject.
 	 * 
 	 * @return An iterator of the values.
 	 */
@@ -745,9 +845,9 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Get the number of keys stored in the JSONObject.
+	 * Get the number of keys stored in the JsonObject.
 	 * 
-	 * @return The number of keys in the JSONObject.
+	 * @return The number of keys in the JsonObject.
 	 */
 	public int length() {
 		return this.map.size();
@@ -755,9 +855,9 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Produce a JsonArray containing the names of the elements of this JSONObject.
+	 * Produce a JsonArray containing the names of the elements of this JsonObject.
 	 * 
-	 * @return A JsonArray containing the key strings, or null if the JSONObject is
+	 * @return A JsonArray containing the key strings, or null if the JsonObject is
 	 *         empty.
 	 */
 	public JsonArray names() {
@@ -929,12 +1029,12 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Get an optional JSONObject associated with a key. It returns null if there is
-	 * no such key, or if its value is not a JSONObject.
+	 * Get an optional JsonObject associated with a key. It returns null if there is
+	 * no such key, or if its value is not a JsonObject.
 	 * 
 	 * @param key
 	 *                A key string.
-	 * @return A JSONObject which is the value.
+	 * @return A JsonObject which is the value.
 	 */
 	public JsonObject optObj(String key) {
 		Object o = opt(key);
@@ -975,10 +1075,14 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		Object o = opt(key);
 		return o != null ? o.toString() : defaultValue;
 	}
+	public String optString(String key) {
+		Object o = opt(key);
+		return o != null ? o.toString() : null;
+	}
 	
 	
 	/**
-	 * Put a key/double pair in the JSONObject.
+	 * Put a key/double pair in the JsonObject.
 	 * 
 	 * @param key
 	 *                A key string.
@@ -995,7 +1099,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Put a key/int pair in the JSONObject.
+	 * Put a key/int pair in the JsonObject.
 	 * 
 	 * @param key
 	 *                A key string.
@@ -1010,7 +1114,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Put a key/long pair in the JSONObject.
+	 * Put a key/long pair in the JsonObject.
 	 * 
 	 * @param key
 	 *                A key string.
@@ -1025,14 +1129,14 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Put a key/value pair in the JSONObject. If the value is null, then the key will
-	 * be removed from the JSONObject if it is present.
+	 * Put a key/value pair in the JsonObject. If the value is null, then the key will
+	 * be removed from the JsonObject if it is present.
 	 * 
 	 * @param key
 	 *                A key string.
 	 * @param value
 	 *                An object which is the value. It should be of one of these
-	 *                types: Boolean, Integer, JsonArray, JSONObject, Long,
+	 *                types: Boolean, Integer, JsonArray, JsonObject, Long,
 	 *                String, null.
 	 * @return this.
 	 * @throws NullPointerException
@@ -1050,9 +1154,9 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Put a key/value pair in the JSONObject, checking numerical types for values not
+	 * Put a key/value pair in the JsonObject, checking numerical types for values not
 	 * valid in JSON and throwing exceptions where necessary. If the value is null,
-	 * then the key will be removed from the JSONObject if it is present.
+	 * then the key will be removed from the JsonObject if it is present.
 	 * 
 	 * @param key
 	 *                A key string.
@@ -1076,7 +1180,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Put a key/value pair in the JSONObject, but only if the key and the value are
+	 * Put a key/value pair in the JsonObject, but only if the key and the value are
 	 * both non-null, and only if there is not already a member with that name.
 	 * 
 	 * @param key
@@ -1095,20 +1199,20 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Put a key/value pair in the JSONObject, but only if the key and the value are
+	 * Put a key/value pair in the JsonObject, but only if the key and the value are
 	 * both non-null.
 	 * 
 	 * @param key
 	 *                A key string.
 	 * @param value
 	 *                An object which is the value. It should be of one of these
-	 *                types: Boolean, Double, Integer, JsonArray, JSONObject, Long,
-	 *                String, or the JSONObject.NULL object.
+	 *                types: Boolean, Double, Integer, JsonArray, JsonObject, Long,
+	 *                String, or the JsonObject.NULL object.
 	 * @return this.
 	 * @throws JSONException
 	 *                 If the value is a non-finite number.
 	 */
-	public JsonObject putOpt(String key, Object value) throws JSONException {
+	protected JsonObject putOpt(String key, Object value) throws JSONException {
 		if (key != null && value != null) {
 			put(key, value);
 		}
@@ -1193,7 +1297,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	}
 	
 	/**
-	 * Get an enumeration of the keys of the JSONObject. The keys will be sorted
+	 * Get an enumeration of the keys of the JsonObject. The keys will be sorted
 	 * alphabetically.
 	 * 
 	 * @return An iterator of the keys.
@@ -1276,7 +1380,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Produce a JsonArray containing the values of the members of this JSONObject.
+	 * Produce a JsonArray containing the values of the members of this JsonObject.
 	 * 
 	 * @param names
 	 *                A JsonArray containing a list of key strings. This determines
@@ -1295,7 +1399,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	}
 	
 	/**
-	 * Make a JSON text of this JSONObject. For compactness, no whitespace is added.
+	 * Make a JSON text of this JsonObject. For compactness, no whitespace is added.
 	 * If this would not result in a syntactically correct JSON text, then null will
 	 * be returned instead.
 	 * <p>
@@ -1328,7 +1432,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Make a prettyprinted JSON text of this JSONObject.
+	 * Make a prettyprinted JSON text of this JsonObject.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
 	 * 
@@ -1349,7 +1453,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Make a prettyprinted JSON text of this JSONObject.
+	 * Make a prettyprinted JSON text of this JsonObject.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
 	 * 
@@ -1410,7 +1514,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * a toJSONString method (which is the most common case), then a text will be
 	 * produced by other means. If the value is an array or Collection, then a
 	 * JsonArray will be made from it and its toJSONString method will be called. If
-	 * the value is a MAP, then a JSONObject will be made from it and its toJSONString
+	 * the value is a MAP, then a JsonObject will be made from it and its toJSONString
 	 * method will be called. Otherwise, the value's toString method will be called,
 	 * and the result will be quoted.
 	 * 
@@ -1506,7 +1610,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	
 	/**
-	 * Write the contents of the JSONObject as JSON text to a writer. For compactness,
+	 * Write the contents of the JsonObject as JSON text to a writer. For compactness,
 	 * no whitespace is added.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.

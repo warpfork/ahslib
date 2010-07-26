@@ -2,6 +2,7 @@ package ahs.util;
 
 import ahs.io.*;
 import ahs.io.codec.*;
+import ahs.io.codec.eon.*;
 import ahs.io.codec.json.*;
 import ahs.util.Arr;
 
@@ -93,25 +94,25 @@ public class ByteVector implements Comparable<ByteVector> {
 	public byte[]	$d;
 	
 	@Deprecated
-	public ByteVector(JSONObject $jo) throws JSONException {
+	public ByteVector(JsonObject $jo) throws JSONException {
 		$jo.assertKlass(ByteVector.class);
 		$d = $jo.getByteData();
 	}
 	
 	@Deprecated
-	public JSONObject toJSON() {
-		return new JSONObject(this, null, $d);
+	public JsonObject toJSON() {
+		return Eon.fill(new JsonObject(), this, null, $d);
 	}
 	
 	/* BEGIN JSON CODEC BLOCK */
-	public static final Encoder<JSONObject,ByteVector> ENCODER_JSON;
-	public static final Decoder<JSONObject,ByteVector> DECODER_JSON;
+	public static final Encoder<JsonObject,ByteVector> ENCODER_JSON;
+	public static final Decoder<JsonObject,ByteVector> DECODER_JSON;
 	static { JsonDencoder $t = new JsonDencoder(); ENCODER_JSON = $t; DECODER_JSON = $t; }
-	public static class JsonDencoder implements Dencoder<JSONObject,ByteVector> {
-		public JSONObject encode(Codec<JSONObject> $codec, ByteVector $x) throws TranslationException {
-			return new JSONObject("ByV", null, $x.$d);
+	public static class JsonDencoder implements Dencoder<JsonObject,ByteVector> {
+		public JsonObject encode(Codec<JsonObject> $codec, ByteVector $x) throws TranslationException {
+			return Eon.fill(new JsonObject(), "ByV", null, $x.$d);
 		}
-		public ByteVector decode(Codec<JSONObject> $codec, JSONObject $x) throws TranslationException {
+		public ByteVector decode(Codec<JsonObject> $codec, JsonObject $x) throws TranslationException {
 			$x.assertKlass("ByV");
 			return new ByteVector($x.getByteData());
 		}
