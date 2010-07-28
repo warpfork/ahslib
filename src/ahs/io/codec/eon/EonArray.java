@@ -3,7 +3,7 @@ package ahs.io.codec.eon;
 import ahs.io.*;
 import ahs.io.codec.*;
 
-public interface EonArray<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends EonArray<$TMAP,$TARR>> {
+public interface EonArray {
 	public int     size();
 	// "opt" methods either return defaults or null in case of errors; their "get" breathren throw exceptions if the requested value is missing or untranslatable.
 	public void    put(int $index, byte[] $val);
@@ -25,10 +25,10 @@ public interface EonArray<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends Eo
 	public String  getString(int $index) throws TranslationException;
 	public String  optString(int $index);
 	public String  optString(int $index, String $default);
-	public void    put(int $index, $TMAP $val);
-	public $TMAP   getObj(int $index) throws TranslationException;
-	public $TMAP   optObj(int $index);
-	public void    put(int $index, $TARR $val);
-	public $TARR   getArr(int $index) throws TranslationException;
-	public $TARR   optArr(int $index);
+	public void    put(int $index, EonObject $val);
+	public EonObject   getObj(int $index) throws TranslationException;
+	public EonObject   optObj(int $index);
+	public void    put(int $index, EonArray $val);
+	public EonArray   getArr(int $index) throws TranslationException;
+	public EonArray   optArr(int $index);
 }

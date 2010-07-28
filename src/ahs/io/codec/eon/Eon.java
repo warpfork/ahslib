@@ -19,56 +19,56 @@ public final class Eon {
 	public static String getKlass(Object $x) {
 		return getKlass($x.getClass());
 	}
-
-	public static <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, Object $class, String $name, $TM $data) {
+	
+	public static <$TM extends EonObject> $TM fill($TM $holder, Object $class, String $name, $TM $data) {
 		if ($class != null) $holder.putKlass($class);
 		if ($name != null)  $holder.putName($name);
 		if ($data != null)  $holder.putData($data);
 		return $holder;
 	}
-	public static  <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, String $class, String $name, $TM $data) {
+	public static <$TM extends EonObject> $TM fill($TM $holder, String $class, String $name, $TM $data) {
 		if ($class != null) $holder.putKlass($class);
 		if ($name != null)  $holder.putName($name);
 		if ($data != null)  $holder.putData($data);
 		return $holder;
 	}
-	public static <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, Object $class, String $name, $TA $data) {
+	public static <$TM extends EonObject, $TA extends EonArray> $TM fill($TM $holder, Object $class, String $name, $TA $data) {
 		if ($class != null) $holder.putKlass($class);
 		if ($name != null)  $holder.putName($name);
 		if ($data != null)  $holder.putData($data);
 		return $holder;
 	}
-	public static <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, String $class, String $name, $TA $data) {
+	public static <$TM extends EonObject, $TA extends EonArray> $TM fill($TM $holder, String $class, String $name, $TA $data) {
 		if ($class != null) $holder.putKlass($class);
 		if ($name != null)  $holder.putName($name);
 		if ($data != null)  $holder.putData($data);
 		return $holder;
 	}
-	public static <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, Object $class, String $name, String $data) {
+	public static <$TM extends EonObject> $TM fill($TM $holder, Object $class, String $name, String $data) {
 		if ($class != null) $holder.putKlass($class);
 		if ($name != null)  $holder.putName($name);
 		if ($data != null)  $holder.putData($data);
 		return $holder;
 	}
-	public static <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, String $class, String $name, String $data) {
+	public static <$TM extends EonObject> $TM fill($TM $holder, String $class, String $name, String $data) {
 		if ($class != null) $holder.putKlass($class);
 		if ($name != null)  $holder.putName($name);
 		if ($data != null)  $holder.putData($data);
 		return $holder;
 	}
-	public static <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, Object $class, String $name, byte[] $data) {
+	public static <$TM extends EonObject> $TM fill($TM $holder, Object $class, String $name, byte[] $data) {
 		if ($class != null) $holder.putKlass($class);
 		if ($name != null)  $holder.putName($name);
 		if ($data != null)  $holder.putData($data);
 		return $holder;
 	}
-	public static <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, String $class, String $name, byte[] $data) {
+	public static <$TM extends EonObject> $TM fill($TM $holder, String $class, String $name, byte[] $data) {
 		if ($class != null) $holder.putKlass($class);
 		if ($name != null)  $holder.putName($name);
 		if ($data != null)  $holder.putData($data);
 		return $holder;
 	}
-	public static <$TA extends EonArray<$TM,$TA>, $TM extends EonObject<$TM,$TA>> $TM fill($TM $holder, Map<String,String> $map) throws UnencodableException {
+	public static <$TM extends EonObject> $TM fill($TM $holder, Map<String,String> $map) throws UnencodableException {
 		for (Map.Entry<String,String> $ent : $map.entrySet())
 			$holder.put($ent.getKey(),$ent.getValue());
 		return $holder;

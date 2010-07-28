@@ -78,7 +78,7 @@ import java.util.TreeSet;
  * @author JSON.org
  * @version 2008-09-18
  */
-public class JsonObject implements EonObject<JsonObject,JsonArray> {
+public class JsonObject implements EonObject {
 	
 	/**
 	 * JsonObject.NULL is equivalent to the value that JavaScript calls null, whilst
@@ -585,11 +585,13 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		return getString(Eon.MAGICWORD_NAME);
 	}
 	
-	public void putData(JsonObject $x) {
+	public void putData(EonObject $x) {
+		if ($x.getClass() != JsonObject.class) throw new IllegalArgumentException("EonObject isn't willing to deal with nested EonObject other than JsonObject.");
 		put(Eon.MAGICWORD_DATA, $x);
 	}
 	
-	public void putData(JsonArray $x) {
+	public void putData(EonArray $x) {
+		if ($x.getClass() != JsonArray.class) throw new IllegalArgumentException("EonObject isn't willing to deal with nested EonArray other than EonArray.");
 		put(Eon.MAGICWORD_DATA, $x);
 	}
 	
@@ -638,11 +640,13 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		put($key, (Object) $val);
 	}
 	
-	public void put(String $key, JsonObject $val) {
+	public void put(String $key, EonObject $val) {
+		if ($val.getClass() != JsonObject.class) throw new IllegalArgumentException("EonObject isn't willing to deal with nested EonObject other than JsonObject.");
 		put($key, (Object) $val);
 	}
 	
-	public void put(String $key, JsonArray $val) {
+	public void put(String $key, EonArray $val) {
+		if ($val.getClass() != JsonArray.class) throw new IllegalArgumentException("EonObject isn't willing to deal with nested EonArray other than EonArray.");
 		put($key, (Object) $val);
 	}
 

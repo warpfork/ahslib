@@ -67,7 +67,7 @@ import java.util.Map;
  * @author JSON.org
  * @version 2008-09-18
  */
-public class JsonArray implements EonArray<JsonObject,JsonArray> {
+public class JsonArray implements EonArray {
 	
 	/**
 	 * The arrayList where the JsonArray's properties are kept.
@@ -395,10 +395,12 @@ public class JsonArray implements EonArray<JsonObject,JsonArray> {
 	}
 	
 
-	public void put(int index, JsonObject value) {
+	public void put(int index, EonObject value) {
+		if (value.getClass() != JsonObject.class) throw new IllegalArgumentException("JsonArray isn't willing to deal with nested EonObject other than JsonObject.");
 		put(index,(Object) value);
 	}
-	public void put(int index, JsonArray value) {
+	public void put(int index, EonArray value) {
+		if (value.getClass() != JsonArray.class) throw new IllegalArgumentException("JsonArray isn't willing to deal with nested EonArray other than EonArray.");
 		put(index,(Object) value);
 	}
 	public void put(int index, String value) {

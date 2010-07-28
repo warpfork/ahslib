@@ -9,7 +9,7 @@ import ahs.util.*;
 //   i'm worried about key portability -- for example, i suspect xml will be less permissive than json.
 //       i really don't understand why ANYONE uses xml EVER.
 
-public interface EonObject<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends EonArray<$TMAP,$TARR>> {
+public interface EonObject {
 	public void    assertKlass(Object $x)   throws TranslationException;
 	public void    assertKlass(Class<?> $x) throws TranslationException;
 	public void    assertKlass(String $x)   throws TranslationException;
@@ -20,12 +20,12 @@ public interface EonObject<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends E
 	public void    putName(String $x);
 	public String  getName() throws TranslationException;
 	
-	public void    putData($TMAP $x);
-	public void    putData($TARR $x);
+	public void    putData(EonObject $x);
+	public void    putData(EonArray $x);
 	public void    putData(String $x);
 	public void    putData(byte[] $x);
-	public $TMAP   getData      () throws TranslationException;
-	public $TARR   getArrayData () throws TranslationException;
+	public EonObject   getData      () throws TranslationException;
+	public EonArray   getArrayData () throws TranslationException;
 	public String  getStringData() throws TranslationException;
 	public byte[]  getByteData  () throws TranslationException;
 	
@@ -50,12 +50,12 @@ public interface EonObject<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends E
 	public String  getString(String $key) throws TranslationException;
 	public String  optString(String $key);		// null
 	public String  optString(String $key, String $default);
-	public void    put(String $key, $TMAP $val);
-	public $TMAP   getObj(String $key) throws TranslationException;
-	public $TMAP   optObj(String $key);		// null
-	public void    put(String $key, $TARR $val);
-	public $TARR   getArr(String $key) throws TranslationException;
-	public $TARR   optArr(String $key);		// null
+	public void    put(String $key, EonObject $val);
+	public EonObject   getObj(String $key) throws TranslationException;
+	public EonObject   optObj(String $key);		// null
+	public void    put(String $key, EonArray $val);
+	public EonArray   getArr(String $key) throws TranslationException;
+	public EonArray   optArr(String $key);		// null
 	
 	
 	
@@ -66,11 +66,8 @@ public interface EonObject<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends E
 	 * be implemented by concrete subclasses.
 	 * 
 	 * @author hash
-	 * 
-	 * @param <$TMAP>
-	 * @param <$TARR>
 	 */
-	public abstract static class Adapter<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends EonArray<$TMAP,$TARR>> implements EonObject<$TMAP,$TARR> {
-		
+	public abstract static class Adapter {
+		//AHS:TODO omg really.  this would make so much json stuff SO much more clear, to say nothing of consistent across other platforms to come.
 	}
 }
