@@ -118,9 +118,9 @@ public class AnnotationTest extends TestCase {
 								$key = $f.getName();
 							else $key = $anno.key(); 
 							
-							putField($codec, $jo, $key, $f, $f.get($x));
+							putField($codec, $jo, $key, $f, $x);
 						} else {
-							putField($codec, $jo, $f.getName(), $f, $f.get($x));
+							putField($codec, $jo, $f.getName(), $f, $x);
 						}
 					}
 				} else {	// only annotated fields matching the selector
@@ -135,7 +135,7 @@ public class AnnotationTest extends TestCase {
 									$key = $f.getName();
 								else $key = $anno.key(); 
 
-								putField($codec, $jo, $key, $f, $f.get($x));
+								putField($codec, $jo, $key, $f, $x);
 							}
 						}
 					}
@@ -147,15 +147,32 @@ public class AnnotationTest extends TestCase {
 			}
 		}
 		
-		private void putField(Codec<JsonObject> $codec, EonObject $eo, String $key, Field $f, Object $value) throws TranslationException {
+		private void putField(Codec<JsonObject> $codec, EonObject $eo, String $key, Field $f, $T $x) throws TranslationException, IllegalAccessException {
 			Class<?> $typo = $f.getType();
 			// i wish you could do a switch on anything that acts like a pointer
 			if ($typo == byte[].class)
-				$eo.put($key, (byte[])$value);
+				$eo.put($key, (byte[])$f.get($x));
+			else if ($typo == double[].class)
+				;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			else if ($typo == int[].class)
+				;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			else if ($typo == long[].class)
+				;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			//else if ($typo == short[].class)	// just don't do this.  ew.  so ineffic and wrong.
+			//	$eo.put($key, (SATAN)$value);
+			else if ($typo == boolean.class)
+				$eo.put($key, $f.getBoolean($x));
+			else if ($typo == double.class)
+				$eo.put($key, $f.getDouble($x));
+			else if ($typo == int.class)
+				$eo.put($key, $f.getInt($x));
+			else if ($typo == long.class)
+				$eo.put($key, $f.getLong($x));
 			else if ($typo == String.class)
-				$eo.put($key, (String)$value);
+				$eo.put($key, (String)$f.get($x));
+			// i suppose we could check here if the value is already an EonObject or EonArray, but in practice who would ever do that?
 			else
-				$eo.put($key, $codec.encode($value));
+				$eo.put($key, $codec.encode($f.get($x)));
 		}
 	}
 	
