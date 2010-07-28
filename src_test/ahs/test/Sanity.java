@@ -130,12 +130,12 @@ public class Sanity extends TestCase {
 			$bats[$i-Byte.MIN_VALUE] = $i;
 		$bats[Byte.MAX_VALUE-Byte.MIN_VALUE] = Byte.MAX_VALUE;
 		
-		JSONObject $jo = new JSONObject();
+		JsonObject $jo = new JsonObject();
 		$jo.put("k",new String($char));
 		String $jos = $jo.toString();
 		X.say($jos);
 		X.say("bytes spent on json body string with hakx: "+($jos.length()-8));
-		X.say("bytes spent on json body string with b64:  "+(new JSONObject(null, null, $bats).toString().length()-8));
+		X.say("bytes spent on json body string with b64:  "+(new JsonObject(null, null, $bats).toString().length()-8));
 		X.say("number of goddamn bytes in the real world: "+(Byte.MAX_VALUE-Byte.MIN_VALUE+1));
 	}
 	
