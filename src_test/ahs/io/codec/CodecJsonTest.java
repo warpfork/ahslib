@@ -13,7 +13,7 @@ public class CodecJsonTest extends TestCase {
 	 * tests basic en/decoding of an object with a single field.
 	 */
 	public void testBasic() throws TranslationException {
-		Codec_Json $jc = new Codec_Json();
+		JsonCodec $jc = new JsonCodec();
 		$jc.putHook(Ob.class, new Ob.Den());
 		
 		String $str = $jc.encode(new Ob("whip it")).toString();
@@ -26,7 +26,7 @@ public class CodecJsonTest extends TestCase {
 	 * tests the recursive stuff where an object hands its own children to the codec and hopes for the best.
 	 */
 	public void testRecursive() throws TranslationException {
-		Codec_Json $jc = new Codec_Json();
+		JsonCodec $jc = new JsonCodec();
 		$jc.putHook(Ob.class, new Ob.Den());
 		$jc.putHook(Oc.class, new Oc.Den());
 		
@@ -42,7 +42,7 @@ public class CodecJsonTest extends TestCase {
 	 * the needed encoders or decoders.
 	 */
 	public void testRecursiveFailFromMissingDencoder() throws TranslationException {
-		Codec_Json $jc = new Codec_Json();
+		JsonCodec $jc = new JsonCodec();
 		$jc.putHook(Oc.class, new Oc.Den());
 		
 		try {
@@ -59,7 +59,7 @@ public class CodecJsonTest extends TestCase {
 	 * significant space savings in special cases over more generic approaches).
 	 */
 	public void testRecursiveWithDenseDencoder() throws TranslationException {
-		Codec_Json $jc = new Codec_Json();
+		JsonCodec $jc = new JsonCodec();
 		$jc.putHook(Ob.class, new Ob.Den());
 		$jc.putHook(Oc.class, new Oc.Dense());
 		
@@ -74,7 +74,7 @@ public class CodecJsonTest extends TestCase {
 	 * title is self-explanitory.
 	 */
 	public void testRecursiveFailFromDecoderNotMatchingEncoder() throws TranslationException {
-		Codec_Json $jc = new Codec_Json();
+		JsonCodec $jc = new JsonCodec();
 		$jc.putHook(Ob.class, new Ob.Den());
 		$jc.putHook(Oc.class, new Oc.Den());
 		
@@ -93,7 +93,7 @@ public class CodecJsonTest extends TestCase {
 	 * title is self-explanitory.  Better than previous.
 	 */
 	public void testRecursiveFailFromDecoderNotMatchingEncoder2() throws TranslationException {
-		Codec_Json $jc = new Codec_Json();
+		JsonCodec $jc = new JsonCodec();
 		$jc.putHook(Ob.class, new Ob.Den());
 		$jc.putHook(Oc.class, new Oc.Dense());
 		

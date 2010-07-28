@@ -5,7 +5,11 @@ import ahs.io.codec.*;
 import ahs.io.codec.json.*;
 import ahs.util.*;
 
-public interface EonObject<$TMAP extends EonObject<$TMAP,?>, $TARR extends EonArray> {
+// it's not impossible that a large number of these fields will eventually want to throw Unencodable exceptions
+//   i'm worried about key portability -- for example, i suspect xml will be less permissive than json.
+//       i really don't understand why ANYONE uses xml EVER.
+
+public interface EonObject<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends EonArray<$TMAP,$TARR>> {
 	public void    assertKlass(Object $x)   throws TranslationException;
 	public void    assertKlass(Class<?> $x) throws TranslationException;
 	public void    assertKlass(String $x)   throws TranslationException;
@@ -29,7 +33,7 @@ public interface EonObject<$TMAP extends EonObject<$TMAP,?>, $TARR extends EonAr
 	// "opt" methods either return defaults or null in case of errors; their "get" breathren throw exceptions if the requested value is missing or untranslatable.
 	public void    put(String $key, byte[] $val);
 	public byte[]  getBytes(String $key) throws TranslationException;
-	public byte[]  optBytes(String $key);
+	public byte[]  optBytes(String $key);		// different.  returns EMPTY_BYTE.
 	public void    put(String $key, boolean $val);
 	public boolean getBoolean(String $key) throws TranslationException;
 	public boolean optBoolean(String $key, boolean $default);
@@ -44,14 +48,14 @@ public interface EonObject<$TMAP extends EonObject<$TMAP,?>, $TARR extends EonAr
 	public long    optLong(String $key, long $default);
 	public void    put(String $key, String $val);
 	public String  getString(String $key) throws TranslationException;
-	public String  optString(String $key);
+	public String  optString(String $key);		// null
 	public String  optString(String $key, String $default);
 	public void    put(String $key, $TMAP $val);
 	public $TMAP   getObj(String $key) throws TranslationException;
-	public $TMAP   optObj(String $key);
+	public $TMAP   optObj(String $key);		// null
 	public void    put(String $key, $TARR $val);
 	public $TARR   getArr(String $key) throws TranslationException;
-	public $TARR   optArr(String $key);
+	public $TARR   optArr(String $key);		// null
 	
 	
 	
@@ -66,7 +70,7 @@ public interface EonObject<$TMAP extends EonObject<$TMAP,?>, $TARR extends EonAr
 	 * @param <$TMAP>
 	 * @param <$TARR>
 	 */
-	public abstract static class Adapter<$TMAP extends EonObject<$TMAP,?>, $TARR extends EonArray> implements EonObject<$TMAP,$TARR> {
+	public abstract static class Adapter<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends EonArray<$TMAP,$TARR>> implements EonObject<$TMAP,$TARR> {
 		
 	}
 }

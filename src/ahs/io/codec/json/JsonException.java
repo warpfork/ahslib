@@ -6,20 +6,20 @@ package ahs.io.codec.json;
  * @author JSON.org
  * @version 2008-09-18
  */
-public class JSONException extends ahs.io.TranslationException {
-	public JSONException() {
+public class JsonException extends ahs.io.TranslationException {
+	public JsonException() {
 		super();
 	}
 
-	public JSONException(String $message, Throwable $cause) {
+	public JsonException(String $message, Throwable $cause) {
 		super($message, $cause);
 	}
 
-	public JSONException(String $message) {
+	public JsonException(String $message) {
 		super($message);
 	}
 
-	public JSONException(Throwable $cause) {
+	public JsonException(Throwable $cause) {
 		super($cause);
 	}
 }

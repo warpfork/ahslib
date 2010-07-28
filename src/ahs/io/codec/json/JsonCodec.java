@@ -1,8 +1,8 @@
-package ahs.io.codec;
+package ahs.io.codec.json;
 
 import ahs.io.*;
 import ahs.io.codec.Codec.*;
-import ahs.io.codec.json.*;
+import ahs.io.codec.*;
 import ahs.util.*;
 
 import java.util.*;
@@ -12,8 +12,8 @@ import java.util.*;
  * @author hash
  * 
  */
-public class Codec_Json extends CodecImpl<JsonObject> {
-	public Codec_Json() {
+public class JsonCodec extends CodecImpl<JsonObject> {
+	public JsonCodec() {
 		super();
 	}
 	

@@ -1,5 +1,34 @@
 package ahs.io.codec.eon;
 
-public interface EonArray {
-	
+import ahs.io.*;
+import ahs.io.codec.*;
+
+public interface EonArray<$TMAP extends EonObject<$TMAP,$TARR>, $TARR extends EonArray<$TMAP,$TARR>> {
+	public int     size();
+	// "opt" methods either return defaults or null in case of errors; their "get" breathren throw exceptions if the requested value is missing or untranslatable.
+	public void    put(int $index, byte[] $val);
+	public byte[]  getBytes(int $index) throws TranslationException;
+	public byte[]  optBytes(int $index);		// different.  returns EMPTY_BYTE.
+	public void    put(int $index, boolean $val);
+	public boolean getBoolean(int $index) throws TranslationException;
+	public boolean optBoolean(int $index, boolean $default);
+	public void    put(int $index, double $val) throws UnencodableException;
+	public double  getDouble(int $index)        throws TranslationException;
+	public double  optDouble(int $index, double $default);
+	public void    put(int $index, int $val) throws UnencodableException;
+	public int     getInt(int $index)        throws TranslationException;
+	public int     optInt(int $index, int $default);
+	public void    put(int $index, long $val) throws UnencodableException;
+	public long    getLong(int $index)        throws TranslationException;
+	public long    optLong(int $index, long $default);
+	public void    put(int $index, String $val);
+	public String  getString(int $index) throws TranslationException;
+	public String  optString(int $index);
+	public String  optString(int $index, String $default);
+	public void    put(int $index, $TMAP $val);
+	public $TMAP   getObj(int $index) throws TranslationException;
+	public $TMAP   optObj(int $index);
+	public void    put(int $index, $TARR $val);
+	public $TARR   getArr(int $index) throws TranslationException;
+	public $TARR   optArr(int $index);
 }

@@ -71,16 +71,16 @@ public class AnnotationTest extends TestCase {
 	 * 
 	 * @param <$T>
 	 */
-	private static class ReflectiveAnnotatedEncoder<$T> implements Encoder<JSONObject,$T> {
+	private static class ReflectiveAnnotatedEncoder<$T> implements Encoder<JsonObject,$T> {
 		public ReflectiveAnnotatedEncoder(String $selector) {
 			this.$selector = $selector;
 		}
 		
 		private String $selector;
 		
-		public JSONObject encode(Codec<JSONObject> $codec, $T $x) throws TranslationException {
+		public JsonObject encode(Codec<JsonObject> $codec, $T $x) throws TranslationException {
 			try {
-				JSONObject $jo = new JSONObject();
+				JsonObject $jo = new JsonObject();
 				String $key;
 				
 				// pick out and put in the semblance of a class name we want
@@ -119,15 +119,15 @@ public class AnnotationTest extends TestCase {
 								$key = $f.getName();
 							else $key = $enc.key(); 
 							
-							$jo.put($key, $f.get($x));
+							$jo.put($key, $codec.encode($f.get($x)));
 						}
 					} else if ($allFields) {
 						X.saye("isn't annotated, but class wants all fields");
 						if ($enc == null || $enc.key().isEmpty())
 							$key = $f.getName();
 						else $key = $enc.key(); 
-						
-						$jo.put($key, $f.get($x));
+
+						$jo.put($key, $codec.encode($f.get($x)));
 					} else {
 						X.saye("is NOT annotated");
 						X.saye(Arr.toString($f.getAnnotations()));
@@ -157,7 +157,7 @@ public class AnnotationTest extends TestCase {
 	 * classes, unfortunately -- note the constructor.
 	 * </p>
 	 */
-	private static class ReflectiveAnnotatedDecoder<$T> implements Decoder<JSONObject,$T> {
+	private static class ReflectiveAnnotatedDecoder<$T> implements Decoder<JsonObject,$T> {
 		/**
 		 * <p>
 		 * This constructor is awkward and somewhat redundant-sounding, but
@@ -181,7 +181,7 @@ public class AnnotationTest extends TestCase {
 		
 		private Class<$T> $class;
 		
-		public $T decode(Codec<JSONObject> $codec, JSONObject $jo) throws TranslationException {
+		public $T decode(Codec<JsonObject> $codec, JsonObject $jo) throws TranslationException {
 			String $key;
 			
 			//$class.
@@ -208,52 +208,52 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeDefault() throws TranslationException {
 		Encable $e = new Encable("pub","priv");
 		
-		Codec<JSONObject> $codec = new CodecImpl<JSONObject>();
+		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
 		$codec.putHook(Encable.class, new ReflectiveAnnotatedEncoder<Encable>(ENC.DEFAULT));
 		
-		JSONObject $v = $codec.encode($e);
+		JsonObject $v = $codec.encode($e);
 		X.saye($v.toString());
 		assertEquals(3, $v.length());
 		assertEquals("Encable", $v.getKlass());
-		assertEquals("pub",  $v.get("$public"));
-		assertEquals("priv", $v.get("$private"));
+		assertEquals("pub",  $v.getString("$public"));
+		assertEquals("priv", $v.getString("$private"));
 	}
 	
 	public void testEncodeSelected() throws TranslationException {
 		Encable $e = new Encable("pub","priv");
 		
-		Codec<JSONObject> $codec = new CodecImpl<JSONObject>();
+		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
 		$codec.putHook(Encable.class, new ReflectiveAnnotatedEncoder<Encable>(ENC.SELECTED));
 		
-		JSONObject $v = $codec.encode($e);
+		JsonObject $v = $codec.encode($e);
 		X.saye($v.toString());
 		assertEquals(2, $v.length());
 		assertEquals("Encable", $v.getKlass());
-		assertEquals("priv", $v.get("$private"));
+		assertEquals("priv", $v.getString("$private"));
 	}
 	
 	public void testEncodeToMagicKey() throws TranslationException {
 		Encable2 $e = new Encable2("pub","priv");
 		
-		Codec<JSONObject> $codec = new CodecImpl<JSONObject>();
+		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
 		
-		JSONObject $v = $codec.encode($e);
+		JsonObject $v = $codec.encode($e);
 		X.saye($v.toString());
 		assertEquals(3, $v.length());
 		assertEquals("name", $v.getKlass());
-		assertEquals("pub",  $v.get("o"));
-		assertEquals("priv", $v.get("x"));
+		assertEquals("pub",  $v.getString("o"));
+		assertEquals("priv", $v.getString("x"));
 	}
 	
 	public void testEncodeUnacceptable() throws TranslationException {
 		Encable2 $e = new Encable2("pub","priv");
 		
-		Codec<JSONObject> $codec = new CodecImpl<JSONObject>();
+		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.SELECTED));
 		
 		try {
-			JSONObject $v = $codec.encode($e);
+			JsonObject $v = $codec.encode($e);
 			fail("this should have exploded.");
 		} catch (UnencodableException $e1) {
 			/* good */

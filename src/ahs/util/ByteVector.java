@@ -94,7 +94,7 @@ public class ByteVector implements Comparable<ByteVector> {
 	public byte[]	$d;
 	
 	@Deprecated
-	public ByteVector(JsonObject $jo) throws JSONException {
+	public ByteVector(JsonObject $jo) throws JsonException {
 		$jo.assertKlass(ByteVector.class);
 		$d = $jo.getByteData();
 	}

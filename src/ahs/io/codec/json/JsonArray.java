@@ -12,8 +12,10 @@ package ahs.io.codec.json;
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import ahs.io.*;
 import ahs.io.codec.*;
 import ahs.io.codec.eon.*;
+import ahs.util.*;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -65,9 +67,8 @@ import java.util.Map;
  * @author JSON.org
  * @version 2008-09-18
  */
-public class JsonArray implements EonArray {
+public class JsonArray implements EonArray<JsonObject,JsonArray> {
 	
-
 	/**
 	 * The arrayList where the JsonArray's properties are kept.
 	 */
@@ -86,10 +87,10 @@ public class JsonArray implements EonArray {
 	 * 
 	 * @param x
 	 *                A JSONTokener
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If there is a syntax error.
 	 */
-	public JsonArray(JSONTokener x) throws JSONException {
+	public JsonArray(JsonTokener x) throws JsonException {
 		this();
 		char c = x.nextClean();
 		char q;
@@ -135,11 +136,11 @@ public class JsonArray implements EonArray {
 	 *                A string that begins with <code>[</code>&nbsp;<small>(left
 	 *                bracket)</small> and ends with <code>]</code>&nbsp;<small>(right
 	 *                bracket)</small>.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If there is a syntax error.
 	 */
-	public JsonArray(String source) throws JSONException {
-		this(new JSONTokener(source));
+	public JsonArray(String source) throws JsonException {
+		this(new JsonTokener(source));
 	}
 	
 	
@@ -171,10 +172,10 @@ public class JsonArray implements EonArray {
 	/**
 	 * Construct a JsonArray from an array
 	 * 
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If not an array.
 	 */
-	public JsonArray(Object array) throws JSONException {
+	public JsonArray(Object array) throws JsonException {
 		this();
 		if (array.getClass().isArray()) {
 			int length = Array.getLength(array);
@@ -182,7 +183,7 @@ public class JsonArray implements EonArray {
 				this.put(Array.get(array, i));
 			}
 		} else {
-			throw new JSONException("JsonArray initial value should be a string or collection or array.");
+			throw new JsonException("JsonArray initial value should be a string or collection or array.");
 		}
 
 	}
@@ -191,10 +192,10 @@ public class JsonArray implements EonArray {
 	 * Construct a JsonArray from an array with a bean. The array should have Java
 	 * Beans.
 	 * 
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If not an array.
 	 */
-	public JsonArray(Object array, boolean includeSuperClass) throws JSONException {
+	public JsonArray(Object array, boolean includeSuperClass) throws JsonException {
 		this();
 		if (array.getClass().isArray()) {
 			int length = Array.getLength(array);
@@ -202,7 +203,7 @@ public class JsonArray implements EonArray {
 				this.put(new JsonObject(Array.get(array, i), includeSuperClass));
 			}
 		} else {
-			throw new JSONException("JsonArray initial value should be a string or collection or array.");
+			throw new JsonException("JsonArray initial value should be a string or collection or array.");
 		}
 	}
 	
@@ -214,12 +215,12 @@ public class JsonArray implements EonArray {
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return An object value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If there is no value for the index.
 	 */
-	public Object get(int index) throws JSONException {
+	public Object get(int index) throws JsonException {
 		Object o = opt(index);
-		if (o == null) { throw new JSONException("JsonArray[" + index + "] not found."); }
+		if (o == null) { throw new JsonException("JsonArray[" + index + "] not found."); }
 		return o;
 	}
 	
@@ -231,16 +232,16 @@ public class JsonArray implements EonArray {
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The truth.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If there is no value for the index or if the value is not
 	 *                 convertable to boolean.
 	 */
-	public boolean getBoolean(int index) throws JSONException {
+	public boolean getBoolean(int index) throws JsonException {
 		Object o = get(index);
 		if (o.equals(Boolean.FALSE) || (o instanceof String && ((String) o).equalsIgnoreCase("false"))) {
 			return false;
 		} else if (o.equals(Boolean.TRUE) || (o instanceof String && ((String) o).equalsIgnoreCase("true"))) { return true; }
-		throw new JSONException("JsonArray[" + index + "] is not a Boolean.");
+		throw new JsonException("JsonArray[" + index + "] is not a Boolean.");
 	}
 	
 	
@@ -250,16 +251,16 @@ public class JsonArray implements EonArray {
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the key is not found or if the value cannot be converted to
 	 *                 a number.
 	 */
-	public double getDouble(int index) throws JSONException {
+	public double getDouble(int index) throws JsonException {
 		Object o = get(index);
 		try {
 			return o instanceof Number ? ((Number) o).doubleValue() : Double.valueOf((String) o).doubleValue();
 		} catch (Exception e) {
-			throw new JSONException("JsonArray[" + index + "] is not a number.");
+			throw new JsonException("JsonArray[" + index + "] is not a number.");
 		}
 	}
 	
@@ -270,11 +271,11 @@ public class JsonArray implements EonArray {
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the key is not found or if the value cannot be converted to
 	 *                 a number. if the value cannot be converted to a number.
 	 */
-	public int getInt(int index) throws JSONException {
+	public int getInt(int index) throws JsonException {
 		Object o = get(index);
 		return o instanceof Number ? ((Number) o).intValue() : (int) getDouble(index);
 	}
@@ -286,14 +287,14 @@ public class JsonArray implements EonArray {
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return A JsonArray value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If there is no value for the index. or if the value is not a
 	 *                 JsonArray
 	 */
-	public JsonArray getJsonArray(int index) throws JSONException {
+	public JsonArray getArr(int index) throws JsonException {
 		Object o = get(index);
 		if (o instanceof JsonArray) { return (JsonArray) o; }
-		throw new JSONException("JsonArray[" + index + "] is not a JsonArray.");
+		throw new JsonException("JsonArray[" + index + "] is not a JsonArray.");
 	}
 	
 	
@@ -303,14 +304,14 @@ public class JsonArray implements EonArray {
 	 * @param index
 	 *                subscript
 	 * @return A JSONObject value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If there is no value for the index or if the value is not a
 	 *                 JSONObject
 	 */
-	public JsonObject getObj(int index) throws JSONException {
+	public JsonObject getObj(int index) throws JsonException {
 		Object o = get(index);
 		if (o instanceof JsonObject) { return (JsonObject) o; }
-		throw new JSONException("JsonArray[" + index + "] is not a JsonObject.");
+		throw new JsonException("JsonArray[" + index + "] is not a JsonObject.");
 	}
 	
 	
@@ -320,11 +321,11 @@ public class JsonArray implements EonArray {
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the key is not found or if the value cannot be converted to
 	 *                 a number.
 	 */
-	public long getLong(int index) throws JSONException {
+	public long getLong(int index) throws JsonException {
 		Object o = get(index);
 		return o instanceof Number ? ((Number) o).longValue() : (long) getDouble(index);
 	}
@@ -336,10 +337,10 @@ public class JsonArray implements EonArray {
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return A string value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If there is no value for the index.
 	 */
-	public String getString(int index) throws JSONException {
+	public String getString(int index) throws JsonException {
 		return get(index).toString();
 	}
 	
@@ -364,10 +365,10 @@ public class JsonArray implements EonArray {
 	 * @param separator
 	 *                A string that will be inserted between the elements.
 	 * @return a string.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the array contains an invalid number.
 	 */
-	public String join(String separator) throws JSONException, UnencodableException {
+	public String join(String separator) throws JsonException, UnencodableException {
 		int len = length();
 		StringBuffer sb = new StringBuffer();
 		
@@ -388,6 +389,30 @@ public class JsonArray implements EonArray {
 	 */
 	public int length() {
 		return this.myArrayList.size();
+	}
+	public int size() {
+		return this.myArrayList.size();
+	}
+	
+
+	public void put(int index, JsonObject value) {
+		put(index,(Object) value);
+	}
+	public void put(int index, JsonArray value) {
+		put(index,(Object) value);
+	}
+	public void put(int index, String value) {
+		put(index,(Object) value);
+	}
+	public void put(int index, byte[] value) {
+		put(index,Base64.encode(value));
+	}
+	public byte[] getBytes(int index) throws JsonException {
+		return Base64.decode(getString(index));
+	}
+	public byte[] optBytes(int index) {
+		String $s = optString(index);
+		return $s == null ? Primitives.EMPTY_BYTE : Base64.decode($s);
 	}
 	
 	
@@ -513,7 +538,7 @@ public class JsonArray implements EonArray {
 	 * @return A JsonArray value, or null if the index has no value, or if the value
 	 *         is not a JsonArray.
 	 */
-	public JsonArray optJsonArray(int index) {
+	public JsonArray optArr(int index) {
 		Object o = opt(index);
 		return o instanceof JsonArray ? (JsonArray) o : null;
 	}
@@ -528,7 +553,7 @@ public class JsonArray implements EonArray {
 	 *                The index must be between 0 and length() - 1.
 	 * @return A JSONObject value.
 	 */
-	public JsonObject optJSONObject(int index) {
+	public JsonObject optObj(int index) {
 		Object o = opt(index);
 		return o instanceof JsonObject ? (JsonObject) o : null;
 	}
@@ -569,16 +594,16 @@ public class JsonArray implements EonArray {
 	
 	
 	/**
-	 * Get the optional string value associated with an index. It returns an empty
-	 * string if there is no value at that index. If the value is not a string and is
-	 * not null, then it is coverted to a string.
+	 * Get the optional string value associated with an index. It returns null if no
+	 * value at that index. If the value is not a string and is not null, then it is
+	 * coverted to a string.
 	 * 
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return A String value.
 	 */
 	public String optString(int index) {
-		return optString(index, "");
+		return optString(index, null);
 	}
 	
 	
@@ -603,11 +628,9 @@ public class JsonArray implements EonArray {
 	 * 
 	 * @param value
 	 *                A boolean value.
-	 * @return this.
 	 */
-	public JsonArray put(boolean value) {
+	public void put(boolean value) {
 		put(value ? Boolean.TRUE : Boolean.FALSE);
-		return this;
 	}
 	
 	
@@ -617,11 +640,9 @@ public class JsonArray implements EonArray {
 	 * 
 	 * @param value
 	 *                A Collection value.
-	 * @return this.
 	 */
-	public JsonArray put(Collection<Object> value) {
+	public void put(Collection<Object> value) {
 		put(new JsonArray(value));
-		return this;
 	}
 	
 	
@@ -631,14 +652,12 @@ public class JsonArray implements EonArray {
 	 * @param value
 	 *                A double value.
 	 * @throws UnencodableException
-	 *                 if the value is not finite.
-	 * @return this.
+	 *                 if the value is infinite or NaN
 	 */
-	public JsonArray put(double value) throws UnencodableException {
+	public void put(double value) throws UnencodableException {
 		Double d = new Double(value);
 		JsonObject.testValidity(d);
 		put(d);
-		return this;
 	}
 	
 	
@@ -647,11 +666,9 @@ public class JsonArray implements EonArray {
 	 * 
 	 * @param value
 	 *                An int value.
-	 * @return this.
 	 */
-	public JsonArray put(int value) {
+	public void put(int value) {
 		put(new Integer(value));
-		return this;
 	}
 	
 	
@@ -660,11 +677,9 @@ public class JsonArray implements EonArray {
 	 * 
 	 * @param value
 	 *                A long value.
-	 * @return this.
 	 */
-	public JsonArray put(long value) {
+	public void put(long value) {
 		put(new Long(value));
-		return this;
 	}
 	
 	
@@ -674,11 +689,9 @@ public class JsonArray implements EonArray {
 	 * 
 	 * @param value
 	 *                A Map value.
-	 * @return this.
 	 */
-	public JsonArray put(Map<Object,Object> value) {
+	public void put(Map<Object,Object> value) {
 		put(new JsonObject(value));
-		return this;
 	}
 	
 	
@@ -689,11 +702,9 @@ public class JsonArray implements EonArray {
 	 *                An object value. The value should be a Boolean, Double, Integer,
 	 *                JsonArray, JSONObject, Long, or String, or the JSONObject.NULL
 	 *                object.
-	 * @return this.
 	 */
-	public JsonArray put(Object value) {
+	protected void put(Object value) {
 		this.myArrayList.add(value);
-		return this;
 	}
 	
 	
@@ -706,13 +717,9 @@ public class JsonArray implements EonArray {
 	 *                The subscript.
 	 * @param value
 	 *                A boolean value.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the index is negative.
 	 */
-	public JsonArray put(int index, boolean value) throws JSONException {
+	public void put(int index, boolean value) {
 		put(index, value ? Boolean.TRUE : Boolean.FALSE);
-		return this;
 	}
 	
 	
@@ -724,13 +731,9 @@ public class JsonArray implements EonArray {
 	 *                The subscript.
 	 * @param value
 	 *                A Collection value.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the index is negative or if the value is not finite.
 	 */
-	public JsonArray put(int index, Collection<Object> value) throws JSONException {
+	public void put(int index, Collection<Object> value) {
 		put(index, new JsonArray(value));
-		return this;
 	}
 	
 	
@@ -742,13 +745,11 @@ public class JsonArray implements EonArray {
 	 *                The subscript.
 	 * @param value
 	 *                A double value.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the index is negative or if the value is not finite.
+	 * @throws UnencodableException
+	 *                 if infinite or NaN
 	 */
-	public JsonArray put(int index, double value) throws JSONException {
-		put(index, new Double(value));
-		return this;
+	public void put(int index, double value) throws UnencodableException {
+		putQuestionable(index, new Double(value));
 	}
 	
 	
@@ -760,13 +761,9 @@ public class JsonArray implements EonArray {
 	 *                The subscript.
 	 * @param value
 	 *                An int value.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the index is negative.
 	 */
-	public JsonArray put(int index, int value) throws JSONException {
+	public void put(int index, int value) {
 		put(index, new Integer(value));
-		return this;
 	}
 	
 	
@@ -778,13 +775,9 @@ public class JsonArray implements EonArray {
 	 *                The subscript.
 	 * @param value
 	 *                A long value.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the index is negative.
 	 */
-	public JsonArray put(int index, long value) throws JSONException {
+	public void put(int index, long value) {
 		put(index, new Long(value));
-		return this;
 	}
 	
 	
@@ -796,14 +789,9 @@ public class JsonArray implements EonArray {
 	 *                The subscript.
 	 * @param value
 	 *                The Map value.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the index is negative or if the the value is an invalid
-	 *                 number.
 	 */
-	public JsonArray put(int index, Map<Object,Object> value) throws JSONException {
+	public void put(int index, Map<Object,Object> value) {
 		put(index, new JsonObject(value));
-		return this;
 	}
 	
 	
@@ -818,14 +806,18 @@ public class JsonArray implements EonArray {
 	 *                The value to put into the array. The value should be a Boolean,
 	 *                Double, Integer, JsonArray, JSONObject, Long, or String, or the
 	 *                JSONObject.NULL object.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the index is negative or if the the value is an invalid
-	 *                 number.
 	 */
-	public JsonArray put(int index, Object value) throws JSONException {
+	protected void put(int index, Object value) {
+		putReally(index, value);
+	}
+	
+	protected void putQuestionable(int index, Object value) throws UnencodableException {
 		JsonObject.testValidity(value);
-		if (index < 0) { throw new JSONException("JsonArray[" + index + "] not found."); }
+		putReally(index, value);
+	}
+	
+	private void putReally(int index, Object value) {
+		if (index < 0) { throw new IndexOutOfBoundsException("JsonArray[" + index + "] not found."); }
 		if (index < length()) {
 			this.myArrayList.set(index, value);
 		} else {
@@ -834,7 +826,6 @@ public class JsonArray implements EonArray {
 			}
 			put(value);
 		}
-		return this;
 	}
 	
 	
@@ -847,10 +838,10 @@ public class JsonArray implements EonArray {
 	 *                paired with the values.
 	 * @return A JSONObject, or null if there are no names or if this JsonArray has no
 	 *         values.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If any of the names are null.
 	 */
-	public JsonObject toJSONObject(JsonArray names) throws JSONException {
+	public JsonObject toJsonObject(JsonArray names) throws JsonException {
 		if (names == null || names.length() == 0 || length() == 0) { return null; }
 		JsonObject jo = new JsonObject();
 		for (int i = 0; i < names.length(); i += 1) {
@@ -888,9 +879,10 @@ public class JsonArray implements EonArray {
 	 * @return a printable, displayable, transmittable representation of the object,
 	 *         beginning with <code>[</code>&nbsp;<small>(left bracket)</small> and
 	 *         ending with <code>]</code>&nbsp;<small>(right bracket)</small>.
-	 * @throws JSONException
+	 * @throws JsonException
+	 * @throws UnencodableException 
 	 */
-	public String toString(int indentFactor) throws JSONException {
+	public String toString(int indentFactor) throws JsonException, UnencodableException {
 		return toString(indentFactor, 0);
 	}
 	
@@ -904,9 +896,10 @@ public class JsonArray implements EonArray {
 	 * @param indent
 	 *                The indention of the top level.
 	 * @return a printable, displayable, transmittable representation of the array.
-	 * @throws JSONException
+	 * @throws JsonException
+	 * @throws UnencodableException 
 	 */
-	String toString(int indentFactor, int indent) throws JSONException {
+	String toString(int indentFactor, int indent) throws JsonException, UnencodableException {
 		int len = length();
 		if (len == 0) { return "[]"; }
 		int i;
@@ -942,9 +935,10 @@ public class JsonArray implements EonArray {
 	 * Warning: This method assumes that the data structure is acyclical.
 	 * 
 	 * @return The writer.
-	 * @throws JSONException
+	 * @throws JsonException
+	 * @throws UnencodableException 
 	 */
-	public Writer write(Writer writer) throws JSONException {
+	public Writer write(Writer writer) throws JsonException, UnencodableException {
 		try {
 			boolean b = false;
 			int len = length();
@@ -968,7 +962,7 @@ public class JsonArray implements EonArray {
 			writer.write(']');
 			return writer;
 		} catch (IOException e) {
-			throw new JSONException(e);
+			throw new JsonException(e);
 		}
 	}
 }

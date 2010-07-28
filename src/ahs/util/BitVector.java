@@ -89,7 +89,7 @@ public class BitVector {
 	private int	$len;
 	
 	@Deprecated
-	public BitVector(JsonObject $jo) throws JSONException {
+	public BitVector(JsonObject $jo) throws JsonException {
 		$jo.assertKlass(BitVector.class);
 		$len = $jo.getInt("l");
 		$bs = BitSet.valueOf($jo.getByteData());

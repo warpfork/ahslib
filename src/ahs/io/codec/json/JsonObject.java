@@ -78,7 +78,6 @@ import java.util.TreeSet;
  * @author JSON.org
  * @version 2008-09-18
  */
-@SuppressWarnings("unchecked")
 public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	
 	/**
@@ -153,11 +152,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 *                A JsonObject.
 	 * @param names
 	 *                An array of strings.
-	 * @exception JSONException
+	 * @exception JsonException
 	 *                    If a value is a non-finite number or if a name is
 	 *                    duplicated.
 	 */
-	public JsonObject(JsonObject jo, String[] names) throws JSONException {
+	public JsonObject(JsonObject jo, String[] names) throws JsonException {
 		this();
 		for (int i = 0; i < names.length; i += 1) {
 			putOnce(names[i], jo.opt(names[i]));
@@ -170,11 +169,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * 
 	 * @param x
 	 *                A JSONTokener object containing the source string.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If there is a syntax error in the source string or a duplicated
 	 *                 key.
 	 */
-	public JsonObject(JSONTokener x) throws JSONException {
+	public JsonObject(JsonTokener x) throws JsonException {
 		this();
 		char c;
 		String key;
@@ -247,9 +246,9 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	public JsonObject(Map<String, Object> map, boolean includeSuperClass) {
 		this.map = new HashMap<String, Object>();
 		if (map != null) {
-			for (Iterator i = map.entrySet().iterator(); i.hasNext();) {
-				Map.Entry e = (Map.Entry) i.next();
-				this.map.put((String)e.getKey(), new JsonObject(e.getValue(), includeSuperClass));
+			for (Iterator<Map.Entry<String,Object>> i = map.entrySet().iterator(); i.hasNext();) {
+				Map.Entry<String,Object> e = i.next();
+				this.map.put(e.getKey(), new JsonObject(e.getValue(), includeSuperClass));
 			}
 		}
 	}
@@ -330,9 +329,9 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 					} else if (result.getClass().isArray()) {
 						map.put(key, new JsonArray(result, includeSuperClass));
 					} else if (result instanceof Collection) { // List or Set
-						map.put(key, new JsonArray((Collection) result, includeSuperClass));
+						map.put(key, new JsonArray((Collection<?>) result, includeSuperClass));
 					} else if (result instanceof Map) {
-						map.put(key, new JsonObject((Map) result, includeSuperClass));
+						map.put(key, new JsonObject((Map<?,?>) result, includeSuperClass));
 					} else if (isStandardProperty(result.getClass())) { // Primitives, String and Wrapper
 						map.put(key, result);
 					} else {
@@ -389,12 +388,12 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 *                A string beginning with <code>{</code>&nbsp;<small>(left
 	 *                brace)</small> and ending with <code>}</code>&nbsp;<small>(right
 	 *                brace)</small>.
-	 * @exception JSONException
+	 * @exception JsonException
 	 *                    If there is a syntax error in the source string or a
 	 *                    duplicated key.
 	 */
-	public JsonObject(String source) throws JSONException {
-		this(new JSONTokener(source));
+	public JsonObject(String source) throws JsonException {
+		this(new JsonTokener(source));
 	}
 
 
@@ -452,16 +451,16 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		return optString(Eon.MAGICWORD_CLASS,null);
 	}
 
-	public void assertKlass(Object $x) throws JSONException {
+	public void assertKlass(Object $x) throws JsonException {
 		assertKlass(Eon.getKlass($x));
 	}
-	public void assertKlass(Class<?> $x) throws JSONException {
+	public void assertKlass(Class<?> $x) throws JsonException {
 		assertKlass(Eon.getKlass($x));
 	}
-	public void assertKlass(String $x) throws JSONException {
+	public void assertKlass(String $x) throws JsonException {
 		String $klass = getKlass();
-		if ($klass == null) throw new JSONException("Class of JsonObject is not declared.");
-		if (!$x.equals($klass)) throw new JSONException("JsonObject class \""+$klass+"\" does not match desired class \""+$x+"\".");
+		if ($klass == null) throw new JsonException("Class of JsonObject is not declared.");
+		if (!$x.equals($klass)) throw new JsonException("JsonObject class \""+$klass+"\" does not match desired class \""+$x+"\".");
 	}
 	
 	public void putKlass(Object $x) {
@@ -474,64 +473,67 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		put(Eon.MAGICWORD_CLASS,$x);
 	}
 	
-	/**
-	 * Accumulate values under a key. It is similar to the put method except that if
-	 * there is already an object stored under the key then a JsonArray is stored
-	 * under the key to hold all of the accumulated values. If there is already a
-	 * JsonArray, then the new value is appended to it. In contrast, the put method
-	 * replaces the previous value.
-	 * 
-	 * @param key
-	 *                A key string.
-	 * @param value
-	 *                An object to be accumulated under the key.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the value is an invalid number or if the key is null.
-	 * @throws UnencodableException 
-	 */
-	public JsonObject accumulate(String key, Object value) throws JSONException, UnencodableException {
-		testValidity(value);
-		Object o = opt(key);
-		if (o == null) {
-			put(key, value instanceof JsonArray ? new JsonArray().put(value) : value);
-		} else if (o instanceof JsonArray) {
-			((JsonArray) o).put(value);
-		} else {
-			put(key, new JsonArray().put(o).put(value));
-		}
-		return this;
-	}
-	
-	
-	/**
-	 * Append values to the array under a key. If the key does not exist in the
-	 * JsonObject, then the key is put in the JsonObject with its value being a
-	 * JsonArray containing the value parameter. If the key was already associated
-	 * with a JsonArray, then the value parameter is appended to it.
-	 * 
-	 * @param key
-	 *                A key string.
-	 * @param value
-	 *                An object to be accumulated under the key.
-	 * @return this.
-	 * @throws JSONException
-	 *                 If the key is null or if the current value associated with the
-	 *                 key is not a JsonArray.
-	 * @throws UnencodableException 
-	 */
-	public JsonObject append(String key, Object value) throws JSONException, UnencodableException {
-		testValidity(value);
-		Object o = opt(key);
-		if (o == null) {
-			put(key, new JsonArray().put(value));
-		} else if (o instanceof JsonArray) {
-			put(key, ((JsonArray) o).put(value));
-		} else {
-			throw new JSONException("JsonObject[" + key + "] is not a JsonArray.");
-		}
-		return this;
-	}
+	// i just didn't feel like converting these to Eon since I never use them anyway.
+	// ...and really, I don't think it's the responsibility of the data structure itself to help you do things like this.
+	// 
+	///**
+	// * Accumulate values under a key. It is similar to the put method except that if
+	// * there is already an object stored under the key then a JsonArray is stored
+	// * under the key to hold all of the accumulated values. If there is already a
+	// * JsonArray, then the new value is appended to it. In contrast, the put method
+	// * replaces the previous value.
+	// * 
+	// * @param key
+	// *                A key string.
+	// * @param value
+	// *                An object to be accumulated under the key.
+	// * @return this.
+	// * @throws JSONException
+	// *                 If the value is an invalid number or if the key is null.
+	// * @throws UnencodableException 
+	// */
+	//public JsonObject accumulate(String key, Object value) throws JSONException, UnencodableException {
+	//	testValidity(value);
+	//	Object o = opt(key);
+	//	if (o == null) {
+	//		put(key, value instanceof JsonArray ? new JsonArray().put(value) : value);
+	//	} else if (o instanceof JsonArray) {
+	//		((JsonArray) o).put(value);
+	//	} else {
+	//		put(key, new JsonArray().put(o).put(value));
+	//	}
+	//	return this;
+	//}
+	//
+	//
+	///**
+	// * Append values to the array under a key. If the key does not exist in the
+	// * JsonObject, then the key is put in the JsonObject with its value being a
+	// * JsonArray containing the value parameter. If the key was already associated
+	// * with a JsonArray, then the value parameter is appended to it.
+	// * 
+	// * @param key
+	// *                A key string.
+	// * @param value
+	// *                An object to be accumulated under the key.
+	// * @return this.
+	// * @throws JSONException
+	// *                 If the key is null or if the current value associated with the
+	// *                 key is not a JsonArray.
+	// * @throws UnencodableException 
+	// */
+	//public JsonObject append(String key, Object value) throws JSONException, UnencodableException {
+	//	testValidity(value);
+	//	Object o = opt(key);
+	//	if (o == null) {
+	//		put(key, new JsonArray().put(value));
+	//	} else if (o instanceof JsonArray) {
+	//		put(key, ((JsonArray) o).put(value));
+	//	} else {
+	//		throw new JSONException("JsonObject[" + key + "] is not a JsonArray.");
+	//	}
+	//	return this;
+	//}
 	
 	
 	/**
@@ -566,12 +568,12 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return The object associated with the key.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the key is not found.
 	 */
-	protected Object get(String key) throws JSONException {
+	protected Object get(String key) throws JsonException {
 		Object o = opt(key);
-		if (o == null) { throw new JSONException("JsonObject[" + quote(key) + "] not found."); }
+		if (o == null) { throw new JsonException("JsonObject[" + quote(key) + "] not found."); }
 		return o;
 	}
 	
@@ -579,7 +581,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		put(Eon.MAGICWORD_NAME, $x);
 	}
 	
-	public String getName() throws JSONException {
+	public String getName() throws JsonException {
 		return getString(Eon.MAGICWORD_NAME);
 	}
 	
@@ -599,19 +601,19 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		put(Eon.MAGICWORD_DATA, $x);
 	}
 	
-	public JsonObject getData() throws JSONException {
+	public JsonObject getData() throws JsonException {
 		return getObj(Eon.MAGICWORD_DATA);
 	}
 	
-	public JsonArray getArrayData() throws JSONException {
+	public JsonArray getArrayData() throws JsonException {
 		return getArr(Eon.MAGICWORD_DATA);
 	}
 	
-	public String getStringData() throws JSONException {
+	public String getStringData() throws JsonException {
 		return getString(Eon.MAGICWORD_DATA);
 	}
 	
-	public byte[] getByteData() throws JSONException {
+	public byte[] getByteData() throws JsonException {
 		return getBytes(Eon.MAGICWORD_DATA);
 	}
 	
@@ -619,7 +621,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		put($key, Base64.encode($val));
 	}
 	
-	public byte[] getBytes(String $key) throws JSONException {
+	public byte[] getBytes(String $key) throws JsonException {
 		return Base64.decode(getString($key));
 	}
 	
@@ -650,15 +652,15 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return The truth.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the value is not a Boolean or the String "true" or "false".
 	 */
-	public boolean getBoolean(String key) throws JSONException {
+	public boolean getBoolean(String key) throws JsonException {
 		Object o = get(key);
 		if (o.equals(Boolean.FALSE) || (o instanceof String && ((String) o).equalsIgnoreCase("false"))) {
 			return false;
 		} else if (o.equals(Boolean.TRUE) || (o instanceof String && ((String) o).equalsIgnoreCase("true"))) { return true; }
-		throw new JSONException("JsonObject[" + quote(key) + "] is not a Boolean.");
+		throw new JsonException("JsonObject[" + quote(key) + "] is not a Boolean.");
 	}
 	
 	
@@ -668,16 +670,16 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return The numeric value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the key is not found or if the value is not a Number object
 	 *                 and cannot be converted to a number.
 	 */
-	public double getDouble(String key) throws JSONException {
+	public double getDouble(String key) throws JsonException {
 		Object o = get(key);
 		try {
 			return o instanceof Number ? ((Number) o).doubleValue() : Double.valueOf((String) o).doubleValue();
 		} catch (Exception e) {
-			throw new JSONException("JsonObject[" + quote(key) + "] is not a number.");
+			throw new JsonException("JsonObject[" + quote(key) + "] is not a number.");
 		}
 	}
 	
@@ -689,11 +691,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return The integer value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the key is not found or if the value cannot be converted to
 	 *                 an integer.
 	 */
-	public int getInt(String key) throws JSONException {
+	public int getInt(String key) throws JsonException {
 		Object o = get(key);
 		return o instanceof Number ? ((Number) o).intValue() : (int) getDouble(key);
 	}
@@ -705,13 +707,13 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return A JsonArray which is the value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the key is not found or if the value is not a JsonArray.
 	 */
-	public JsonArray getArr(String key) throws JSONException {
+	public JsonArray getArr(String key) throws JsonException {
 		Object o = get(key);
 		if (o instanceof JsonArray) { return (JsonArray) o; }
-		throw new JSONException("JsonObject[" + quote(key) + "] is not a JsonArray.");
+		throw new JsonException("JsonObject[" + quote(key) + "] is not a JsonArray.");
 	}
 	
 	
@@ -721,13 +723,13 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return A JsonObject which is the value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the key is not found or if the value is not a JsonObject.
 	 */
-	public JsonObject getObj(String key) throws JSONException {
+	public JsonObject getObj(String key) throws JsonException {
 		Object o = get(key);
 		if (o instanceof JsonObject) { return (JsonObject) o; }
-		throw new JSONException("JsonObject[" + quote(key) + "] is not a JsonObject.");
+		throw new JsonException("JsonObject[" + quote(key) + "] is not a JsonObject.");
 	}
 	
 	
@@ -738,11 +740,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return The long value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the key is not found or if the value cannot be converted to
 	 *                 a long.
 	 */
-	public long getLong(String key) throws JSONException {
+	public long getLong(String key) throws JsonException {
 		Object o = get(key);
 		return o instanceof Number ? ((Number) o).longValue() : (long) getDouble(key);
 	}
@@ -792,10 +794,10 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 *                A key string.
 	 * @return A string which is the value.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the key is not found.
 	 */
-	public String getString(String key) throws JSONException {
+	public String getString(String key) throws JsonException {
 		return get(key).toString();
 	}
 	
@@ -1076,8 +1078,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		return o != null ? o.toString() : defaultValue;
 	}
 	public String optString(String key) {
-		Object o = opt(key);
-		return o != null ? o.toString() : null;
+		return optString(key, null);
 	}
 	
 	
@@ -1186,12 +1187,12 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @param key
 	 * @param value
 	 * @return true if put a value; false if a value was already present.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 if the key is a duplicate
 	 */
-	public boolean putOnce(String key, Object value) throws JSONException {
+	public boolean putOnce(String key, Object value) throws JsonException {
 		if (key != null && value != null) {
-			if (opt(key) != null) { throw new JSONException("Duplicate key \"" + key + "\""); }
+			if (opt(key) != null) { throw new JsonException("Duplicate key \"" + key + "\""); }
 			put(key, value);
 		}
 		return true;
@@ -1209,10 +1210,10 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 *                types: Boolean, Double, Integer, JsonArray, JsonObject, Long,
 	 *                String, or the JsonObject.NULL object.
 	 * @return this.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the value is a non-finite number.
 	 */
-	protected JsonObject putOpt(String key, Object value) throws JSONException {
+	protected JsonObject putOpt(String key, Object value) throws JsonException {
 		if (key != null && value != null) {
 			put(key, value);
 		}
@@ -1386,10 +1387,10 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 *                A JsonArray containing a list of key strings. This determines
 	 *                the sequence of the values in the result.
 	 * @return A JsonArray of values.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If any of the values are non-finite numbers.
 	 */
-	public JsonArray toJsonArray(JsonArray names) throws JSONException {
+	public JsonArray toJsonArray(JsonArray names) throws JsonException {
 		if (names == null || names.length() == 0) { return null; }
 		JsonArray ja = new JsonArray();
 		for (int i = 0; i < names.length(); i += 1) {
@@ -1441,10 +1442,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @return a printable, displayable, portable, transmittable representation of the
 	 *         object, beginning with <code>{</code>&nbsp;<small>(left brace)</small>
 	 *         and ending with <code>}</code>&nbsp;<small>(right brace)</small>.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the object contains an invalid number.
+	 * @throws UnencodableException 
 	 */
-	public String toString(int indentFactor) throws JSONException {
+	public String toString(int indentFactor) throws JsonException, UnencodableException {
 		if (indentFactor == -1) 
 			return toString();
 		else
@@ -1464,10 +1466,11 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @return a printable, displayable, transmittable representation of the object,
 	 *         beginning with <code>{</code>&nbsp;<small>(left brace)</small> and
 	 *         ending with <code>}</code>&nbsp;<small>(right brace)</small>.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the object contains an invalid number.
+	 * @throws UnencodableException 
 	 */
-	String toString(int indentFactor, int indent) throws JSONException {
+	String toString(int indentFactor, int indent) throws JsonException, UnencodableException {
 		int j;
 		int n = length();
 		if (n == 0) { return "{}"; }
@@ -1526,26 +1529,26 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @return a printable, displayable, transmittable representation of the object,
 	 *         beginning with <code>{</code>&nbsp;<small>(left brace)</small> and
 	 *         ending with <code>}</code>&nbsp;<small>(right brace)</small>.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the value is or contains an invalid number.
 	 * @throws UnencodableException 
 	 */
-	static String valueToString(Object value) throws JSONException, UnencodableException {
+	static String valueToString(Object value) throws JsonException, UnencodableException {
 		if (value == null || value.equals(null)) { return "null"; }
-		if (value instanceof JSONString) {
+		if (value instanceof JsonString) {
 			Object o;
 			try {
-				o = ((JSONString) value).toJSONString();
+				o = ((JsonString) value).toJSONString();
 			} catch (Exception e) {
-				throw new JSONException(e);
+				throw new JsonException(e);
 			}
 			if (o instanceof String) { return (String) o; }
-			throw new JSONException("Bad value from toJSONString: " + o);
+			throw new JsonException("Bad value from toJSONString: " + o);
 		}
 		if (value instanceof Number) { return numberToString((Number) value); }
 		if (value instanceof Boolean || value instanceof JsonObject || value instanceof JsonArray) { return value.toString(); }
-		if (value instanceof Map) { return new JsonObject((Map) value).toString(); }
-		if (value instanceof Collection) { return new JsonArray((Collection) value).toString(); }
+		if (value instanceof Map) { return new JsonObject((Map<?,?>) value).toString(); }
+		if (value instanceof Collection) { return new JsonArray((Collection<?>) value).toString(); }
 		if (value.getClass().isArray()) { return new JsonArray(value).toString(); }
 		return quote(value.toString());
 	}
@@ -1565,15 +1568,15 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * @return a printable, displayable, transmittable representation of the object,
 	 *         beginning with <code>{</code>&nbsp;<small>(left brace)</small> and
 	 *         ending with <code>}</code>&nbsp;<small>(right brace)</small>.
-	 * @throws JSONException
+	 * @throws JsonException
 	 *                 If the object contains an invalid number.
 	 * @throws UnencodableException 
 	 */
-	static String valueToString(Object value, int indentFactor, int indent) throws JSONException, UnencodableException {
+	static String valueToString(Object value, int indentFactor, int indent) throws JsonException, UnencodableException {
 		if (value == null || value.equals(null)) { return "null"; }
 		try {
-			if (value instanceof JSONString) {
-				Object o = ((JSONString) value).toJSONString();
+			if (value instanceof JsonString) {
+				Object o = ((JsonString) value).toJSONString();
 				if (o instanceof String) { return (String) o; }
 			}
 		} catch (Exception e) {
@@ -1583,16 +1586,16 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		if (value instanceof Boolean) { return value.toString(); }
 		if (value instanceof JsonObject) { return ((JsonObject) value).toString(indentFactor, indent); }
 		if (value instanceof JsonArray) { return ((JsonArray) value).toString(indentFactor, indent); }
-		if (value instanceof Map) { return new JsonObject((Map) value).toString(indentFactor, indent); }
-		if (value instanceof Collection) { return new JsonArray((Collection) value).toString(indentFactor, indent); }
+		if (value instanceof Map) { return new JsonObject((Map<?,?>) value).toString(indentFactor, indent); }
+		if (value instanceof Collection) { return new JsonArray((Collection<?>) value).toString(indentFactor, indent); }
 		if (value.getClass().isArray()) { return new JsonArray(value).toString(indentFactor, indent); }
 		return quote(value.toString());
 	}
-	static String valueToStringUnchecked(Object value, int indentFactor, int indent) throws JSONException {
+	static String valueToStringUnchecked(Object value, int indentFactor, int indent) throws JsonException, UnencodableException {
 		if (value == null || value.equals(null)) { return "null"; }
 		try {
-			if (value instanceof JSONString) {
-				Object o = ((JSONString) value).toJSONString();
+			if (value instanceof JsonString) {
+				Object o = ((JsonString) value).toJSONString();
 				if (o instanceof String) { return (String) o; }
 			}
 		} catch (Exception e) {
@@ -1602,8 +1605,8 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 		if (value instanceof Boolean) { return value.toString(); }
 		if (value instanceof JsonObject) { return ((JsonObject) value).toString(indentFactor, indent); }
 		if (value instanceof JsonArray) { return ((JsonArray) value).toString(indentFactor, indent); }
-		if (value instanceof Map) { return new JsonObject((Map) value).toString(indentFactor, indent); }
-		if (value instanceof Collection) { return new JsonArray((Collection) value).toString(indentFactor, indent); }
+		if (value instanceof Map) { return new JsonObject((Map<?,?>) value).toString(indentFactor, indent); }
+		if (value instanceof Collection) { return new JsonArray((Collection<?>) value).toString(indentFactor, indent); }
 		if (value.getClass().isArray()) { return new JsonArray(value).toString(indentFactor, indent); }
 		return quote(value.toString());
 	}
@@ -1616,10 +1619,10 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 	 * Warning: This method assumes that the data structure is acyclical.
 	 * 
 	 * @return The writer.
-	 * @throws JSONException
+	 * @throws JsonException
 	 * @throws UnencodableException 
 	 */
-	public Writer write(Writer writer) throws JSONException, UnencodableException {
+	public Writer write(Writer writer) throws JsonException, UnencodableException {
 		try {
 			boolean b = false;
 			Iterator<String> keys = keys();
@@ -1645,7 +1648,7 @@ public class JsonObject implements EonObject<JsonObject,JsonArray> {
 			writer.write('}');
 			return writer;
 		} catch (IOException e) {
-			throw new JSONException(e);
+			throw new JsonException(e);
 		}
 	}
 
