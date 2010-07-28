@@ -51,7 +51,7 @@ public class AnnotationTest extends TestCase {
 	
 	
 	
-	@Encodable(value="name")
+	@Encodable(value="classname")
 	private static class Encable2 {
 		public  @ENC(key="o")					String $public;
 		private @ENC(key="x", value={ENC.DEFAULT,ENC.SELECTED})	String $private;
@@ -148,10 +148,14 @@ public class AnnotationTest extends TestCase {
 		}
 		
 		private void putField(Codec<JsonObject> $codec, EonObject $eo, String $key, Field $f, Object $value) throws TranslationException {
-			//TODO deal with all the cases via reflection
 			Class<?> $typo = $f.getType();
-			//X.saye($typo.getName());
-			//$eo.put($f.getName(), $codec.encode($value));
+			// i wish you could do a switch on anything that acts like a pointer
+			if ($typo == byte[].class)
+				$eo.put($key, (byte[])$value);
+			else if ($typo == String.class)
+				$eo.put($key, (String)$value);
+			else
+				$eo.put($key, $codec.encode($value));
 		}
 	}
 	
@@ -254,10 +258,11 @@ public class AnnotationTest extends TestCase {
 		
 		JsonObject $v = $codec.encode($e);
 		X.saye($v.toString());
-		assertEquals(3, $v.length());
-		assertEquals("name", $v.getKlass());
+		assertEquals(4, $v.length());
+		assertEquals("classname", $v.getKlass());
 		assertEquals("pub",  $v.getString("o"));
 		assertEquals("priv", $v.getString("x"));
+		assertEquals(Base64.decode("ABBA"), $v.getBytes("b"));
 	}
 	
 	public void testEncodeUnacceptable() throws TranslationException {
