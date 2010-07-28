@@ -2,6 +2,7 @@ package ahs.test;
 
 import ahs.io.*;
 import ahs.io.codec.*;
+import ahs.io.codec.eon.*;
 import ahs.io.codec.json.*;
 import ahs.util.*;
 
@@ -54,13 +55,16 @@ public class AnnotationTest extends TestCase {
 	private static class Encable2 {
 		public  @ENC(key="o")					String $public;
 		private @ENC(key="x", value={ENC.DEFAULT,ENC.SELECTED})	String $private;
+		private @ENC(key="b")					byte[] $bees;
 		
-		public Encable2(String $public, String $private) {
+		public Encable2(String $public, String $private, String $bees) {
 			this.$public = $public;
 			this.$private = $private;
+			this.$bees = Base64.decode($bees);
 		}
 		public String getPublic()	{ return this.$public;	}
 		public String getPrivate()	{ return this.$private;	}
+		public byte[] getBees()		{ return this.$bees;	}
 	}
 	
 	
@@ -101,36 +105,39 @@ public class AnnotationTest extends TestCase {
 					else
 						$jo.putKlass($key);
 				}
-				
-				boolean $allFields = $cenc.all_fields();
-				
-				// walk across fields and serialize the non-static annotated ones
-				// this code will want pretty serious refactoring for effic in the production branch
-				for (Field $f : $class.getDeclaredFields()) {
-					$f.setAccessible(true);
-					X.saye("FIELD: "+$f);
-					int $mod = $f.getModifiers();
-					if (Modifier.isStatic($mod)) continue;
-					ENC $enc = $f.getAnnotation(ENC.class);
-					if ($enc != null) {
-						X.saye("is annotated");
-						if (Arr.contains($enc.value(), $selector)) {
-							if ($enc.key().isEmpty())
-								$key = $f.getName();
-							else $key = $enc.key(); 
-							
-							$jo.put($key, $codec.encode($f.get($x)));
-						}
-					} else if ($allFields) {
-						X.saye("isn't annotated, but class wants all fields");
-						if ($enc == null || $enc.key().isEmpty())
-							$key = $f.getName();
-						else $key = $enc.key(); 
 
-						$jo.put($key, $codec.encode($f.get($x)));
-					} else {
-						X.saye("is NOT annotated");
-						X.saye(Arr.toString($f.getAnnotations()));
+				// walk across fields and serialize the non-static ones
+				if ($cenc.all_fields()) {	// all of them, regardless of whether that particular field is annotated
+					for (Field $f : $class.getDeclaredFields()) {
+						$f.setAccessible(true);
+						int $mod = $f.getModifiers();
+						if (Modifier.isStatic($mod)) continue;
+						ENC $anno = $f.getAnnotation(ENC.class);
+						if ($anno != null) {
+							if ($anno.key().isEmpty())
+								$key = $f.getName();
+							else $key = $anno.key(); 
+							
+							putField($codec, $jo, $key, $f, $f.get($x));
+						} else {
+							putField($codec, $jo, $f.getName(), $f, $f.get($x));
+						}
+					}
+				} else {	// only annotated fields matching the selector
+					for (Field $f : $class.getDeclaredFields()) {
+						$f.setAccessible(true);
+						int $mod = $f.getModifiers();
+						if (Modifier.isStatic($mod)) continue;
+						ENC $anno = $f.getAnnotation(ENC.class);
+						if ($anno != null) {
+							if (Arr.contains($anno.value(), $selector)) {
+								if ($anno.key().isEmpty())
+									$key = $f.getName();
+								else $key = $anno.key(); 
+
+								putField($codec, $jo, $key, $f, $f.get($x));
+							}
+						}
 					}
 				}
 				
@@ -138,6 +145,13 @@ public class AnnotationTest extends TestCase {
 			} catch (IllegalAccessException $e) {
 				throw new UnencodableException("reflection problem",$e);
 			}
+		}
+		
+		private void putField(Codec<JsonObject> $codec, EonObject $eo, String $key, Field $f, Object $value) throws TranslationException {
+			//TODO deal with all the cases via reflection
+			Class<?> $typo = $f.getType();
+			//X.saye($typo.getName());
+			//$eo.put($f.getName(), $codec.encode($value));
 		}
 	}
 	
@@ -233,7 +247,7 @@ public class AnnotationTest extends TestCase {
 	}
 	
 	public void testEncodeToMagicKey() throws TranslationException {
-		Encable2 $e = new Encable2("pub","priv");
+		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
 		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
@@ -247,7 +261,7 @@ public class AnnotationTest extends TestCase {
 	}
 	
 	public void testEncodeUnacceptable() throws TranslationException {
-		Encable2 $e = new Encable2("pub","priv");
+		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
 		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.SELECTED));
