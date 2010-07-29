@@ -33,7 +33,8 @@ public interface EonObject {
 	// "opt" methods either return defaults or null in case of errors; their "get" breathren throw exceptions if the requested value is missing or untranslatable.
 	public void    put(String $key, byte[] $val);
 	public byte[]  getBytes(String $key) throws TranslationException;
-	public byte[]  optBytes(String $key);		// different.  returns EMPTY_BYTE.
+	public byte[]  optBytes(String $key);
+	public byte[]  optBytes(String $key, byte[] $default);
 	public void    put(String $key, boolean $val);
 	public boolean getBoolean(String $key) throws TranslationException;
 	public boolean optBoolean(String $key, boolean $default);

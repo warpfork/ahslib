@@ -414,7 +414,14 @@ public class JsonArray implements EonArray {
 	}
 	public byte[] optBytes(int index) {
 		String $s = optString(index);
-		return $s == null ? Primitives.EMPTY_BYTE : Base64.decode($s);
+		return $s == null ? null : Base64.decode($s);
+	}
+	
+	public byte[] optBytes(int index, byte[] $default) {
+		String $s = optString(index);
+		if ($s == null) return $default;
+		byte[] $try = Base64.decode($s);
+		return $try == null ? $default : $try;
 	}
 	
 	

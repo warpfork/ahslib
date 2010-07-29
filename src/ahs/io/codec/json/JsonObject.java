@@ -629,7 +629,14 @@ public class JsonObject implements EonObject {
 	
 	public byte[] optBytes(String $key) {
 		String $s = optString($key);
-		return $s == null ? Primitives.EMPTY_BYTE : Base64.decode($s);
+		return $s == null ? null : Base64.decode($s);
+	}
+	
+	public byte[] optBytes(String $key, byte[] $default) {
+		String $s = optString($key);
+		if ($s == null) return $default;
+		byte[] $try = Base64.decode($s);
+		return $try == null ? $default : $try;
 	}
 	
 	public void put(String $key, boolean $val) {

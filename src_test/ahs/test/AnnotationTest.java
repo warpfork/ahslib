@@ -69,6 +69,26 @@ public class AnnotationTest extends TestCase {
 		public String getPrivate()	{ return this.$private;	}
 		public byte[] getBees()		{ return this.$bees;	}
 	}
+
+	@Encodable(all_fields=true)
+	private static class Big {
+		public Little	$lil;
+		
+		public Big(Little $lil) {
+			this.$lil = $lil;
+		}
+		public Little getLil()	{ return this.$lil;	}
+	}
+	
+	@Encodable
+	private static class Little {
+		public @ENC	String	$str;
+		
+		public Little(String $str) {
+			this.$str = $str;
+		}
+		public String getStr()	{ return this.$str;	}
+	}
 	
 	
 	
@@ -373,6 +393,36 @@ public class AnnotationTest extends TestCase {
 		} catch (UnencodableException $e1) {
 			/* good */
 		}
+	}
+	
+	public void testEncodeNull() throws TranslationException {
+		Encable2 $e = new Encable2("pub",null,"ABBA");
+		
+		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
+		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
+		
+		JsonObject $v = $codec.encode($e);
+		X.saye($v.toString());
+		assertEquals(3, $v.length());
+		assertEquals("classname", $v.getKlass());
+		assertEquals("pub",  $v.getString("o"));
+		assertEquals(null, $v.optString("x"));
+		assertEquals(Base64.decode("ABBA"), $v.getBytes("b"));
+	}
+	
+	public void testEncodeNull2() throws TranslationException {
+		Encable2 $e = new Encable2("pub","priv",null);
+		
+		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
+		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
+		
+		JsonObject $v = $codec.encode($e);
+		X.saye($v.toString());
+		assertEquals(3, $v.length());
+		assertEquals("classname", $v.getKlass());
+		assertEquals("pub",  $v.getString("o"));
+		assertEquals("priv", $v.getString("x"));
+		assertEquals(null, $v.optBytes("b"));
 	}
 	
 }

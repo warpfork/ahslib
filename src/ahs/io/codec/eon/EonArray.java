@@ -8,7 +8,8 @@ public interface EonArray {
 	// "opt" methods either return defaults or null in case of errors; their "get" breathren throw exceptions if the requested value is missing or untranslatable.
 	public void    put(int $index, byte[] $val);
 	public byte[]  getBytes(int $index) throws TranslationException;
-	public byte[]  optBytes(int $index);		// different.  returns EMPTY_BYTE.
+	public byte[]  optBytes(int $index);
+	public byte[]  optBytes(int $index, byte[] $default);
 	public void    put(int $index, boolean $val);
 	public boolean getBoolean(int $index) throws TranslationException;
 	public boolean optBoolean(int $index, boolean $default);
