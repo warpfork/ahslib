@@ -16,6 +16,7 @@ public interface EonObject {
 	public void    putKlass   (Object $x);
 	public void    putKlass   (Class<?> $x);
 	public void    putKlass   (String $x);
+	public String  getKlass();
 	
 	public void    putName(String $x);
 	public String  getName() throws TranslationException;
@@ -30,6 +31,7 @@ public interface EonObject {
 	public byte[]  getByteData  () throws TranslationException;
 	
 	public boolean has(String $key);
+	public int     size();
 	// "opt" methods either return defaults or null in case of errors; their "get" breathren throw exceptions if the requested value is missing or untranslatable.
 	public void    put(String $key, byte[] $val);
 	public byte[]  getBytes(String $key) throws TranslationException;

@@ -865,6 +865,9 @@ public class JsonObject implements EonObject {
 	public int length() {
 		return this.map.size();
 	}
+	public int size() {
+		return this.map.size();
+	}
 	
 	
 	/**

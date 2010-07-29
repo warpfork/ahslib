@@ -98,7 +98,7 @@ public class AnnotationTest extends TestCase {
 	 * 
 	 * @param <$T> can be <code>java.lang.Object</code> for all I care.
 	 */
-	private static class ReflectiveAnnotatedEncoder<$T> implements Encoder<JsonObject,$T> {
+	private static class ReflectiveAnnotatedEncoder<$T> implements Encoder<EonObject,$T> {
 		public ReflectiveAnnotatedEncoder(String $selector) {
 			this.$selector = $selector;
 		}
@@ -108,7 +108,7 @@ public class AnnotationTest extends TestCase {
 		
 		private String $selector;
 		
-		public JsonObject encode(Codec<JsonObject> $codec, $T $x) throws TranslationException {
+		public JsonObject encode(Codec<EonObject> $codec, $T $x) throws TranslationException {
 			try {
 				JsonObject $jo = new JsonObject();
 				String $key;
@@ -173,7 +173,7 @@ public class AnnotationTest extends TestCase {
 			}
 		}
 		
-		private void encodeField(Codec<JsonObject> $codec, EonObject $eo, String $key, Field $f, $T $x) throws TranslationException, IllegalAccessException {
+		private void encodeField(Codec<EonObject> $codec, EonObject $eo, String $key, Field $f, $T $x) throws TranslationException, IllegalAccessException {
 			Class<?> $typo = $f.getType();
 			// i wish you could do a switch on anything that acts like a pointer
 			if ($typo == byte[].class)
@@ -342,12 +342,12 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeDefault() throws TranslationException {
 		Encable $e = new Encable("pub","priv");
 		
-		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
 		$codec.putHook(Encable.class, new ReflectiveAnnotatedEncoder<Encable>(ENC.DEFAULT));
 		
-		JsonObject $v = $codec.encode($e);
+		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
-		assertEquals(3, $v.length());
+		assertEquals(3, $v.size());
 		assertEquals("Encable", $v.getKlass());
 		assertEquals("pub",  $v.getString("$public"));
 		assertEquals("priv", $v.getString("$private"));
@@ -356,12 +356,12 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeSelected() throws TranslationException {
 		Encable $e = new Encable("pub","priv");
 		
-		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
 		$codec.putHook(Encable.class, new ReflectiveAnnotatedEncoder<Encable>(ENC.SELECTED));
 		
-		JsonObject $v = $codec.encode($e);
+		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
-		assertEquals(2, $v.length());
+		assertEquals(2, $v.size());
 		assertEquals("Encable", $v.getKlass());
 		assertEquals("priv", $v.getString("$private"));
 	}
@@ -369,12 +369,12 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeToMagicKey() throws TranslationException {
 		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
-		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
 		
-		JsonObject $v = $codec.encode($e);
+		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
-		assertEquals(4, $v.length());
+		assertEquals(4, $v.size());
 		assertEquals("classname", $v.getKlass());
 		assertEquals("pub",  $v.getString("o"));
 		assertEquals("priv", $v.getString("x"));
@@ -384,11 +384,11 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeUnacceptable() throws TranslationException {
 		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
-		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.SELECTED));
 		
 		try {
-			JsonObject $v = $codec.encode($e);
+			EonObject $v = $codec.encode($e);
 			fail("this should have exploded.");
 		} catch (UnencodableException $e1) {
 			/* good */
@@ -398,12 +398,12 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeNull() throws TranslationException {
 		Encable2 $e = new Encable2("pub",null,"ABBA");
 		
-		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
 		
-		JsonObject $v = $codec.encode($e);
+		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
-		assertEquals(3, $v.length());
+		assertEquals(3, $v.size());
 		assertEquals("classname", $v.getKlass());
 		assertEquals("pub",  $v.getString("o"));
 		assertEquals(null, $v.optString("x"));
@@ -413,16 +413,29 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeNull2() throws TranslationException {
 		Encable2 $e = new Encable2("pub","priv",null);
 		
-		Codec<JsonObject> $codec = new CodecImpl<JsonObject>();
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
 		
-		JsonObject $v = $codec.encode($e);
+		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
-		assertEquals(3, $v.length());
+		assertEquals(3, $v.size());
 		assertEquals("classname", $v.getKlass());
 		assertEquals("pub",  $v.getString("o"));
 		assertEquals("priv", $v.getString("x"));
 		assertEquals(null, $v.optBytes("b"));
 	}
 	
+	public void testDecode() throws TranslationException {
+		Encable $e = new Encable("pub","priv");
+		
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		$codec.putHook(Encable.class, new ReflectiveAnnotatedEncoder<Encable>(ENC.DEFAULT));
+		$codec.putHook(Encable.class, new ReflectiveAnnotatedDecoder<Encable>(Encable.class, ENC.DEFAULT));
+		
+		EonObject $v = $codec.encode($e);
+		X.saye($v.toString());
+		Encable $z = $codec.decode($v, Encable.class);
+		assertEquals("pub",  $z.getPublic());
+		assertEquals("priv", $z.getPrivate());
+	}
 }
