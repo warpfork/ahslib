@@ -46,6 +46,7 @@ public class AnnotationTest extends TestCase {
 		public  @ENC					String $public;
 		private @ENC({ENC.DEFAULT,ENC.SELECTED})	String $private;
 		
+		/** just for reflective instantiability */
 		protected Encable() {}
 		
 		public Encable(String $public, String $private) {
@@ -75,6 +76,9 @@ public class AnnotationTest extends TestCase {
 	@Encodable(all_fields=true)
 	private static class Big {
 		public Little	$lil;
+
+		/** just for reflective instantiability */
+		protected Big() {}
 		
 		public Big(Little $lil) {
 			this.$lil = $lil;
@@ -85,6 +89,9 @@ public class AnnotationTest extends TestCase {
 	@Encodable
 	private static class Little {
 		public @ENC	String	$str;
+
+		/** just for reflective instantiability */
+		protected Little() {}
 		
 		public Little(String $str) {
 			this.$str = $str;
@@ -440,7 +447,7 @@ public class AnnotationTest extends TestCase {
 		assertEquals("pub",  $z.getPublic());
 		assertEquals("priv", $z.getPrivate());
 	}
-	
+
 	public void testNestedEncode() throws TranslationException {
 		Big $b = new Big(new Little("asdf"));
 		
@@ -455,6 +462,21 @@ public class AnnotationTest extends TestCase {
 		EonObject $v2 = $v.getObj("$lil");
 		assertEquals(2, $v.size());
 		assertEquals("Little", $v2.getKlass());
-		assertEquals("asdf",  $v2.getString("$str"));
+		assertEquals("asdf", $v2.getString("$str"));
+	}
+	
+	public void testNestedDecode() throws TranslationException {
+		Big $b = new Big(new Little("asdf"));
+		
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		$codec.putHook(Big.class, new ReflectiveAnnotatedEncoder<Big>());
+		$codec.putHook(Little.class, new ReflectiveAnnotatedEncoder<Little>());
+		$codec.putHook(Big.class, new ReflectiveAnnotatedDecoder<Big>(Big.class));
+		$codec.putHook(Little.class, new ReflectiveAnnotatedDecoder<Little>(Little.class));
+		
+		EonObject $v = $codec.encode($b);
+		X.saye($v.toString());
+		Big $z = $codec.decode($v, Big.class);
+		assertEquals("asdf", $z.getLil().getStr());
 	}
 }
