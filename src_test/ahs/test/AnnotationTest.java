@@ -39,10 +39,14 @@ public class AnnotationTest extends TestCase {
 	
 	
 	
+	
+	
 	@Encodable(styles={ENC.DEFAULT, ENC.SELECTED})
 	private static class Encable {
 		public  @ENC					String $public;
 		private @ENC({ENC.DEFAULT,ENC.SELECTED})	String $private;
+		
+		protected Encable() {}
 		
 		public Encable(String $public, String $private) {
 			this.$public = $public;
@@ -51,8 +55,6 @@ public class AnnotationTest extends TestCase {
 		public String getPublic()	{ return this.$public;	}
 		public String getPrivate()	{ return this.$private;	}
 	}
-	
-	
 	
 	@Encodable(value="classname")
 	private static class Encable2 {
