@@ -19,6 +19,9 @@ public class AnnotationTest extends TestCase {
 		String key() default "";	// I wish this could just be null.
 		public static final String DEFAULT = "$";
 		public static final String SELECTED = "!";
+		// someday it might behoove us to have an instantiableClass field here.  otherwise, how can we deal with generic interfaces (List<?> being a prime example)?
+		//   i mean, we can detect that specific case since it's so common, but what about when people specifically want a linked list for performance reasons?
+		//      they can revert to having some sort of assertInvariants method that takes care of it, sure (such a method should exist anyway), but still, ugh. 
 	}
 	
 	@Documented
@@ -73,11 +76,14 @@ public class AnnotationTest extends TestCase {
 	 * Always respects the value given for classname encoding preferences as given in
 	 * the Encodable annotation.
 	 * 
-	 * @param <$T>
+	 * @param <$T> can be <code>java.lang.Object</code> for all I care.
 	 */
 	private static class ReflectiveAnnotatedEncoder<$T> implements Encoder<JsonObject,$T> {
 		public ReflectiveAnnotatedEncoder(String $selector) {
 			this.$selector = $selector;
+		}
+		public ReflectiveAnnotatedEncoder() {
+			this(ENC.DEFAULT);
 		}
 		
 		private String $selector;
@@ -105,7 +111,7 @@ public class AnnotationTest extends TestCase {
 					else
 						$jo.putKlass($key);
 				}
-
+				
 				// walk across fields and serialize the non-static ones
 				if ($cenc.all_fields()) {	// all of them, regardless of whether that particular field is annotated
 					for (Field $f : $class.getDeclaredFields()) {
@@ -118,9 +124,9 @@ public class AnnotationTest extends TestCase {
 								$key = $f.getName();
 							else $key = $anno.key(); 
 							
-							putField($codec, $jo, $key, $f, $x);
+							encodeField($codec, $jo, $key, $f, $x);
 						} else {
-							putField($codec, $jo, $f.getName(), $f, $x);
+							encodeField($codec, $jo, $f.getName(), $f, $x);
 						}
 					}
 				} else {	// only annotated fields matching the selector
@@ -135,7 +141,7 @@ public class AnnotationTest extends TestCase {
 									$key = $f.getName();
 								else $key = $anno.key(); 
 
-								putField($codec, $jo, $key, $f, $x);
+								encodeField($codec, $jo, $key, $f, $x);
 							}
 						}
 					}
@@ -147,7 +153,7 @@ public class AnnotationTest extends TestCase {
 			}
 		}
 		
-		private void putField(Codec<JsonObject> $codec, EonObject $eo, String $key, Field $f, $T $x) throws TranslationException, IllegalAccessException {
+		private void encodeField(Codec<JsonObject> $codec, EonObject $eo, String $key, Field $f, $T $x) throws TranslationException, IllegalAccessException {
 			Class<?> $typo = $f.getType();
 			// i wish you could do a switch on anything that acts like a pointer
 			if ($typo == byte[].class)
@@ -158,8 +164,6 @@ public class AnnotationTest extends TestCase {
 				;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
 			else if ($typo == long[].class)
 				;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
-			//else if ($typo == short[].class)	// just don't do this.  ew.  so ineffic and wrong.
-			//	$eo.put($key, (SATAN)$value);
 			else if ($typo == boolean.class)
 				$eo.put($key, $f.getBoolean($x));
 			else if ($typo == double.class)
@@ -171,6 +175,7 @@ public class AnnotationTest extends TestCase {
 			else if ($typo == String.class)
 				$eo.put($key, (String)$f.get($x));
 			// i suppose we could check here if the value is already an EonObject or EonArray, but in practice who would ever do that?
+			//	if they really need to do it, someone could just put a no-op encoder in their codec for the requisite types.
 			else
 				$eo.put($key, $codec.encode($f.get($x)));
 		}
@@ -192,7 +197,7 @@ public class AnnotationTest extends TestCase {
 	 * classes, unfortunately -- note the constructor.
 	 * </p>
 	 */
-	private static class ReflectiveAnnotatedDecoder<$T> implements Decoder<JsonObject,$T> {
+	private static class ReflectiveAnnotatedDecoder<$T> implements Decoder<EonObject,$T> {
 		/**
 		 * <p>
 		 * This constructor is awkward and somewhat redundant-sounding, but
@@ -203,28 +208,33 @@ public class AnnotationTest extends TestCase {
 		 * 
 		 * @throws UnencodableException
 		 *                 if the class is not annotated with the Encodable
-		 *                 interface.
+		 *                 interface or otherwise not a suitable decode target.
 		 */
-		public ReflectiveAnnotatedDecoder(Class<$T> $class) throws UnencodableException {
+		public ReflectiveAnnotatedDecoder(Class<$T> $class, String $selector) throws UnencodableException {
 			this.$class = $class;
 			
 			// check if the class will allow itself to be dencoded like this
+			if ($class.isAnnotation() || $class.isInterface() || $class.isAnonymousClass())
+				throw new UnencodableException("Interfaces, anonymous classes, and annotations can not be a decode target -- such magic is impossible.");
 			Encodable $cenc = $class.getAnnotation(Encodable.class);
 			if ($cenc == null)
 				throw new UnencodableException("Class to be decoded must be annotated with the @Encodable interface.");
+			
+			this.$selector = $selector;
+		}
+		public ReflectiveAnnotatedDecoder(Class<$T> $class) throws UnencodableException {
+			this($class, ENC.DEFAULT);
 		}
 		
 		private Class<$T> $class;
+		private String $selector;
 		
-		public $T decode(Codec<JsonObject> $codec, JsonObject $jo) throws TranslationException {
+		public $T decode(Codec<EonObject> $codec, EonObject $jo) throws TranslationException {
 			String $key;
 			
-			//$class.
-			
-			// also, check if that class should have a name including in it's encoding
+			// also, check if that class should have a name including in its encoding
 			// make assertions for sanity if it does
 			Encodable $cenc = $class.getAnnotation(Encodable.class);
-			
 			$key = $cenc.value();
 			if ($key.equals(Encodable.NONE))
 				; /* no checks */
@@ -232,10 +242,79 @@ public class AnnotationTest extends TestCase {
 				$jo.assertKlass($class);
 			else
 				$jo.assertKlass($key);
-			
-			// we're going to have FUN with reflection to figure out decoding types
-			// use the isPrimitive method as a presort, and go to string compares after that (hopefully intern is an option)
-			return null;
+
+			try {
+				// create a new blank instance of the object to be returned
+				$T $x = $class.newInstance();
+				
+				// walk across fields and deserialize the non-static ones
+				if ($cenc.all_fields()) {	// all of them, regardless of whether that particular field is annotated
+					for (Field $f : $class.getDeclaredFields()) {
+						$f.setAccessible(true);
+						int $mod = $f.getModifiers();
+						if (Modifier.isStatic($mod)) continue;
+						ENC $anno = $f.getAnnotation(ENC.class);
+						if ($anno != null) {
+							if ($anno.key().isEmpty())
+								$key = $f.getName();
+							else $key = $anno.key(); 
+							
+							decodeField($codec, $jo, $key, $f, $x);
+						} else {
+							decodeField($codec, $jo, $f.getName(), $f, $x);
+						}
+					}
+				} else {	// only annotated fields matching the selector
+					for (Field $f : $class.getDeclaredFields()) {
+						$f.setAccessible(true);
+						int $mod = $f.getModifiers();
+						if (Modifier.isStatic($mod)) continue;
+						ENC $anno = $f.getAnnotation(ENC.class);
+						if ($anno != null) {
+							if (Arr.contains($anno.value(), $selector)) {
+								if ($anno.key().isEmpty())
+									$key = $f.getName();
+								else $key = $anno.key(); 
+	
+								decodeField($codec, $jo, $key, $f, $x);
+							}
+						}
+					}
+				}
+				
+				return $x;
+			} catch (InstantiationException $e) {
+				throw new UnencodableException("reflection problem",$e);
+			} catch (IllegalAccessException $e) {
+				throw new UnencodableException("reflection problem",$e);
+			}
+		}
+
+		private void decodeField(Codec<EonObject> $codec, EonObject $eo, String $key, Field $f, $T $x) throws IllegalAccessException, TranslationException {
+			Class<?> $typo = $f.getType();
+			// i wish you could do a switch on anything that acts like a pointer
+			if ($typo == byte[].class)
+				$f.set($x, $eo.getBytes($key));
+			else if ($typo == double[].class)
+				;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			else if ($typo == int[].class)
+				;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			else if ($typo == long[].class)
+				;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			else if ($typo == boolean.class)
+				$f.set($x, $eo.getBoolean($key));
+			else if ($typo == double.class)
+				$f.set($x, $eo.getDouble($key));
+			else if ($typo == int.class)
+				$f.set($x, $eo.getInt($key));
+			else if ($typo == long.class)
+				$f.setLong($x, $eo.getLong($key));
+			else if ($typo == String.class)
+				$f.set($x, $eo.getString($key));
+			// i suppose we could check here if the value is already an EonObject or EonArray, but in practice who would ever do that?
+			//	if they really need to do it, someone could just put a no-op encoder in their codec for the requisite types.
+			else
+				$f.set($x, $codec.decode($eo.getObj($key), (Class<Object>)$typo));	// i'm REALLY not sure i trust this.  the cast shouldn't change the pointer, but... wait.  CAN'T CAST UP IN GENERIC.
 		}
 		
 	}

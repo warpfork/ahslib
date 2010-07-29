@@ -17,7 +17,7 @@ public class Console {
 			public void run() {
 				long $delta;
 				String $header;
-				for (int $cycles = 0; 0==0; $cycles++) {
+				for (int $cycles = 0; true; $cycles++) {
 					$delta = (System.currentTimeMillis() - $start);
 					$sb.delete(0, $sb.length());
 					$sb.append("run time: ").append($cycles).append("cycles; ").append($delta).append("ms; ").append($delta/1000).append("seconds");

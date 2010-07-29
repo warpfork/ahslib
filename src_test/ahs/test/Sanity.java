@@ -76,6 +76,8 @@ public class Sanity extends TestCase {
 		  Sup<Blah> $b = new Sub<Blah>();	// up cast out:	WIN
 		  Sup<Blag> $c = new Sub<Blag>();	// up cast out:	WIN
 		//Sup<Blah> $e = new Sup<Blag>();	// up cast in:	FAIL	"type mismatch: cannot convert ..."
+		//Sub<Blah> $e = new Sub<Blag>();	// up cast in:	FAIL	"type mismatch: cannot convert ..."
+		  // and no, putting a cast explicitly in parens doesn't help either.
 	}
 	
 	
