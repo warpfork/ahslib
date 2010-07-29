@@ -440,4 +440,21 @@ public class AnnotationTest extends TestCase {
 		assertEquals("pub",  $z.getPublic());
 		assertEquals("priv", $z.getPrivate());
 	}
+	
+	public void testNestedEncode() throws TranslationException {
+		Big $b = new Big(new Little("asdf"));
+		
+		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		$codec.putHook(Big.class, new ReflectiveAnnotatedEncoder<Big>());
+		$codec.putHook(Little.class, new ReflectiveAnnotatedEncoder<Little>());
+		
+		EonObject $v = $codec.encode($b);
+		X.saye($v.toString());
+		assertEquals(2, $v.size());
+		assertEquals("Big", $v.getKlass());
+		EonObject $v2 = $v.getObj("$lil");
+		assertEquals(2, $v.size());
+		assertEquals("Little", $v2.getKlass());
+		assertEquals("asdf",  $v2.getString("$str"));
+	}
 }
