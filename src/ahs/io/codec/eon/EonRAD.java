@@ -1,0 +1,144 @@
+package ahs.io.codec.eon;
+
+import ahs.io.*;
+import ahs.io.codec.*;
+import ahs.util.*;
+import java.lang.reflect.*;
+
+/**
+ * <p>
+ * Note that it's impossible for this class to provide any sort of validation that
+ * the object it returns obeys any sort of invariants, since it operates entirely
+ * through mindless reflection instead of any controlled pattern of constructors
+ * or factory methods. In particular, it's trivially possible for the encoded form
+ * to have been modified to, for example, exclude fields (which will likely result
+ * in the decoded object having unexpected null values), or modify values to
+ * invalid combinations.
+ * </p>
+ * 
+ * <p>
+ * It's also impossible to use one instance of this class a decoder for multiple
+ * classes, unfortunately -- note the constructor.
+ * </p>
+ */
+public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
+	/**
+	 * <p>
+	 * This constructor is awkward and somewhat redundant-sounding, but
+	 * unfortunately there's no other way to get a reference to the Class<?>
+	 * object for the generic type, and that reference is needed at runtime
+	 * for critical reflection operations.
+	 * </p>
+	 * 
+	 * @throws UnencodableException
+	 *                 if the class is not annotated with the Encodable
+	 *                 interface or otherwise not a suitable decode target.
+	 */
+	public EonRAD(Class<$T> $class, String $selector) throws UnencodableException {
+		this.$class = $class;
+		
+		// check if the class will allow itself to be dencoded like this
+		if ($class.isAnnotation() || $class.isInterface() || $class.isAnonymousClass())
+			throw new UnencodableException("Interfaces, anonymous classes, and annotations can not be a decode target -- such magic is impossible.");
+		Encodable $cenc = $class.getAnnotation(Encodable.class);
+		if ($cenc == null)
+			throw new UnencodableException("Class to be decoded must be annotated with the @Encodable interface.");
+		
+		this.$selector = $selector;
+	}
+	public EonRAD(Class<$T> $class) throws UnencodableException {
+		this($class, Enc.DEFAULT);
+	}
+	
+	private Class<$T> $class;
+	private String $selector;
+	
+	public $T decode(EonCodec $codec, EonObject $jo) throws TranslationException {
+		String $key;
+		
+		// also, check if that class should have a name including in its encoding
+		// make assertions for sanity if it does
+		Encodable $cenc = $class.getAnnotation(Encodable.class);
+		$key = $cenc.value();
+		if ($key.equals(Encodable.NONE))
+			; /* no checks */
+		else if ($key.equals(Encodable.DEFAULT))
+			$jo.assertKlass($class);
+		else
+			$jo.assertKlass($key);
+
+		try {
+			// create a new blank instance of the object to be returned
+			$T $x = $class.newInstance();
+			
+			// walk across fields and deserialize the non-static ones
+			if ($cenc.all_fields()) {	// all of them, regardless of whether that particular field is annotated
+				for (Field $f : $class.getDeclaredFields()) {
+					$f.setAccessible(true);
+					int $mod = $f.getModifiers();
+					if (Modifier.isStatic($mod)) continue;
+					Enc $anno = $f.getAnnotation(Enc.class);
+					if ($anno != null) {
+						if ($anno.key().isEmpty())
+							$key = $f.getName();
+						else $key = $anno.key(); 
+						
+						decodeField($codec, $jo, $key, $f, $x);
+					} else {
+						decodeField($codec, $jo, $f.getName(), $f, $x);
+					}
+				}
+			} else {	// only annotated fields matching the selector
+				for (Field $f : $class.getDeclaredFields()) {
+					$f.setAccessible(true);
+					int $mod = $f.getModifiers();
+					if (Modifier.isStatic($mod)) continue;
+					Enc $anno = $f.getAnnotation(Enc.class);
+					if ($anno != null) {
+						if (Arr.contains($anno.value(), $selector)) {
+							if ($anno.key().isEmpty())
+								$key = $f.getName();
+							else $key = $anno.key(); 
+
+							decodeField($codec, $jo, $key, $f, $x);
+						}
+					}
+				}
+			}
+			
+			return $x;
+		} catch (InstantiationException $e) {
+			throw new UnencodableException("reflection problem",$e);
+		} catch (IllegalAccessException $e) {
+			throw new UnencodableException("reflection problem",$e);
+		}
+	}
+
+	private void decodeField(EonCodec $codec, EonObject $eo, String $key, Field $f, $T $x) throws IllegalAccessException, TranslationException {
+		Class<?> $typo = $f.getType();
+		// i wish you could do a switch on anything that acts like a pointer
+		if ($typo == byte[].class)
+			$f.set($x, $eo.getBytes($key));
+		else if ($typo == double[].class)
+			;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+		else if ($typo == int[].class)
+			;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+		else if ($typo == long[].class)
+			;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+		else if ($typo == boolean.class)
+			$f.set($x, $eo.getBoolean($key));
+		else if ($typo == double.class)
+			$f.set($x, $eo.getDouble($key));
+		else if ($typo == int.class)
+			$f.set($x, $eo.getInt($key));
+		else if ($typo == long.class)
+			$f.setLong($x, $eo.getLong($key));
+		else if ($typo == String.class)
+			$f.set($x, $eo.getString($key));
+		// i suppose we could check here if the value is already an EonObject or EonArray, but in practice who would ever do that?
+		//	if they really need to do it, someone could just put a no-op encoder in their codec for the requisite types.
+		else
+			$f.set($x, $codec.decode($eo.getObj($key), (Class<Object>)$typo));	// i'm REALLY not sure i trust this.  the cast shouldn't change the pointer, but... wait.  CAN'T CAST UP IN GENERIC.
+	}
+	
+}
