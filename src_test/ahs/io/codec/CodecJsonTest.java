@@ -79,7 +79,7 @@ public class CodecJsonTest extends TestCase {
 		$jc.putHook(Oc.class, new Oc.Den());
 		
 		Oc $toy = new Oc(Arr.asList(new Ob[] { new Ob("whip it") }));
-		JSONObject $datenc = $jc.encode($toy);
+		EonObject $datenc = $jc.encode($toy);
 		X.say($datenc+"");
 		
 		$jc.putHook(Oc.class, new Oc.Dense());
@@ -98,7 +98,7 @@ public class CodecJsonTest extends TestCase {
 		$jc.putHook(Oc.class, new Oc.Dense());
 		
 		Oc $toy = new Oc(Arr.asList(new Ob[] { new Ob("whip it") }));
-		JSONObject $datenc = $jc.encode($toy);
+		EonObject $datenc = $jc.encode($toy);
 		X.say($datenc+"");
 		
 		$jc.putHook(Oc.class, new Oc.Den());
@@ -121,12 +121,12 @@ public class CodecJsonTest extends TestCase {
 		
 		String $dat;
 		
-		public static class Den implements Dencoder<JSONObject,Ob> {
-			public JSONObject encode(Codec<JSONObject> $codec, Ob $x) throws TranslationException {
-				return new JSONObject($x,"dat",$x.$dat);
+		public static class Den implements Dencoder<EonObject,Ob> {
+			public EonObject encode(Codec<EonObject> $codec, Ob $x) throws TranslationException {
+				return new EonObject($x,"dat",$x.$dat);
 			}
 			
-			public Ob decode(Codec<JSONObject> $codec, JSONObject $x) throws TranslationException {
+			public Ob decode(Codec<EonObject> $codec, EonObject $x) throws TranslationException {
 				$x.assertKlass(Ob.class);
 				return new Ob($x.getStringData());
 			}
@@ -171,34 +171,34 @@ public class CodecJsonTest extends TestCase {
 			return true;
 		}
 		
-		public static class Den implements Dencoder<JSONObject,Oc> {
-			public JSONObject encode(Codec<JSONObject> $codec, Oc $x) throws TranslationException {
+		public static class Den implements Dencoder<EonObject,Oc> {
+			public EonObject encode(Codec<EonObject> $codec, Oc $x) throws TranslationException {
 				JSONArray $ja = new JSONArray();
 				for (int $i = 0; $i < $x.$dat.size(); $i++)
 					$ja.put($codec.encode($x.$dat.get($i)));
-				return new JSONObject($x, null, $ja);
+				return new EonObject($x, null, $ja);
 			}
 			
 
-			public Oc decode(Codec<JSONObject> $codec, JSONObject $x) throws TranslationException {
+			public Oc decode(Codec<EonObject> $codec, EonObject $x) throws TranslationException {
 				$x.assertKlass(Oc.class);
 				JSONArray $ja = $x.getArrayData();
 				List<Ob> $ar = new ArrayList<Ob>($ja.length());
 				for (int $i = 0; $i < $ja.length(); $i++)
-					$ar.add($codec.decode($ja.getJSONObject($i), Ob.class));
+					$ar.add($codec.decode($ja.getEonObject($i), Ob.class));
 				return new Oc($ar);
 			}
 		}
 		
-		public static class Dense implements Dencoder<JSONObject,Oc> {
-			public JSONObject encode(Codec<JSONObject> $codec, Oc $x) throws TranslationException {
+		public static class Dense implements Dencoder<EonObject,Oc> {
+			public EonObject encode(Codec<EonObject> $codec, Oc $x) throws TranslationException {
 				JSONArray $ja = new JSONArray();
 				for (int $i = 0; $i < $x.$dat.size(); $i++)
 					$ja.put($x.$dat.get($i).$dat);
-				return new JSONObject($x, null, $ja);
+				return new EonObject($x, null, $ja);
 			}
 			
-			public Oc decode(Codec<JSONObject> $codec, JSONObject $x) throws TranslationException {
+			public Oc decode(Codec<EonObject> $codec, EonObject $x) throws TranslationException {
 				$x.assertKlass(Oc.class);
 				JSONArray $ja = $x.getArrayData();
 				List<Ob> $ar = new ArrayList<Ob>($ja.length());

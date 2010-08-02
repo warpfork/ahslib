@@ -10,8 +10,8 @@ import java.util.*;
 
 /**
  * @author hash
- * 
  */
+@Deprecated
 public class JsonCodec extends CodecImpl<JsonObject> {
 	public JsonCodec() {
 		super();
@@ -47,33 +47,6 @@ public class JsonCodec extends CodecImpl<JsonObject> {
 		for (int $i = 0; $i < $size; $i++)
 			$v.add($codec.decode($list.getObj($i), $datclrclass));
 		return $v;
-	}
-	
-	
-	public static class Brutemux<$C> {
-        	public <$T> void putHook(Class<$T> $c, Listener<$T> $d) {
-        		$hooks.put($c, $d);
-        	}
-        	
-		private Map<Class<?>,Listener<?>>	$hooks	= new HashMap<Class<?>,Listener<?>>();
-		
-		public boolean disbatch(Codec<$C> $codec, $C $x) throws TranslationException {
-			//for (Map.Entry<Class<?>,Listener<?>> $ent : $hooks.entrySet()) {
-			for (Class<?> $c : $hooks.keySet()) {
-				try {
-					return disbatch($codec.decode($x, $c));
-				} catch (TranslationException $e) { /* just go on and try the next. */ }
-			}
-			return false;
-		}
-		
-		@SuppressWarnings("unchecked")	// yes, the following method is technically unsafe.  at runtime, it should be absolutely reliable.
-		public <$T> boolean disbatch($T $x) {
-			Listener<$T> $hook = (Listener<$T>)$hooks.get($x.getClass());
-			if ($hook == null) return false; 
-			$hook.hear($x);
-			return true;
-		}
 	}
 }
 

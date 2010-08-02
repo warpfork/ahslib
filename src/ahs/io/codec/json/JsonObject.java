@@ -79,6 +79,23 @@ import java.util.TreeSet;
  * @version 2008-09-18
  */
 public class JsonObject implements EonObject {
+	/**
+	 * This method is kind of a dick. It doesn't work recursively, so don't expect
+	 * nested instances of other Eon* to work.
+	 */
+	public byte[] serialize() throws TranslationException {
+		return toString().getBytes(Strings.UTF_8);
+	}
+
+	/**
+	 * This method is kind of a dick. It doesn't work recursively, so don't expect
+	 * nested instances of other Eon* to work.
+	 */
+	public void deserialize(byte[] $bats) throws TranslationException {
+		fillMeFromTokens(new JsonTokener(new String($bats, Strings.UTF_8)));
+	}
+	
+	
 	
 	/**
 	 * JsonObject.NULL is equivalent to the value that JavaScript calls null, whilst
@@ -175,6 +192,10 @@ public class JsonObject implements EonObject {
 	 */
 	public JsonObject(JsonTokener x) throws JsonException {
 		this();
+		fillMeFromTokens(x);
+	}
+	
+	protected void fillMeFromTokens(JsonTokener x) throws JsonException {
 		char c;
 		String key;
 		
@@ -218,7 +239,7 @@ public class JsonObject implements EonObject {
 				default:
 					throw x.syntaxError("Expected a ',' or '}'");
 			}
-		}
+		}	
 	}
 	
 	

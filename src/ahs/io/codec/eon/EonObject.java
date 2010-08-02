@@ -7,7 +7,7 @@ import ahs.util.*;
 
 // it's not impossible that a large number of these fields will eventually want to throw Unencodable exceptions
 //   i'm worried about key portability -- for example, i suspect xml will be less permissive than json.
-//       i really don't understand why ANYONE uses xml EVER.
+//      i really don't understand why ANYONE uses xml EVER.
 
 public interface EonObject {
 	public void    assertKlass(Object $x)   throws TranslationException;
@@ -60,7 +60,8 @@ public interface EonObject {
 	public EonArray   getArr(String $key) throws TranslationException;
 	public EonArray   optArr(String $key);		// null
 	
-	
+	public byte[] serialize() throws TranslationException;
+	public void deserialize(byte[] $bats) throws TranslationException;
 	
 	
 	/**
