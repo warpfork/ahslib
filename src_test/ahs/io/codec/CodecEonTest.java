@@ -19,7 +19,7 @@ import java.util.*;
  * @author hash
  * 
  */
-public class CodecTest extends TestCase {
+public class CodecEonTest extends TestCase {
 	/**
 	 * Simplest possible target.  Contains no fields.  None.
 	 */
@@ -35,6 +35,17 @@ public class CodecTest extends TestCase {
 				$x.assertKlass(Oa.class);
 				return new Oa();
 			}
+		}
+		
+		public int hashCode() {
+			return 0;
+		}
+		
+		public boolean equals(Object obj) {
+			if (this == obj) return true;
+			if (obj == null) return false;
+			if (getClass() != obj.getClass()) return false;
+			return true;
 		}
 	}
 
@@ -57,6 +68,24 @@ public class CodecTest extends TestCase {
 				return new Ob($x.getStringData());
 			}
 		}
+		
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((this.$dat == null) ? 0 : this.$dat.hashCode());
+			return result;
+		}
+		
+		public boolean equals(Object obj) {
+			if (this == obj) return true;
+			if (obj == null) return false;
+			if (getClass() != obj.getClass()) return false;
+			Ob other = (Ob) obj;
+			if (this.$dat == null) {
+				if (other.$dat != null) return false;
+			} else if (!this.$dat.equals(other.$dat)) return false;
+			return true;
+		}
 	}
 	
 	/**
@@ -77,6 +106,24 @@ public class CodecTest extends TestCase {
 				$x.assertKlass(Oc.class);
 				return new Oc($codec.decodeList($x.getArrayData(), Ob.class));
 			}
+		}
+		
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((this.$dat == null) ? 0 : this.$dat.hashCode());
+			return result;
+		}
+		
+		public boolean equals(Object obj) {
+			if (this == obj) return true;
+			if (obj == null) return false;
+			if (getClass() != obj.getClass()) return false;
+			Oc other = (Oc) obj;
+			if (this.$dat == null) {
+				if (other.$dat != null) return false;
+			} else if (!this.$dat.equals(other.$dat)) return false;
+			return true;
 		}
 	}
 }
