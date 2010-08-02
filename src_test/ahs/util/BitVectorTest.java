@@ -190,9 +190,9 @@ public class BitVectorTest extends TestCase {
 	}
 	
 	public void testJsonSerialization() throws TranslationException {
-		Codec<JsonObject> $codec = new JsonCodec();
-		$codec.putHook(BitVector.class, BitVector.ENCODER_JSON);
-		$codec.putHook(BitVector.class, BitVector.DECODER_JSON);
+		JsonCodec $codec = new JsonCodec();
+		$codec.putHook(BitVector.class, BitVector.ENCODER);
+		$codec.putHook(BitVector.class, BitVector.DECODER);
 		BitVector $bv, $bv2;
 		JsonObject $jo;
 		

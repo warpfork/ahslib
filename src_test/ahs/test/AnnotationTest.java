@@ -107,7 +107,7 @@ public class AnnotationTest extends TestCase {
 	 * 
 	 * @param <$T> can be <code>java.lang.Object</code> for all I care.
 	 */
-	private static class ReflectiveAnnotatedEncoder<$T> implements Encoder<EonObject,$T> {
+	private static class ReflectiveAnnotatedEncoder<$T> implements Encoder<EonCodec,EonObject,$T> {
 		public ReflectiveAnnotatedEncoder(String $selector) {
 			this.$selector = $selector;
 		}
@@ -117,7 +117,7 @@ public class AnnotationTest extends TestCase {
 		
 		private String $selector;
 		
-		public JsonObject encode(Codec<EonObject> $codec, $T $x) throws TranslationException {
+		public JsonObject encode(EonCodec $codec, $T $x) throws TranslationException {
 			try {
 				JsonObject $jo = new JsonObject();
 				String $key;
@@ -182,7 +182,7 @@ public class AnnotationTest extends TestCase {
 			}
 		}
 		
-		private void encodeField(Codec<EonObject> $codec, EonObject $eo, String $key, Field $f, $T $x) throws TranslationException, IllegalAccessException {
+		private void encodeField(EonCodec $codec, EonObject $eo, String $key, Field $f, $T $x) throws TranslationException, IllegalAccessException {
 			Class<?> $typo = $f.getType();
 			// i wish you could do a switch on anything that acts like a pointer
 			if ($typo == byte[].class)
@@ -226,7 +226,7 @@ public class AnnotationTest extends TestCase {
 	 * classes, unfortunately -- note the constructor.
 	 * </p>
 	 */
-	private static class ReflectiveAnnotatedDecoder<$T> implements Decoder<EonObject,$T> {
+	private static class ReflectiveAnnotatedDecoder<$T> implements Decoder<EonCodec,EonObject,$T> {
 		/**
 		 * <p>
 		 * This constructor is awkward and somewhat redundant-sounding, but
@@ -258,7 +258,7 @@ public class AnnotationTest extends TestCase {
 		private Class<$T> $class;
 		private String $selector;
 		
-		public $T decode(Codec<EonObject> $codec, EonObject $jo) throws TranslationException {
+		public $T decode(EonCodec $codec, EonObject $jo) throws TranslationException {
 			String $key;
 			
 			// also, check if that class should have a name including in its encoding
@@ -319,7 +319,7 @@ public class AnnotationTest extends TestCase {
 			}
 		}
 
-		private void decodeField(Codec<EonObject> $codec, EonObject $eo, String $key, Field $f, $T $x) throws IllegalAccessException, TranslationException {
+		private void decodeField(EonCodec $codec, EonObject $eo, String $key, Field $f, $T $x) throws IllegalAccessException, TranslationException {
 			Class<?> $typo = $f.getType();
 			// i wish you could do a switch on anything that acts like a pointer
 			if ($typo == byte[].class)
@@ -351,7 +351,7 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeDefault() throws TranslationException {
 		Encable $e = new Encable("pub","priv");
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Encable.class, new ReflectiveAnnotatedEncoder<Encable>(ENC.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
@@ -365,7 +365,7 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeSelected() throws TranslationException {
 		Encable $e = new Encable("pub","priv");
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Encable.class, new ReflectiveAnnotatedEncoder<Encable>(ENC.SELECTED));
 		
 		EonObject $v = $codec.encode($e);
@@ -378,7 +378,7 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeToMagicKey() throws TranslationException {
 		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
@@ -393,7 +393,7 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeUnacceptable() throws TranslationException {
 		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.SELECTED));
 		
 		try {
@@ -407,7 +407,7 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeNull() throws TranslationException {
 		Encable2 $e = new Encable2("pub",null,"ABBA");
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
@@ -422,7 +422,7 @@ public class AnnotationTest extends TestCase {
 	public void testEncodeNull2() throws TranslationException {
 		Encable2 $e = new Encable2("pub","priv",null);
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Encable2.class, new ReflectiveAnnotatedEncoder<Encable2>(ENC.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
@@ -437,7 +437,7 @@ public class AnnotationTest extends TestCase {
 	public void testDecode() throws TranslationException {
 		Encable $e = new Encable("pub","priv");
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Encable.class, new ReflectiveAnnotatedEncoder<Encable>(ENC.DEFAULT));
 		$codec.putHook(Encable.class, new ReflectiveAnnotatedDecoder<Encable>(Encable.class, ENC.DEFAULT));
 		
@@ -451,7 +451,7 @@ public class AnnotationTest extends TestCase {
 	public void testNestedEncode() throws TranslationException {
 		Big $b = new Big(new Little("asdf"));
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Big.class, new ReflectiveAnnotatedEncoder<Big>());
 		$codec.putHook(Little.class, new ReflectiveAnnotatedEncoder<Little>());
 		
@@ -468,7 +468,7 @@ public class AnnotationTest extends TestCase {
 	public void testNestedDecode() throws TranslationException {
 		Big $b = new Big(new Little("asdf"));
 		
-		Codec<EonObject> $codec = new CodecImpl<EonObject>();
+		EonCodec $codec = new JsonCodec();
 		$codec.putHook(Big.class, new ReflectiveAnnotatedEncoder<Big>());
 		$codec.putHook(Little.class, new ReflectiveAnnotatedEncoder<Little>());
 		$codec.putHook(Big.class, new ReflectiveAnnotatedDecoder<Big>(Big.class));

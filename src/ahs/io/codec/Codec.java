@@ -29,10 +29,10 @@ import java.util.*;
  *                The type of object used to represent the encoded version of the data. A
  *                typical example might be ahs.json.JSONObject.
  */
-public interface Codec<$CODE> {
-	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODE, $TARG> $encoder);
+public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
+	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder);
 
-	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Decoder<$CODE, $TARG> $decoder);
+	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Decoder<$CODEC, $CODE, $TARG> $decoder);
 	
 	public <$TARG> $CODE encode($TARG $datclr) throws TranslationException;
 	
@@ -55,22 +55,22 @@ public interface Codec<$CODE> {
 	 *                data. In practice, this should presumably match the $CODE
 	 *                parameter of the Codec interface.
 	 */
-	public static class EncoderDispatch<$C> {
-        	public <$T, $S extends $T> void putHook(Class<$S> $c, Encoder<$C,$T> $e) {
+	public static class EncoderDispatch<$CO extends Codec<$CO,$C>, $C> {
+        	public <$T, $S extends $T> void putHook(Class<$S> $c, Encoder<$CO,$C,$T> $e) {
         		$hooks.put($c, $e);
         	}
         	
-		private Map<Class<?>,Encoder<$C,?>>	$hooks	= new HashMap<Class<?>,Encoder<$C,?>>();
+		private Map<Class<?>,Encoder<$CO,$C,?>>	$hooks	= new HashMap<Class<?>,Encoder<$CO,$C,?>>();
 		
 		@SuppressWarnings("unchecked")	// yes, the following method is technically unsafe.  at runtime, it should be absolutely reliable.
-		public <$T> $C encode(Codec<$C> $codec, $T $x) throws TranslationException {
-			Encoder<$C,$T> $hook = (Encoder<$C,$T>)$hooks.get($x.getClass());
+		public <$T> $C encode($CO $codec, $T $x) throws TranslationException {
+			Encoder<$CO,$C,$T> $hook = (Encoder<$CO,$C,$T>)$hooks.get($x.getClass());
 			if ($hook == null) throw new TranslationException("Encoding dispatch hook not found for " + $x.getClass().getName()); 
 			return encode($codec, $x, $hook);
 		}
 		
 		// probably a bad idea to have to specify an encoder like this.  you're going to want to remember to put in a matching decoder anyway.
-		public <$T> $C encode(Codec<$C> $codec, $T $x, Encoder<$C,$T> $h) throws TranslationException {
+		public <$T> $C encode($CO $codec, $T $x, Encoder<$CO,$C,$T> $h) throws TranslationException {
 			return $h.encode($codec, $x);
 		}
 	}
@@ -92,16 +92,16 @@ public interface Codec<$CODE> {
 	 *                data. In practice, this should presumably match the $CODE
 	 *                parameter of the Codec interface.
 	 */
-	public static class DecoderDispatch<$C> {
-        	public <$T, $S extends $T> void putHook(Class<$S> $c, Decoder<$C,$T> $d) {
+	public static class DecoderDispatch<$CO extends Codec<$CO,$C>, $C> {
+        	public <$T, $S extends $T> void putHook(Class<$S> $c, Decoder<$CO,$C,$T> $d) {
         		$hooks.put($c, $d);
         	}
         	
-		private Map<Class<?>,Decoder<$C,?>>	$hooks	= new HashMap<Class<?>,Decoder<$C,?>>();
+		private Map<Class<?>,Decoder<$CO,$C,?>>	$hooks	= new HashMap<Class<?>,Decoder<$CO,$C,?>>();
 		
 		@SuppressWarnings("unchecked")	// yes, the following method is technically unsafe.  at runtime, it should be absolutely reliable.
-		public <$T> $T decode(Codec<$C> $codec, $C $x, Class<$T> $c) throws TranslationException {
-			Decoder<$C,$T> $hook = (Decoder<$C,$T>)$hooks.get($c);
+		public <$T> $T decode($CO $codec, $C $x, Class<$T> $c) throws TranslationException {
+			Decoder<$CO,$C,$T> $hook = (Decoder<$CO,$C,$T>)$hooks.get($c);
 			if ($hook == null) throw new TranslationException("Decoding dispatch hook not found for class " + $c.getCanonicalName()); 
 			return $hook.decode($codec, $x);
 		}

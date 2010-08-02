@@ -7,35 +7,35 @@ import ahs.util.*;
 
 import java.util.*;
 
-public class CodecImpl<$CODE> implements Codec<$CODE> {
+public class CodecImpl<$CODEC extends Codec<$CODEC, $CODE>, $CODE> implements Codec<$CODEC,$CODE> {
 	public CodecImpl() {
-		$ed = new EncoderDispatch<$CODE>();
-		$dd = new DecoderDispatch<$CODE>();
+		$ed = new EncoderDispatch<$CODEC, $CODE>();
+		$dd = new DecoderDispatch<$CODEC, $CODE>();
 	}
 	
-	private EncoderDispatch<$CODE> $ed;
-	private DecoderDispatch<$CODE> $dd;
+	private EncoderDispatch<$CODEC,$CODE> $ed;
+	private DecoderDispatch<$CODEC,$CODE> $dd;
 	
-	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODE, $TARG> $encoder) {
+	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder) {
 		$ed.putHook($datclrclass, $encoder);
 	}
 	
-	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Decoder<$CODE, $TARG> $decoder) {
+	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Decoder<$CODEC, $CODE, $TARG> $decoder) {
 		$dd.putHook($datclrclass, $decoder);
 	}
 	
-	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Dencoder<$CODE, $TARG> $dencoder) {
-		putHook($datclrclass, (Encoder<$CODE, $TARG>)$dencoder);
-		putHook($datclrclass, (Decoder<$CODE, $TARG>)$dencoder);
+	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Dencoder<$CODEC, $CODE, $TARG> $dencoder) {
+		putHook($datclrclass, (Encoder<$CODEC, $CODE, $TARG>)$dencoder);
+		putHook($datclrclass, (Decoder<$CODEC, $CODE, $TARG>)$dencoder);
 	}
 	
 	public <$TARG> $CODE encode($TARG $datclr) throws TranslationException {
-		return $ed.encode(this, $datclr);
+		return $ed.encode(($CODEC)this, $datclr);
 	}
 	
 	public <$TARG> $TARG decode($CODE $datenc, Class<$TARG> $datclrclass) throws TranslationException {
 		try {
-			return $dd.decode(this, $datenc, $datclrclass);
+			return $dd.decode(($CODEC)this, $datenc, $datclrclass);
 		} catch (TranslationException $e) {
 			throw new TranslationException("Decoding failed for class "+$datclrclass.getName()+".", $e);
 		}
@@ -43,14 +43,14 @@ public class CodecImpl<$CODE> implements Codec<$CODE> {
 	
 	
 	
-	public static class Brutemux<$C> {
+	public static class Brutemux<$CO extends Codec<$CO,$C>, $C> {
         	public <$T> void putHook(Class<$T> $c, Listener<$T> $d) {
         		$hooks.put($c, $d);
         	}
         	
 		private Map<Class<?>,Listener<?>>	$hooks	= new HashMap<Class<?>,Listener<?>>();
 		
-		public boolean disbatch(Codec<$C> $codec, $C $x) throws TranslationException {
+		public boolean disbatch(Codec<$CO,$C> $codec, $C $x) throws TranslationException {
 			//for (Map.Entry<Class<?>,Listener<?>> $ent : $hooks.entrySet()) {
 			for (Class<?> $c : $hooks.keySet()) {
 				try {

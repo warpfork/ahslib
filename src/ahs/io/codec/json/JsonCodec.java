@@ -12,6 +12,8 @@ import java.util.*;
  * @author hash
  */
 public class JsonCodec extends EonCodec {
+	public static final JsonCodec X = new JsonCodec();
+	
 	public JsonCodec() {
 		super(OBJPROVIDER, ARRPROVIDER);
 	}
@@ -26,7 +28,28 @@ public class JsonCodec extends EonCodec {
 											return new JsonArray();
 										}
 									};
+	
+	public <$TARG> JsonObject encode($TARG $datclr) throws TranslationException { return (JsonObject)super.encode($datclr); }
+	//public <$TARG> $TARG decode(JsonObject $datenc, Class<$TARG> $datclrclass) throws TranslationException { return super.decode($datenc, $datclrclass); }	// pointless.  return type doesn't change.  just provides another function with a more specific argument that does the same thing; doesn't mask the more general one.
+	
+	public JsonObject simple(Object $class, String $name, EonObject $data) { return (JsonObject)super.simple($class,$name,$data); }
+	public JsonObject simple(String $class, String $name, EonObject $data) { return (JsonObject)super.simple($class,$name,$data); }
+	public JsonObject simple(Object $class, String $name, EonArray $data) { return (JsonObject)super.simple($class,$name,$data); }
+	public JsonObject simple(String $class, String $name, EonArray $data) { return (JsonObject)super.simple($class,$name,$data); }
+	public JsonObject simple(Object $class, String $name, String $data) { return (JsonObject)super.simple($class,$name,$data); }
+	public JsonObject simple(String $class, String $name, String $data) { return (JsonObject)super.simple($class,$name,$data); }
+	public JsonObject simple(Object $class, String $name, byte[] $data) { return (JsonObject)super.simple($class,$name,$data); }
+	public JsonObject simple(String $class, String $name, byte[] $data) { return (JsonObject)super.simple($class,$name,$data); }
 }
+
+
+
+
+
+
+
+
+
 
 
 

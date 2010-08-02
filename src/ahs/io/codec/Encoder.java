@@ -49,6 +49,6 @@ import ahs.io.codec.eon.*;
  *                The type of object used to represent the encoded version of the data. A
  *                typical example might be ahs.json.JSONObject.
  */
-public interface Encoder<$CODE, $TARG> {
-	public $CODE encode(Codec<$CODE> $codec, $TARG $x) throws TranslationException;
+public interface Encoder<$CODEC extends Codec<$CODEC,$CODE>, $CODE, $TARG> {
+	public $CODE encode($CODEC $codec, $TARG $x) throws TranslationException;
 }

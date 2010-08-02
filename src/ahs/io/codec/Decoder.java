@@ -29,6 +29,6 @@ import ahs.io.*;
  *                The type of object used to represent the encoded version of the data. A
  *                typical example might be ahs.json.JSONObject.
  */
-public interface Decoder<$CODE, $TARG> {
-	public $TARG decode(Codec<$CODE> $codec, $CODE $x) throws TranslationException;
+public interface Decoder<$CODEC extends Codec<$CODEC,$CODE>, $CODE, $TARG> {
+	public $TARG decode($CODEC $codec, $CODE $x) throws TranslationException;
 }

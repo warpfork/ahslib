@@ -94,14 +94,14 @@ public class ByteVector implements Comparable<ByteVector> {
 	public byte[]	$d;
 	
 	/* BEGIN EON CODEC BLOCK */
-	public static final Encoder<EonObject,ByteVector> ENCODER;
-	public static final Decoder<EonObject,ByteVector> DECODER;
+	public static final Encoder<EonCodec,EonObject,ByteVector> ENCODER;
+	public static final Decoder<EonCodec,EonObject,ByteVector> DECODER;
 	static { EonDencoder $t = new EonDencoder(); ENCODER = $t; DECODER = $t; }
-	public static class EonDencoder implements Dencoder<EonObject,ByteVector> {
-		public JsonObject encode(Codec<EonObject> $codec, ByteVector $x) throws TranslationException {
+	public static class EonDencoder implements Dencoder<EonCodec,EonObject,ByteVector> {
+		public EonObject encode(EonCodec $codec, ByteVector $x) throws TranslationException {
 			return $codec.simple("ByV", null, $x.$d);
 		}
-		public ByteVector decode(Codec<EonObject> $codec, EonObject $x) throws TranslationException {
+		public ByteVector decode(EonCodec $codec, EonObject $x) throws TranslationException {
 			$x.assertKlass("ByV");
 			return new ByteVector($x.getByteData());
 		}

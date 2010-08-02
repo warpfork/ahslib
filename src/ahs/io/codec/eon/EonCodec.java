@@ -9,7 +9,7 @@ import java.util.*;
 /**
  * @author hash
  */
-public class EonCodec extends CodecImpl<EonObject> {
+public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 	public EonCodec(Factory<? extends EonObject> $objProvider, Factory<? extends EonArray> $arrProvider) {
 		super();
 		this.$objProvider = $objProvider;
@@ -39,19 +39,19 @@ public class EonCodec extends CodecImpl<EonObject> {
 	
 	
 	
-	public <$TYPE> EonArray encodeList(Codec<EonObject> $codec, List<$TYPE> $list) throws TranslationException {
+	public <$TYPE> EonArray encodeList(List<$TYPE> $list) throws TranslationException {
 		EonArray $ea = $arrProvider.make();
 		int $size = $list.size();
 		for (int $i = 0; $i < $size; $i++)
-			$ea.put($i, $codec.encode($list.get($i)));
+			$ea.put($i, this.encode($list.get($i)));
 		return $ea;
 	}
 	
-	public <$TYPE> List<$TYPE> decodeList(Codec<EonObject> $codec, EonArray $ea, Class<$TYPE> $datclrclass) throws TranslationException {
+	public <$TYPE> List<$TYPE> decodeList(EonArray $ea, Class<$TYPE> $datclrclass) throws TranslationException {
 		int $size = $ea.size();
 		List<$TYPE> $v = new ArrayList<$TYPE>($size);
 		for (int $i = 0; $i < $size; $i++)
-			$v.add($codec.decode($ea.getObj($i), $datclrclass));
+			$v.add(this.decode($ea.getObj($i), $datclrclass));
 		return $v;
 	}
 	

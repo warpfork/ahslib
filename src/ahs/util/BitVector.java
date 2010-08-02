@@ -96,28 +96,26 @@ public class BitVector {
 	}
 
 	@Deprecated
-	public JsonObject toJSON() {
-		JsonObject $jo = Eon.fill(new JsonObject(), this, null, $bs.toByteArray());
-		$jo.put("l", $len);
-		return $jo;
+	public JsonObject toJSON() throws TranslationException {
+		return (JsonObject)ENCODER.encode(JsonCodec.X, this);
 	}
-	
-	/* BEGIN JSON CODEC BLOCK */
-	public static final Encoder<JsonObject,BitVector> ENCODER_JSON;
-	public static final Decoder<JsonObject,BitVector> DECODER_JSON;
-	static { JsonDencoder $t = new JsonDencoder(); ENCODER_JSON = $t; DECODER_JSON = $t; }
-	public static class JsonDencoder implements ahs.io.codec.Dencoder<JsonObject,BitVector> {
-		public JsonObject encode(Codec<JsonObject> $codec, BitVector $x) throws TranslationException {
-			JsonObject $jo = Eon.fill(new JsonObject(), "BiV", null, $x.$bs.toByteArray());
+
+	/* BEGIN EON CODEC BLOCK */
+	public static final Encoder<EonCodec,EonObject,BitVector> ENCODER;
+	public static final Decoder<EonCodec,EonObject,BitVector> DECODER;
+	static { EonDencoder $t = new EonDencoder(); ENCODER = $t; DECODER = $t; }
+	public static class EonDencoder implements ahs.io.codec.Dencoder<EonCodec,EonObject,BitVector> {
+		public EonObject encode(EonCodec $codec, BitVector $x) throws TranslationException {
+			EonObject $jo = $codec.simple("BiV", null, $x.$bs.toByteArray());
 			$jo.put("l", $x.$len);
 			return $jo;
 		}
-		public BitVector decode(Codec<JsonObject> $codec, JsonObject $x) throws TranslationException {
+		public BitVector decode(EonCodec $codec, EonObject $x) throws TranslationException {
 			$x.assertKlass("BiV");
 			return new BitVector($x.getByteData(),0,$x.getInt("l"));
 		}
 	}
-	/* END JSON CODEC BLOCK */
+	/* END EON CODEC BLOCK */
 	
 	
 	// pad		-- extend to size
