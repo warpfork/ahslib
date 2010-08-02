@@ -69,7 +69,16 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 
 		try {
 			// create a new blank instance of the object to be returned
-			$T $x = $class.newInstance();
+			$T $x;
+			try {
+				Constructor<$T> $con = $class.getDeclaredConstructor(Encodable.class);
+				$con.setAccessible(true);
+				$x = $con.newInstance((Encodable)null);
+			} catch (NoSuchMethodException $e) {
+				throw new UnencodableException("reflection problem: a constructor acceptable a single Encodable argument must be available.",$e);
+			} catch (InvocationTargetException $e) {
+				throw new UnencodableException("reflection problem: a constructor threw exception.",$e);
+			}
 			
 			// walk across fields and deserialize the non-static ones
 			if ($cenc.all_fields()) {	// all of them, regardless of whether that particular field is annotated

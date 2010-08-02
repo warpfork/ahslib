@@ -17,7 +17,7 @@ public class AnnotationTest extends TestCase {
 		private @Enc({Enc.DEFAULT,Enc.SELECTED})	String $private;
 		
 		/** just for reflective instantiability */
-		protected Encable() {}
+		private Encable(Encodable $x) {}
 		
 		public Encable(String $public, String $private) {
 			this.$public = $public;
@@ -46,9 +46,9 @@ public class AnnotationTest extends TestCase {
 	@Encodable(all_fields=true)
 	private static class Big {
 		public Little	$lil;
-
+		
 		/** just for reflective instantiability */
-		protected Big() {}
+		private Big(Encodable $x) {}
 		
 		public Big(Little $lil) {
 			this.$lil = $lil;
@@ -59,9 +59,9 @@ public class AnnotationTest extends TestCase {
 	@Encodable
 	private static class Little {
 		public @Enc	String	$str;
-
+		
 		/** just for reflective instantiability */
-		protected Little() {}
+		private Little(Encodable $x) {}
 		
 		public Little(String $str) {
 			this.$str = $str;
