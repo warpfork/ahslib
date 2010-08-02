@@ -8,7 +8,7 @@ import java.nio.charset.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import ahs.util.Strings;
+import ahs.util.*;
 import ahs.util.thread.*;
 
 public class IOForge {
@@ -54,11 +54,38 @@ public class IOForge {
 	public static String readFileAsString(String $filename) throws FileNotFoundException, IOException {
 		return readString(new FileInputStream($filename));
 	}
+	public static String readFileAsString(String $filename, Charset $cs) throws FileNotFoundException, IOException {
+		return readString(new FileInputStream($filename), $cs);
+	}
 	public static String readFileAsString(File $file) throws FileNotFoundException, IOException {
 		return readString(new FileInputStream($file));
 	}
+	public static String readFileAsString(File $file, Charset $cs) throws FileNotFoundException, IOException {
+		return readString(new FileInputStream($file), $cs);
+	}
 	public static String readResourceAsString(String $resource) throws FileNotFoundException, IOException {
 		return readString(getResourceAsStream($resource));
+	}
+	public static String readResourceAsString(String $resource, Charset $cs) throws FileNotFoundException, IOException {
+		return readString(getResourceAsStream($resource), $cs);
+	}
+	public static String[] readFileAsStringLines(String $filename) throws FileNotFoundException, IOException {
+		return readStringLines(new FileInputStream($filename));
+	}
+	public static String[] readFileAsStringLines(String $filename, Charset $cs) throws FileNotFoundException, IOException {
+		return readStringLines(new FileInputStream($filename), $cs);
+	}
+	public static String[] readFileAsStringLines(File $file) throws FileNotFoundException, IOException {
+		return readStringLines(new FileInputStream($file));
+	}
+	public static String[] readFileAsStringLines(File $file, Charset $cs) throws FileNotFoundException, IOException {
+		return readStringLines(new FileInputStream($file), $cs);
+	}
+	public static String[] readResourceAsStringLines(String $resource) throws FileNotFoundException, IOException {
+		return readStringLines(getResourceAsStream($resource));
+	}
+	public static String[] readResourceAsStringLines(String $resource, Charset $cs) throws FileNotFoundException, IOException {
+		return readStringLines(getResourceAsStream($resource), $cs);
 	}
 	
 	/** Closes the input stream when done, even if IOException. */
@@ -78,15 +105,39 @@ public class IOForge {
 	
 	/** Closes the input stream when done, even if IOException. */
 	public static String readString(InputStream $ins) throws IOException {
+		return readString($ins, Strings.UTF_8);
+	}
+	
+	/** Closes the input stream when done, even if IOException. */
+	public static String readString(InputStream $ins, Charset $cs) throws IOException {
 		try {
 			char[] $buf = new char[512];
 			int $k;
 			StringBuffer $sb = new StringBuffer();
-			InputStreamReader $isr = new InputStreamReader($ins, Strings.UTF_8);
+			InputStreamReader $isr = new InputStreamReader($ins, $cs);
 			while (($k = $isr.read($buf)) != -1) {
 				$sb.append($buf, 0, $k);
 			}
 			return $sb.toString();
+		} finally {
+			$ins.close();
+		}
+	}
+
+	
+	/** Closes the input stream when done, even if IOException. */
+	public static String[] readStringLines(InputStream $ins) throws IOException {
+		return readStringLines($ins, Strings.UTF_8);
+	}
+	
+	/** Closes the input stream when done, even if IOException. */
+	public static String[] readStringLines(InputStream $ins, Charset $cs) throws IOException {
+		try {
+			List<String> $lines = new ArrayList<String>();
+			BufferedReader $br = new BufferedReader(new InputStreamReader($ins, $cs));
+			for (String $next = $br.readLine(); $next != null; $next = $br.readLine())
+				$lines.add($next);
+			return $lines.toArray(Primitives.EMPTY_STRING);
 		} finally {
 			$ins.close();
 		}

@@ -12,6 +12,9 @@ public class StringStreamReadHead implements ReadHead<String> {
 		this.$base = new BufferedReader(new InputStreamReader($base, $cs));
 		this.$pump = new PumpT();
 	}
+	public StringStreamReadHead(InputStream $base) {
+		this($base, Strings.UTF_8);
+	}
 	
 	private final BufferedReader			$base;
 	private final PumpT				$pump;
