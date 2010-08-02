@@ -16,8 +16,8 @@ public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 		this.$arrProvider = $arrProvider;
 	}
 
-	private Factory<? extends EonObject> $objProvider;
-	private Factory<? extends EonArray> $arrProvider;
+	private final Factory<? extends EonObject> $objProvider;
+	private final Factory<? extends EonArray> $arrProvider;
 	
 	public static byte[] serialize(EonObject $eo) throws TranslationException {
 		return $eo.serialize();
@@ -33,6 +33,18 @@ public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 	}
 	public <$TARG> $TARG deserialize(byte[] $bar, Class<$TARG> $datclrclass) throws TranslationException {
 		return decode(deserialize($bar), $datclrclass);
+	}
+	
+	
+	
+	
+
+	public EonArray newArr() {
+		return $arrProvider.make();
+	}
+	
+	public EonObject newObj() {
+		return $objProvider.make();
 	}
 	
 	

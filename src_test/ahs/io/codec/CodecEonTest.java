@@ -60,7 +60,7 @@ public class CodecEonTest extends TestCase {
 		
 		public static class Den implements Dencoder<EonCodec,EonObject,Ob> {
 			public EonObject encode(EonCodec $codec, Ob $x) throws TranslationException {
-				return $codec.simple($x,null,$x.$dat);
+				return $codec.simple($x,"dat",$x.$dat);
 			}
 			
 			public Ob decode(EonCodec $codec, EonObject $x) throws TranslationException {
@@ -96,15 +96,33 @@ public class CodecEonTest extends TestCase {
 		public Oc(List<Ob> $x) { $dat = $x; }
 		
 		List<Ob> $dat;
-
+		
 		public static class Den implements Dencoder<EonCodec,EonObject,Oc> {
 			public EonObject encode(EonCodec $codec, Oc $x) throws TranslationException {
-				return $codec.simple($x,"Ob",$codec.encodeList($x.$dat));
+				return $codec.simple($x,null,$codec.encodeList($x.$dat));
 			}
 			
 			public Oc decode(EonCodec $codec, EonObject $x) throws TranslationException {
 				$x.assertKlass(Oc.class);
 				return new Oc($codec.decodeList($x.getArrayData(), Ob.class));
+			}
+		}
+		
+		public static class Dense implements Dencoder<EonCodec,EonObject,Oc> {
+			public EonObject encode(EonCodec $codec, Oc $x) throws TranslationException {
+				EonArray $ja = $codec.newArr();
+				for (int $i = 0; $i < $x.$dat.size(); $i++)
+					$ja.put($i, $x.$dat.get($i).$dat);
+				return $codec.simple($x, null, $ja);
+			}
+			
+			public Oc decode(EonCodec $codec, EonObject $x) throws TranslationException {
+				$x.assertKlass(Oc.class);
+				EonArray $ja = $x.getArrayData();
+				List<Ob> $ar = new ArrayList<Ob>($ja.size());
+				for (int $i = 0; $i < $ja.size(); $i++)
+					$ar.add(new Ob($ja.getString($i)));
+				return new Oc($ar);
 			}
 		}
 		
