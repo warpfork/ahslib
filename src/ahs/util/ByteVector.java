@@ -93,31 +93,20 @@ public class ByteVector implements Comparable<ByteVector> {
 	
 	public byte[]	$d;
 	
-	@Deprecated
-	public ByteVector(JsonObject $jo) throws JsonException {
-		$jo.assertKlass(ByteVector.class);
-		$d = $jo.getByteData();
-	}
-	
-	@Deprecated
-	public JsonObject toJSON() {
-		return Eon.fill(new JsonObject(), this, null, $d);
-	}
-	
-	/* BEGIN JSON CODEC BLOCK */
-	public static final Encoder<JsonObject,ByteVector> ENCODER_JSON;
-	public static final Decoder<JsonObject,ByteVector> DECODER_JSON;
-	static { JsonDencoder $t = new JsonDencoder(); ENCODER_JSON = $t; DECODER_JSON = $t; }
-	public static class JsonDencoder implements Dencoder<JsonObject,ByteVector> {
-		public JsonObject encode(Codec<JsonObject> $codec, ByteVector $x) throws TranslationException {
-			return Eon.fill(new JsonObject(), "ByV", null, $x.$d);
+	/* BEGIN EON CODEC BLOCK */
+	public static final Encoder<EonObject,ByteVector> ENCODER;
+	public static final Decoder<EonObject,ByteVector> DECODER;
+	static { EonDencoder $t = new EonDencoder(); ENCODER = $t; DECODER = $t; }
+	public static class EonDencoder implements Dencoder<EonObject,ByteVector> {
+		public JsonObject encode(Codec<EonObject> $codec, ByteVector $x) throws TranslationException {
+			return $codec.simple("ByV", null, $x.$d);
 		}
-		public ByteVector decode(Codec<JsonObject> $codec, JsonObject $x) throws TranslationException {
+		public ByteVector decode(Codec<EonObject> $codec, EonObject $x) throws TranslationException {
 			$x.assertKlass("ByV");
 			return new ByteVector($x.getByteData());
 		}
 	}
-	/* END JSON CODEC BLOCK */
+	/* END EON CODEC BLOCK */
 	
 	// pad		-- extend to size
 	// chop		-- limit to size
