@@ -37,7 +37,20 @@ public class WorkQueue<$T> implements Queue<$T> {
 	
 	private final Lock			$lw;
 	private final ConcurrentLinkedQueue<$T>	$queue;	// someday i might reimplement this myself since i end up doubling the locks on each end the way i've done it.
-	private final Semaphore			$gate;	// we -always- update this -before- the queue so that it's a -minimal- value.  it may sometimes severely underestimate the available work in order to provide this service with guaranteeable correctness, since reading the amount of available work from this semaphore is an operation that is never blocked. (this comes up when operations that may potentially modify the entire queue are in progress as opposed to the more common operations that simply effect the head or tail of the queue).
+	/**
+	 * we -always- update this -before- the queue so that it's a -minimal- value. it
+	 * may sometimes severely underestimate the available work in order to provide
+	 * this service with guaranteeable correctness, since reading the amount of
+	 * available work from this semaphore is an operation that is never blocked. (this
+	 * comes up when operations that may potentially modify the entire queue are in
+	 * progress as opposed to the more common operations that simply effect the head
+	 * or tail of the queue).
+	 * 
+	 * when write is locked, it can't grow (but it can still shrink, even when read is
+	 * locked, because the semaphore is used to synchronize and order read requests
+	 * even before the read lock is invoked).
+	 */
+	private final Semaphore			$gate;
 	private final Lock			$lr;
 	
 	private void lockWrite() {
@@ -75,48 +88,60 @@ public class WorkQueue<$T> implements Queue<$T> {
 	}
 	
 	/**
-	 * This deviates from the standard contract of the Queue interface. This method
-	 * will not throw a NoSuchElementException when the queue is empty; instead it
-	 * simply blocks until some data can be returned.
-	 * 
-	 * @throws NoSuchElementException
-	 *                 when the queue was empty when the request was made and the
-	 *                 queue has since been "closed".
-	 */
-	public $T element() throws NoSuchElementException {
-		//TODO
-		return null;
-	}
-	
-	/**
 	 * Since this queue does not provide a capacity restriction, this method is the
 	 * same as calling <code>add($e)</code>. (Subclasses that do provide capacity
 	 * restriction may choose to make this a blocking call.)
 	 */
 	public boolean offer($T $e) {
-		//TODO
-		return false;
+		return add($e);
 	}
 	
-	/** {@inheritDoc} 
-	 * Use this method with extreme caution in a multithreaded case.  In fact, just don't use it. 
+	/**
+	 * {@inheritDoc}
+	 * Use this method with extreme caution in a multithreaded case, since 
+	 * consecutive invocations can not be expected to yield the same result.
 	 */
 	public $T peek() {
-		//TODO
-		return null;
+		// doesn't need a permit, because it's not guaranteed to return anything
+		// in fact, i don't think it even needs to lock, because isn't not modifying anything
+		return $queue.peek();
+	}
+	
+	/**
+	 * This deviates from the standard contract of the Queue interface. This method
+	 * will not throw a NoSuchElementException when the queue is empty; instead it
+	 * simply blocks until some data can be returned. Its use is simply not
+	 * recommended.
+	 */
+	public $T element() {
+		// this guy needs a permit even though he's not removing since he needs to return something
+		$gate.acquireUninterruptibly();	// doing this outside of a lock scares me
+		lockRead();
+		$T $v = $queue.element();
+		$gate.release();	// this might actually be fine outside the unlock too; not sure
+		unlockRead();
+		return $v;
 	}
 	
 	/** {@inheritDoc} */
 	public $T poll() {
-		//TODO
-		return null;
+		$gate.tryAcquire();	// doing this outside of a lock scares me
+		lockRead();
+		$T $v = $queue.poll();
+		unlockRead();
+		return $v;
 	}
 	
 	/** {@inheritDoc} */
 	public $T remove() {
-		//TODO
-		return null;
+		$gate.acquireUninterruptibly();	// doing this outside of a lock scares me
+		lockRead();
+		$T $v = $queue.remove();
+		unlockRead();
+		return $v;
 	}
+	
+	
 	
 	/** {@inheritDoc} */
 	public boolean addAll(Collection<? extends $T> $more) {
