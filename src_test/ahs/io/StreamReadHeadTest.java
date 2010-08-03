@@ -145,7 +145,7 @@ public class StreamReadHeadTest extends TestCase {
 		
 		new PumperBasic($rh.getPump()).start();
 		
-		while (0==0) if ($eated.get() == BigBlocks) break; else X.chill(100);
+		while (true) if ($eated.get() == BigBlocks) break; else X.chill(100);
 		
 		assertTrue($rh.isClosed());
 		assertEquals(Block3, Arr.toArray(((StreamReadHead)$rh).readCompletely()));

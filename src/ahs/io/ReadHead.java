@@ -7,6 +7,7 @@ import java.io.*;
 
 // it might be better semantics to ALWAYS have the normal read methods return full chunks,
 //  and then provide a single extra readLast() method that throws exceptions unless called after the head is closed.
+// on the other hand, nobody ever said that a particular subclass can't choose to do that anyway.  there's no need to make it explicit here.
 
 /**
  * <p>
@@ -16,8 +17,8 @@ import java.io.*;
  * This unified scheme has the noteworthy aspect of always allowing incoming data to be
  * requested at the application's leisure (as opposed to requiring any sort of event
  * listener), while simultaneously allowing event listeners to be attached if the old
- * "listener" pattern or "select"-like functionality is desired across multple ReadHead
- * instances.
+ * "listener" pattern is desired or "select"-like functionality need be implemented across
+ * multple ReadHead instances.
  * </p>
  * 
  * <p>
@@ -64,7 +65,7 @@ public interface ReadHead<$T> {
 	 * Grants access to the Pump which powers the channel underlying this ReadHead. A
 	 * "blank" pump (which may also be a singleton) may be returned if the ReadHead
 	 * implementation does not require a thread for pumping the underlying channel,
-	 * but never null.
+	 * but null may never be returned.
 	 * </p>
 	 * 
 	 * <p>
@@ -102,19 +103,18 @@ public interface ReadHead<$T> {
 	
 	/**
 	 * <p>
-	 * Blocking read.  Elements that are read are removed from the stream.
+	 * Blocking read. Elements that are read are removed from the stream.
 	 * </p>
 	 * 
 	 * <p>
-	 * If multiple threads block on this, there is no guarantee of fairness (that is,
-	 * the first thread to block might not be the first thread to unblock; the order
-	 * is random)... because why the hell would you have multiple threads reading from
-	 * this in the first place? Otherwise, synchronicity is maintained -- there will be
-	 * no double-reads, null pointer exceptions, concurrent modification exceptions,
-	 * or etc.
+	 * If multiple threads block on this concurrently, the choice of whether or not to
+	 * provide a guarantee of fairness is left up to the implementor. Regardless,
+	 * basic synchronicity must be maintained -- there will be no double-reads, null
+	 * pointer exceptions, concurrent modification exceptions, or etc.
 	 * </p>
 	 * 
-	 * @return next chunk of input
+	 * @return next chunk of input, or null if there is no data available and the underlying
+	 *         stream has reached an EOF state.
 	 */
 	public $T read();
 	
@@ -123,6 +123,7 @@ public interface ReadHead<$T> {
 	 * 
 	 * @return a chunk of input if possible, or null otherwise; null may indicate
 	 *         either EOF or simply nothing available at the time.
+	 *         <code>isClosed()</code> should be used to determine the difference.
 	 */
 	public $T readNow();
 	
@@ -130,6 +131,7 @@ public interface ReadHead<$T> {
 	 * @return true if a chunk of input is stream to be read immediately; false
 	 *         otherwise. Similarly to <code>readNow()</code>, a return of false may
 	 *         indicate either EOF or simply nothing available at the time.
+	 *         <code>isClosed()</code> should be used to determine the difference.
 	 */
 	public boolean hasNext();
 	
@@ -142,7 +144,8 @@ public interface ReadHead<$T> {
 	 * @return a primitive array containing one entry for each chunk of input
 	 *         following the last invocation of a read method that is available from
 	 *         the stream between the time of this method's invocation and the closing
-	 *         of the stream.
+	 *         of the stream. The array returned may have zero entries if no data ever
+	 *         becomes available, but null may never be returned.
 	 */
 	public $T[] readAll();
 	
@@ -153,7 +156,8 @@ public interface ReadHead<$T> {
 	 * 
 	 * @return a primitive array containing one entry for each chunk of input
 	 *         following the last invocation of a read method that is currently
-	 *         available from the stream.
+	 *         available from the stream. The array returned may have zero entries if
+	 *         there is no input currently available, but null may never be returned.
 	 */
 	public $T[] readAllNow();
 	

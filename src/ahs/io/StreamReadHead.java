@@ -34,7 +34,7 @@ public class StreamReadHead implements ReadHead<ByteBuffer> {
 	// some things about the ConcurrentLinkedQueue implementation are inopportune.
 	// in particular, the fact that the toArray() method COPIES EVERYTHING.
 	//   it's not as bad as it could be; at least it's a shallow copy.
-	//   using large block sizes would can its impact significantly.
+	//   using large block sizes can limit its impact significantly.
 	
 	public StreamReadHead(InputStream $base, int $blockSize) {
 		this.$base = $base;
