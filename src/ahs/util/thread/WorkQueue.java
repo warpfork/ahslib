@@ -89,11 +89,15 @@ public class WorkQueue<$T> implements Queue<$T> {
 	
 	/**
 	 * Since this queue does not provide a capacity restriction, this method is the
-	 * same as calling <code>add($e)</code>. (Subclasses that do provide capacity
+	 * same as calling <code>add($more)</code>. (Subclasses that do provide capacity
 	 * restriction may choose to make this a blocking call.)
 	 */
-	public boolean offer($T $e) {
-		return add($e);
+	public boolean offer($T $more) {
+		lockWrite();
+		$queue.add($more);
+		$gate.release();
+		unlockWrite();
+		return true;	// really
 	}
 	
 	/**
@@ -118,21 +122,26 @@ public class WorkQueue<$T> implements Queue<$T> {
 		$gate.acquireUninterruptibly();	// doing this outside of a lock scares me
 		lockRead();
 		$T $v = $queue.element();
-		$gate.release();	// this might actually be fine outside the unlock too; not sure
+		$gate.release();	// this must be done inside the lock for voodoo reasons.  (remove(Object))
 		unlockRead();
 		return $v;
 	}
 	
 	/** {@inheritDoc} */
 	public $T poll() {
-		$gate.tryAcquire();	// doing this outside of a lock scares me
+		boolean $one = $gate.tryAcquire();	// doing this outside of a lock scares me
+		if (!$one) return null;
 		lockRead();
 		$T $v = $queue.poll();
 		unlockRead();
 		return $v;
 	}
-	
-	/** {@inheritDoc} */
+
+	/**
+	 * This deviates from the standard contract of the Queue interface. This method
+	 * will not throw a NoSuchElementException when the queue is empty; instead it
+	 * simply blocks until some data can be returned.
+	 */
 	public $T remove() {
 		$gate.acquireUninterruptibly();	// doing this outside of a lock scares me
 		lockRead();
