@@ -74,7 +74,10 @@ public class WorkQueue<$T> implements Queue<$T> {
 		$lw.unlock();
 	}
 	
-	
+	public int interrupt() {
+		return $gate.getQueueLength();
+		//TODO:AHS: how do i do this without timed cycles on the acquisition (or using actual interruption)?
+	}
 	
 	
 	
