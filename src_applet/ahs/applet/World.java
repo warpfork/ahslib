@@ -57,19 +57,28 @@ public class World implements DomContact {
 	}
 	
 	private void initializeBodyBetter() {
+		// get rid of weird padding on the body itself
 		setAttribute ("body", "style.margin",		"0");
 		setAttribute ("body", "style.padding",		"0");
-		setAttribute ("Main", "style.visibility",	"hidden");
+		
+		// take the applet out of sight and layout flow
+		setAttribute ("app", "style.visibility",	"hidden");
+		//setAttribute ("app", "style.position",		"absolute");	// makes the applet reload itself?!?!
+		
+		// highlight the main region
 		setAttribute ("main", "style.border",		"3px dotted #000000");
-		setAttribute ("main", "style.position",		"absolute");
-		setAttribute ("main", "style.top",		"0");
-		setAttribute ("main", "style.width",		"100%");
+		//setAttribute ("main", "style.position",		"absolute");
+		//setAttribute ("main", "style.top",		"0");
+		//setAttribute ("main", "style.width",		"100%");
 	}
 	
 	public void init(Applet $applet) {
 		this.$dom.init($applet);
 		initializeDevChannels();
 		initializeBodyBetter();
+	}
+	public String getAppletId() {
+		return this.$dom.getAppletId();
 	}
 	public Map<String,String> getQueryMap() {
 		return this.$dom.getQueryMap();

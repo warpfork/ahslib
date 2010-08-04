@@ -10,6 +10,8 @@ import java.util.*;
  * 
  * The body tag should be accessible by the id "<code>body</code>";
  * 
+ * The applet itself should be accessible by the id "<code>app</code>";
+ * 
  * The element intended for content insertion on this page should be accessible by the id
  * " <code>body</code>" and must be an immediate child of the body (this is to avoid
  * situations involving overwritting the applet itself).
@@ -22,6 +24,7 @@ import java.util.*;
  */
 public interface DomContact {
 	public void init(Applet $applet);
+	public String getAppletId();
 	
 	public Map<String,String> getQueryMap();
 	

@@ -52,13 +52,16 @@ public class DomContactJso implements DomContact {
 		eval("gebt('body')[0].id = 'body';");
 		eval("dB = newe('div'); dB.id = 'main'; gebi('body').appendChild(dB);");
 		eval("dB = newe('div'); dB.id = 'dev'; dB.style.visibility = 'hidden'; gebi('body').appendChild(dB);");
+		eval("gebi('main').focus()");
 	}
+	private static final String LG_AND = Pattern.quote("&");
+	private static final String LG_EQ = Pattern.quote("=");
 	private void learnGet() {
 		String $get = (String)eval("window.location.search.substring(1)");
-		String[] $entries = $get.split(";");
+		String[] $entries = $get.split(LG_AND);
 		Map<String,String> $map = new HashMap<String,String>();
 		for (String $ent : $entries) {
-			String[] $split = $ent.split("=", 1);
+			String[] $split = $ent.split(LG_EQ, 2);
 			if ($split.length == 1)
 				$map.put($split[0], "");
 			else
@@ -74,8 +77,14 @@ public class DomContactJso implements DomContact {
 	private static final String SSN = Matcher.quoteReplacement("\\n");
 	private synchronized String condense(String... $strs) {
 		$precommand.setLength(0);
-		for (String $s : $strs) $precommand.append($s.replaceAll("\n", SSN));
+		for (String $s : $strs) $precommand.append($s.replaceAll("\n", SSN));	//XXX:AHS:APPLET: i don't think this goes here; it deals with issues arrising from println stuff, which isn't our problem
 		return $precommand.toString();
+	}
+	
+	
+
+	public String getAppletId() {
+		return null;
 	}
 	
 	/**
