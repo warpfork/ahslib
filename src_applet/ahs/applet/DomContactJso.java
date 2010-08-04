@@ -13,10 +13,8 @@ public class DomContactJso implements DomContact {
 		if ($jso != null) throw new IllegalStateException("we already did that!");
 		$jso = JSObject.getWindow($applet);
 		$precommand = new StringBuffer();
-		eval("alert('init');");
 		insertCrit();
 		learnGet();
-		//$applet.add(new java.awt.Label("Applet loaded successfully."));
 	}
 	
 	private JSObject	$jso;
@@ -78,6 +76,18 @@ public class DomContactJso implements DomContact {
 		$precommand.setLength(0);
 		for (String $s : $strs) $precommand.append($s.replaceAll("\n", SSN));
 		return $precommand.toString();
+	}
+	
+	/**
+	 * Returns the values of HTTP GET of the containing page.
+	 * 
+	 * @return a Map of keys to values from the HTTP GET query of the page the applet
+	 *         is contained within. i.e. for the page
+	 *         <code>example.com/dir/page.ext?key=val&covered=inbees</code>, the map
+	 *         would contain <code>{"key" => "value", "covered" => "inbees"}</code>
+	 */
+	public Map<String,String> getQueryMap() {
+		return $query;
 	}
 	
 	/**

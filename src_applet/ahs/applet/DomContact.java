@@ -1,6 +1,7 @@
 package ahs.applet;
 
 import java.applet.*;
+import java.util.*;
 
 /**
  * The "<code>$id</code>
@@ -21,6 +22,8 @@ import java.applet.*;
  */
 public interface DomContact {
 	public void init(Applet $applet);
+	
+	public Map<String,String> getQueryMap();
 	
 	public void setContent(String $id, String $body);
 	public String getContent(String $id);

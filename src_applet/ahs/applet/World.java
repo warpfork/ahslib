@@ -4,6 +4,7 @@ import ahs.log.*;
 import ahs.util.*;
 import java.applet.*;
 import java.io.*;
+import java.util.*;
 
 public class World implements DomContact {
 	public World(DomContact $d) {
@@ -69,6 +70,9 @@ public class World implements DomContact {
 		this.$dom.init($applet);
 		initializeDevChannels();
 		initializeBodyBetter();
+	}
+	public Map<String,String> getQueryMap() {
+		return this.$dom.getQueryMap();
 	}
 	public void setContent(String $id, String $body) {
 		this.$dom.setContent($id, $body);
