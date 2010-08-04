@@ -2,8 +2,10 @@ package ahs.util.thread;
 
 import ahs.test.*;
 import ahs.util.*;
-
 import java.util.*;
+
+import junit.framework.*;
+import ahs.test.TestCase;
 
 public class WorkQueueTest extends TestCase {
 	public void setUp() {
@@ -172,7 +174,9 @@ public class WorkQueueTest extends TestCase {
 		
 		assertEquals($q.qsize(), $q.size());	// this isn't the same on every run since we don't know if the last Zee happened after the last Qwee
 		
-		new Thread(new Zee($q, 1)).start();
+		Thread $t = new Thread(new Zee($q, 1));
+		$t.start();
+		$t.join();
 		assertEquals($mult*10, $q.size());
 	}
 	private static final class Qwee implements Runnable {
@@ -211,8 +215,14 @@ public class WorkQueueTest extends TestCase {
 	 */
 	public void testBasicMoreThreadMoreRepeatedly() throws InterruptedException {
 		final int $mult = 1000;
-		for (int $i = 0; $i < $mult; $i++)
-			testBasicMoreThreadMore();
+		for (int $i = 0; $i < $mult; $i++) {
+			try {
+				setUp();
+				testBasicMoreThreadMore();
+			} catch (AssertionFailedError $e) {
+				throw new Error("run "+$i, $e);
+			}
+		}
 	}
 	
 	
