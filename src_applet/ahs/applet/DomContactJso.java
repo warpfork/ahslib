@@ -4,6 +4,7 @@ import ahs.util.*;
 
 import java.applet.*;
 import java.util.*;
+import java.util.regex.*;
 
 import netscape.javascript.*;
 
@@ -50,8 +51,9 @@ public class DomContactJso implements DomContact {
 	private void insertCrit() {
 		eval("dS = document.createElement('script'); dS.type = 'text/javascript'; dS.innerHTML = \""+CRIT+"\"; document.getElementsByTagName('head')[0].appendChild(dS);");
 		eval("gebt('head')[0].id = 'head';");
-		eval("dB = newe('div'); dB.id = 'body'; gebt('body')[0].appendChild(dB);");
-		eval("dB = newe('div'); dB.id = 'dev'; gebt('body')[0].appendChild(dB);");
+		eval("gebt('body')[0].id = 'body';");
+		eval("dB = newe('div'); dB.id = 'main'; gebi('body').appendChild(dB);");
+		eval("dB = newe('div'); dB.id = 'dev'; dB.style.visibility = 'hidden'; gebi('body').appendChild(dB);");
 	}
 	private void learnGet() {
 		String $get = (String)eval("window.location.search.substring(1)");
@@ -71,9 +73,10 @@ public class DomContactJso implements DomContact {
 	private synchronized Object eval(String... $strs) {
 		return $jso.eval(condense($strs));
 	}
+	private static final String SSN = Matcher.quoteReplacement("\\n");
 	private synchronized String condense(String... $strs) {
 		$precommand.setLength(0);
-		for (String $s : $strs) $precommand.append($s);
+		for (String $s : $strs) $precommand.append($s.replaceAll("\n", SSN));
 		return $precommand.toString();
 	}
 	

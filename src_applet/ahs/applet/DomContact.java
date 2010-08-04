@@ -5,11 +5,16 @@ import java.applet.*;
 /**
  * The "<code>$id</code>
  * " string arguments to all these methods should match the DOM's concept of "
- * <code>id</code>
- * ".  The root pane intended for content insertion should be accessible by the id "
- * <code>body</code>"; this object need not necessarily be the actual <code>body</code>
- * tag (and in fact in practice probably shouldn't be; overwritting the applet itself is
- * dangerously error-prone).
+ * <code>id</code>".
+ * 
+ * The body tag should be accessible by the id "<code>body</code>";
+ * 
+ * The element intended for content insertion on this page should be accessible by the id
+ * " <code>body</code>" and must be an immediate child of the body (this is to avoid
+ * situations involving overwritting the applet itself).
+ * 
+ * An (initially hidden) element intended for dev logging on this page should be
+ * accessible by the id "<code>dev</code>" and must be an immediate child of the body.
  * 
  * @author hash
  * 
