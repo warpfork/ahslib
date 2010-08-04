@@ -1,5 +1,7 @@
 package ahs.applet;
 
+import ahs.util.*;
+
 import java.applet.*;
 import java.util.*;
 
@@ -67,9 +69,12 @@ public class DomContactJso implements DomContact {
 	private Map<String,String> $query;
 	
 	private synchronized Object eval(String... $strs) {
+		return $jso.eval(condense($strs));
+	}
+	private synchronized String condense(String... $strs) {
 		$precommand.setLength(0);
 		for (String $s : $strs) $precommand.append($s);
-		return $jso.eval($precommand.toString());
+		return $precommand.toString();
 	}
 	
 	/**
@@ -142,6 +147,7 @@ public class DomContactJso implements DomContact {
 	 *                escape accordingly (and do not assume sanitization).
 	 */
 	public void setAttribute(String $id, String $key, String $value) {
+		//X.saye(condense("gebi('",$id,"').",$key,"=\"",$value,"\";"));
 		eval("gebi('",$id,"').",$key,"=\"",$value,"\";");
 	}
 }
