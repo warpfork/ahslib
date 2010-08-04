@@ -82,10 +82,8 @@ public class DomContactJso implements DomContact {
 	}
 	
 	
-
-	public String getAppletId() {
-		return null;
-	}
+	
+	
 	
 	/**
 	 * Returns the values of HTTP GET of the containing page.

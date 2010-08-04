@@ -77,9 +77,6 @@ public class World implements DomContact {
 		initializeDevChannels();
 		initializeBodyBetter();
 	}
-	public String getAppletId() {
-		return this.$dom.getAppletId();
-	}
 	public Map<String,String> getQueryMap() {
 		return this.$dom.getQueryMap();
 	}

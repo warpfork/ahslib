@@ -24,7 +24,6 @@ import java.util.*;
  */
 public interface DomContact {
 	public void init(Applet $applet);
-	public String getAppletId();
 	
 	public Map<String,String> getQueryMap();
 	
