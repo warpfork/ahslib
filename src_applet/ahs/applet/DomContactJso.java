@@ -7,10 +7,12 @@ import netscape.javascript.*;
 
 public class DomContactJso implements DomContact {
 	public void init(Applet $applet) {
+		if ($jso != null) throw new IllegalStateException("we already did that!");
 		$jso = JSObject.getWindow($applet);
 		$precommand = new StringBuffer();
 		eval("alert('init');");
 		insertCrit();
+		learnGet();
 		//$applet.add(new java.awt.Label("Applet loaded successfully."));
 	}
 	
@@ -28,8 +30,8 @@ public class DomContactJso implements DomContact {
 		"	delete element;								\\n" + 
 		"	return true;								\\n" + 
 		"}										\\n" + 
-		"" + 
-		"" + 
+		"" +  
+		"" +  
 		"" + 
 		"" + 
 		"" + 
@@ -47,7 +49,23 @@ public class DomContactJso implements DomContact {
 		eval("dS = document.createElement('script'); dS.type = 'text/javascript'; dS.innerHTML = \""+CRIT+"\"; document.getElementsByTagName('head')[0].appendChild(dS);");
 		eval("gebt('head')[0].id = 'head';");
 		eval("dB = newe('div'); dB.id = 'body'; gebt('body')[0].appendChild(dB);");
+		eval("dB = newe('div'); dB.id = 'dev'; gebt('body')[0].appendChild(dB);");
 	}
+	private void learnGet() {
+		String $get = (String)eval("window.location.search.substring(1)");
+		String[] $entries = $get.split(";");
+		Map<String,String> $map = new HashMap<String,String>();
+		for (String $ent : $entries) {
+			String[] $split = $ent.split("=", 1);
+			if ($split.length == 1)
+				$map.put($split[0], "");
+			else
+				$map.put($split[0], $split[1]);
+		}
+		$query = Collections.unmodifiableMap($map);
+	}
+	private Map<String,String> $query;
+	
 	private synchronized Object eval(String... $strs) {
 		$precommand.setLength(0);
 		for (String $s : $strs) $precommand.append($s);
@@ -55,28 +73,75 @@ public class DomContactJso implements DomContact {
 	}
 	
 	/**
-	 * @param $ID
+	 * Sets the value of innerHTML of the specified object in the DOM.
+	 * 
+	 * @param $id
+	 *                the DOM id of the element to affect
 	 * @param $body
 	 *                will be enclosed in double quotes when evaluated into the page;
 	 *                escape accordingly (and do not assume sanitization).
 	 */
-	public void setContent(String $ID, String $body) {
-		eval("gebi('",$ID,"').innerHTML=\"",$body,"\";");
-	}
-	public String getContent(String $ID) {
-		return eval("gebi('",$ID,"').innerHTML;")+"";
-	}
-	public void appendContent(String $ID, String $body) {
-		eval("gebi('",$ID,"').innerHTML+=\"",$body,"\";");
-	}
-	public void clearContent(String $ID) {
-		eval("gebi('",$ID,"').innerHTML='';");
+	public void setContent(String $id, String $body) {
+		//eval("gebi('",$id,"').innerHTML=\"",$body,"\";");
+		setAttribute($id, "innerHTML", $body);
 	}
 	
-	public String getAttribute(String $ID, String $key) {
-		return eval("gebi('",$ID,"').",$key,";")+"";	// this hack is actually safer than toString. :/
+	/**
+	 * Returns the current value of innerHTML of the specified object in the DOM.
+	 * 
+	 * @param $id
+	 *                the DOM id of the element to affect
+	 */
+	public String getContent(String $id) {
+		//return eval("gebi('",$id,"').innerHTML;")+"";
+		return getAttribute($id, "innerHTML");
 	}
-	public void setAttribute(String $ID, String $key, String $value) {
-		eval("gebi('",$ID,"').",$key,"=\"",$value,"\";");
+	
+	/**
+	 * @param $id
+	 *                the DOM id of the element to affect
+	 * @param $body
+	 *                will be enclosed in double quotes when evaluated into the page;
+	 *                escape accordingly (and do not assume sanitization).
+	 */
+	public void appendContent(String $id, String $body) {
+		eval("gebi('",$id,"').innerHTML+=\"",$body,"\";");
+	}
+	
+	/**
+	 * @param $id
+	 *                the DOM id of the element to affect
+	 */
+	public void clearContent(String $id) {
+		eval("gebi('",$id,"').innerHTML='';");
+	}
+	
+	/**
+	 * Returns the current value of the attribute specified as a String, or an empty
+	 * string if the attribute is not specified.
+	 * 
+	 * @param $id
+	 *                the DOM id of the element to affect
+	 * @param $key
+	 *                the property name to examine
+	 */
+	public String getAttribute(String $id, String $key) {
+		return eval("gebi('",$id,"').",$key,";")+"";
+	}
+	
+	/**
+	 * Returns the current value of the attribute specified as a String, or an empty
+	 * string if the attribute is not specified.
+	 * 
+	 * @param $id
+	 *                the DOM id of the element to affect
+	 * @param $key
+	 *                the property name to examine
+	 * @param $value
+	 *                the value to assign to the property.  will be enclosed in double quotes when evaluated into the page;
+	 *                escape accordingly (and do not assume sanitization).
+	 */
+	public void setAttribute(String $id, String $key, String $value) {
+		eval("gebi('",$id,"').",$key,"=\"",$value,"\";");
 	}
 }

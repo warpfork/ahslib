@@ -144,13 +144,33 @@ public class IOForge {
 	}
 	
 	public static InputStream getResourceAsStream(String $resource) throws FileNotFoundException {
-		InputStream $ins = CL.getResourceAsStream($resource);
+		InputStream $ins;
+		if (CL != null)
+			$ins = CL.getResourceAsStream($resource);
+		else
+			$ins = CL2.getResourceAsStream($resource);
 		if ($ins == null) throw new FileNotFoundException();
 		return $ins;
 	}
 	
-	private static final ClassLoader CL = ClassLoader.getSystemClassLoader();
-	//private static final ClassLoader CL = IOForge.class.getClassLoader();
+	private static final ClassLoader CL;
+	private static final ClassLoader CL2;
+	static {
+		ClassLoader $cl;
+		try {
+			$cl = ClassLoader.getSystemClassLoader();
+		} catch (java.security.AccessControlException $e) {
+			//$cl = IOForge.class.getClassLoader();
+			//ClassLoader $next = $cl.getParent();
+			//while ($next != null) {
+			//	$cl = $next;
+			//	$next = $cl.getParent();
+			//}
+			$cl = null;	// we detect and deal with this elsewhere
+		}
+		CL = $cl;
+		CL2 = IOForge.class.getClassLoader();
+	};
 	
 	
 	
