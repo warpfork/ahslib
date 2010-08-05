@@ -128,6 +128,9 @@ public interface ReadHead<$T> {
 	public $T readNow();
 	
 	/**
+	 * Tells whether or not input is availale to be read. Obviously this semantics of
+	 * this are somewhat unreadably if the ReadHead is shared by multiple threads.
+	 * 
 	 * @return true if a chunk of input is stream to be read immediately; false
 	 *         otherwise. Similarly to <code>readNow()</code>, a return of false may
 	 *         indicate either EOF or simply nothing available at the time.

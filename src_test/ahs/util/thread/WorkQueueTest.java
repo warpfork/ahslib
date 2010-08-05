@@ -211,10 +211,12 @@ public class WorkQueueTest extends TestCase {
 	};
 	
 	/**
-	 * Does the previous test a few thousand times.
+	 * Does the previous test as many times as my patience can readily bear (which
+	 * turns out to be a few hundred -- 1000 is like 15 minutes).
 	 */
 	public void testBasicMoreThreadMoreRepeatedly() throws InterruptedException {
-		final int $mult = 1000;
+		final int $mult = 200;
+		long $start = X.time();
 		for (int $i = 0; $i < $mult; $i++) {
 			try {
 				setUp();
@@ -223,6 +225,7 @@ public class WorkQueueTest extends TestCase {
 				throw new Error("run "+$i, $e);
 			}
 		}
+		X.saye((X.time()-$start)/$mult+" ms per QweeZee run");
 	}
 	
 	

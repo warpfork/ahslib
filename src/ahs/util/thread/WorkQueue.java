@@ -35,7 +35,7 @@ public class WorkQueue<$T> implements Queue<$T> {
 		$lr = new ReentrantLock();
 	}
 	
-	private final Lock			$lw;
+	private final Lock			$lw;	// this might do better as a synch block given the possibility exceptions running away with us
 	private final ConcurrentLinkedQueue<$T>	$queue;	// someday i might reimplement this myself since i end up doubling the locks on each end the way i've done it.
 	/**
 	 * we -always- update this -before- the queue so that it's a -minimal- value. it
@@ -43,12 +43,14 @@ public class WorkQueue<$T> implements Queue<$T> {
 	 * this service with guaranteeable correctness, since reading the amount of
 	 * available work from this semaphore is an operation that is never blocked. (this
 	 * comes up when operations that may potentially modify the entire queue are in
-	 * progress as opposed to the more common operations that simply effect the head
-	 * or tail of the queue).
+	 * progress. the more common operations that simply effect the head or tail of the
+	 * queue will not lead to drastic varation in the number of permits available to
+	 * the semphore).
 	 * 
 	 * when write is locked, it can't grow (but it can still shrink, even when read is
 	 * locked, because the semaphore is used to synchronize and order read requests
-	 * even before the read lock is invoked).
+	 * even before the read lock is invoked). thus, if write is locked and all permits
+	 * are then drained, read is effectly completely locked as well.
 	 */
 	private final Semaphore			$gate;
 	private final Lock			$lr;
@@ -56,21 +58,7 @@ public class WorkQueue<$T> implements Queue<$T> {
 	private void lockWrite() {
 		$lw.lock();
 	}
-	private void lockRead() {
-		$lr.lock();
-	}
-	private void lockAll() {
-		$lw.lock();
-		$lr.lock();
-	}
 	private void unlockWrite() {
-		$lw.unlock();
-	}
-	private void unlockRead() {
-		$lr.unlock();
-	}
-	private void unlockAll() {
-		$lr.unlock();
 		$lw.unlock();
 	}
 	
@@ -123,10 +111,8 @@ public class WorkQueue<$T> implements Queue<$T> {
 	public $T element() {
 		// this guy needs a permit even though he's not removing since he needs to return something
 		$gate.acquireUninterruptibly();	// doing this outside of a lock scares me
-		lockRead();
 		$T $v = $queue.element();
 		$gate.release();	// this must be done inside the lock for voodoo reasons.  (remove(Object))
-		unlockRead();
 		return $v;
 	}
 	
@@ -134,9 +120,7 @@ public class WorkQueue<$T> implements Queue<$T> {
 	public $T poll() {
 		boolean $one = $gate.tryAcquire();	// doing this outside of a lock scares me
 		if (!$one) return null;
-		lockRead();
 		$T $v = $queue.poll();
-		unlockRead();
 		return $v;
 	}
 
@@ -147,9 +131,7 @@ public class WorkQueue<$T> implements Queue<$T> {
 	 */
 	public $T remove() {
 		$gate.acquireUninterruptibly();	// doing this outside of a lock scares me
-		lockRead();
 		$T $v = $queue.remove();
-		unlockRead();
 		return $v;
 	}
 	
@@ -166,24 +148,24 @@ public class WorkQueue<$T> implements Queue<$T> {
 
 	/** {@inheritDoc} */
 	public void clear() {
-		lockAll();
+		lockWrite();
 		$gate.drainPermits();
 		$queue.clear();
-		unlockAll();
+		unlockWrite();
 	}
 	
 	/** {@inheritDoc} */
 	public boolean contains(Object $o) {
-		lockAll();
+		lockWrite();
 		boolean $victory = $queue.contains($o);
-		unlockAll();
+		unlockWrite();
 		return $victory;
 	}
 	
 	public boolean containsAll(Collection<?> $c) {
-		lockAll();
+		lockWrite();
 		boolean $victory = $queue.containsAll($c);
-		unlockAll();
+		unlockWrite();
 		return $victory;
 	}
 	
@@ -202,41 +184,41 @@ public class WorkQueue<$T> implements Queue<$T> {
 	/** {@inheritDoc} */
 	public boolean remove(Object $o) {
 		// I wanted to drain one permit so no one overworks, then check/remove, then restore a permit if no remove.  turns out i can't without a different semaphore implementation since that might involve an overdraw itself.  soooo we lock.
-		lockAll();
+		lockWrite();
 		boolean $one = $gate.tryAcquire();
 		// nobody else can be modifying the list right now (add or remove)
 		// which means that while the gate is readable, it is NOT writable
 		// and thus the gate's estimate of how many things is in the queue is not just a minimum anymore; it's exact. 
 		// so if we didn't get a permit, we can just skip the search because the list is certainly empty.
 		if (!$one) {
-			unlockAll();
+			unlockWrite();
 			return false;
 		} else {
 			boolean $victory = $queue.remove($o);
 			if (!$victory) $gate.release();
 			// we don't release the permit from the tryAcquire if we did remove something... obviously
-			unlockAll();
+			unlockWrite();
 			return $victory;
 		}
 	}
 	
 	/** {@inheritDoc} */
 	public boolean removeAll(Collection<?> $c) {
-		lockAll();
+		lockWrite();
 		$gate.drainPermits();
 		boolean $victory = $queue.removeAll($c);
 		$gate.release($queue.size());
-		unlockAll();
+		unlockWrite();
 		return $victory;
 	}
 	
 	/** {@inheritDoc} */
 	public boolean retainAll(Collection<?> $c) {
-		lockAll();
+		lockWrite();
 		$gate.drainPermits();
 		boolean $victory = $queue.retainAll($c);
 		$gate.release($queue.size());
-		unlockAll();
+		unlockWrite();
 		return $victory;
 	}
 	
@@ -282,10 +264,10 @@ public class WorkQueue<$T> implements Queue<$T> {
 	 * </p>
 	 */
 	public $T[] toArray() {
-		lockAll();
+		lockWrite();
 		@SuppressWarnings("unchecked")
 		$T[] $v = ($T[]) $queue.toArray();
-		unlockAll();
+		unlockWrite();
 		return $v;
 	}
 	
@@ -295,9 +277,9 @@ public class WorkQueue<$T> implements Queue<$T> {
 	 * </p>
 	 */
 	public <$A> $A[] toArray($A[] $a) {
-		lockAll();
+		lockWrite();
 		$A[] $v = $queue.toArray($a);
-		unlockAll();
+		unlockWrite();
 		return $v;
 	}
 }
