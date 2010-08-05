@@ -121,9 +121,8 @@ public class StringStreamReadHead implements ReadHead<String> {
 	}
 	
 	/** {@inheritDoc}  */
-	public StringStreamReadHead close() throws IOException {
+	public void close() throws IOException {
 		$base.close();
-		return this;
 	}
 	
 	private class PumpT implements Pump {

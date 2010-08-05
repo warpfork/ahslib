@@ -1,5 +1,7 @@
 package ahs.util;
 
+import java.io.*;
+
 public interface ExceptionHandler<$T extends Throwable> extends Listener<$T> {
 	/**
 	 * Hear (and respond to) the given Throwable.
@@ -17,6 +19,15 @@ public interface ExceptionHandler<$T extends Throwable> extends Listener<$T> {
 		 * Punts the Throwable's stack trace to the standard error stream.
 		 */
 		public void hear(Throwable $e) {
+			$e.printStackTrace();
+		}
+	};
+	
+	public static final ExceptionHandler<? extends IOException> STDERR_IOEXCEPTION = new ExceptionHandler<IOException>() {
+		/**
+		 * Punts the Throwable's stack trace to the standard error stream.
+		 */
+		public void hear(IOException $e) {
 			$e.printStackTrace();
 		}
 	};

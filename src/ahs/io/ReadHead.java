@@ -43,7 +43,7 @@ import java.io.*;
  * Implementers are typically expected to follow some sort of RAII (Resource Acquisition
  * Is Initialization) pattern, as no methods regarding opening or initializing are
  * provided by this interface, but there is absolutely no requirement that implementers do
- * so.
+ * so, and methods responsible for initialization may be as apt.
  * </p>
  * 
  * <p>
@@ -62,39 +62,75 @@ import java.io.*;
 public interface ReadHead<$T> {
 	/**
 	 * <p>
-	 * Grants access to the Pump which powers the channel underlying this ReadHead. A
-	 * "blank" pump (which may also be a singleton) may be returned if the ReadHead
-	 * implementation does not require a thread for pumping the underlying channel,
-	 * but null may never be returned.
+	 * Grants access to the Pump which powers the channel underlying this ReadHead.
+	 * Some implementations may not require a Pump (in-program pipes are typically in
+	 * this pattern, since their data is effectively pumped in by the thread doing the
+	 * write to the pipe), in which case they must return null.
 	 * </p>
 	 * 
 	 * <p>
 	 * Calling <code>getPump().run(1)</code> followed by <code>read()</code> should
-	 * effectively make any ReadHead act exactly as if it was backed by a blocking
-	 * stream being pumped by the current thread.
+	 * effectively make any ReadHead that requires pumping act exactly as if it was
+	 * backed by a blocking stream being pumped by the current thread.
 	 * </p>
 	 * 
-	 * @return the Pump instance associated with this ReadHead
+	 * @return the Pump instance associated with this ReadHead, or null if this
+	 *         implementation does not require pumping.
 	 */
 	public Pump getPump();
 	
+	/**
+	 * <p>
+	 * In the case of exceptions that occur in the course of a Pump's operations, the
+	 * Pump sends those exceptions to the handler specified by this method (or may
+	 * discard them silently if no handler has been set). Exceptions caught by the
+	 * Pump that are not IOExceptions are still pushed through this interface by
+	 * listing them as the cause of a new IOException that is then rethrown.
+	 * Exceptions not caught by the Pump can still bubble out of the Pump without
+	 * being pushed through this interface, but no exception should do both.
+	 * </p>
+	 * 
+	 * <p>
+	 * The handler's <code>hear(*)</code> method is invoked by the pumping thread, and
+	 * will be executed before the Pump takes any other actions such as attempting to
+	 * continue reading.
+	 * </p>
+	 * 
+	 * @param $eh
+	 */
 	public void setExceptionHandler(ExceptionHandler<IOException> $eh);
 	
 	/**
 	 * <p>
-	 * Sets a Listener that is invoked every time the ReadHead's pump adds a new chunk
-	 * of data to the queue of data available in its internal buffer; the Listener
-	 * will be handed a reference to this ReadHead.
+	 * Sets a Listener for critical events in the lifecycle of the ReadHead. The
+	 * Listener must be invoked by the implementer every time a new chunk of data
+	 * becomes available. Implementations may also choose to use it to signal other
+	 * critical events such as the closing of the underlying stream. In all
+	 * situations, the Listener is handed a reference to this ReadHead.
 	 * </p>
 	 * 
 	 * <p>
-	 * The Listener's <code>hear()</code> method will be invoked from the thread
-	 * currently powering the pump, and as such should not be responsible for any
+	 * Despite the listener's intended purpose, it is critical to note that even if a
+	 * <code>hasNext()</code> call is the first thing within the Listener's <code>hear(*)</code>
+	 * procedure, that call may return false. This may situation may arise even if the
+	 * call to the Listener was intended to signal new data availability, since
+	 * multithreaded access to the ReadHead can result in another thread having
+	 * pre-empted the Listener and consumed the data before the Listener can respond.
+	 * </p>
+	 * 
+	 * <p>
+	 * The Listener's <code>hear(*)</code> method will be invoked from the thread
+	 * currently powering the pump (or in some cases the thread responsible for the
+	 * write that triggered the event), and as such should not be responsible for any
 	 * intensive or time-consuming operations. The recommended usage is to simply
-	 * provide an event listener that marks the ReadHead as having data available in
-	 * some other "selector"-like scheme. Future versions of this library may
-	 * depricate this method in favor of a selector scheme provided by this package,
-	 * and thereafter remove the method from the public namespace entirely.
+	 * provide an event listener that marks the ReadHead as (probably) having data
+	 * available in some other "selector"-like scheme.
+	 * </p>
+	 * 
+	 * <p>
+	 * Future versions of this library may depricate this method in favor of a
+	 * selector scheme provided by this package, and thereafter remove the method from
+	 * the public namespace entirely.
 	 * </p>
 	 * 
 	 * @param $el
@@ -113,8 +149,8 @@ public interface ReadHead<$T> {
 	 * pointer exceptions, concurrent modification exceptions, or etc.
 	 * </p>
 	 * 
-	 * @return next chunk of input, or null if there is no data available and the underlying
-	 *         stream has reached an EOF state.
+	 * @return next chunk of input, or null if there is no data available and the
+	 *         underlying stream has reached an <code>EOF</code> state.
 	 */
 	public $T read();
 	
@@ -122,40 +158,58 @@ public interface ReadHead<$T> {
 	 * Nonblocking read. Elements that are read are removed from the stream.
 	 * 
 	 * @return a chunk of input if possible, or null otherwise; null may indicate
-	 *         either EOF or simply nothing available at the time.
+	 *         either <code>EOF</code> or simply nothing available at the time.
 	 *         <code>isClosed()</code> should be used to determine the difference.
 	 */
 	public $T readNow();
 	
 	/**
-	 * Tells whether or not input is availale to be read. Obviously this semantics of
-	 * this are somewhat unreadably if the ReadHead is shared by multiple threads.
+	 * Tells whether or not input is immediately availale to be read. If the ReadHead
+	 * is shared by multiple threads this should not be relied upon to determine if a
+	 * subsequent blocking call will return without waiting, since other threads may
+	 * have already pre-empted it.
 	 * 
 	 * @return true if a chunk of input is stream to be read immediately; false
 	 *         otherwise. Similarly to <code>readNow()</code>, a return of false may
-	 *         indicate either EOF or simply nothing available at the time.
+	 *         indicate either <code>EOF</code> or simply nothing available at the time.
 	 *         <code>isClosed()</code> should be used to determine the difference.
 	 */
 	public boolean hasNext();
 	
 	/**
+	 * <p>
 	 * Blocks until the stream is closed, then returns its entire contents at once
-	 * (minus, of course, any entries that have already been read). The semantics of
-	 * this are undefined if multiple threads attempt to read after the stream is
-	 * closed.
+	 * (minus any entries that have already been read, even if those other reads take
+	 * place <i>after</i> the invocation of <code>readAll()</code>). If multiple
+	 * threads invoke this, then one of them will recieve a normal result, and the
+	 * rest will receive empty arrays (as will subsequent invocations).
+	 * </p>
+	 * 
+	 * <p>
+	 * <i>Note:</i> if you feel this behavior (waiting until the end of stream but
+	 * still allowing other reads) odd, consider the following points:
+	 * <ol>
+	 * <li>If you're afraid of losing data between invocation and reaching EOF, simply ensure you've already stopped reading that might take place in any other threads.
+	 * <li>This behavior is meant to help ensure all data has been retrieved by the time a reading thread exits
+	 * <li>
+	 * </ol>
+	 * </p>
 	 * 
 	 * @return a primitive array containing one entry for each chunk of input
 	 *         following the last invocation of a read method that is available from
 	 *         the stream between the time of this method's invocation and the closing
 	 *         of the stream. The array returned may have zero entries if no data ever
-	 *         becomes available, but null may never be returned.
+	 *         becomes available (including if the stream is already closed and empty
+	 *         when the invocation occurs), but null may never be returned.
 	 */
 	public $T[] readAll();
 	
 	/**
 	 * Immediately returns entire contents of this stream at once (minus, of course,
-	 * any entries that have already been read). The semantics of this are undefined
-	 * if multiple threads attempt to read after the stream is closed.
+	 * any entries that have already been read). Similarly to the blocking
+	 * <code>readAll()</code> method, if multiple threads invoke this after the stream
+	 * is closed then the first will receive a normal result, and other threads and
+	 * subsequent invocations will receive empty arrays.
 	 * 
 	 * @return a primitive array containing one entry for each chunk of input
 	 *         following the last invocation of a read method that is currently
@@ -167,11 +221,11 @@ public interface ReadHead<$T> {
 	
 	
 	/**
-	 * @return true if the ReadHead has internally reached some sort of EOF state;
-	 *         false otherwise. Upon returning true, data may still exist in buffers
-	 *         waiting to be read; however, it is guaranteed that once both isClosed()
-	 *         and hasNext() return true and false respectively that no further
-	 *         invocations of hasNext() will return true.
+	 * @return true if the ReadHead has internally reached some sort of
+	 *         <code>EOF</code> state; false otherwise. Upon returning true, data may
+	 *         still exist in buffers waiting to be read; however, it is guaranteed
+	 *         that once both isClosed() and hasNext() return true and false
+	 *         respectively that no further invocations of hasNext() will return true.
 	 */
 	public boolean isClosed();
 	
@@ -199,10 +253,11 @@ public interface ReadHead<$T> {
 	 * <p>
 	 * In situations that bear resemblance to pipes (that is, a ReadHead is paired
 	 * with a WriteHead at some other position along the same underlying stream or
-	 * channel; network connections are typically exemplary of this), this method may
-	 * typically be expected to maintain the same semantics as the general contract of
-	 * close methods of the underlying type -- namely, that the matching WriteHead (or
-	 * equivalent) may find its stream or channel to have become closed as well.
+	 * channel; network connections are typically exemplary of this as well as
+	 * in-program pipes), this method may typically be expected to maintain the same
+	 * semantics as the general contract of close methods of the underlying type --
+	 * namely, that the matching WriteHead (or equivalent) may find its stream or
+	 * channel to have become closed as well.
 	 * </p>
 	 * 
 	 * <p>
@@ -210,10 +265,9 @@ public interface ReadHead<$T> {
 	 * closed ReadHead is illogical (but should not typically throw exceptions).
 	 * </p>
 	 * 
-	 * @return the same object the call was invoked on, for invocation chaining.
-	 *         (Implementers and subclasses should always override the return type to
-	 *         match themselves).
 	 * @throws IOException
+	 *                 if the close operation results in problems or if the underlying
+	 *                 stream throws an IOException.
 	 */
-	public ReadHead<$T> close() throws IOException;
+	public void close() throws IOException;
 }

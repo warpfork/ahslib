@@ -163,11 +163,10 @@ public class StreamReadHead implements ReadHead<ByteBuffer> {
 	}
 	
 	/** {@inheritDoc}  */
-	public StreamReadHead close() throws IOException {
+	public void close() throws IOException {
 		$base.close();
 		// note that we do NOT tell the pump to stop: the pump should keep pumping the underlying stream
 		//  until the stream throws errors, or we might lose things in the abyss between buffers.
-		return this;
 	}
 	
 	private class PumpT implements Pump {

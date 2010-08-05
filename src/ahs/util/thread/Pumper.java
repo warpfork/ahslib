@@ -1,5 +1,14 @@
 package ahs.util.thread;
 
+/**
+ * This interface groups classes that are designed to provide functionality for Pump
+ * instances (but is syntactically no different than any other Runnable; it simply carries
+ * the implication that the class has a constructor or initializer method somewhere that
+ * accepts a Pump argument).
+ * 
+ * @author hash
+ * 
+ */
 public interface Pumper extends Runnable {
 	/**
 	 * <p>

@@ -28,9 +28,9 @@ public interface Pump {
 	 * efficient when allocating some resources or buffers in blocks and reusing them
 	 * across cycles, and also as a kindness to Pumper implementations which may be
 	 * responsible for running multiple Pump instances wanting to have control over
-	 * how often its attention switches. However, if the Pump implementer is truly
-	 * lazy, there's nothing that requires them to heed the <code>$times</code>
-	 * argument at all.
+	 * how its attention is weighted. However, if the Pump implementer is truly lazy,
+	 * there's nothing that requires them to heed the <code>$times</code> argument at
+	 * all.
 	 * </p>
 	 * 
 	 * @param $times
