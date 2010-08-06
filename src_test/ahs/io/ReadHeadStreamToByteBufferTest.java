@@ -1,4 +1,4 @@
-package ahs.io;
+	package ahs.io;
 
 import ahs.test.*;
 import ahs.util.*;
@@ -6,9 +6,10 @@ import ahs.util.thread.*;
 
 import java.io.*;
 import java.nio.*;
+import java.util.*;
 import java.util.concurrent.atomic.*;
 
-public class StreamReadHeadTest extends TestCase {
+public class ReadHeadStreamToByteBufferTest extends TestCase {
 	public void setUp() {
 		$dat1 = new ByteArrayInputStream(new byte[] { 0x0, 0x1, 0x2, 0x3,    0x4, 0x5, 0x6, 0x7,    0x8, 0x9, 0xA });
 		$dat2 = new ByteArrayInputStream(Big);
@@ -28,7 +29,7 @@ public class StreamReadHeadTest extends TestCase {
 	private InputStream $dat1, $dat2;
 	
 	public void testBasic() {
-		ReadHead<ByteBuffer> $rh = new StreamReadHead($dat1, 4);
+		ReadHead<ByteBuffer> $rh = new ReadHeadStreamToByteBuffer($dat1, 4);
 		assertNull($rh.readNow());
 		assertFalse($rh.isClosed());
 		assertFalse($rh.hasNext());
@@ -48,10 +49,11 @@ public class StreamReadHeadTest extends TestCase {
 		assertTrue($rh.hasNext());
 		assertEquals(Block3, Arr.toArray($rh.read()));
 		assertFalse($rh.hasNext());
+		
 	}
 	
 	public void testBasicAligned() {
-		ReadHead<ByteBuffer> $rh = new StreamReadHead(new ByteArrayInputStream(new byte[] { 0x0, 0x1, 0x2, 0x3,    0x4, 0x5, 0x6, 0x7,    0x0, 0x1, 0x2, 0x3 }), 4);
+		ReadHead<ByteBuffer> $rh = new ReadHeadStreamToByteBuffer(new ByteArrayInputStream(new byte[] { 0x0, 0x1, 0x2, 0x3,    0x4, 0x5, 0x6, 0x7,    0x0, 0x1, 0x2, 0x3 }), 4);
 		assertNull($rh.readNow());
 		assertFalse($rh.isClosed());
 		assertFalse($rh.hasNext());
@@ -83,31 +85,31 @@ public class StreamReadHeadTest extends TestCase {
 	}
 	
 	public void testReadAll() {
-		ReadHead<ByteBuffer> $rh = new StreamReadHead($dat1, 4);
+		ReadHead<ByteBuffer> $rh = new ReadHeadStreamToByteBuffer($dat1, 4);
 		new PumperBasic($rh.getPump()).run();
 		
 		assertEquals(Block1, $rh.read().array());
-		ByteBuffer[] $bbs = $rh.readAll();
-		assertEquals(2, $bbs.length);
-		assertEquals(Block2, Arr.toArray($bbs[0]));
-		assertEquals(Block3, Arr.toArray($bbs[1]));
+		List<ByteBuffer> $bbs = $rh.readAll();
+		assertEquals(2, $bbs.size());
+		assertEquals(Block2, Arr.toArray($bbs.get(0)));
+		assertEquals(Block3, Arr.toArray($bbs.get(1)));
 		//assertEquals(0, $rh.readAll().length);	// actually, i'm not allowed to make this assertion according to the general contract in ReadHead.
 	}
 	
 	public void testReadNao() {
-		ReadHead<ByteBuffer> $rh = new StreamReadHead($dat1, 4);
+		ReadHead<ByteBuffer> $rh = new ReadHeadStreamToByteBuffer($dat1, 4);
 		new PumperBasic($rh.getPump()).run();
 		
 		assertEquals(Block1, $rh.read().array());
-		ByteBuffer[] $bbs = $rh.readAllNow();
-		assertEquals(2, $bbs.length);
-		assertEquals(Block2, Arr.toArray($bbs[0]));
-		assertEquals(Block3, Arr.toArray($bbs[1]));
-		assertEquals(0, $rh.readAll().length);
+		List<ByteBuffer> $bbs = $rh.readAllNow();
+		assertEquals(2, $bbs.size());
+		assertEquals(Block2, Arr.toArray($bbs.get(0)));
+		assertEquals(Block3, Arr.toArray($bbs.get(1)));
+		assertEquals(0, $rh.readAll().size());
 	}
 	
 	public void testHarder() {
-		ReadHead<ByteBuffer> $rh = new StreamReadHead($dat2, 4);
+		ReadHead<ByteBuffer> $rh = new ReadHeadStreamToByteBuffer($dat2, 4);
 		assertNull($rh.readNow());
 		assertFalse($rh.isClosed());
 		assertFalse($rh.hasNext());
@@ -123,7 +125,7 @@ public class StreamReadHeadTest extends TestCase {
 	}
 	
 	public void testBlockingAndReadFromTwoThreads() {
-		final ReadHead<ByteBuffer> $rh = new StreamReadHead($dat2, 4);
+		final ReadHead<ByteBuffer> $rh = new ReadHeadStreamToByteBuffer($dat2, 4);
 		final AtomicInteger $eated = new AtomicInteger();	// all uses of this are crappy hacks.
 		
 		new Thread() {
@@ -148,6 +150,6 @@ public class StreamReadHeadTest extends TestCase {
 		while (true) if ($eated.get() == BigBlocks) break; else X.chill(100);
 		
 		assertTrue($rh.isClosed());
-		assertEquals(Block3, Arr.toArray(((StreamReadHead)$rh).readCompletely()));
+		assertEquals(Block3, Arr.toArray(((ReadHeadStreamToByteBuffer)$rh).readCompletely()));
 	}
 }

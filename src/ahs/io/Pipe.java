@@ -4,6 +4,7 @@ import ahs.util.*;
 import ahs.util.thread.*;
 
 import java.io.*;
+import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -42,20 +43,19 @@ public class Pipe<$T> {
 		private Source() {}	// this should be a singleton per instance of the enclosing class
 		
 		private volatile Listener<ReadHead<$T>>		$el;
-		private volatile ExceptionHandler<IOException>	$eh;
 		
 		public Pump getPump() {
 			return null;
 		}
-
+		
 		public void setExceptionHandler(ExceptionHandler<IOException> $eh) {
-			this.$eh = $eh;
+			// do nothing.  we're not even capable of having exceptions.
 		}
-
+		
 		public void setListener(Listener<ReadHead<$T>> $el) {
 			this.$el = $el;
 		}
-
+		
 		public $T read() {
 			try {
 				$gate.acquire(); // using an interrupt in this way has the potential to violate the contract of this method laid out in the ReadHead interface, since other threads could issue an interrupt for no reason whatsoever.
@@ -82,17 +82,17 @@ public class Pipe<$T> {
 			return $gate.availablePermits() > 0;
 		}
 		
-		public $T[] readAll() {
+		public List<$T> readAll() {
 			waitForClose();
 			return readAllNow();
 		}
 		
-		public $T[] readAllNow() {
+		public List<$T> readAllNow() {
 			synchronized ($queue) {
-				$gate.drainPermits();
-				@SuppressWarnings("unchecked")
-				$T[] $v = ($T[])$queue.toArray();
-				$queue.clear();
+				int $p = $gate.drainPermits();
+				List<$T> $v = new ArrayList<$T>($p);
+				for (int $i = 0; $i < $p; $i++)
+					$v.add($queue.poll());
 				return $v;
 			}
 		}
@@ -103,7 +103,7 @@ public class Pipe<$T> {
 		
 		public void close() {
 			$closed[0] = true;
-			$closed.notifyAll();
+			X.notifyAll($closed);
 		}
 		
 		private void waitForClose() {
@@ -144,6 +144,16 @@ public class Pipe<$T> {
 		
 		public boolean hasRoom() {
 			return true;	// we don't implement any capacity restrictions, so this isn't really ever in question.
+		}
+		
+		public boolean isClosed() {
+			return $closed[0];
+		}
+		
+		public void close() {
+			// I was going to just make this a redirection to SRC.close, but then i lawled when i realized i'd have to catch exceptions that are never thrown and not even declared because i was just viewing it as any ol' ReadHead.
+			$closed[0] = true;
+			X.notifyAll($closed);
 		}
 	}
 }

@@ -27,5 +27,9 @@ public interface WriteHead<$T> {
 	
 	public boolean hasRoom();
 	
+	public void close();
+	
+	public boolean isClosed();
+	
 	//public void setExceptionHandler(ExceptionHandler<IOException> $eh);	// what?
 }

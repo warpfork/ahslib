@@ -4,6 +4,7 @@ import ahs.util.*;
 import ahs.util.thread.*;
 
 import java.io.*;
+import java.util.*;
 
 // it might be better semantics to ALWAYS have the normal read methods return full chunks,
 //  and then provide a single extra readLast() method that throws exceptions unless called after the head is closed.
@@ -224,7 +225,7 @@ public interface ReadHead<$T> {
 	 *                 since this method is then not well defined.
 	 * 
 	 */
-	public $T[] readAll();
+	public List<$T> readAll();
 	
 	/**
 	 * Immediately returns entire contents of this stream at once (minus, of course,
@@ -238,7 +239,7 @@ public interface ReadHead<$T> {
 	 *         available from the stream. The array returned may have zero entries if
 	 *         there is no input currently available, but null may never be returned.
 	 */
-	public $T[] readAllNow();
+	public List<$T> readAllNow();
 	
 	
 	
