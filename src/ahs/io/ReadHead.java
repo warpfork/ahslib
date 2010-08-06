@@ -19,7 +19,7 @@ import java.util.*;
  * requested at the application's leisure (as opposed to requiring any sort of event
  * listener), while simultaneously allowing event listeners to be attached if the old
  * "listener" pattern is desired or "select"-like functionality need be implemented across
- * multple ReadHead instances.
+ * multiple ReadHead instances.
  * </p>
  * 
  * <p>
@@ -28,7 +28,7 @@ import java.util.*;
  * to the implementation, and is specified by the generic type. ReadHead specifically
  * intends to prevent any excessive copying of arrays around by its clients; a single
  * instance of the generic object returned by the read methods should be sufficient to
- * warrant processing in its own right, and the readAll methods are provided only as a a
+ * warrant processing in its own right, and the readAll methods are provided only as a
  * matter of completeness and convenience (and because many stream and channel interfaces
  * lack such simple conveniences) for use when the total volume of data is manageably
  * small.
@@ -111,7 +111,7 @@ public interface ReadHead<$T> {
 	
 	/**
 	 * <p>
-	 * Sets a Listener for critical events in the lifecycle of the ReadHead. The
+	 * Sets a Listener for critical events in the life cycle of the ReadHead. The
 	 * Listener must be invoked by the implementer every time a new chunk of data
 	 * becomes available. Implementations may also choose to use it to signal other
 	 * critical events such as the closing of the underlying stream. In all
@@ -137,7 +137,7 @@ public interface ReadHead<$T> {
 	 * </p>
 	 * 
 	 * <p>
-	 * Future versions of this library may depricate this method in favor of a
+	 * Future versions of this library may deprecate this method in favor of a
 	 * selector scheme provided by this package, and thereafter remove the method from
 	 * the public namespace entirely.
 	 * </p>
@@ -153,7 +153,7 @@ public interface ReadHead<$T> {
 	 * 
 	 * <p>
 	 * If multiple threads block on this concurrently, the choice of whether or not to
-	 * provide a guarantee of fairness is left up to the implementor. Regardless,
+	 * provide a guarantee of fairness is left up to the implementer. Regardless,
 	 * basic synchronicity must be maintained -- there will be no double-reads, null
 	 * pointer exceptions, concurrent modification exceptions, or etc.
 	 * </p>
@@ -176,7 +176,7 @@ public interface ReadHead<$T> {
 	public $T readNow();
 	
 	/**
-	 * Tells whether or not input is immediately availale to be read. If the ReadHead
+	 * Tells whether or not input is immediately available to be read. If the ReadHead
 	 * is shared by multiple threads this should not be relied upon to determine if a
 	 * subsequent blocking call will return without waiting, since other threads may
 	 * have already pre-empted it.
@@ -193,7 +193,7 @@ public interface ReadHead<$T> {
 	 * Blocks until the stream is closed, then returns its entire contents at once
 	 * (minus any entries that have already been read, even if those other reads take
 	 * place <i>after</i> the invocation of <code>readAll()</code>). If multiple
-	 * threads invoke this, then one of them will recieve a normal result, and the
+	 * threads invoke this, then one of them will receive a normal result, and the
 	 * rest will receive empty arrays (as will subsequent invocations).
 	 * </p>
 	 * 
@@ -207,7 +207,7 @@ public interface ReadHead<$T> {
 	 * <li>This behavior is meant to help ensure all data has been retrieved by the
 	 * time a reading thread exits -- call it in every thread and between all of them
 	 * they'll get everything.
-	 * <li>In some implementations (namely those based on semphore permits), it's
+	 * <li>In some implementations (namely those based on semaphore permits), it's
 	 * difficult to stop other readers internally without linking the locking of reads
 	 * and writes, which is highly undesirable since it implies greater complexity and
 	 * overhead to all calls.
