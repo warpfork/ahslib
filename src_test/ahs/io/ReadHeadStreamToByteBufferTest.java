@@ -44,6 +44,7 @@ public class ReadHeadStreamToByteBufferTest extends TestCase {
 		
 		new PumperBasic($rh.getPump()).run();	// $dat1 always returns a graceful EOF.
 		assertTrue($rh.isClosed());
+		// i'd like to put an assert for the underlying stream being closed at this point, but InputStream doesn't even have a getter for that.
 		assertTrue($rh.hasNext());
 		assertEquals(Block2, Arr.toArray($rh.readNow()));
 		assertTrue($rh.hasNext());

@@ -242,10 +242,11 @@ public interface ReadHead<$T> {
 	public List<$T> readAllNow();
 	
 	
-	
+
 	/**
 	 * @return true if the ReadHead has internally reached some sort of
-	 *         <code>EOF</code> state; false otherwise. Upon returning true, data may
+	 *         <code>EOF</code> state; false otherwise. If true is ever returned, no
+	 *         subsequent invocations may return false. Upon returning true, data may
 	 *         still exist in buffers waiting to be read; however, it is guaranteed
 	 *         that once both isClosed() and hasNext() return true and false
 	 *         respectively that no further invocations of hasNext() will return true.

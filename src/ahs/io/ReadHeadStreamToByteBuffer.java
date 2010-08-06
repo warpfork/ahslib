@@ -59,7 +59,22 @@ public class ReadHeadStreamToByteBuffer implements ReadHead<ByteBuffer> {
 	}
 	
 	public void close() throws IOException {
-		$pipe.SRC.close();	// this transparently handles interruption of any still-blocking reads as well as return of the final readAll.
+		$base.close();
+	}
+	
+	/**
+	 * this function is for updating our state at this level to fully closed (i.e.,
+	 * after the event has propagated through the underlying stream and buffering, and
+	 * we will never add data to the readable buffer).
+	 */
+	private void ourClose() throws IOException {
+		$base.close();	// this is likely redundant, but can't hurt.
+		
+		try {
+			$pipe.SRC.close();	// this transparently handles interruption of any still-blocking reads as well as return of the final readAll.
+		} catch (IOException $e) {
+			/* this can't actually happen in a pipe */
+		}
 		
 		// give our listener a chance to notice our closure.  (pipe doesn't know our listener.)  (our isClosed method refers to pipe, which already considers itself completely closed.)
 		Listener<ReadHead<ByteBuffer>> $dated_el = $el;
@@ -125,7 +140,7 @@ public class ReadHeadStreamToByteBuffer implements ReadHead<ByteBuffer> {
 				// readers will immediately Notice the new data due to the pipe's internal semaphore doing its job
 				if ($currentSum > 0) try {
 					$pipe.SINK.write(ByteBuffer.wrap($bats, 0, $currentSum));
-				} catch (IOException $e1) {
+				} catch (IOException $e) {
 					/* this can't actually happen in a pipe */
 				}
 				
@@ -135,7 +150,7 @@ public class ReadHeadStreamToByteBuffer implements ReadHead<ByteBuffer> {
 				
 				// this is roughly atomic in that no other writes should be able to happen before this since we're the only thread pumping
 				if ($die) try {
-					close();
+					ourClose();	// it is in fact ok to flag ourselves as closed here, since regardless of how we got here the underlying stream is already not willing to give us more data
 				} catch (IOException $e) {
 					if ($dated_eh != null) $dated_eh = $eh;		// if we didn't get it earlier in this cycle, get it now; if we did, keep that one
 					if ($dated_eh != null) $dated_eh.hear($e);	// now tell 'em
