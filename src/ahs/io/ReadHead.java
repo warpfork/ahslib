@@ -55,6 +55,14 @@ import java.io.*;
  * library's ConcurrentLinkedQueue class is an ideal helper for such a role.)
  * </p>
  * 
+ * <p>
+ * Note that the lack of methods for reading contiguous blocks; this is neither accidental
+ * nor an oversight. The author asserts that if you find yourself with a desire for this
+ * behavior, you're Doing It Wrong. The problem you are confronting is probably best
+ * solved by using a ReadHead with a generic type that it itself a generic List, or using
+ * some other sort of object as a container for batches.
+ * </p>
+ * 
  * @author hash
  * 
  * @param <$T>
@@ -189,9 +197,16 @@ public interface ReadHead<$T> {
 	 * <i>Note:</i> if you feel this behavior (waiting until the end of stream but
 	 * still allowing other reads) odd, consider the following points:
 	 * <ol>
-	 * <li>If you're afraid of losing data between invocation and reaching EOF, simply ensure you've already stopped reading that might take place in any other threads.
-	 * <li>This behavior is meant to help ensure all data has been retrieved by the time a reading thread exits
-	 * <li>
+	 * <li>If you're afraid of losing data between invocation and reaching EOF, simply
+	 * ensure you've already stopped reading that might take place in any other
+	 * threads.
+	 * <li>This behavior is meant to help ensure all data has been retrieved by the
+	 * time a reading thread exits -- call it in every thread and between all of them
+	 * they'll get everything.
+	 * <li>In some implementations (namely those based on semphore permits), it's
+	 * difficult to stop other readers internally without linking the locking of reads
+	 * and writes, which is highly undesirable since it implies greater complexity and
+	 * overhead to all calls.
 	 * </ol>
 	 * </p>
 	 * 
@@ -201,6 +216,10 @@ public interface ReadHead<$T> {
 	 *         of the stream. The array returned may have zero entries if no data ever
 	 *         becomes available (including if the stream is already closed and empty
 	 *         when the invocation occurs), but null may never be returned.
+	 * @throws UnsupportedOperationException
+	 *                 if the underlying stream has no notion of closed or finished,
+	 *                 since this method is then not well defined.
+	 * 
 	 */
 	public $T[] readAll();
 	
