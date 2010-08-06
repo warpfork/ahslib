@@ -158,7 +158,10 @@ public interface ReadHead<$T> {
 	 * </p>
 	 * 
 	 * @return next chunk of input, or null if there is no data available and the
-	 *         underlying stream has reached an <code>EOF</code> state.
+	 *         underlying stream has reached an <code>EOF</code> state. Some
+	 *         implementations may also choose to return null in the case that the
+	 *         underlying stream reaches an EOF state while this call is still
+	 *         blocking for more input; others may try to return a partial chunk.
 	 */
 	public $T read();
 	
