@@ -4,10 +4,12 @@ import ahs.util.*;
 import ahs.util.thread.*;
 
 import java.io.*;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class Pipe<$T> {
 	public Pipe() {
+		$closed = new boolean[] { false };
 		$queue = new ConcurrentLinkedQueue<$T>();
 		$gate = new Semaphore(0, true);	// fair.
 		SRC = new Source();
@@ -34,16 +36,15 @@ public class Pipe<$T> {
 	 * are then drained, read is effectly completely locked as well.
 	 */
 	private final Semaphore			$gate;
-	private boolean				$closed;
-	
-	
+	private final boolean[]			$closed;
 	
 	private class Source implements ReadHead<$T> {
-		private Listener<ReadHead<$T>>		$el;
-		private ExceptionHandler<IOException>	$eh;
+		private Source() {}	// this should be a singleton per instance of the enclosing class
+		
+		private volatile Listener<ReadHead<$T>>		$el;
+		private volatile ExceptionHandler<IOException>	$eh;
 		
 		public Pump getPump() {
-			//TODO
 			return null;
 		}
 
@@ -82,8 +83,8 @@ public class Pipe<$T> {
 		}
 		
 		public $T[] readAll() {
-			//TODO
-			return null;
+			waitForClose();
+			return readAllNow();
 		}
 		
 		public $T[] readAllNow() {
@@ -97,11 +98,19 @@ public class Pipe<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $closed;
+			return $closed[0];
 		}
 		
 		public void close() {
-			$closed = true;
+			$closed[0] = true;
+			$closed.notifyAll();
+		}
+		
+		private void waitForClose() {
+			synchronized ($closed) {
+				while (!isClosed())
+					X.wait($closed);
+			}
 		}
 		
 		private void clear() {
@@ -113,6 +122,28 @@ public class Pipe<$T> {
 	}
 	
 	private class Sink implements WriteHead<$T> {
+		private Sink() {}	// this should be a singleton per instance of the enclosing class
 		
+		public void write($T $chunk) throws IOException {
+			synchronized ($queue) {
+				$queue.add($chunk);
+				$gate.release();
+			}
+		}
+		
+		public void writeAll(Collection<? extends $T> $chunks) throws IOException {
+			synchronized ($queue) {
+				$queue.addAll($chunks);
+				$gate.release($chunks.size());	// this is safe with this particular queue, since it never rejects elements without throwing exceptions.
+			}
+		}
+		
+		public void flush() {
+			// no op.  there's nothing to catch up on here regardless of current state.
+		}
+		
+		public boolean hasRoom() {
+			return true;	// we don't implement any capacity restrictions, so this isn't really ever in question.
+		}
 	}
 }

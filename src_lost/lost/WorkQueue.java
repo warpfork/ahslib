@@ -32,7 +32,7 @@ public class WorkQueue<$T> implements Queue<$T> {
 		$gate = new Semaphore(0, true);	// fair.
 	}
 	
-	private final ConcurrentLinkedQueue<$T>	$queue;	// someday i might reimplement this myself since i end up doubling the locks on each end the way i've done it.
+	private final ConcurrentLinkedQueue<$T>	$queue;
 	/**
 	 * we -always- update this -before- the queue so that it's a -minimal- value. it
 	 * may sometimes severely underestimate the available work in order to provide
