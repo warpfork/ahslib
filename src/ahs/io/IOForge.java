@@ -12,14 +12,14 @@ import ahs.util.*;
 import ahs.util.thread.*;
 
 public class IOForge {
-	public static StreamReadHead readFile(String $filename) throws FileNotFoundException {
-		return new StreamReadHead(new FileInputStream($filename), 4096);
+	public static ReadHeadStreamToByteBuffer readFile(String $filename) throws FileNotFoundException {
+		return new ReadHeadStreamToByteBuffer(new FileInputStream($filename), 4096);
 	}
-	public static StreamReadHead readFile(File $file) throws FileNotFoundException {
-		return new StreamReadHead(new FileInputStream($file), 4096);
+	public static ReadHeadStreamToByteBuffer readFile(File $file) throws FileNotFoundException {
+		return new ReadHeadStreamToByteBuffer(new FileInputStream($file), 4096);
 	}
-	public static StreamReadHead readResource(String $resource) throws FileNotFoundException {
-		return new StreamReadHead(getResourceAsStream($resource), 4096);
+	public static ReadHeadStreamToByteBuffer readResource(String $resource) throws FileNotFoundException {
+		return new ReadHeadStreamToByteBuffer(getResourceAsStream($resource), 4096);
 	}
 	
 	public static byte[] readFileRaw(File $file) throws FileNotFoundException, IOException {
@@ -32,23 +32,23 @@ public class IOForge {
 		return readRaw(getResourceAsStream($resource));
 	}
 	
-	public static StringStreamReadHead readFileAsStringStream(File $file) throws FileNotFoundException {
-		return new StringStreamReadHead(new FileInputStream($file), Strings.UTF_8);
+	public static ReadHeadStreamToString readFileAsStringStream(File $file) throws FileNotFoundException {
+		return new ReadHeadStreamToString(new FileInputStream($file), Strings.UTF_8);
 	}
-	public static StringStreamReadHead readFileAsStringStream(File $file, Charset $cs) throws FileNotFoundException {
-		return new StringStreamReadHead(new FileInputStream($file), $cs);
+	public static ReadHeadStreamToString readFileAsStringStream(File $file, Charset $cs) throws FileNotFoundException {
+		return new ReadHeadStreamToString(new FileInputStream($file), $cs);
 	}
-	public static StringStreamReadHead readFileAsStringStream(String $filename) throws FileNotFoundException {
-		return new StringStreamReadHead(new FileInputStream($filename), Strings.UTF_8);
+	public static ReadHeadStreamToString readFileAsStringStream(String $filename) throws FileNotFoundException {
+		return new ReadHeadStreamToString(new FileInputStream($filename), Strings.UTF_8);
 	}
-	public static StringStreamReadHead readFileAsStringStream(String $filename, Charset $cs) throws FileNotFoundException {
-		return new StringStreamReadHead(new FileInputStream($filename), $cs);
+	public static ReadHeadStreamToString readFileAsStringStream(String $filename, Charset $cs) throws FileNotFoundException {
+		return new ReadHeadStreamToString(new FileInputStream($filename), $cs);
 	}
-	public static StringStreamReadHead readResourceAsStringStream(String $resource) throws FileNotFoundException {
-		return new StringStreamReadHead(getResourceAsStream($resource), Strings.UTF_8);
+	public static ReadHeadStreamToString readResourceAsStringStream(String $resource) throws FileNotFoundException {
+		return new ReadHeadStreamToString(getResourceAsStream($resource), Strings.UTF_8);
 	}
-	public static StringStreamReadHead readResourceAsStringStream(String $resource, Charset $cs) throws FileNotFoundException {
-		return new StringStreamReadHead(getResourceAsStream($resource), $cs);
+	public static ReadHeadStreamToString readResourceAsStringStream(String $resource, Charset $cs) throws FileNotFoundException {
+		return new ReadHeadStreamToString(getResourceAsStream($resource), $cs);
 	}
 	
 	public static String readFileAsString(String $filename) throws FileNotFoundException, IOException {
