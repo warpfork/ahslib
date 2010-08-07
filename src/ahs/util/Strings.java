@@ -1,5 +1,6 @@
 package ahs.util;
 
+import java.nio.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
@@ -7,6 +8,25 @@ public class Strings {
 	public static final Charset	UTF_8		= Charset.forName("UTF-8");
 	public static final Charset	ASCII		= Charset.forName("ASCII");
 	public static final char[]	HEX_CHARS	= new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+//////////////////////////////////////////////////////////////// TRANSLATION FUCTIONS
+	// some of this functionality is already readily available, but these differ in that default charset always means utf-8
+	
+	public static final String fromBytes(byte[] $bats, Charset $cs) {
+		return new String($bats, $cs);
+	}
+	
+	public static final String fromBytes(byte[] $bats) {
+		return new String($bats, UTF_8);
+	}
+	
+	public static final String fromBytes(ByteBuffer $bats, Charset $cs) {
+		return new String(Arr.toArray($bats), $cs);
+	}
+	
+	public static final String fromBytes(ByteBuffer $bats) {
+		return new String(Arr.toArray($bats), UTF_8);
+	}
 	
 //////////////////////////////////////////////////////////////// PARTING FUCTIONS
 	// default to returning the original string if the pattern is not found
@@ -307,12 +327,12 @@ public class Strings {
 	
 	public static final String toHex(byte[] $bah) { return encHex($bah); }
 	public static final String encHex(byte[] $bah) {
-		char[] chars = new char[2 * $bah.length];
-		for (int i = 0; i < $bah.length; ++i) {	// could probably save cpu at the cost of a 4 bytes of memory by just having two counters
-			chars[2 * i] = HEX_CHARS[($bah[i] & 0xF0) >>> 4];
-			chars[2 * i + 1] = HEX_CHARS[$bah[i] & 0x0F];
+		char[] $chars = new char[2 * $bah.length];
+		for (int $i = 0; $i < $bah.length; ++$i) {	// could probably save cpu at the cost of a 4 bytes of memory by just having two counters, since it would remove the need to multiply
+			$chars[2 * $i] = HEX_CHARS[($bah[$i] & 0xF0) >>> 4];
+			$chars[2 * $i + 1] = HEX_CHARS[$bah[$i] & 0x0F];
 		}
-		return new String(chars);
+		return new String($chars);
 		
 		//   also works.  Relative speed unknown (but presumed worse):
 		//

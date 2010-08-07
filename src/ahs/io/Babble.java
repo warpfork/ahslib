@@ -10,6 +10,7 @@ import ahs.util.*;
  * @author hash
  * 
  */
+@Deprecated
 public class Babble extends java.io.ByteArrayOutputStream {
 	public Babble() {
 		// t's coo, we chll.

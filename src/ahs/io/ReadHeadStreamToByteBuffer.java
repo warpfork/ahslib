@@ -55,7 +55,7 @@ public class ReadHeadStreamToByteBuffer extends ReadHeadAdapter<ByteBuffer> {
 	 */
 	public ByteBuffer readCompletely() {
 		List<ByteBuffer> $bla = readAll();
-		ByteBuffer $v = ByteBuffer.allocate($blockSize * $bla.size());
+		ByteBuffer $v = ByteBuffer.allocate($blockSize * $bla.size());	// as of this moment you're consuming twice the memory that a more direct implementation would require.
 		Iterator<ByteBuffer> $itr = $bla.iterator();
 		while ($itr.hasNext()) {
 			$v.put($itr.next());	// calling rewind on $bb would be redundant; we know where it came from after all.
