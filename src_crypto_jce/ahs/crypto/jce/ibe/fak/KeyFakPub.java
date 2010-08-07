@@ -2,6 +2,7 @@ package ahs.crypto.jce.ibe.fak;
 
 import ahs.crypto.jce.ibe.*;
 import ahs.io.*;
+import ahs.io.codec.json.*;
 import ahs.util.*;
 
 public class KeyFakPub implements KeyIbePub {
@@ -17,7 +18,7 @@ public class KeyFakPub implements KeyIbePub {
 
 	public byte[] getEncoded() {
 		try {
-			return BitVector.ENCODER_JSON.encode(null, $x).toString().getBytes(Strings.UTF_8);
+			return BitVector.ENCODER.encode(new JsonCodec(), $x).serialize();
 		} catch (TranslationException $e) {
 			X.cry($e);
 			return null;

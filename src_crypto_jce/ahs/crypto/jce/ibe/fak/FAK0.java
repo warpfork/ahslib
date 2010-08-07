@@ -2,6 +2,7 @@ package ahs.crypto.jce.ibe.fak;
 
 import ahs.crypto.jce.dig.*;
 import ahs.io.*;
+import ahs.io.codec.eon.*;
 import ahs.io.codec.json.*;
 import ahs.util.*;
 
@@ -22,17 +23,23 @@ public class FAK0 implements KeySystemIbeFak {
 	
 	/** {@inheritDoc} */
 	public byte[] encrypt(byte[] $plaintext, KeyFakPub $ko) {
-		return new JSONObject("Enc", Base64.encode($ko.getEncoded()), $plaintext).toString().getBytes(Strings.UTF_8);
+		try {
+			return new JsonCodec().simple("Enc", Base64.encode($ko.getEncoded()), $plaintext).serialize();
+		} catch (TranslationException $e) {
+			X.cry($e);
+			return null;
+		}
 	}
 	
 	/** {@inheritDoc} */
 	public byte[] decrypt(byte[] $ciphertext, KeyFakPrv $kx) {
 		try {
-			JSONObject $jo = new JSONObject(new String($ciphertext, Strings.UTF_8));
+			EonObject $jo = new JsonCodec().newObj();
+			$jo.deserialize($ciphertext);
 			$jo.assertKlass("Enc");
 			if (!Arr.equals($kx.getEncoded(), Base64.decode($jo.getName()))) return null;
 			return $jo.getByteData();
-		} catch (JSONException $e) {
+		} catch (TranslationException $e) {
 			return null;
 		}
 	}
@@ -41,19 +48,25 @@ public class FAK0 implements KeySystemIbeFak {
 	public byte[] sign(byte[] $text, KeyFakPrv $myKey) {
 		Digester $d = new DigesterMD5();
 		byte[] $sig = $d.digest(Arr.cat($myKey.getEncoded(), $text));
-		return new JSONObject("Sig", Base64.encode($myKey.getEncoded()), $sig).toString().getBytes(Strings.UTF_8);
+		try {
+			return new JsonCodec().simple("Sig", Base64.encode($myKey.getEncoded()), $sig).serialize();
+		} catch (TranslationException $e) {
+			X.cry($e);
+			return null;
+		}
 	}
 	
 	/** {@inheritDoc} */
 	public boolean verify(byte[] $text, byte[] $sig, KeyFakPub $signerKey) {
 		Digester $d = new DigesterMD5();
 		try {
-			JSONObject $jo = new JSONObject(new String($text, Strings.UTF_8));
+			EonObject $jo = new JsonCodec().newObj();
+			$jo.deserialize($text);
 			$jo.assertKlass("Sig");
 			if (!Arr.equals($signerKey.getEncoded(), Base64.decode($jo.getName()))) return false;
 			byte[] $resig = $d.digest(Arr.cat($signerKey.getEncoded(), $text));
 			return Arr.equals($resig, $jo.getByteData());
-		} catch (JSONException $e) {
+		} catch (TranslationException $e) {
 			return false;
 		}
 	}
@@ -67,7 +80,9 @@ public class FAK0 implements KeySystemIbeFak {
 	
 	/** {@inheritDoc} */
 	public KeyFakPub decodePublicKey(byte[] $koe) throws TranslationException {
-		return new KeyFakPub(BitVector.DECODER_JSON.decode(null, new JSONObject(new String($koe, Strings.UTF_8))));
+		EonObject $jo = new JsonCodec().newObj();
+		$jo.deserialize($koe);
+		return new KeyFakPub(BitVector.DECODER.decode(null, $jo));
 	}
 	
 	/** {@inheritDoc} */
@@ -77,6 +92,8 @@ public class FAK0 implements KeySystemIbeFak {
 	
 	/** {@inheritDoc} */
 	public KeyFakPrv decodePrivateKey(byte[] $kxe) throws TranslationException {
-		return new KeyFakPrv(BitVector.DECODER_JSON.decode(null, new JSONObject(new String($kxe, Strings.UTF_8))));
+		EonObject $jo = new JsonCodec().newObj();
+		$jo.deserialize($kxe);
+		return new KeyFakPrv(BitVector.DECODER.decode(null, $jo));
 	}
 }

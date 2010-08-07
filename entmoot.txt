@@ -33,15 +33,17 @@ ENT: create a new encoding format more sympathetic to binary than JSON.
 		- Pussyfooting around with binary is kinda stupid.  You've already lost the ability to edit in any normal plain-text form, so what have you got to lose by making all your length fields a joyfully constant four bytes? 
 			- (Keys are again different, since they want to be somewhat translatable to different formats, and I don't expect all formats to accept binary keys (and whether or not to translate any particular key into Base64 would be unpleasantly ambiguous).)
 
-ENT: keep a unified interface to both JSON and the new binary encoding scheme.
-	- Abstract all existing methods that have been tacked on to JSONObject like getByteData as well as all the convenience constructors into factory methods, as well as move the MAGICWORD_* stuff in the JSON interface to a central agnostic location within the codec package.
-	- Move the ahs.json.* package to a more logical location underneath ahs.io.codec.*
-	- EON would be a cute name -- Extended Object Notation or Eternal Object Notation.  Or, Exultant Object Notation, if I just want to stick with my domain name.  And EBON for the binary variant?  Hilarious.
+ENT:DONE! keep a unified interface to both JSON and the new binary encoding scheme.
 
 ENT: revisit existing methods for building JSONObject and JSONArray instances from strings.
 	- Inline comments must be handled correctly (since we will always want this to comprise our configuration file format, and thus be extremely human-friendly).
 
 ENT: complete the new *[Read/Write]Head systems for dealing with "big" IO and standardized chunking of streams.
+	- DONE: ReadHead and implementers for blocking streams
+	- DONE: in-program pipes, genericly
+	- need  implementers for NIO channel stuff
+	- need translator-like implementers that are going to get you from babble to eon objects ready to be fed to codecs
+	- jesus, did I ever mention how incredibly useful it is to have this stuff done right for multithreaded programs?  Pipes that expose a ReadHead and a WriteHead are becoming a hugely critical part of efficient work distribution systems across threads.
 
 ENT: lay out a simple set of convenience functions for more "transaction"-like file system interaction.
 	- We're not aiming for anything like a full versioned filesystem or even necessarily guarantees of atomicity on a greater than one file scale; just jumping around so that if a write fails to complete, the old file is still somewhere handy and so is the partial write.
