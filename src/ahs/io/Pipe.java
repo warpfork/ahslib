@@ -66,6 +66,9 @@ public class Pipe<$T> {
 				// who the fuck wrote this stupid interrupt system anyway.  jesus.
 				return null;
 				// suppose we could close underlying, kill the pump, and then drain all permits all in one fell swoop before returning... but that's just... nuts.
+				// and by "in one fell swoop" i actually mean "in a way requiring way more atomicity than we have locks".  also, we're a -pipe-.   we don't -have- and underlying that's visible to us in any way.  so just completely nix that last.
+				// so the only workable option we're left with is WRITE A NEW SEMAPHORE?!  Ugh.
+				// also oh my god we don't want to interrupt other parts of the thread by accident if the close method wants to interrupt any still blocking reads but there aren't any!
 			}
 			$T $v = $queue.remove();
 			return $v;
@@ -103,6 +106,7 @@ public class Pipe<$T> {
 		
 		public void close() {
 			$closed[0] = true;
+			//FIXME interrupt any still-blocking read() calls
 			X.notifyAll($closed);
 		}
 		
