@@ -25,15 +25,14 @@ public class ReadHeadStreamToByteBuffer extends ReadHeadAdapter<ByteBuffer> {
 		while ($currentSum < $blockSize) {
 			$actualSizeRead = $base.read($bats, $currentSum, $blockSize-$currentSum);
 			if ($actualSizeRead == -1)	// EOF
-				if ($currentSum != 0)
-					break;	// this may seem a bit odd, but we're actually going to wait for the next full tick to report the EOF.  we need to use this tick to report the partial chunk we've already got.
-				else
-					return null;
+				baseEof();
 			else
 				$currentSum += $actualSizeRead;
 		}
 		
-		return ByteBuffer.wrap($bats, 0, $currentSum);
+		if ($currentSum > 0)
+			return ByteBuffer.wrap($bats, 0, $currentSum);
+		return null;
 	}
 	
 	public void close() throws IOException {

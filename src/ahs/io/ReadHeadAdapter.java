@@ -21,11 +21,24 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	}
 	
 	/**
-	 * This method is called once per cycle of the pump. It should read and construct
-	 * a chunk from the underlying stream/channel/whatever and return it. A null
-	 * return indicates EOF.
+	 * This method is called once per cycle of the pump. If possible, it should read
+	 * and construct a chunk from the underlying stream/channel/whatever and return
+	 * it. A null return does NOT necessarily indicate EOF, since subclasses based on
+	 * non-blocking IO schemes might be pumped and yet not have enough data available
+	 * to formulate a whole chunk.
 	 */
 	protected abstract $T getChunk() throws IOException;
+	
+	/**
+	 * The subclass should call this method when it encounters a situation that makes
+	 * it want to stop reading (such as EOF or an exception (which should also have
+	 * been thrown from the getChunk method)) while in the middle of executing the
+	 * getChunk() method from a pumping thread. This adapter will then change its
+	 * state to reflect this and halt further pumping.
+	 */
+	protected void baseEof() {
+		ourClose();	// it is in fact ok to flag ourselves as closed here, since regardless of how we got here the underlying stream is already not willing to give us more data
+	}
 	
 	private final PumpT			$pump;
 	private final Pipe<$T>			$pipe;
@@ -73,8 +86,12 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	 * after the event has propagated through the underlying stream and buffering, and
 	 * we will never add data to the readable buffer).
 	 */
-	private void ourClose() throws IOException {
-		close();	// this is likely redundant, but can't hurt.
+	private void ourClose() {
+		try {
+			close();	// this is likely redundant, but can't hurt.
+		} catch (IOException $e) {
+			/* what could we possibly do with this? and i don't want to break out of the rest of this function. */
+		}
 		
 		try {
 			$pipe.SRC.close();	// this transparently handles interruption of any still-blocking reads as well as return of the final readAll.
@@ -105,17 +122,13 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 				} catch (IOException $e) {
 					$dated_eh = $eh;
 					if ($dated_eh != null) $dated_eh.hear($e);
-					// i guess it's somewhat debatable whether or not any exception should close... but that's what InputStream does, so i'm sticking to it for the time 
+					
+					// i guess it's somewhat debatable whether or not any exception should close... but that's what InputStream does, so i'm sticking to it for the time
+					baseEof();
+					break;
 				}
 				
-				if ($chunk == null) {
-					try {
-						ourClose();	// it is in fact ok to flag ourselves as closed here, since regardless of how we got here the underlying stream is already not willing to give us more data
-					} catch (IOException $e) {
-						if ($dated_eh != null) $dated_eh = $eh;		// if we didn't get it earlier in this cycle, get it now; if we did, keep that one
-						if ($dated_eh != null) $dated_eh.hear($e);	// now tell 'em
-					}
-				} else {
+				if ($chunk != null) {
 					// wrap it up and enqueue to the buffer
 					// readers will immediately Notice the new data due to the pipe's internal semaphore doing its job
 					try {

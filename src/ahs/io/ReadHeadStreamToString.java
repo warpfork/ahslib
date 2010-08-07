@@ -16,7 +16,9 @@ public class ReadHeadStreamToString extends ReadHeadAdapter<String> {
 	private final BufferedReader			$base;
 	
 	protected String getChunk() throws IOException {
-		return $base.readLine();
+		String $v = $base.readLine();
+		if ($v == null) baseEof();
+		return $v;
 	}
 	
 	public void close() throws IOException {

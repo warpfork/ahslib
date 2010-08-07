@@ -28,9 +28,20 @@ public class Arr {
 	}
 	
 	
-	
+
 	/**
-	 * After this method returns, the given ByteBuffer's position will match its limit.
+	 * <p>
+	 * After this method returns, the given ByteBuffer's position will match its
+	 * limit.
+	 * </p>
+	 * 
+	 * <p>
+	 * If it is known that the ByteBuffer's backing array is not longer than its limit
+	 * and you are comfortable with recycling that backing array, the
+	 * <code>array()</code> method on ByteBuffer itself is a more memory-efficent
+	 * choice (even if you use this method and then immediately allow the ByteBuffer
+	 * to be gc'd).
+	 * </p>
 	 * 
 	 * @param $bb
 	 * @return a new byte array that has a length matching the ByteBuffer's current
