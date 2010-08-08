@@ -15,9 +15,7 @@ public class ReadHeadChannelToBabble extends ReadHeadAdapter<ByteBuffer> {
 	private final ByteChannel	$base;
 	private final ByteBuffer	$preint	= ByteBuffer.allocate(4);
 	
-	// okay, this is hard.
-	// just because the channel tells the selector to power this pump doesn't mean there's actually -enough- data for a semantic event.
-	// and that adapter we're extending doesn't expect us to do anything except 
+	// oh god.  we still have an issue to watch out for.  one select fire from the underlying might still need multiple pump cycles.  should a selector pump just go until the kid returns a null chunk and interrupts itself or what?  i guess so.
 	protected ByteBuffer getChunk() throws IOException {
 		// figure out what length of message we expect
 		if ($base.read($preint) == -1) baseEof();
@@ -28,19 +26,14 @@ public class ReadHeadChannelToBabble extends ReadHeadAdapter<ByteBuffer> {
 		$preint.rewind();
 		if ($messlen < 1) throw new IOException("malformed babble -- negative message length header");
 		
-		
 		// get the message
 		ByteBuffer $bb = ByteBuffer.allocate($messlen);
-		//NOTHING AFTER THIS LINE MAKES SENSE
-		int $r = $base.read($bb);
-		if ($bb.remaining() > 0) return null;
-		int $p = 0;	// use an internal field of bb for this
-		while ($p < $messlen) {
-			$k = $base.read($buf,$p,$buf.length-$p);
-			if ($k == -1) break;	// it might be more appropriate to ReadHead to just quietly close without returning a semantic event or fireing an exception
-			$p += $k;
+		if ($base.read($bb) == -1) {
+			// we're pissed
+			throw new IOException("babble of unexpected length");
 		}
-		if ($p != $messlen) throw new IOException("babble of unexpected length");
+		
+		if ($bb.remaining() > 0) return null;	// we just don't have as much information as this chunk should contain yet
 		
 		$bb.rewind();
 		return $bb;
