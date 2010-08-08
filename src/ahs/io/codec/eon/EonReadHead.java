@@ -9,23 +9,37 @@ import java.nio.*;
 import java.util.*;
 
 /**
- * Translations ByteBuffer into EonObject.
+ * Translates ByteBuffer into EonObject.
  * 
  * @author hash
  * 
  */
 public class EonReadHead implements ReadHead<EonObject> {
-	public EonReadHead(ReadHead<ByteBuffer> $bio) {
+	public EonReadHead(ReadHead<ByteBuffer> $bio, EonCodec $co) {
 		this.$bio = $bio;
+		this.$co = $co;
 	}
 	
 	private final ReadHead<ByteBuffer>	$bio;
+	private final EonCodec			$co;
 	
+	protected EonObject convert(ByteBuffer $bb) throws TranslationException {
+		if ($bb == null) return null;
+		return $co.deserialize($bb.array());
+	}
+	
+	protected List<EonObject> convertAll(List<ByteBuffer> $bbs) {
+		final int $s = $bbs.size();
+		List<EonObject> $v = new ArrayList<EonObject>($s);
+		for (int $i = 0; $i < $s; $i++)
+			$v.add(convert($bbs.get($i)));
+		return $v;
+	}
 	
 	public Pump getPump() {
 		return null;
 	}
-
+	
 	public void setExceptionHandler(ExceptionHandler<IOException> $eh) {
 		// i just thought of a radicially new way of dealing with this.
 		// perhaps i should have two pipes in that danged adapter... or rather a Pipe<Pair<$T, IOException>>
@@ -47,13 +61,13 @@ public class EonReadHead implements ReadHead<EonObject> {
 	}
 
 	public EonObject readNow() {
-		//TODO
+		ByteBuffer $bb = $bio.readNow();
+		return ($bb == null) ? $bb : new EonObject
 		return null;
 	}
 
 	public boolean hasNext() {
-		//TODO
-		return false;
+		return $bio.hasNext();
 	}
 
 	public List<EonObject> readAll() {
@@ -67,13 +81,11 @@ public class EonReadHead implements ReadHead<EonObject> {
 	}
 
 	public boolean isClosed() {
-		//TODO
-		return false;
+		return $bio.isClosed();
 	}
 
 	public void close() throws IOException {
-		//TODO
-		
+		$bio.close();
 	}
 	
 }
