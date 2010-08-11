@@ -122,7 +122,7 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 			throw new UnencodableException("reflection problem",$e);
 		}
 	}
-
+	
 	private void decodeField(EonCodec $codec, EonObject $eo, String $key, Field $f, $T $x) throws IllegalAccessException, TranslationException {
 		Class<?> $typo = $f.getType();
 		// i wish you could do a switch on anything that acts like a pointer
@@ -147,7 +147,6 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 		// i suppose we could check here if the value is already an EonObject or EonArray, but in practice who would ever do that?
 		//	if they really need to do it, someone could just put a no-op encoder in their codec for the requisite types.
 		else
-			$f.set($x, $codec.decode($eo.getObj($key), (Class<Object>)$typo));	// i'm REALLY not sure i trust this.  the cast shouldn't change the pointer, but... wait.  CAN'T CAST UP IN GENERIC.
+			$f.set($x, $codec.decode($eo.getObj($key), $typo));
 	}
-	
 }
