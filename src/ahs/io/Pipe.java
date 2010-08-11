@@ -136,9 +136,10 @@ public class Pipe<$T> {
 		}
 		
 		public void writeAll(Collection<? extends $T> $chunks) throws IOException {
+			// at first i thought i could implement this with addAll on the queue and a single big release... not actually so.  addAll on the queue can throw exceptions but still have made partial progress.
 			synchronized ($queue) {
-				$queue.addAll($chunks);
-				$gate.release($chunks.size());	// this is safe with this particular queue, since it never rejects elements without throwing exceptions.
+				for ($T $chunk : $chunks)
+					write($chunk);
 			}
 		}
 		
