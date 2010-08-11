@@ -45,27 +45,39 @@ public class ReadHeadChannelToBabble extends ReadHeadAdapter<ByteBuffer> {
 	private ByteBuffer		$mess;
 	
 	protected ByteBuffer getChunk() throws IOException {
+		X.saye("chank");
 		if ($messlen < 0) {
+			X.saye("eat a num");
 			// figure out what length of message we expect
 			if ($base.read($preint) == -1) {
 				baseEof();
 				if ($preint.remaining() != 4) throw new IOException("malformed babble -- message length header not read");
 			}
+			X.saye("blow?");
 			if ($preint.remaining() > 0) return null; // don't have a size header yet.  keep waiting for more data.
-			$messlen = Primitives.intFromByteArray($preint.array());
+			if (true) {	// these should be functionally identical except i suspect the latter has minutely better performance
+				$preint.rewind();
+				$messlen = $preint.getInt();
+			} else {
+				$messlen = Primitives.intFromByteArray($preint.array());
+			}
+			X.saye("noblow. len="+$messlen);
 			$preint.rewind();
 			if ($messlen < 1) throw new IOException("malformed babble -- negative message length header");
 			$mess = ByteBuffer.allocate($messlen);
 		}
 		// if procedure gets here, we either had messlen state from the last round or we have it now.
-		
+
+		X.saye("getit...");
 		// get the message
 		if ($base.read($mess) == -1) {
 			// we're pissed
 			throw new IOException("babble of unexpected length");
 		}
-		
+
+		X.saye("gotit?");
 		if ($mess.remaining() > 0) return null; // we just don't have as much information as this chunk should contain yet.  keep waiting for more data.
+		X.saye("gotit!");
 		
 		$messlen = -1;
 		$preint.rewind();

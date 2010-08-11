@@ -36,6 +36,7 @@ public class WriteHeadBabbleToChannel implements WriteHead<ByteBuffer> {
 	public void write(ByteBuffer $chunk) throws IOException {
 		$preint.clear();
 		$preint.putInt($chunk.remaining());
+		$preint.rewind();
 		subwrite($preint);
 		subwrite($chunk);
 	}
