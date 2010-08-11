@@ -27,11 +27,21 @@ public class PumperSelector implements Pumper {
 	
 	private final Selector $selector; 
 	
+	/**
+	 * Starts the pump in a brand new thread of its own.
+	 */
+	public synchronized void start() {
+		new Thread(this, "AnonymousPumper").start();
+	}
+	
 	/** {@inheritDoc} */
 	public void run() {
 		while (true) {
 			try {
-				$selector.select();	// blocks for events
+				// block for events
+				//   but still wake up every once and a while so that the sync on selector's internals loosens up enough to let registrations of new channels get through
+				//     (obscenely, $selector.wakeup() is of no use to avoid this periodicy, since it only helps if you call it -after- the register function, but the register function -blocks- until the wakeup.)
+				$selector.select(100);
 			} catch (IOException $e) {
 				X.cry($e);
 			}
@@ -50,11 +60,22 @@ public class PumperSelector implements Pumper {
 			}
 		}
 	}
-	
+
 	public void register(SelectableChannel $ch, Pump $p) {
 		if ($p == null) throw new NullPointerException("pump cannot be null");
 		try {
-			$ch.register($selector, $ch.validOps(), $p);
+			$selector.wakeup();	// this has probabilistic (and unlikely at that) success, but can't really hurt us, so... feh. 
+			$ch.register($selector, SelectionKey.OP_READ, $p);	// we basically can't use write.  it makes for spin.
+		} catch (ClosedChannelException $e) {
+			throw new IllegalStateException($e);
+		}
+	}
+	
+	public void register(ServerSocketChannel $ch, Pump $p) {
+		if ($p == null) throw new NullPointerException("pump cannot be null");
+		try {
+			$selector.wakeup();	// this has probabilistic (and unlikely at that) success, but can't really hurt us, so... feh.
+			$ch.register($selector, SelectionKey.OP_ACCEPT, $p);
 		} catch (ClosedChannelException $e) {
 			throw new IllegalStateException($e);
 		}

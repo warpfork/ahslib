@@ -1,5 +1,6 @@
 package ahs.io;
 
+import ahs.util.*;
 import ahs.util.thread.*;
 
 import java.io.*;
