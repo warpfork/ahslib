@@ -1,13 +1,39 @@
 package ahs.io;
 
 import ahs.util.*;
+import ahs.util.thread.*;
 
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 
+/**
+ * Exception handlers are advised to deregisters the base channel from teh selector; this
+ * can be done by telling the PumperSelector to deregister the pump from getPump().
+ * 
+ * @author hash
+ * 
+ */
 public class ReadHeadChannelToBabble extends ReadHeadAdapter<ByteBuffer> {
-	public ReadHeadChannelToBabble(ByteChannel $base) {
+	/**
+	 * @param $base
+	 *                should already be connected and in a non-blocking state.
+	 */
+	public ReadHeadChannelToBabble(DatagramChannel $base, PumperSelector $ps) {
+		this($base);
+		$ps.register($base, getPump());
+	}
+	
+	/**
+	 * @param $base
+	 *                should already be connected and in a non-blocking state.
+	 */
+	public ReadHeadChannelToBabble(SocketChannel $base, PumperSelector $ps) {
+		this($base);
+		$ps.register($base, getPump());
+	}
+	
+	private ReadHeadChannelToBabble(ByteChannel $base) {
 		super();
 		this.$base = $base;
 		this.$messlen = -1;
@@ -18,7 +44,6 @@ public class ReadHeadChannelToBabble extends ReadHeadAdapter<ByteBuffer> {
 	private int			$messlen;
 	private ByteBuffer		$mess;
 	
-	// oh god.  we still have an issue to watch out for.  one select fire from the underlying might still need multiple pump cycles.  should a selector pump just go until the kid returns a null chunk and interrupts itself or what?  i guess so.
 	protected ByteBuffer getChunk() throws IOException {
 		if ($messlen < 0) {
 			// figure out what length of message we expect

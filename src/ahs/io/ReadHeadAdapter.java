@@ -112,7 +112,6 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		}
 		
 		public synchronized void run(final int $times) {
-			ExceptionHandler<IOException> $dated_eh = null;
 			for (int $i = 0; $i < $times; $i++) {
 				if (isDone()) break;
 
@@ -120,7 +119,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 				try {
 					$chunk = getChunk();
 				} catch (IOException $e) {
-					$dated_eh = $eh;
+					ExceptionHandler<IOException> $dated_eh = $eh;
 					if ($dated_eh != null) $dated_eh.hear($e);
 					
 					// i guess it's somewhat debatable whether or not any exception should close... but that's what InputStream does, so i'm sticking to it for the time
@@ -128,19 +127,26 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 					break;
 				}
 				
-				if ($chunk != null) {
-					// wrap it up and enqueue to the buffer
-					// readers will immediately Notice the new data due to the pipe's internal semaphore doing its job
-					try {
-						$pipe.SINK.write($chunk);
-					} catch (IOException $e) {
-						/* this can't actually happen in a pipe */
-					}
-					
-					// signal that we got a new chunk in
-					Listener<ReadHead<$T>> $dated_el = $el;
-					if ($dated_el != null) $dated_el.hear(ReadHeadAdapter.this);
+				
+				// if we have no chunk and we weren't hit by an IOException, then it's either
+				//    - just a non-blocking dude who doesn't have enough bytes for a semantic chunk, or
+				//    - a blocking dude who is at EOF and should have already signalled as much.
+				if ($chunk == null) {
+					// we're not necessarily done with this channel, but we don't want to spin on it any more right now.
+					break;
 				}
+				
+				// we have a chunk; wrap it up and enqueue to the buffer
+				// readers will immediately Notice the new data due to the pipe's internal semaphore doing its job
+				try {
+					$pipe.SINK.write($chunk);
+				} catch (IOException $e) {
+					/* this can't actually happen in a pipe */
+				}
+				
+				// signal that we got a new chunk in
+				Listener<ReadHead<$T>> $dated_el = $el;
+				if ($dated_el != null) $dated_el.hear(ReadHeadAdapter.this);
 			}
 		}
 	}
