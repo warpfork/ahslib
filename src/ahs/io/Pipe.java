@@ -143,10 +143,6 @@ public class Pipe<$T> {
 			}
 		}
 		
-		public void flush() {
-			// no op.  there's nothing to catch up on here regardless of current state.
-		}
-		
 		public boolean hasRoom() {
 			return true;	// we don't implement any capacity restrictions, so this isn't really ever in question.
 		}

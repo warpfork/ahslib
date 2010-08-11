@@ -32,7 +32,7 @@ import java.util.*;
  * taken more as "with minimal blocking as absolutely critical". For example, in
  * filesystem operations it means merely that the WriteHead will impose no additional wait
  * beyond normal disk access time; in the case of a network file system, there may still
- * be significant blocking for the disk access itself
+ * be significant blocking for the disk access itself.
  * </p>
  * 
  * @author hash
@@ -57,6 +57,12 @@ public interface WriteHead<$T> {
 	 *         will return immediately without blocking.
 	 */
 	public boolean hasRoom();
+	
+
+	/**
+	 * @return true if the underlying stream is closed and writes are not possible.
+	 */
+	public boolean isClosed();
 	
 	/**
 	 * <p>
@@ -88,10 +94,4 @@ public interface WriteHead<$T> {
 	 *                 stream throws an IOException.
 	 */
 	public void close() throws IOException;
-	
-
-	/**
-	 * @return true if the underlying stream is closed and writes are not possible.
-	 */
-	public boolean isClosed();
 }

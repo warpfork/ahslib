@@ -23,6 +23,10 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	
 	private final ServerSocketChannel	$ssc;
 	
+	public ServerSocketChannel getServerSocketChannel() {
+		return $ssc;
+	}
+	
 	protected SocketChannel getChunk() throws IOException {
 		SocketChannel $sc = $ssc.accept();
 		if ($sc == null) return null;

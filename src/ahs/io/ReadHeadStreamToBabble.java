@@ -3,6 +3,7 @@ package ahs.io;
 import ahs.util.*;
 
 import java.io.*;
+import java.net.*;
 import java.nio.*;
 import java.util.*;
 
@@ -25,6 +26,10 @@ import java.util.*;
  * 
  */
 public class ReadHeadStreamToBabble extends ReadHeadAdapter<ByteBuffer> {
+	public ReadHeadStreamToBabble(Socket $sock) throws IOException {
+		this(new BufferedInputStream($sock.getInputStream()));
+	}
+	
 	public ReadHeadStreamToBabble(InputStream $base) {
 		super();
 		this.$is = $base;

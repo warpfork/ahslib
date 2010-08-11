@@ -44,6 +44,8 @@ public class PumperSelector implements Pumper {
 				SelectionKey $k = $itr.next();
 				$itr.remove();
 				
+				if (!$k.isValid()) continue;
+				
 				((Pump)$k.attachment()).run(Integer.MAX_VALUE);	// the pump is told to get as much as it can, but with the expectation that it will return much sooner when the channel runs out of immediately available data.
 			}
 		}
