@@ -31,7 +31,7 @@ public class PumperSelector implements Pumper {
 	 * Starts the pump in a brand new thread of its own.
 	 */
 	public synchronized void start() {
-		new Thread(this, "AnonymousPumper").start();
+		new Thread(this, "SelectorPumper").start();
 	}
 	
 	/** {@inheritDoc} */
@@ -60,7 +60,7 @@ public class PumperSelector implements Pumper {
 			}
 		}
 	}
-
+	
 	public void register(SelectableChannel $ch, Pump $p) {
 		if ($p == null) throw new NullPointerException("pump cannot be null");
 		try {

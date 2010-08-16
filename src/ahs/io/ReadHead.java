@@ -120,18 +120,19 @@ public interface ReadHead<$T> {
 	 * 
 	 * <p>
 	 * Despite the listener's intended purpose, it is critical to note that even if a
-	 * <code>hasNext()</code> call is the first thing within the Listener's <code>hear(*)</code>
-	 * procedure, that call may return false. This may situation may arise even if the
-	 * call to the Listener was intended to signal new data availability, since
-	 * multithreaded access to the ReadHead can result in another thread having
-	 * pre-empted the Listener and consumed the data before the Listener can respond.
+	 * <code>hasNext()</code> call is the first thing within the Listener's
+	 * <code>hear(ReadHead<$T>)</code> procedure, that call may return false. This may
+	 * situation may arise even if the call to the Listener was intended to signal new
+	 * data availability, since multithreaded access to the ReadHead can result in
+	 * another thread having pre-empted the Listener and consumed the data before the
+	 * Listener can respond.
 	 * </p>
 	 * 
 	 * <p>
-	 * The Listener's <code>hear(*)</code> method will be invoked from the thread
-	 * currently powering the pump (or in some cases the thread responsible for the
-	 * write that triggered the event), and as such should not be responsible for any
-	 * intensive or time-consuming operations. The recommended usage is to simply
+	 * The Listener's <code>hear(ReadHead<$T>)</code> method will be invoked from the
+	 * thread currently powering the pump (or in some cases the thread responsible for
+	 * the write that triggered the event), and as such should not be responsible for
+	 * any intensive or time-consuming operations. The recommended usage is to simply
 	 * provide an event listener that marks the ReadHead as (probably) having data
 	 * available in some other "selector"-like scheme.
 	 * </p>
@@ -139,7 +140,10 @@ public interface ReadHead<$T> {
 	 * <p>
 	 * Future versions of this library may deprecate this method in favor of a
 	 * selector scheme provided by this package, and thereafter remove the method from
-	 * the public namespace entirely.
+	 * the public namespace entirely; it's also possible that the definition will be
+	 * weakened to allow the implementer to only invoke the listener when a new chunk
+	 * becomes available in order to reduce noise, and users are thus advised to use
+	 * readAllNow instead of just readNow in response to hearing an update.
 	 * </p>
 	 * 
 	 * @param $el

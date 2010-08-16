@@ -48,11 +48,11 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	public Pump getPump() {
 		return $pump;
 	}
-
+	
 	public void setExceptionHandler(ExceptionHandler<IOException> $eh) {
 		this.$eh = $eh;
 	}
-
+	
 	public void setListener(Listener<ReadHead<$T>> $el) {
 		this.$el = $el;
 	}
@@ -114,7 +114,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		public synchronized void run(final int $times) {
 			for (int $i = 0; $i < $times; $i++) {
 				if (isDone()) break;
-
+				
 				$T $chunk = null;
 				try {
 					$chunk = getChunk();
@@ -150,5 +150,4 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			}
 		}
 	}
-	
 }
