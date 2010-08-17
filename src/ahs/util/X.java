@@ -66,12 +66,6 @@ public class X {
 	 * the ishy exception as the source for a runtime exception.
 	 * </p>
 	 * 
-	 * <p>
-	 * Ideal for catching InterruptedException from invocations to wait() and its
-	 * ilk, since merely printing stack traces and ignoring those exceptions can cause
-	 * extremely undesirable behavior.
-	 * </p>
-	 * 
 	 * @param $e
 	 *                Exception that made us cry.
 	 */
@@ -84,6 +78,20 @@ public class X {
 	 */
 	public static void cry() {
 		throw new CryException();
+	}
+	
+	/**
+	 * @see #cry(Throwable)
+	 */
+	public static void cry(String $m, Throwable $e) {
+		throw new CryException($m, $e);
+	}
+	
+	/**
+	 * @see #cry(Throwable)
+	 */
+	public static void cry(String $m) {
+		throw new CryException($m);
 	}
 	
 	private static class CryException extends Error {
