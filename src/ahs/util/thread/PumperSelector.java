@@ -41,6 +41,10 @@ public class PumperSelector implements Pumper {
 				// block for events
 				//   but still wake up every once and a while so that the sync on selector's internals loosens up enough to let registrations of new channels get through
 				//     (obscenely, $selector.wakeup() is of no use to avoid this periodicy, since it only helps if you call it -after- the register function, but the register function -blocks- until the wakeup.)
+				//SOMEDAY: i can fix this
+				//   have an event queue that registration functions push and event to... and by queue i mean Pipe -- that beautiful concurrent one i just made
+				//   then have the listener on the pipe call wakeup on the selector
+				//   and then have this loop readAllNow on the pipe and act as appropriate
 				$selector.select(100);
 			} catch (IOException $e) {
 				X.cry($e);
