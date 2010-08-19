@@ -85,7 +85,7 @@ public class Multibuffer {
 	private static class Window extends JFrame {
 		public Window(String $title) {
 			super($title);
-			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			//this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			//this.setBounds(700,200,900,600);
 			//this.setResizable(false);
 			this.setExtendedState(Frame.MAXIMIZED_BOTH);
