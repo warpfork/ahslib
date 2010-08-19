@@ -24,9 +24,10 @@ public class ReadHeadStreamToByteBuffer extends ReadHeadAdapter<ByteBuffer> {
 		// try to get as much as we can
 		while ($currentSum < $blockSize) {
 			$actualSizeRead = $base.read($bats, $currentSum, $blockSize-$currentSum);
-			if ($actualSizeRead == -1)	// EOF
+			if ($actualSizeRead == -1) {	// EOF
 				baseEof();
-			else
+				break;
+			} else
 				$currentSum += $actualSizeRead;
 		}
 		

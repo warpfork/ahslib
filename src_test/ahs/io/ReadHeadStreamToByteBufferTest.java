@@ -30,6 +30,7 @@ public class ReadHeadStreamToByteBufferTest extends TestCase {
 	
 	public void testBasic() {
 		ReadHead<ByteBuffer> $rh = new ReadHeadStreamToByteBuffer($dat1, 4);
+		
 		assertNull($rh.readNow());
 		assertFalse($rh.isClosed());
 		assertFalse($rh.hasNext());
