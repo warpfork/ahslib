@@ -9,12 +9,20 @@ import java.nio.*;
 import java.util.*;
 
 /**
- * Translates ByteBuffer into EonObject.
+ * Translates ByteBuffer into EonObject by decorating the ReadHead&lt;ByteBuffer&gt; given
+ * in the constructor; all read buffering remains at the level below the decorator (i.e.
+ * outside of this class). Exception reporting at the two levels is separate, but
+ * listeners are not; it is assumed that any event in the decorated ReadHead should be
+ * reported to the listener of this ReadHead, and as such the constructor sets the
+ * Listener of the decorated ReadHead.
  * 
  * @author hash
  * 
  */
 public class EonReadHead implements ReadHead<EonObject> {
+	// a lot of these methods end up trying to make it possible to do everything you could ever want without having to touch a single referrence to the decorated obj.
+	// ...but that's kinda farcical, because you can't ever make a good interface for doing the exceptions
+	
 	public EonReadHead(ReadHead<ByteBuffer> $bio, EonCodec $co) {
 		this.$bio = $bio;
 		this.$co = $co;
@@ -22,36 +30,48 @@ public class EonReadHead implements ReadHead<EonObject> {
 	
 	private final ReadHead<ByteBuffer>	$bio;
 	private final EonCodec			$co;
+	private Listener<ReadHead<EonObject>>	$el;
+	private ExceptionHandler<IOException>	$eh;
 	
 	protected EonObject convert(ByteBuffer $bb) throws TranslationException {
 		if ($bb == null) return null;
 		return $co.deserialize($bb.array());
 	}
 	
+	/**
+	 * @param $bbs
+	 * @return the list of converted objects, excluding any who threw exceptions in
+	 *         their individual conversion process.
+	 */
 	protected List<EonObject> convertAll(List<ByteBuffer> $bbs) {
 		final int $s = $bbs.size();
 		List<EonObject> $v = new ArrayList<EonObject>($s);
 		for (int $i = 0; $i < $s; $i++)
-			$v.add(convert($bbs.get($i)));
+			try {
+				$v.add(convert($bbs.get($i)));
+			} catch (TranslationException $e) {
+				report($e);		//FIXME:AHS: consider the sync properties of the methods this is used in.  can listeners be hit by multiple threads at once?
+			}
 		return $v;
 	}
 	
+	protected void report(IOException $ioe) {
+		Listener<ReadHead<EonObject>> $dated_el = $el;
+		if ($dated_el != null) $dated_el.hear(this);
+	}
+	
+	/**
+	 * Returns the decorated ReadHead's pump.
+	 */
 	public Pump getPump() {
-		return null;
+		return $bio.getPump();
 	}
 	
 	public void setExceptionHandler(ExceptionHandler<IOException> $eh) {
-		// i just thought of a radicially new way of dealing with this.
-		// perhaps i should have two pipes in that danged adapter... or rather a Pipe<Pair<$T, IOException>>
-		// then reads can throw exceptions like they were their own happening now, and pumps can also still respond as needed
-		// though i suppose you never have a $T and an exception in the same round
-		// and you never really have multiple exceptions
-		// except in translator setups like this where there's processing of the message beyond just byte io stuff
-		// which is the more general case and thus the one we should be designing for
+		this.$eh = $eh;
 	}
 
 	public void setListener(Listener<ReadHead<EonObject>> $el) {
-		//TODO
 		
 	}
 
@@ -61,9 +81,12 @@ public class EonReadHead implements ReadHead<EonObject> {
 	}
 
 	public EonObject readNow() {
-		ByteBuffer $bb = $bio.readNow();
-		return ($bb == null) ? $bb : new EonObject
-		return null;
+		try {
+			return convert($bio.readNow());
+		} catch (TranslationException $e) {
+			report($e);
+			return null;
+		}
 	}
 
 	public boolean hasNext() {
