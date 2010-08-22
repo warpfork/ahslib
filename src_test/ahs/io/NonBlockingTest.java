@@ -117,7 +117,7 @@ public class NonBlockingTest extends TestCase {
 	
 	public void testBabbleBig() throws IOException {
 		LOG.info(this, "Starting big babble test");
-
+		
 		LOG.debug(this, "writing to channel 1...");
 		TB.rewind(); $whsc1.write(TB);
 		

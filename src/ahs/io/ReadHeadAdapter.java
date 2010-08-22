@@ -91,6 +91,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			close();	// this is likely redundant, but can't hurt.
 		} catch (IOException $e) {
 			/* what could we possibly do with this? and i don't want to break out of the rest of this function. */
+			$e.printStackTrace();
 		}
 		
 		try {

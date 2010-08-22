@@ -75,6 +75,6 @@ public class ReadHeadChannelToBabble extends ReadHeadAdapter<ByteBuffer> {
 	
 	public void close() throws IOException {
 		$base.close();
-		//TODO:AHS: we should be cancelling the channel too
+		//TODO:AHS: we should probably be cancelling the channel too, but so far we haven't needed to hold on to the pumperselector
 	}
 }
