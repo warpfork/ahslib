@@ -28,10 +28,12 @@ public class PumperSelector implements Pumper {
 	private final Selector $selector; 
 	
 	/**
-	 * Starts the pump in a brand new thread of its own.
+	 * Starts the pump in a brand new (daemon) thread of its own.
 	 */
 	public synchronized void start() {
-		new Thread(this, "SelectorPumper").start();
+		Thread $t = new Thread(this, "SelectorPumper");
+		$t.setDaemon(true);
+		$t.start();
 	}
 	
 	/** {@inheritDoc} */
