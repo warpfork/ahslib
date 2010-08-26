@@ -7,10 +7,11 @@ import java.util.*;
 
 public final class Eon {
 	private Eon() {}	// thou shalt not instantiate me
-	
-	public static final String MAGICWORD_NAME = "$";
+
 	public static final String MAGICWORD_CLASS = "#";
+	public static final String MAGICWORD_NAME = "$";
 	public static final String MAGICWORD_DATA = "%";
+	public static final String MAGICWORD_HINT = "!";
 	
 	public static String getKlass(Class<?> $c) {
 		String[] $arrg = $c.getCanonicalName().split("\\Q.\\E");

@@ -8,13 +8,16 @@ import ahs.util.*;
 import java.util.*;
 
 public class CodecImpl<$CODEC extends Codec<$CODEC, $CODE>, $CODE> implements Codec<$CODEC,$CODE> {
+	/**
+	 * Constructs a new Codec that contains no encode or decode hooks.
+	 */
 	public CodecImpl() {
 		$ed = new EncoderDispatch<$CODEC, $CODE>();
 		$dd = new DecoderDispatch<$CODEC, $CODE>();
 	}
 	
-	private EncoderDispatch<$CODEC,$CODE> $ed;
-	private DecoderDispatch<$CODEC,$CODE> $dd;
+	private final EncoderDispatch<$CODEC,$CODE> $ed;
+	private final DecoderDispatch<$CODEC,$CODE> $dd;
 	
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder) {
 		$ed.putHook($datclrclass, $encoder);

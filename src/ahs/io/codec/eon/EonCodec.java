@@ -10,12 +10,27 @@ import java.util.*;
  * @author hash
  */
 public class EonCodec extends CodecImpl<EonCodec,EonObject> {
+	/**
+	 * Constructs a new EonCodec that contains no encode or decode hooks and uses the
+	 * given factories to produce new empty objects and arrays for storage.
+	 */
 	public EonCodec(Factory<? extends EonObject> $objProvider, Factory<? extends EonArray> $arrProvider) {
 		super();
 		this.$objProvider = $objProvider;
 		this.$arrProvider = $arrProvider;
 	}
-
+	
+	/**
+	 * Constructs a new EonCodec that contains no encode or decode hooks and using the
+	 * same (pointer-equality!) factories to produce new empty objects and arrays for
+	 * storage.
+	 */
+	public EonCodec(EonCodec $other) {
+		super();
+		this.$objProvider = $other.$objProvider;
+		this.$arrProvider = $other.$arrProvider;
+	}
+	
 	private final Factory<? extends EonObject> $objProvider;
 	private final Factory<? extends EonArray> $arrProvider;
 	
@@ -38,7 +53,7 @@ public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 	
 	
 	
-
+	
 	public EonArray newArr() {
 		return $arrProvider.make();
 	}

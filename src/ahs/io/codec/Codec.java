@@ -31,7 +31,7 @@ import java.util.*;
  */
 public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder);
-
+	
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Decoder<$CODEC, $CODE, $TARG> $decoder);
 	
 	public <$TARG> $CODE encode($TARG $datclr) throws TranslationException;
@@ -39,8 +39,8 @@ public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	public <$TARG> $TARG decode($CODE $datenc, Class<$TARG> $datclrclass) throws TranslationException;
 	
 	
-
-
+	
+	
 	/**
 	 * <p>
 	 * This is a utility class for use in building the internals of codec
@@ -76,8 +76,8 @@ public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	}
 	
 	
-
-
+	
+	
 	/**
 	 * <p>
 	 * This is a utility class for use in building the internals of codec
