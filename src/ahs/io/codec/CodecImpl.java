@@ -31,12 +31,17 @@ public class CodecImpl<$CODEC extends Codec<$CODEC, $CODE>, $CODE> implements Co
 		putHook($datclrclass, (Encoder<$CODEC, $CODE, $TARG>)$dencoder);
 		putHook($datclrclass, (Decoder<$CODEC, $CODE, $TARG>)$dencoder);
 	}
-	
+
 	@SuppressWarnings("unchecked")	// we're casting to the generic arg of the exact same thing.  it's FINE.
 	public <$TARG> $CODE encode($TARG $datclr) throws TranslationException {
 		return $ed.encode(($CODEC)this, $datclr);
 	}
-
+	
+	@SuppressWarnings("unchecked")	// we're casting to the generic arg of the exact same thing.  it's FINE.
+	public <$TARG> $CODE encode($TARG $datclr, Class<$TARG> $datclrclass) throws TranslationException {
+		return $ed.encode(($CODEC)this, $datclr, $datclrclass);
+	}
+	
 	@SuppressWarnings("unchecked")	// we're casting to the generic arg of the exact same thing.  it's FINE.
 	public <$TARG> $TARG decode($CODE $datenc, Class<$TARG> $datclrclass) throws TranslationException {
 		try {

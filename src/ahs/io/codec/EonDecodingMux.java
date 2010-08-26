@@ -15,15 +15,20 @@ import mcon.msg.MconMessage.*;
  * decoders. The mux shifts the "MAGICWORD_CLASS" field to the "MAGICWORD_HINT" field upon
  * encoding, and places the common interface's class in the "MAGICWORD_CLASS" field; the
  * process is reversed in decoding -- this means that the mux'd instantiable classes
- * enrolled in the mux must not use the "MAGICWORD_HINT" data field themselves, but otherwise any existing encoders and decoders should be usable transparently..
+ * enrolled in the mux must not use the "MAGICWORD_HINT" data field themselves, but
+ * otherwise any existing encoders and decoders should be usable transparently..
  * 
- * Calling the enroll(*) functions of this class automatically calls the appropriate
- * putHook(*) methods on the parent codec.
+ * Calling the enroll(*) functions of this class also calls the putHook(*) methods on the
+ * parent codec. Encoding and decoding hooks for the $FACE type are placed in the parent
+ * codec at construction time.
  * 
  * Once this mux is configured, all references to it can be safely discarded -- it will be
  * used internally by the parent codec in a transparent fashion. Simply give the parent
- * codec instances for encoding as normal, and when decoding give it the common interface
- * as the decode target.
+ * codec instances for encoding and decoding as normal, but giving it the common interface
+ * ($FACE) as the target class.
+ * 
+ * Beware that the decoding process for a muxed object mutates the given EonObject as
+ * opposed to cloning it (specifically, it sets the MAGICWORD_CLASS field).
  * 
  * @author hash
  * 
@@ -43,7 +48,6 @@ public class EonDecodingMux<$FACE> {
 	private void initialize() {
 		$parent.putHook($klass, new Dencoder<EonCodec,EonObject,$FACE>() {
 			public EonObject encode(EonCodec $codec, $FACE $x) throws TranslationException {
-				ahs.util.X.saye("using mux enc");
 				EonObject $eo = $parent.encode($x.getClass().cast($x));	// dynamically cast it back as precise as it can get so we don't end up hitting the interface's encode hook infinitely
 				$eo.put(Eon.MAGICWORD_HINT, $eo.getKlass());
 				$eo.putKlass(EonDecodingMux.this.$klass);

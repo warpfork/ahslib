@@ -34,7 +34,7 @@ public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Decoder<$CODEC, $CODE, $TARG> $decoder);
 	
-	public <$TARG> $CODE encode($TARG $datclr) throws TranslationException;
+	public <$TARG> $CODE encode($TARG $datclr, Class<$TARG> $datclrclass) throws TranslationException;
 	
 	public <$TARG> $TARG decode($CODE $datenc, Class<$TARG> $datclrclass) throws TranslationException;
 	
@@ -61,17 +61,17 @@ public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
         	}
         	
 		private Map<Class<?>,Encoder<$CO,$C,?>>	$hooks	= new HashMap<Class<?>,Encoder<$CO,$C,?>>();
-		
-		@SuppressWarnings("unchecked")	// yes, the following method is technically unsafe.  at runtime, it should be absolutely reliable.
-		public <$T> $C encode($CO $codec, $T $x) throws TranslationException {
-			Encoder<$CO,$C,$T> $hook = (Encoder<$CO,$C,$T>)$hooks.get($x.getClass());
-			if ($hook == null) throw new TranslationException("Encoding dispatch hook not found for " + $x.getClass().getName()); 
-			return encode($codec, $x, $hook);
+
+		@SuppressWarnings("unchecked")	// ...seriously?
+		public <$T> $C encode($CO $codec, $T $x) throws TranslationException { 
+			return encode($codec, $x, (Class<$T>)$x.getClass());
 		}
 		
-		// probably a bad idea to have to specify an encoder like this.  you're going to want to remember to put in a matching decoder anyway.
-		public <$T> $C encode($CO $codec, $T $x, Encoder<$CO,$C,$T> $h) throws TranslationException {
-			return $h.encode($codec, $x);
+		@SuppressWarnings("unchecked")	// yes, the following method is technically unsafe.  at runtime, it should be absolutely reliable.
+		public <$T> $C encode($CO $codec, $T $x, Class<$T> $c) throws TranslationException {
+			Encoder<$CO,$C,$T> $hook = (Encoder<$CO,$C,$T>)$hooks.get($c);
+			if ($hook == null) throw new TranslationException("Encoding dispatch hook not found for " + $x.getClass().getName()); 
+			return $hook.encode($codec, $x);
 		}
 	}
 	

@@ -29,6 +29,7 @@ public class JsonCodec extends EonCodec {
 										}
 									};
 	
+	public <$TARG> JsonObject encode($TARG $datclr, Class<$TARG> $datclrclass) throws TranslationException { return (JsonObject)super.encode($datclr, $datclrclass); }
 	public <$TARG> JsonObject encode($TARG $datclr) throws TranslationException { return (JsonObject)super.encode($datclr); }
 	//public <$TARG> $TARG decode(JsonObject $datenc, Class<$TARG> $datclrclass) throws TranslationException { return super.decode($datenc, $datclrclass); }	// pointless.  return type doesn't change.  just provides another function with a more specific argument that does the same thing; doesn't mask the more general one.
 	

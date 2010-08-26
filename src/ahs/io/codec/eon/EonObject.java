@@ -25,7 +25,7 @@ public interface EonObject {
 	public void    putData(EonArray $x);
 	public void    putData(String $x);
 	public void    putData(byte[] $x);
-	public EonObject   getData      () throws TranslationException;
+	public EonObject  getData      () throws TranslationException;
 	public EonArray   getArrayData () throws TranslationException;
 	public String  getStringData() throws TranslationException;
 	public byte[]  getByteData  () throws TranslationException;
@@ -72,6 +72,6 @@ public interface EonObject {
 	 * @author hash
 	 */
 	public abstract static class Adapter {
-		//AHS:TODO omg really.  this would make so much json stuff SO much more clear, to say nothing of consistent across other platforms to come.
+		//TODO:AHS: omg really.  this would make so much json stuff SO much more clear, to say nothing of consistent across other platforms to come.
 	}
 }
