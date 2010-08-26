@@ -12,10 +12,6 @@ import java.util.*;
  * of various nestings that can be used in specific tests of specific codecs and
  * encodings.
  * 
- * All of the provided classes can be instantiated in their native state using the
- * TestObject(CodecTest $blah) constructor; the default constructors should not be used
- * since those are involved in the reflection used in some annotative encoders.
- * 
  * @author hash
  * 
  */
@@ -53,7 +49,7 @@ public class CodecEonTest extends TestCase {
 	 * Contains a single field (a String) that can be handled by any encoding scheme
 	 * directly.
 	 */
-	public static class Ob {
+	public static class Ob implements Ox {
 		public Ob(String $s) { $dat = $s; }
 		
 		String $dat;
@@ -92,7 +88,7 @@ public class CodecEonTest extends TestCase {
 	 * Contains a list of #Ob, thus testing both recursive encoding as well as
 	 * EonCodec's special functions for lists.
 	 */
-	public static class Oc {
+	public static class Oc implements Ox {
 		public Oc(List<Ob> $x) { $dat = $x; }
 		
 		List<Ob> $dat;
@@ -143,5 +139,12 @@ public class CodecEonTest extends TestCase {
 			} else if (!this.$dat.equals(other.$dat)) return false;
 			return true;
 		}
+	}
+	
+	/**
+	 * Extended by #Ob and #Oc.  Intended for use in mux testing.
+	 */
+	public static interface Ox {
+		/* just for grouping. */
 	}
 }

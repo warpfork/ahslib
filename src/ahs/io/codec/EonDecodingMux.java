@@ -4,6 +4,8 @@ import ahs.io.*;
 import ahs.io.codec.Codec.*;
 import ahs.io.codec.eon.*;
 
+import java.util.*;
+
 import mcon.msg.*;
 import mcon.msg.MconMessage.*;
 
@@ -30,17 +32,19 @@ public class EonDecodingMux<$FACE> {
 	public EonDecodingMux(EonCodec $parent, Class<$FACE> $klass) {
 		this.$parent = $parent;
 		this.$klass = $klass;
+		this.$demux = new HashMap<String,Class<? extends $FACE>>();
+		initialize();
 	}
 	
-	private final EonCodec		$parent;
-	private final Class<$FACE>	$klass;
+	private final Class<$FACE>				$klass;
+	private final EonCodec					$parent;
+	private final Map<String,Class<? extends $FACE>>	$demux;
 	
-	// okay, i'm going about this almost completely wrong: i'm going to need to list everything first, THEN put it in the parent with a final initialize call
-	// i need a single decode method that knows about all of the mux'd targets that i can give to the parent codec
-	public <$T extends $FACE> void enroll(Class<$T> $klass, final Encoder<EonCodec,EonObject,$T> $encoder, final Decoder<EonCodec,EonObject,$T> $decoder) {
-		$parent.putHook($klass, new Dencoder<EonCodec,EonObject,$T>() {
-			public EonObject encode(EonCodec $codec, $T $x) throws TranslationException {
-				EonObject $eo = $encoder.encode($parent, $x);
+	private void initialize() {
+		$parent.putHook($klass, new Dencoder<EonCodec,EonObject,$FACE>() {
+			public EonObject encode(EonCodec $codec, $FACE $x) throws TranslationException {
+				ahs.util.X.saye("using mux enc");
+				EonObject $eo = $parent.encode($x.getClass().cast($x));	// dynamically cast it back as precise as it can get so we don't end up hitting the interface's encode hook infinitely
 				$eo.put(Eon.MAGICWORD_HINT, $eo.getKlass());
 				$eo.putKlass(EonDecodingMux.this.$klass);
 				return $eo;
@@ -48,11 +52,22 @@ public class EonDecodingMux<$FACE> {
 			
 			public $FACE decode(EonCodec $codec, EonObject $eo) throws TranslationException {
 				$eo.assertKlass(EonDecodingMux.this.$klass);
-				$eo.putKlass($eo.getString(Eon.MAGICWORD_HINT));
-				$T $x = $decoder.decode($parent, $eo);
-				return $x;
+				String $hint = $eo.getString(Eon.MAGICWORD_HINT);
+				Class<? extends $FACE> $t = $demux.get($hint);
+				if ($t == null) throw new TranslationException("Decoding dispatch hook not found for hint \"" + $hint + "\""); 
+				$eo.putKlass($hint);
+				return $parent.decode($eo, $t);
 			}
 		});
-		
+	}
+	
+	public <$T extends $FACE> void enroll(Class<$T> $klass, final Encoder<EonCodec,EonObject,$T> $encoder, final Decoder<EonCodec,EonObject,$T> $decoder) {
+		$parent.putHook($klass, $encoder);
+		$parent.putHook($klass, $decoder);
+		$demux.put(Eon.getKlass($klass), $klass);
+	}
+
+	public <$T extends $FACE> void enroll(Class<$T> $klass, final Dencoder<EonCodec,EonObject,$T> $dencoder) {
+		enroll($klass, (Encoder<EonCodec,EonObject,$T>)$dencoder, (Decoder<EonCodec,EonObject,$T>) $dencoder);
 	}
 }
