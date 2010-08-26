@@ -1,5 +1,7 @@
 package ahs.util.thread;
 
+import ahs.io.*;
+import ahs.io.Pipe;
 import ahs.util.*;
 
 import java.io.*;
@@ -9,7 +11,8 @@ import java.util.*;
 /**
  * If using this with a ReadHead that is backed by NIO channels, you'll probably be
  * handing a reference to this pumper to the ReadHead; ReadHead don't typically expose the
- * details of their base enough for this class to do its job that way.
+ * details of their base enough for this class to do its job if merely given the public
+ * interface of the ReadHead.
  * 
  * @author hash
  * 
@@ -23,9 +26,16 @@ public class PumperSelector implements Pumper {
 			X.cry($e);
 		}
 		$selector = $bees;
+		$pipe = new Pipe<Event>();
+		$pipe.SRC.setListener(new Listener<ReadHead<Event>>() {
+			public void hear(ReadHead<Event> $eh) {
+				$selector.wakeup();
+			}
+		});
 	}
 	
-	private final Selector $selector; 
+	private final Selector		$selector;
+	private final Pipe<Event>	$pipe;
 	
 	/**
 	 * Starts the pump in a brand new (daemon) thread of its own.
@@ -41,28 +51,48 @@ public class PumperSelector implements Pumper {
 		while (true) {
 			try {
 				// block for events
-				//   but still wake up every once and a while so that the sync on selector's internals loosens up enough to let registrations of new channels get through
-				//     (obscenely, $selector.wakeup() is of no use to avoid this periodicy, since it only helps if you call it -after- the register function, but the register function -blocks- until the wakeup.)
-				//SOMEDAY: i can fix this
-				//   have an event queue that registration functions push and event to... and by queue i mean Pipe -- that beautiful concurrent one i just made
-				//   then have the listener on the pipe call wakeup on the selector
-				//   and then have this loop readAllNow on the pipe and act as appropriate
-				$selector.select(100);
+				$selector.select();
 			} catch (IOException $e) {
 				X.cry($e);
 			}
 			
-			// Get list of selection keys with pending events
-			Iterator<SelectionKey> $itr = $selector.selectedKeys().iterator();
+			{	// Get list of selection keys with pending events
+				Iterator<SelectionKey> $itr = $selector.selectedKeys().iterator();
+				
+				// Process each key
+				while ($itr.hasNext()) {
+					SelectionKey $k = $itr.next();
+					$itr.remove();
+					
+					if (!$k.isValid()) continue;
+					
+					((Pump)$k.attachment()).run(Integer.MAX_VALUE);	// the pump is told to get as much as it can, but with the expectation that it will return much sooner (namely, when the channel runs out of immediately available data).
+				}
+			}
 			
-			// Process each key
-			while ($itr.hasNext()) {
-				SelectionKey $k = $itr.next();
-				$itr.remove();
-				
-				if (!$k.isValid()) continue;
-				
-				((Pump)$k.attachment()).run(Integer.MAX_VALUE);	// the pump is told to get as much as it can, but with the expectation that it will return much sooner when the channel runs out of immediately available data.
+			List<Event> $evts = $pipe.SRC.readAllNow();
+			for (Event $evt : $evts) {
+				if ($evt instanceof Event_Reg) {
+					try {
+						if ($evt.channel() instanceof ServerSocketChannel)
+							$evt.channel().register($selector, SelectionKey.OP_ACCEPT, $evt.pump());
+						else
+							$evt.channel().register($selector, SelectionKey.OP_READ, $evt.pump());
+					} catch (ClosedChannelException $e) {
+						X.cry($e);	//XXX: i'm not sure if this is okay... what if the remote connection closes the connection between the register call and when the event comes out of the pipe here?
+					}
+				} else if ($evt instanceof Event_Dereg) {
+					if ($evt.channel() == null)
+						for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
+							SelectionKey $k = $itr.next();
+							if ($evt.$pump == $k.attachment()) $k.cancel();
+						}
+					else
+						for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
+							SelectionKey $k = $itr.next();
+							if ($evt.$thing == $k.channel()) $k.cancel();
+						}
+				}
 			}
 		}
 	}
@@ -70,35 +100,55 @@ public class PumperSelector implements Pumper {
 	public void register(SelectableChannel $ch, Pump $p) {
 		if ($p == null) throw new NullPointerException("pump cannot be null");
 		try {
-			$selector.wakeup();	// this has probabilistic (and unlikely at that) success, but can't really hurt us, so... feh. 
-			$ch.register($selector, SelectionKey.OP_READ, $p);	// we basically can't use write.  it makes for spin.
-		} catch (ClosedChannelException $e) {
-			throw new IllegalStateException($e);
+			$pipe.SINK.write(new Event_Reg($ch, $p));
+		} catch (IOException $e) {
+			/* PIPE. */
 		}
 	}
 	
 	public void register(ServerSocketChannel $ch, Pump $p) {
 		if ($p == null) throw new NullPointerException("pump cannot be null");
 		try {
-			$selector.wakeup();	// this has probabilistic (and unlikely at that) success, but can't really hurt us, so... feh.
-			$ch.register($selector, SelectionKey.OP_ACCEPT, $p);
-		} catch (ClosedChannelException $e) {
-			throw new IllegalStateException($e);
-		}
-	}
-	
-	public void deregister(Pump $p) {
-		for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
-			SelectionKey $k = $itr.next();
-			if ($p == $k.attachment()) $itr.remove();
+			$pipe.SINK.write(new Event_Reg($ch, $p));
+		} catch (IOException $e) {
+			/* PIPE. */
 		}
 	}
 	
 	public void deregister(SelectableChannel $ch) {
-		for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
-			SelectionKey $k = $itr.next();
-			if ($ch == $k.channel()) $itr.remove();
+		try {
+			$pipe.SINK.write(new Event_Dereg($ch));
+		} catch (IOException $e) {
+			/* PIPE. */
 		}
 	}
-		
+	
+	public void deregister(Pump $p) {
+		try {
+			$pipe.SINK.write(new Event_Dereg($p));
+		} catch (IOException $e) {
+			/* PIPE. */
+		}
+	}
+	
+	private static abstract class Event {
+		protected Event(SelectableChannel $thing, Pump $pump) { this.$thing = $thing; this.$pump = $pump; }
+		private SelectableChannel $thing;
+		private Pump $pump;
+		public SelectableChannel channel() { return $thing; };
+		public Pump pump() { return $pump; };
+	}
+	private static class Event_Reg extends Event {
+		private Event_Reg(SelectableChannel $ch, Pump $p) {
+			super($ch, $p);
+		}
+	}
+	private static class Event_Dereg extends Event {
+		private Event_Dereg(Pump $p) {
+			super(null, $p);
+		}
+		private Event_Dereg(SelectableChannel $ch) {
+			super($ch, null);
+		}
+	}
 }

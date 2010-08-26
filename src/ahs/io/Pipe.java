@@ -19,6 +19,7 @@ public class Pipe<$T> {
 	
 	public final ReadHead<$T>		SRC;
 	public final WriteHead<$T>		SINK;
+	private volatile Listener<ReadHead<$T>>	$el;
 	
 	private final ConcurrentLinkedQueue<$T>	$queue;
 	/**
@@ -42,8 +43,6 @@ public class Pipe<$T> {
 	private class Source implements ReadHead<$T> {
 		private Source() {}	// this should be a singleton per instance of the enclosing class
 		
-		private volatile Listener<ReadHead<$T>>		$el;
-		
 		public Pump getPump() {
 			return null;
 		}
@@ -53,7 +52,7 @@ public class Pipe<$T> {
 		}
 		
 		public void setListener(Listener<ReadHead<$T>> $el) {
-			this.$el = $el;
+			Pipe.this.$el = $el;
 		}
 		
 		public $T read() {
@@ -132,6 +131,9 @@ public class Pipe<$T> {
 			synchronized ($queue) {
 				$queue.add($chunk);
 				$gate.release();
+				
+				Listener<ReadHead<$T>> $el_dated = Pipe.this.$el;
+				if ($el_dated != null) $el_dated.hear(SRC);
 			}
 		}
 		

@@ -124,7 +124,7 @@ public class CodecJsonTest extends CodecEonTest {
 	}
 	
 	
-
+	
 	public void testMuxing() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
 		EonDecodingMux<Ox> $mux = new EonDecodingMux<Ox>($jc, Ox.class);
