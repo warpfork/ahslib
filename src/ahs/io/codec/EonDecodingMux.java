@@ -6,9 +6,6 @@ import ahs.io.codec.eon.*;
 
 import java.util.*;
 
-import mcon.msg.*;
-import mcon.msg.MconMessage.*;
-
 /**
  * Use this class to implement polymorphism in codecs by enrolling multiple instantiable
  * classes that share a common interface in this "seed", along with their encoders and

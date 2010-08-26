@@ -99,36 +99,20 @@ public class PumperSelector implements Pumper {
 	
 	public void register(SelectableChannel $ch, Pump $p) {
 		if ($p == null) throw new NullPointerException("pump cannot be null");
-		try {
-			$pipe.SINK.write(new Event_Reg($ch, $p));
-		} catch (IOException $e) {
-			/* PIPE. */
-		}
+		$pipe.SINK.write(new Event_Reg($ch, $p));
 	}
 	
 	public void register(ServerSocketChannel $ch, Pump $p) {
 		if ($p == null) throw new NullPointerException("pump cannot be null");
-		try {
-			$pipe.SINK.write(new Event_Reg($ch, $p));
-		} catch (IOException $e) {
-			/* PIPE. */
-		}
+		$pipe.SINK.write(new Event_Reg($ch, $p));
 	}
 	
 	public void deregister(SelectableChannel $ch) {
-		try {
-			$pipe.SINK.write(new Event_Dereg($ch));
-		} catch (IOException $e) {
-			/* PIPE. */
-		}
+		$pipe.SINK.write(new Event_Dereg($ch));
 	}
 	
 	public void deregister(Pump $p) {
-		try {
-			$pipe.SINK.write(new Event_Dereg($p));
-		} catch (IOException $e) {
-			/* PIPE. */
-		}
+		$pipe.SINK.write(new Event_Dereg($p));
 	}
 	
 	private static abstract class Event {

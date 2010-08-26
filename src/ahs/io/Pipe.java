@@ -12,13 +12,14 @@ public class Pipe<$T> {
 	public Pipe() {
 		$closed = new boolean[] { false };
 		$queue = new ConcurrentLinkedQueue<$T>();
-		$gate = new Semaphore(0, true);	// fair.
+		$gate = new InterruptableSemaphore(0, true);	// fair.
 		SRC = new Source();
 		SINK = new Sink();
 	}
 	
-	public final ReadHead<$T>		SRC;
-	public final WriteHead<$T>		SINK;
+	// i'm perfectly capable of using just the ReadHead and WriteHead interfaces internally as well... but this lets clients avoid having to always wrap the write calls in a no-op try-catch block.
+	public final Source			SRC;
+	public final Sink			SINK;
 	private volatile Listener<ReadHead<$T>>	$el;
 	
 	private final ConcurrentLinkedQueue<$T>	$queue;
@@ -37,10 +38,10 @@ public class Pipe<$T> {
 	 * even before the read lock is invoked). thus, if write is locked and all permits
 	 * are then drained, read is effectly completely locked as well.
 	 */
-	private final Semaphore			$gate;
+	private final InterruptableSemaphore	$gate;
 	private final boolean[]			$closed;
 	
-	private class Source implements ReadHead<$T> {
+	public final class Source implements ReadHead<$T> {
 		private Source() {}	// this should be a singleton per instance of the enclosing class
 		
 		public Pump getPump() {
@@ -57,17 +58,9 @@ public class Pipe<$T> {
 		
 		public $T read() {
 			try {
-				$gate.acquire(); // using an interrupt in this way has the potential to violate the contract of this method laid out in the ReadHead interface, since other threads could issue an interrupt for no reason whatsoever.
+				$gate.acquire();
 			} catch (InterruptedException $e) {
-				// closing the stream here would not solve the above issue, since null still shouldn't happen until all buffers are empty
-				// oh wait... that actually would be fine, since we shouldn't be blocking if there's nothing in the buffer anyway
-				// NOPE still doesn't work, acquire method checks for preexisting interrupts
-				// who the fuck wrote this stupid interrupt system anyway.  jesus.
 				return null;
-				// suppose we could close underlying, kill the pump, and then drain all permits all in one fell swoop before returning... but that's just... nuts.
-				// and by "in one fell swoop" i actually mean "in a way requiring way more atomicity than we have locks".  also, we're a -pipe-.   we don't -have- and underlying that's visible to us in any way.  so just completely nix that last.
-				// so the only workable option we're left with is WRITE A NEW SEMAPHORE?!  Ugh.
-				// also oh my god we don't want to interrupt other parts of the thread by accident if the close method wants to interrupt any still blocking reads but there aren't any!
 			}
 			$T $v = $queue.remove();
 			return $v;
@@ -105,7 +98,7 @@ public class Pipe<$T> {
 		
 		public void close() {
 			$closed[0] = true;
-			//FIXME interrupt any still-blocking read() calls
+			$gate.interrupt();
 			X.notifyAll($closed);
 		}
 		
@@ -115,19 +108,12 @@ public class Pipe<$T> {
 					X.wait($closed);
 			}
 		}
-		
-		private void clear() {
-			synchronized ($queue) {
-				$gate.drainPermits();
-				$queue.clear();
-			}
-		}
 	}
 	
-	private class Sink implements WriteHead<$T> {
+	public final class Sink implements WriteHead<$T> {
 		private Sink() {}	// this should be a singleton per instance of the enclosing class
 		
-		public void write($T $chunk) throws IOException {
+		public void write($T $chunk) {
 			synchronized ($queue) {
 				$queue.add($chunk);
 				$gate.release();
@@ -137,7 +123,7 @@ public class Pipe<$T> {
 			}
 		}
 		
-		public void writeAll(Collection<? extends $T> $chunks) throws IOException {
+		public void writeAll(Collection<? extends $T> $chunks) {
 			// at first i thought i could implement this with addAll on the queue and a single big release... not actually so.  addAll on the queue can throw exceptions but still have made partial progress.
 			synchronized ($queue) {
 				for ($T $chunk : $chunks)
@@ -154,9 +140,7 @@ public class Pipe<$T> {
 		}
 		
 		public void close() {
-			// I was going to just make this a redirection to SRC.close, but then i lawled when i realized i'd have to catch exceptions that are never thrown and not even declared because i was just viewing it as any ol' ReadHead.
-			$closed[0] = true;
-			X.notifyAll($closed);
+			SRC.close();
 		}
 	}
 }

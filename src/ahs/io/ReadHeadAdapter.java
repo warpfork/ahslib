@@ -94,11 +94,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			$e.printStackTrace();
 		}
 		
-		try {
-			$pipe.SRC.close();	// this transparently handles interruption of any still-blocking reads as well as return of the final readAll.
-		} catch (IOException $e) {
-			/* this can't actually happen in a pipe */
-		}
+		$pipe.SRC.close();	// this transparently handles interruption of any still-blocking reads as well as return of the final readAll.
 		
 		// give our listener a chance to notice our closure.  (pipe doesn't know our listener.)  (our isClosed method refers to pipe, which already considers itself completely closed.)
 		Listener<ReadHead<$T>> $dated_el = $el;
@@ -139,11 +135,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 				
 				// we have a chunk; wrap it up and enqueue to the buffer
 				// readers will immediately Notice the new data due to the pipe's internal semaphore doing its job
-				try {
-					$pipe.SINK.write($chunk);
-				} catch (IOException $e) {
-					/* this can't actually happen in a pipe */
-				}
+				$pipe.SINK.write($chunk);
 				
 				// signal that we got a new chunk in
 				Listener<ReadHead<$T>> $dated_el = $el;
