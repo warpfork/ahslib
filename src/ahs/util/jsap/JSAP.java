@@ -504,7 +504,7 @@ public class JSAP {
 			
 			int wrapWidth = screenWidth;
 			
-			//TODO:AHS: kick some ass
+			//TODO:AHS:JSAP: kick some ass
 			//
 			//			Options:
 			//				  -d, --direction=DIR       determines how conflicts are resolved.

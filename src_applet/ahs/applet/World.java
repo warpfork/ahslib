@@ -17,11 +17,11 @@ public class World implements DomContact {
 			
 			public void write(byte[] b, int off, int len) {
 				$dom.appendContent(ID_DEV_CHANNEL_STDOUT, new String(b, off, len, Strings.UTF_8));
-			} 
+			}
 			
 			public void write(byte[] b) {
 				$dom.appendContent(ID_DEV_CHANNEL_STDOUT, new String(b, Strings.UTF_8));
-			} 
+			}
 		});
 		DEV_CHANNEL_STDERR = new PrintStream(new OutputStream() {
 			public void write(int $arg) {
@@ -30,13 +30,16 @@ public class World implements DomContact {
 			
 			public void write(byte[] b, int off, int len) {
 				$dom.appendContent(ID_DEV_CHANNEL_STDERR, new String(b, off, len, Strings.UTF_8));
-			} 
+			}
 			
 			public void write(byte[] b) {
 				$dom.appendContent(ID_DEV_CHANNEL_STDERR, new String(b, Strings.UTF_8));
-			} 
+			}
 		});
 
+		initializeDevChannels();
+		initializeBodyBetter();
+		
 		LOG = new Logger(Logger.LEVEL_DEBUG, DEV_CHANNEL_STDERR);
 	}
 	
@@ -71,11 +74,9 @@ public class World implements DomContact {
 		//setAttribute ("main", "style.top",		"0");
 		//setAttribute ("main", "style.width",		"100%");
 	}
-	
-	public void init(Applet $applet) {
-		this.$dom.init($applet);
-		initializeDevChannels();
-		initializeBodyBetter();
+
+	public Object eval(String... $strs) {
+		return this.$dom.eval($strs);
 	}
 	public Map<String,String> getQueryMap() {
 		return this.$dom.getQueryMap();
