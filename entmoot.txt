@@ -15,9 +15,7 @@ ENT: update arrangement of libraries within svn and workspace.
 		- this makes consulting the source easier (including eclipse's autogeneration of docs on the fly with zero configuration).
 		- this allows compilation of any "final product" jars to compile their own .class files for only those classes needed, minimizing jar size and avoiding the clusterfuck of nested jars (and eliding the alternate option of needing multiple jars to constitute a workable program).
 
-ENT: upgrade ahs.io.codec.* interfaces to fully support a "hint"able system for decoding.
-	- This may be limited to using tricks with subclasses (or preferably but transparently subinterfaces) and Class<?>.cast(Object), and thus still require instanceof conditional blocks outside of the codec.  Still, that's better than having all of the decoding muxes be decentralized and wily.
-	- A more convoluted system of Map<Hint<?>,Pair<Class<?>,Listener<?>>> may still be possible, but is... well, convoluted.  If it is implemented, it should probably be optional for Codec implementers to provide.
+ENT:DONE! upgrade ahs.io.codec.* interfaces to fully support a "hint"able system for decoding.
 
 ENT: unify a helper library for applying bouncy castle crypto.
 	- draw this from the experimental pool in the secserv project when it reaches greater maturity.
@@ -41,9 +39,8 @@ ENT: revisit existing methods for building JSONObject and JSONArray instances fr
 ENT: complete the new *[Read/Write]Head systems for dealing with "big" IO and standardized chunking of streams.
 	- DONE: ReadHead and implementers for blocking streams
 	- DONE: in-program pipes, genericly
-	- need  implementers for NIO channel stuff
+	- DONE: need  implementers for NIO channel stuff
 	- need translator-like implementers that are going to get you from babble to eon objects ready to be fed to codecs
-	- jesus, did I ever mention how incredibly useful it is to have this stuff done right for multithreaded programs?  Pipes that expose a ReadHead and a WriteHead are becoming a hugely critical part of efficient work distribution systems across threads.
 
 ENT: lay out a simple set of convenience functions for more "transaction"-like file system interaction.
 	- We're not aiming for anything like a full versioned filesystem or even necessarily guarantees of atomicity on a greater than one file scale; just jumping around so that if a write fails to complete, the old file is still somewhere handy and so is the partial write.
