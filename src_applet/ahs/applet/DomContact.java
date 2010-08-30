@@ -5,7 +5,7 @@ import java.util.*;
 
 /**
  * <p>
- * This interface provides a unified basic standard for 
+ * This interface provides a unified basic standard for
  * </p>
  * 
  * <p>
@@ -19,8 +19,8 @@ import java.util.*;
  * <li>The body tag should be accessible by the ID "<code>body</code>";
  * <li>The applet itself should be accessible by the ID "<code>app</code>";
  * <li>The element intended for content insertion on this page should be accessible by the
- * ID "<code>body</code>" and must be an immediate child of the body (this is to avoid
- * situations involving overwriting the applet itself).
+ * ID "<code>main</code>" and must be an immediate child of the body (this element is
+ * necessary to avoid situations involving overwriting the applet itself).
  * <li>An element intended for dev logging on this page (presumably initially hidden)
  * should be accessible by the ID "<code>dev</code>" and must be an immediate child of the
  * body.
