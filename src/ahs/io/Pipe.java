@@ -41,6 +41,10 @@ public class Pipe<$T> {
 	private final InterruptableSemaphore	$gate;
 	private final boolean[]			$closed;
 	
+	public int size() {
+		return $gate.availablePermits();
+	}
+	
 	public final class Source implements ReadHead<$T> {
 		private Source() {}	// this should be a singleton per instance of the enclosing class
 		
