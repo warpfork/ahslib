@@ -1,4 +1,4 @@
-package ahs.io.codec;
+package ahs.io.codec.eon;
 
 import ahs.io.*;
 import ahs.io.codec.Codec.*;

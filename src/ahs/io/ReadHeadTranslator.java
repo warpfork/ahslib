@@ -20,7 +20,8 @@ public class ReadHeadTranslator<$FROM, $TO> implements ReadHead<$TO> {
 	}
 	
 	public void setExceptionHandler(ExceptionHandler<IOException> $eh) {
-		//TODO
+		//TODO shit.  read the contract of this function again.  exceptions are supposed to be reported from the PUMP THREAD.
+		// i HAVE been doing it wrong.  the buffer needs to be at the top layer and all of the readhead implementations i've made so far need to be made more piecewise (and probably just made by cute factory methods in some handy class).
 	}
 	
 	public void setListener(Listener<ReadHead<$TO>> $el) {
