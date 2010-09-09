@@ -1,8 +1,8 @@
 package ahs.io.codec.eon;
 
 import ahs.io.*;
+import ahs.io.codec.*;
 import ahs.io.codec.Codec.*;
-import ahs.io.codec.eon.*;
 
 import java.util.*;
 
