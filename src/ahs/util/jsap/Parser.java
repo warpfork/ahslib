@@ -21,7 +21,7 @@ import java.util.Iterator;
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
  * @see ahs.util.jsap.JSAP
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("rawtypes")
 class Parser {
 
     /**

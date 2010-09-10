@@ -40,8 +40,7 @@ import java.util.List;
  * @see ahs.util.jsap.JSAPResult#getBoolean(String)
  * @see ahs.util.jsap.JSAP#parse(String[])
  */
-
-@SuppressWarnings("unchecked")
+@SuppressWarnings("rawtypes")
 public abstract class Parameter {
 
     /**

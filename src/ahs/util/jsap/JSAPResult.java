@@ -20,7 +20,7 @@ import java.util.*;
  * to make your code more readable and to avoid re-casting.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class JSAPResult implements ExceptionMap {
 
     /**

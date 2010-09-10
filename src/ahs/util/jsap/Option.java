@@ -29,7 +29,7 @@ import java.util.List;
  * @see ahs.util.jsap.Flagged
  * @see ahs.util.jsap.Option
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class Option extends Parameter {
 
     /**
