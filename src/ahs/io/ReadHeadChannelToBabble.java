@@ -49,12 +49,12 @@ public class ReadHeadChannelToBabble extends ReadHeadAdapter<ByteBuffer> {
 			// figure out what length of message we expect
 			if ($base.read($preint) == -1) {
 				baseEof();
-				if ($preint.remaining() != 4) throw new IOException("malformed babble -- message length header not read");
+				if ($preint.remaining() != 4) throw new IOException("malformed babble -- partial message length header read before unexpected EOF");
 			}
 			if ($preint.remaining() > 0) return null; // don't have a size header yet.  keep waiting for more data.
 			$messlen = Primitives.intFromByteArray($preint.array());
 			$preint.rewind();
-			if ($messlen < 1) throw new IOException("malformed babble -- negative message length header");
+			if ($messlen < 1) throw new IOException("malformed babble -- message length header not positive");
 			$mess = ByteBuffer.allocate($messlen);
 		}
 		// if procedure gets here, we either had messlen state from the last round or we have it now.
