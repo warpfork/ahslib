@@ -873,7 +873,7 @@ public class InterruptableSemaphore {
 		
 		/**
 		 * Condition implementation for a {@link AbstractQueuedSynchronizer}
-		 * serving as the basis of a {@link Lock} implementation.
+		 * serving as the basis of a Lock implementation.
 		 * 
 		 * <p>
 		 * Method documentation for this class describes mechanics, not behavioral
