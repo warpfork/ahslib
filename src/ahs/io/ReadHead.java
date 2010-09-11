@@ -254,6 +254,8 @@ public interface ReadHead<$T> {
 	 *         still exist in buffers waiting to be read; however, it is guaranteed
 	 *         that once both isClosed() and hasNext() return true and false
 	 *         respectively that no further invocations of hasNext() will return true.
+	 *         (In other words, this method signals whether or not this buffer is
+	 *         capable of growing.)
 	 */
 	public boolean isClosed();
 	

@@ -101,9 +101,13 @@ public class Pipe<$T> {
 		}
 		
 		public void close() {
-			$closed[0] = true;
-			$gate.interrupt();
-			X.notifyAll($closed);
+			$closed[0] = true;	// set our state to closed
+			$gate.interrupt();	// interrupt any currently blocking reads
+			X.notifyAll($closed);	// trigger the return of any final readAll calls
+			
+			// give our listener a chance to notice our closure.
+			Listener<ReadHead<$T>> $dated_el = $el;
+			if ($dated_el != null) $dated_el.hear(this);
 		}
 		
 		private void waitForClose() {

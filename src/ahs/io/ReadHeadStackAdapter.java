@@ -1,6 +1,7 @@
 package ahs.io;
 
 import ahs.io.ReadHeadAdapter.*;
+import ahs.io.codec.eon.*;
 import ahs.util.*;
 import ahs.util.thread.*;
 
@@ -10,17 +11,29 @@ import java.nio.channels.*;
 import java.util.*;
 
 public class ReadHeadStackAdapter<$T> implements ReadHead<$T> {
-	public ReadHeadStackAdapter(TranslatorStack<ReadableByteChannel,$T> $ts) {
+	public ReadHeadStackAdapter(ReadableByteChannel $rbc, Translator<InfallibleReadableByteChannel, $T> $ts) {
+		this($rbc, (ChunkBuilder<$T>)$ts);
+	}
+	public ReadHeadStackAdapter(ReadableByteChannel $rbc, ChunkBuilder<$T> $ts) {
 		this.$pipe = new Pipe<$T>();
 		this.$pump = new PumpT();
-		this.$ts = $ts;
+		this.$trans = $ts;
+		this.$irbc = new InfallibleReadableByteChannel($rbc, new ExceptionHandler<IOException>() {
+			public void hear(IOException $e) {
+				ExceptionHandler<IOException> $dated_eh = $eh;
+				$irbc.close();	// this could kinda loop, but the method shouldn't KEEP throwing exceptions.
+				if ($dated_eh != null) $dated_eh.hear($e);
+			}
+		});
 	}
 	
-	private final TranslatorStack<ReadableByteChannel,$T>	$ts;
-	private final PumpT					$pump;
-	private final Pipe<$T>					$pipe;
-	private Listener<ReadHead<$T>>				$el;
-	private ExceptionHandler<IOException>			$eh;
+	private final ChunkBuilder<$T>			$trans;
+	private final PumpT				$pump;
+	private final Pipe<$T>				$pipe;
+	private ExceptionHandler<IOException>		$eh;
+	private final InfallibleReadableByteChannel	$irbc;
+	
+	
 	
 	public Pump getPump() {
 		return $pump;
@@ -31,7 +44,7 @@ public class ReadHeadStackAdapter<$T> implements ReadHead<$T> {
 	}
 	
 	public void setListener(Listener<ReadHead<$T>> $el) {
-		this.$el = $el;
+		$pipe.SRC.setListener($el);
 	}
 	
 	public $T read() {
@@ -58,6 +71,11 @@ public class ReadHeadStackAdapter<$T> implements ReadHead<$T> {
 		return $pipe.SRC.isClosed();
 	}
 	
+	public void close() throws IOException {
+		$irbc.close();
+		// we don't close the pipe itself -- we wait for a subsequent round of pumping to empty the buffer of the Channel; it then closes the pipe.
+	}
+	
 	/**
 	 * this function is for updating our state at this level to fully closed (i.e.,
 	 * after the event has propagated through the underlying stream and buffering, and
@@ -65,17 +83,12 @@ public class ReadHeadStackAdapter<$T> implements ReadHead<$T> {
 	 * pumping.
 	 */
 	private void baseEof() {
-		try {
-			close();	// this is likely redundant, but can't hurt.
-		} catch (IOException $e) {
-			$e.printStackTrace();
-		}
+		//if ($irbc.isOpen()) throw new MajorBug();
 		
-		$pipe.SRC.close();	// this transparently handles interruption of any still-blocking reads as well as return of the final readAll.
-		
-		// give our listener a chance to notice our closure.  (pipe doesn't know our listener.)  (our isClosed method refers to pipe, which already considers itself completely closed.)
-		Listener<ReadHead<$T>> $dated_el = $el;
-		if ($dated_el != null) $dated_el.hear(this);
+		$pipe.SRC.close();	// this transparently handles (in this order):
+					//   - interruption of any still-blocking reads
+					//   - return of the final readAll
+					//   - sending of an event to our listener to give it a chance to notice our closure.
 	}
 	
 	
@@ -90,73 +103,40 @@ public class ReadHeadStackAdapter<$T> implements ReadHead<$T> {
 		public synchronized void run(final int $times) {
 			for (int $i = 0; $i < $times; $i++) {
 				if (isDone()) break;
-				
-				$T $chunk = null;
-				try {
-					$chunk = getChunk();
-				} catch (IOException $e) {
-					ExceptionHandler<IOException> $dated_eh = $eh;
-					if ($dated_eh != null) $dated_eh.hear($e);
-					
-					// i guess it's somewhat debatable whether or not any exception should close... but that's what InputStream does, so i'm sticking to it for the time
-					//ATTN: this is changing.  NOT all exceptions will cause this.  translation will not; ioe from the channel itself will.
+				if (!$irbc.isOpen()) {
 					baseEof();
 					break;
 				}
 				
-				
-				// if we have no chunk and we weren't hit by an IOException, then it's either
-				//    - just a non-blocking dude who doesn't have enough bytes for a semantic chunk, or
-				//    - a blocking dude who is at EOF and should have already signalled as much.
-				if ($chunk == null) {
-					// we're not necessarily done with this channel, but we don't want to spin on it any more right now.
+				try {
+					$T $chunk = $trans.translate($irbc);
+					
+					// if we have no chunk it's just a non-blocking dude who doesn't have enough bytes for a semantic chunk
+					if ($chunk == null)
+						break;	// we're not necessarily done with this channel, but we don't want to spin on it any more right now.
+					
+					// we have a chunk; wrap it up and enqueue to the buffer
+					// any readers currently blocking will immediately Notice the new data due to the pipe's internal semaphore doing its job
+					//  and the listener will automatically be notified as well
+					$pipe.SINK.write($chunk);
+				} catch (TranslationException $e) {
+					ExceptionHandler<IOException> $dated_eh = $eh;
+					if ($dated_eh != null) $dated_eh.hear($e);
 					break;
 				}
-				
-				// we have a chunk; wrap it up and enqueue to the buffer
-				// readers will immediately Notice the new data due to the pipe's internal semaphore doing its job
-				$pipe.SINK.write($chunk);
-				
-				// signal that we got a new chunk in
-				Listener<ReadHead<$T>> $dated_el = $el;
-				if ($dated_el != null) $dated_el.hear(ReadHeadStackAdapter.this);
 			}
 		}
 	}
 	
-	// both the first entry in a TranslatorStack as well as the entire stack itself should be able to implement this, really.
-	public static interface ChunkBuilder<$CHUNK> extends Translator<ReadableByteChannel,$CHUNK> {
-		/**
-		 * Read as much as currently possible from the ByteChannel. If pleased
-		 * with the data obtained in this read (along with other data that may be
-		 * buffered from preceeding reads), return a chunk to be passed up to the
-		 * next layer of either translation or buffering; if not yet enough data
-		 * to make a full chunk, return null; if weird data, throw exceptions.
-		 * 
-		 * @param $bc
-		 *                a ReadableByteChannel in non-blocking mode.
-		 * @return a chunk if possible; null otherwise.
-		 * @throws TranslationException
-		 *                 in case of data not conforming to protocol
-		 * @throws EOFException
-		 *                 in case of the ByteChannel becoming closed at a point
-		 *                 not expected by the protocol
-		 * @throws IOException
-		 *                 in case of general errors from the ByteChannel
-		 */
-		public $CHUNK translate(ReadableByteChannel $bc) throws TranslationException;
-		// okay, so the crux here is that errors from the underlying channel should (arguably, perhaps) be going somewhere else.
-		// which meeans that the chunk builder itself should only really ever be offered data.
-	}
-	
 	/**
-	 * Hides all exceptions from the client, rerouting them elsewhere.
-	 * 
-	 * @author hash
-	 *
+	 * Hides all exceptions from the client, rerouting them elsewhere. IOException
+	 * thrown from the read method cause the method to return 0; if the
+	 * ExceptionHandler doesn't do something in response to the exception when it gets
+	 * it (like simply closing the channel), it's quite likely that the read method
+	 * will keep getting pumped with no productive result.
 	 */
-	private static class Wrapp implements ReadableByteChannel {
-		public Wrapp(ReadableByteChannel $bc, ExceptionHandler<IOException> $eh) {
+	private static class InfallibleReadableByteChannel implements ReadableByteChannel {
+		private InfallibleReadableByteChannel(ReadableByteChannel $bc, ExceptionHandler<IOException> $eh) {
 			$bc = $bc;
 			$eh = $eh;
 		}
@@ -181,8 +161,61 @@ public class ReadHeadStackAdapter<$T> implements ReadHead<$T> {
 				return $bc.read($dst);
 			} catch (IOException $ioe) {
 				$eh.hear($ioe);
-				return 0;	// -1 ...?  i guess it probably doesn't matter, since the exception handler ought to be stopping futher reads from getting pumped anyway.	
+				return -1;
 			}
+		}
+	}
+	
+	// both the first entry in a TranslatorStack as well as the entire stack itself should be able to implement this, really.
+	public static interface ChunkBuilder<$CHUNK> extends Translator<InfallibleReadableByteChannel,$CHUNK> {
+		/**
+		 * Read as much as currently possible from the ByteChannel. If pleased
+		 * with the data obtained in this read (along with other data that may be
+		 * buffered from preceeding reads), return a chunk to be passed up to the
+		 * next layer of either translation or buffering; if not yet enough data
+		 * to make a full chunk, return null; if weird data, throw exceptions.
+		 * 
+		 * @param $bc
+		 *                a ReadableByteChannel in non-blocking mode that reports
+		 *                its low-level exceptions elsewhere.
+		 * @return a chunk if possible; null otherwise.
+		 * @throws TranslationException
+		 *                 in case of data not conforming to protocol, or if the
+		 *                 channel became closed at a point not expected by the
+		 *                 protocol
+		 */
+		public $CHUNK translate(InfallibleReadableByteChannel $bc) throws TranslationException;
+	}
+	
+	public static class BabbleTranslator implements ChunkBuilder<ByteBuffer> {
+		private final ByteBuffer	$preint	= ByteBuffer.allocate(4);
+		private int			$messlen;
+		private ByteBuffer		$mess;
+		
+		public ByteBuffer translate(InfallibleReadableByteChannel $base) throws TranslationException {
+			if ($messlen < 0) {
+				// figure out what length of message we expect
+				if ($base.read($preint) == -1) {
+					if ($preint.remaining() != 4) throw new TranslationException("malformed babble -- partial message length header read before unexpected EOF");
+					return null;	// this is the one place in the Babble protocol for a smooth shutdown to be legal... the pump should just notice the channel being closed before next time around.
+				}
+				if ($preint.remaining() > 0) return null; // don't have a size header yet.  keep waiting for more data.
+				$messlen = Primitives.intFromByteArray($preint.array());
+				$preint.rewind();
+				if ($messlen < 1) throw new TranslationException("malformed babble -- message length header not positive");
+				$mess = ByteBuffer.allocate($messlen);
+			}
+			// if procedure gets here, we either had messlen state from the last round or we have it now.
+			
+			// get the message (or at least part of it, if possible)
+			if ($base.read($mess) == -1) throw new TranslationException("babble of unexpected length");
+			
+			if ($mess.remaining() > 0) return null; // we just don't have as much information as this chunk should contain yet.  keep waiting for more data.
+			
+			$messlen = -1;
+			$preint.rewind();
+			$mess.rewind();
+			return $mess;
 		}
 	}
 }

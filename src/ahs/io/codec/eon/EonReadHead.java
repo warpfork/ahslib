@@ -6,6 +6,7 @@ import ahs.util.thread.*;
 
 import java.io.*;
 import java.nio.*;
+import java.nio.channels.*;
 import java.util.*;
 
 /**
@@ -19,8 +20,17 @@ import java.util.*;
  * @author hash
  * 
  */
-public class EonReadHead extends ReadHeadTranslator<ByteBuffer, EonObject> {
-	public EonReadHead(ReadHead<ByteBuffer> $bio, EonCodec $co) {
-		super($bio, new ByteBufferToEonTranslator($co));
+public class EonReadHead extends ReadHeadStackAdapter<EonObject> {
+	// okay, we've still got a little ways to go on interfaces before this can really be agnostic to blocking vs nonblocking io.
+	// at that point, this will become more of an abstract class full of factories.
+	
+	public EonReadHead(ReadableByteChannel $rbc, EonCodec $co) {
+		super(
+				$rbc, 
+				TranslatorStack.make(
+						new ReadHeadStackAdapter.BabbleTranslator(),
+						new ByteBufferToEonTranslator($co)
+				)
+		);
 	}
 }
