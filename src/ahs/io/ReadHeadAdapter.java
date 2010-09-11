@@ -11,14 +11,58 @@ import java.nio.channels.*;
 import java.util.*;
 
 public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
+	/**
+	 * @param $rbc
+	 * @param $ts
+	 *                Translator (or stack thereof) to use in processing
+	 *                chunks.
+	 */
+	public static <$T> ReadHead<$T> make(ReadableByteChannel $rbc, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {	// ain't that just a mouthful
+		return new Channelwise<$T>($rbc, (Channelwise.ChunkBuilder<$T>)$ts);
+	}
+
+	/**
+	 * @param $base
+	 *                should already be connected and in a non-blocking state.
+	 * @param $ps
+	 *                selector with which to register the pump for reading
+	 *                operations; will be kept and relevant key removed
+	 *                automatically when the channel is closed.
+	 * @param $ts
+	 *                Translator (or stack thereof) to use in processing
+	 *                chunks.
+	 */
+	public static <$T> ReadHead<$T> make(DatagramChannel $base, PumperSelector $ps, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
+		return new ChannelwiseSelecting<$T>($base, $ps, (Channelwise.ChunkBuilder<$T>)$ts);
+	}
+	
+	/**
+	 * @param $base
+	 *                should already be connected and in a non-blocking state.
+	 * @param $ps
+	 *                selector with which to register the pump for reading
+	 *                operations; will be kept and relevant key removed
+	 *                automatically when the channel is closed.
+	 * @param $ts
+	 *                Translator (or stack thereof) to use in processing
+	 *                chunks.
+	 */
+	public static <$T> ReadHead<$T> make(SocketChannel $base, PumperSelector $ps, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
+		return new ChannelwiseSelecting<$T>($base, $ps, (Channelwise.ChunkBuilder<$T>)$ts);
+	}
+	
+	
+	
+	
+	
+	
+	
 	protected ReadHeadAdapter() {
 		$pipe = new Pipe<$T>();
 	}
 	
 	protected final Pipe<$T>		$pipe;
 	protected ExceptionHandler<IOException>	$eh;
-	
-	
 	
 	public abstract Pump getPump();
 	
@@ -91,9 +135,6 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	
 	
 	public static class Channelwise<$T> extends ReadHeadAdapter<$T> {
-		public Channelwise(ReadableByteChannel $rbc, Translator<InfallibleReadableByteChannel, $T> $ts) {
-			this($rbc, (ChunkBuilder<$T>)$ts);
-		}
 		public Channelwise(ReadableByteChannel $rbc, ChunkBuilder<$T> $ts) {
 			this.$pump = new PumpT();
 			this.$trans = $ts;
@@ -116,9 +157,9 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		
 		public void close() throws IOException {
 			$irbc.close();
-			// we don't close the pipe itself -- we wait for a subsequent round of pumping to empty the buffer of the Channel; it then closes the pipe.
+			// we don't close the pipe itself -- we wait for a subsequent round of pumping to empty the buffer of the Channel; it then closes the pipe by calling the baseEof function.
 			
-			//TODO:AHS: in future subclasses that Know about PumperSelector, override this to cancel the key after closing the channel.
+			// in subclasses that Know about PumperSelector, it's advisable to override this to cancel the key after closing the channel.
 		}
 		
 		
@@ -165,6 +206,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		
 		// both the first entry in a TranslatorStack as well as the entire stack itself should be able to implement this, really.
 		public static interface ChunkBuilder<$CHUNK> extends Translator<InfallibleReadableByteChannel,$CHUNK> {
+			// this interface really only exists so i had someplace to put this javadoc.
 			/**
 			 * Read as much as currently possible from the ByteChannel. If pleased
 			 * with the data obtained in this read (along with other data that may be
@@ -227,12 +269,14 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		
 		
 		public static class BabbleTranslator implements ChunkBuilder<ByteBuffer> {
+			public BabbleTranslator() {}
+			
 			private final ByteBuffer	$preint	= ByteBuffer.allocate(4);
-			private int			$messlen;
+			private int			$messlen = -1;
 			private ByteBuffer		$mess;
 			
 			public ByteBuffer translate(InfallibleReadableByteChannel $base) throws TranslationException {
-				if ($messlen < 0) {
+				if ($messlen <= 0) {
 					// figure out what length of message we expect
 					if ($base.read($preint) == -1) {
 						if ($preint.remaining() != 4) throw new TranslationException("malformed babble -- partial message length header read before unexpected EOF");
@@ -256,6 +300,52 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 				$mess.rewind();
 				return $mess;
 			}
+		}
+	}
+
+	public static class ChannelwiseSelecting<$T> extends Channelwise<$T> {
+		// i would LOVE to have made more general constructors, but it's impossible to find a higher level of abstraction that is both selectable and readable
+		// and i can't even sling together a new hack interface to unify them because everything in the selectable hierarchy is abstract classes (never interfaces)! 
+		
+		/**
+		 * @param $base
+		 *                should already be connected and in a non-blocking state.
+		 * @param $ps
+		 *                selector with which to register the pump for reading
+		 *                operations; will be kept and relevant key removed
+		 *                automatically when the channel is closed.
+		 * @param $ts
+		 *                Translator (or stack thereof) to use in processing
+		 *                chunks.
+		 */
+		public ChannelwiseSelecting(DatagramChannel $base, PumperSelector $ps, ChunkBuilder<$T> $ts) {
+			super($base, $ts);
+			this.$ps = $ps;
+			$ps.register($base, getPump());
+		}
+		
+		/**
+		 * @param $base
+		 *                should already be connected and in a non-blocking state.
+		 * @param $ps
+		 *                selector with which to register the pump for reading
+		 *                operations; will be kept and relevant key removed
+		 *                automatically when the channel is closed.
+		 * @param $ts
+		 *                Translator (or stack thereof) to use in processing
+		 *                chunks.
+		 */
+		public ChannelwiseSelecting(SocketChannel $base, PumperSelector $ps, ChunkBuilder<$T> $ts) {
+			super($base, $ts);
+			this.$ps = $ps;
+			$ps.register($base, getPump());
+		}
+		
+		private PumperSelector $ps;
+		
+		public void close() throws IOException {
+			$ps.deregister(getPump());
+			super.close();
 		}
 	}
 }

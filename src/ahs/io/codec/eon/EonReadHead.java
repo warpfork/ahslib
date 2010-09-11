@@ -20,17 +20,20 @@ import java.util.*;
  * @author hash
  * 
  */
-public class EonReadHead extends ReadHeadAdapter.Channelwise<EonObject> {
-	// okay, we've still got a little ways to go on interfaces before this can really be agnostic to blocking vs nonblocking io.
-	// at that point, this will become more of an abstract class full of factories.
-	
-	public EonReadHead(ReadableByteChannel $rbc, EonCodec $co) {
-		super(
+public final class EonReadHead {
+	public static ReadHead<EonObject> make(ReadableByteChannel $rbc, EonCodec $co) {
+		return ReadHeadAdapter.make(
 				$rbc, 
 				TranslatorStack.make(
 						new ReadHeadAdapter.Channelwise.BabbleTranslator(),
 						new Eon.TranslatorFromByteBuffer($co)
-				)
+				)				
 		);
 	}
+	
+	
+	
+	
+	
+	private EonReadHead() {}
 }
