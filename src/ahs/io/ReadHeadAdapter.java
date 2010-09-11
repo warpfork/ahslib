@@ -1,7 +1,5 @@
 package ahs.io;
 
-import ahs.io.ReadHeadAdapterSimple.*;
-import ahs.io.codec.eon.*;
 import ahs.util.*;
 import ahs.util.thread.*;
 
@@ -14,23 +12,21 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	/**
 	 * @param $rbc
 	 * @param $ts
-	 *                Translator (or stack thereof) to use in processing
-	 *                chunks.
+	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
 	public static <$T> ReadHead<$T> make(ReadableByteChannel $rbc, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {	// ain't that just a mouthful
 		return new Channelwise<$T>($rbc, (Channelwise.ChunkBuilder<$T>)$ts);
 	}
-
+	
 	/**
 	 * @param $base
 	 *                should already be connected and in a non-blocking state.
 	 * @param $ps
-	 *                selector with which to register the pump for reading
-	 *                operations; will be kept and relevant key removed
-	 *                automatically when the channel is closed.
+	 *                selector with which to register the pump for reading operations;
+	 *                will be kept and relevant key removed automatically when the
+	 *                channel is closed.
 	 * @param $ts
-	 *                Translator (or stack thereof) to use in processing
-	 *                chunks.
+	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
 	public static <$T> ReadHead<$T> make(DatagramChannel $base, PumperSelector $ps, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
 		return new ChannelwiseSelecting<$T>($base, $ps, (Channelwise.ChunkBuilder<$T>)$ts);
@@ -40,12 +36,11 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	 * @param $base
 	 *                should already be connected and in a non-blocking state.
 	 * @param $ps
-	 *                selector with which to register the pump for reading
-	 *                operations; will be kept and relevant key removed
-	 *                automatically when the channel is closed.
+	 *                selector with which to register the pump for reading operations;
+	 *                will be kept and relevant key removed automatically when the
+	 *                channel is closed.
 	 * @param $ts
-	 *                Translator (or stack thereof) to use in processing
-	 *                chunks.
+	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
 	public static <$T> ReadHead<$T> make(SocketChannel $base, PumperSelector $ps, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
 		return new ChannelwiseSelecting<$T>($base, $ps, (Channelwise.ChunkBuilder<$T>)$ts);
@@ -146,7 +141,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 				}
 			});
 		}
-
+		
 		private final ChunkBuilder<$T>			$trans;
 		private final PumpT				$pump;
 		private final InfallibleReadableByteChannel	$irbc;
@@ -177,17 +172,16 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			public synchronized void run(final int $times) {
 				for (int $i = 0; $i < $times; $i++) {
 					if (isDone()) break;
-					if (!$irbc.isOpen()) {
-						baseEof();
-						break;
-					}
 					
 					try {
 						$T $chunk = $trans.translate($irbc);
 						
 						// if we have no chunk it's just a non-blocking dude who doesn't have enough bytes for a semantic chunk
-						if ($chunk == null)
-							break;	// we're not necessarily done with this channel, but we don't want to spin on it any more right now.
+						if ($chunk == null) {
+							if (!$irbc.isOpen())
+								baseEof();
+							break;	// we don't want to spin on it any more right now (and we might be done with it permanently).
+						}
 						
 						// we have a chunk; wrap it up and enqueue to the buffer
 						// any readers currently blocking will immediately Notice the new data due to the pipe's internal semaphore doing its job
@@ -208,32 +202,34 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		public static interface ChunkBuilder<$CHUNK> extends Translator<InfallibleReadableByteChannel,$CHUNK> {
 			// this interface really only exists so i had someplace to put this javadoc.
 			/**
-			 * Read as much as currently possible from the ByteChannel. If pleased
-			 * with the data obtained in this read (along with other data that may be
-			 * buffered from preceeding reads), return a chunk to be passed up to the
-			 * next layer of either translation or buffering; if not yet enough data
-			 * to make a full chunk, return null; if weird data, throw exceptions.
+			 * Read as much as currently possible from the ByteChannel. If
+			 * pleased with the data obtained in this read (along with other
+			 * data that may be buffered from preceeding reads), return a
+			 * chunk to be passed up to the next layer of either translation
+			 * or buffering; if not yet enough data to make a full chunk,
+			 * return null; if weird data, throw exceptions.
 			 * 
 			 * @param $bc
-			 *                a ReadableByteChannel in non-blocking mode that reports
-			 *                its low-level exceptions elsewhere.
+			 *                a ReadableByteChannel in non-blocking mode that
+			 *                reports its low-level exceptions elsewhere.
 			 * @return a chunk if possible; null otherwise.
 			 * @throws TranslationException
-			 *                 in case of data not conforming to protocol, or if the
-			 *                 channel became closed at a point not expected by the
-			 *                 protocol
+			 *                 in case of data not conforming to protocol, or
+			 *                 if the channel became closed at a point not
+			 *                 expected by the protocol
 			 */
 			public $CHUNK translate(InfallibleReadableByteChannel $bc) throws TranslationException;
 		}
 		
 		
-		
+
 		/**
-		 * Hides all exceptions from the client, rerouting them elsewhere. IOException
-		 * thrown from the read method cause the method to return 0; if the
-		 * ExceptionHandler doesn't do something in response to the exception when it gets
-		 * it (like simply closing the channel), it's quite likely that the read method
-		 * will keep getting pumped with no productive result.
+		 * Hides all exceptions from the client, rerouting them elsewhere.
+		 * IOException thrown from the read method cause the method to return 0;
+		 * if the ExceptionHandler doesn't do something in response to the
+		 * exception when it gets it (like simply closing the channel), it's quite
+		 * likely that the read method will keep getting pumped with no productive
+		 * result.
 		 */
 		private static class InfallibleReadableByteChannel implements ReadableByteChannel {
 			private InfallibleReadableByteChannel(ReadableByteChannel $bc, ExceptionHandler<IOException> $eh) {
@@ -341,7 +337,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			$ps.register($base, getPump());
 		}
 		
-		private PumperSelector $ps;
+		private final PumperSelector $ps;
 		
 		public void close() throws IOException {
 			$ps.deregister(getPump());

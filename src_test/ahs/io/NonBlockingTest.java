@@ -71,7 +71,7 @@ public class NonBlockingTest extends TestCase {
 		$whsc1 = new WriteHeadBabbleToChannel($sc1);
 		LOG.debug(this, "WriteHead open.");
 		LOG.debug(this, "Opening ReadHead on accepted socket channel...");
-		$rhsc2 = new ReadHeadChannelToBabble($sc2, $selector);
+		$rhsc2 = new ReadHeadChannelToBabble($sc2, $selector);	// = ReadHeadAdapter.make($sc2, $selector, new ReadHeadAdapter.Channelwise.BabbleTranslator());
 		LOG.debug(this, "ReadHead open and registered.");
 		LOG.debug(this, "opening WriteHead on accepted socket channel...");
 		$whsc2 = new WriteHeadBabbleToChannel($sc2);
