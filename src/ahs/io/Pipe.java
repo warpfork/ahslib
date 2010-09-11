@@ -104,7 +104,7 @@ public class Pipe<$T> {
 			synchronized ($queue) {
 				$closed[0] = true;	// set our state to closed
 			}
-			$gate.interrupt();	// interrupt any currently blocking reads
+			$gate.interrupt();	// interrupt any currently blocking reads	//FIXME this is hectic.  folks should wake if they're stuck, but.... hectic.  and what about noobs calling read after close?  they're allowed, but not to block.
 			X.notifyAll($closed);	// trigger the return of any final readAll calls
 			
 			// give our listener a chance to notice our closure.

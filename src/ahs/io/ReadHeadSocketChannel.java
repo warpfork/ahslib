@@ -56,30 +56,35 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 		
 		public synchronized void run(final int $times) {
 			for (int $i = 0; $i < $times; $i++) {
+				X.saye("start run");
 				if (isDone()) break;
+				if (!$ssc.isOpen()) {
+					baseEof();
+					break;
+				}
+				X.saye("start run really");
 				
 				try {
-					SocketChannel $chunk = $ssc.accept();
-					
-					// if we have no chunk it's just a non-blocking dude who doesn't have enough bytes for a semantic chunk
-					if ($chunk == null) {
-						if (!$ssc.isOpen())
-							baseEof();
-						break;	// we don't want to spin on it any more right now (and we might be done with it permanently).
+					try {
+						SocketChannel $chunk = $ssc.accept();
+						X.saye("got a sock...?");
+						
+						if ($chunk == null) break;
+						$chunk.configureBlocking(false);
+						X.saye("yesss i did");
+						
+						$pipe.SINK.write($chunk);
+						X.saye("wrote "+$chunk);
+					} catch (ClosedChannelException $e) {
+						baseEof();
 					}
-					$chunk.configureBlocking(false);
-					
-					// we have a chunk; wrap it up and enqueue to the buffer
-					// any readers currently blocking will immediately Notice the new data due to the pipe's internal semaphore doing its job
-					//  and the listener will automatically be notified as well
-					$pipe.SINK.write($chunk);
-					X.saye("alive");
 				} catch (IOException $e) {
 					ExceptionHandler<IOException> $dated_eh = $eh;
 					if ($dated_eh != null) $dated_eh.hear($e);
 					break;
 				}
 			}
+			X.saye("pump returning.");
 		}
 	}
 }
