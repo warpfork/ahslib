@@ -73,6 +73,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 					// any readers currently blocking will immediately Notice the new data due to the pipe's internal semaphore doing its job
 					//  and the listener will automatically be notified as well
 					$pipe.SINK.write($chunk);
+					X.saye("alive");
 				} catch (IOException $e) {
 					ExceptionHandler<IOException> $dated_eh = $eh;
 					if ($dated_eh != null) $dated_eh.hear($e);

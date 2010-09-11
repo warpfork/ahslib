@@ -101,7 +101,9 @@ public class Pipe<$T> {
 		}
 		
 		public void close() {
-			$closed[0] = true;	// set our state to closed
+			synchronized ($queue) {
+				$closed[0] = true;	// set our state to closed
+			}
 			$gate.interrupt();	// interrupt any currently blocking reads
 			X.notifyAll($closed);	// trigger the return of any final readAll calls
 			
@@ -122,8 +124,8 @@ public class Pipe<$T> {
 		private Sink() {}	// this should be a singleton per instance of the enclosing class
 		
 		public void write($T $chunk) {
-			if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
 			synchronized ($queue) {
+				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
 				$queue.add($chunk);
 				$gate.release();
 				

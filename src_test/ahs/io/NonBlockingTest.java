@@ -48,11 +48,17 @@ public class NonBlockingTest extends TestCase {
 	private static WriteHead<ByteBuffer>	$whsc2;
 	private static ReadHead<ByteBuffer>	$rhsc1;
 	private static ReadHead<ByteBuffer>	$rhsc2;
+	private static final ExceptionHandler<IOException> EH = new ExceptionHandler<IOException>() {
+		public void hear(IOException $e) {
+			LOG.warn(NonBlockingTest.class, "WAT", $e);
+		}
+	};
 	
 	public void testServerSocket() throws IOException {
 		LOG.info(this, "Starting server socket test");
 		
 		$rhsc = new ReadHeadSocketChannel(new InetSocketAddress(PORT), $selector);
+		$rhsc.setExceptionHandler(EH);
 		LOG.debug(this, "server socket bound and open");
 		LOG.debug(this, "starting selector...");
 		$selector.start();
@@ -72,12 +78,14 @@ public class NonBlockingTest extends TestCase {
 		LOG.debug(this, "WriteHead open.");
 		LOG.debug(this, "Opening ReadHead on accepted socket channel...");
 		$rhsc2 = new ReadHeadChannelToBabble($sc2, $selector);	// = ReadHeadAdapter.make($sc2, $selector, new ReadHeadAdapter.Channelwise.BabbleTranslator());
+		$rhsc2.setExceptionHandler(EH);
 		LOG.debug(this, "ReadHead open and registered.");
 		LOG.debug(this, "opening WriteHead on accepted socket channel...");
 		$whsc2 = new WriteHeadBabbleToChannel($sc2);
 		LOG.debug(this, "WriteHead open.");
 		LOG.debug(this, "Opening ReadHead on first socket channel...");
 		$rhsc1 = new ReadHeadChannelToBabble($sc1, $selector);
+		$rhsc1.setExceptionHandler(EH);
 		LOG.debug(this, "ReadHead open and registered.");
 		
 		LOG.info(this, "server socket test finished.");
