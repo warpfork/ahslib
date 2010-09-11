@@ -14,7 +14,7 @@ import java.nio.channels.*;
  * @author hash
  * 
  */
-public class ReadHeadChannelToBabble extends ReadHeadAdapter<ByteBuffer> {
+public class ReadHeadChannelToBabble extends ReadHeadAdapterSimple<ByteBuffer> {
 	/**
 	 * @param $base
 	 *                should already be connected and in a non-blocking state.

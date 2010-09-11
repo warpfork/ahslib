@@ -14,7 +14,7 @@ import java.nio.channels.*;
  * @author hash
  * 
  */
-public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
+public class ReadHeadSocketChannel extends ReadHeadAdapterSimple<SocketChannel> {
 	public ReadHeadSocketChannel(InetSocketAddress $localBinding, PumperSelector $ps) throws IOException {
 		$ssc = ServerSocketChannel.open();
 		$ssc.configureBlocking(false);

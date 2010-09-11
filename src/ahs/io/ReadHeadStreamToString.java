@@ -4,7 +4,7 @@ import ahs.util.*;
 import java.io.*;
 import java.nio.charset.*;
 
-public class ReadHeadStreamToString extends ReadHeadAdapter<String> {
+public class ReadHeadStreamToString extends ReadHeadAdapterSimple<String> {
 	public ReadHeadStreamToString(InputStream $base, Charset $cs) {
 		super();
 		this.$base = new BufferedReader(new InputStreamReader($base, $cs));

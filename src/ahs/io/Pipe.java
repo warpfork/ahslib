@@ -122,6 +122,7 @@ public class Pipe<$T> {
 		private Sink() {}	// this should be a singleton per instance of the enclosing class
 		
 		public void write($T $chunk) {
+			if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
 			synchronized ($queue) {
 				$queue.add($chunk);
 				$gate.release();
@@ -140,7 +141,7 @@ public class Pipe<$T> {
 		}
 		
 		public boolean hasRoom() {
-			return true;	// we don't implement any capacity restrictions, so this isn't really ever in question.
+			return true;	// we don't implement any capacity restrictions, so this isn't really ever in question.  isClosed is technically an unrelated question.
 		}
 		
 		public boolean isClosed() {
