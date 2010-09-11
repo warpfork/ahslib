@@ -29,7 +29,7 @@ public class EonReadHead extends ReadHeadStackAdapter<EonObject> {
 				$rbc, 
 				TranslatorStack.make(
 						new ReadHeadStackAdapter.BabbleTranslator(),
-						new ByteBufferToEonTranslator($co)
+						new Eon.TranslatorFromByteBuffer($co)
 				)
 		);
 	}

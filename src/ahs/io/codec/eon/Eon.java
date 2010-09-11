@@ -1,13 +1,48 @@
 package ahs.io.codec.eon;
 
+import ahs.io.*;
 import ahs.io.codec.*;
 import ahs.io.codec.json.*;
 
+import java.nio.*;
 import java.util.*;
 
 public final class Eon {
-	private Eon() {}	// thou shalt not instantiate me
-
+	/**
+	 * Assumes the entire ByteBuffer is backed by an accessible array and the entire
+	 * thing should be used from beginning to end, ignoring position. (If this is not
+	 * acceptable in your present situation, consider using the
+	 * {@link ahs.util.Arr#makeWrapped(ByteBuffer)} function.)
+	 */
+	public static class TranslatorFromByteBuffer implements Translator<ByteBuffer,EonObject> {
+		public TranslatorFromByteBuffer(EonCodec $co) {
+			this.$co = $co;
+		}
+		
+		private final EonCodec	$co;
+		
+		public EonObject translate(ByteBuffer $bb) throws TranslationException {
+			return $co.deserialize($bb.array());
+		}
+	}
+	
+	public static class TranslatorToByteBuffer implements Translator<EonObject,ByteBuffer> {
+		public TranslatorToByteBuffer(EonCodec $co) {
+			this.$co = $co;
+		}
+		
+		private final EonCodec	$co;
+		
+		public ByteBuffer translate(EonObject $eo) throws TranslationException {
+			return ByteBuffer.wrap($co.serialize($eo));
+		}
+	}
+	
+	
+	
+	private Eon() {}	// thou shalt not instantiate me // not even for thine lulz // unless thou art full of reflection // in whence case thou art also full of cocks
+				// the above comment required me to research hebrew tenses, which just taught me a LOT about the bible.
+	
 	public static final String MAGICWORD_CLASS = "#";
 	public static final String MAGICWORD_NAME = "$";
 	public static final String MAGICWORD_DATA = "%";

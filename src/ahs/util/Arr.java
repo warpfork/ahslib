@@ -55,6 +55,20 @@ public class Arr {
 		return $v;
 	}
 	
+	/**
+	 * <p>
+	 * This behaves exactly as per ByteBuffer.wrap(Arr.toArray($bb)).
+	 * </p>
+	 * 
+	 * @param $bb
+	 * @return a new ByteBuffer that wraps a new byte array, having a length matching
+	 *         the given ByteBuffer's current limit and has contents matching the
+	 *         given ByteBuffer's content from 0 to limit.
+	 */
+	public static ByteBuffer makeWrapped(ByteBuffer $bb) {
+		return ByteBuffer.wrap(Arr.toArray($bb));
+	}
+	
 	//MAKEMORE
 	/**
 	 * Returns a new array with only non-null elements (in the same order as the old
