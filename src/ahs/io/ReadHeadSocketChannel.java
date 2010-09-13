@@ -56,25 +56,20 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 		
 		public synchronized void run(final int $times) {
 			for (int $i = 0; $i < $times; $i++) {
-				X.saye("start run");
 				if (isDone()) break;
 				if (!$ssc.isOpen()) {
 					baseEof();
 					break;
 				}
-				X.saye("start run really");
 				
 				try {
 					try {
 						SocketChannel $chunk = $ssc.accept();
-						X.saye("got a sock...?");
 						
 						if ($chunk == null) break;
 						$chunk.configureBlocking(false);
-						X.saye("yesss i did");
 						
 						$pipe.SINK.write($chunk);
-						X.saye("wrote "+$chunk);
 					} catch (ClosedChannelException $e) {
 						baseEof();
 					}
@@ -84,7 +79,6 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 					break;
 				}
 			}
-			X.saye("pump returning.");
 		}
 	}
 }

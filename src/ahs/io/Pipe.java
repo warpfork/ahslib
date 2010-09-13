@@ -22,6 +22,9 @@ public class Pipe<$T> {
 	public final Sink			SINK;
 	private volatile Listener<ReadHead<$T>>	$el;
 	
+	/**
+	 * This is the buffer itself. Synchronizing on this basically is the write lock.
+	 */
 	private final ConcurrentLinkedQueue<$T>	$queue;
 	/**
 	 * we -always- update this -before- the queue so that it's a -minimal- value. it
@@ -61,20 +64,25 @@ public class Pipe<$T> {
 		}
 		
 		public $T read() {
-			try {
-				$gate.acquire();
-			} catch (InterruptedException $e) {
-				return null;
+			if (isClosed()) {
+				return readNow();
+			} else {
+				try {	
+					// so... i need to acquire atomically with the closed check, or else acquire can happen immediately after an interrupt and end up blocking forever.
+					// the above is impossible.  so instead i just made the semaphore -always- throw interrupted exceptions after it's been interrupted once.
+					$gate.acquire();
+				} catch (InterruptedException $e) {
+					return null;
+				}
+				$T $v = $queue.remove();
+				return $v;
 			}
-			$T $v = $queue.remove();
-			return $v;
 		}
 		
 		public $T readNow() {
 			boolean $one = $gate.tryAcquire();
 			if (!$one) return null;
-			$T $v = $queue.poll();
-			return $v;
+			return $queue.poll();
 		}
 		
 		public boolean hasNext() {
@@ -104,7 +112,7 @@ public class Pipe<$T> {
 			synchronized ($queue) {
 				$closed[0] = true;	// set our state to closed
 			}
-			$gate.interrupt();	// interrupt any currently blocking reads	//FIXME this is hectic.  folks should wake if they're stuck, but.... hectic.  and what about noobs calling read after close?  they're allowed, but not to block.
+			$gate.interrupt();	// interrupt any currently blocking reads
 			X.notifyAll($closed);	// trigger the return of any final readAll calls
 			
 			// give our listener a chance to notice our closure.
