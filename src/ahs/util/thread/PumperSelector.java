@@ -38,6 +38,22 @@ public class PumperSelector implements Pumper {
 	private final Pipe<Event>	$pipe;
 	
 	/**
+	 * This method uses lazy instantiation which is NOT thread-safe... but it's fine
+	 * as long as it's used once from a single thread first.
+	 * 
+	 * @return the default single PumperSelector for this VM (already started in its
+	 *         own daemon thread).
+	 */
+	public static PumperSelector getDefault() {
+		if ($default == null) {
+			$default = new PumperSelector();
+			$default.start();
+		}
+		return $default;
+	}
+	private static PumperSelector	$default;
+	
+	/**
 	 * Starts the pump in a brand new (daemon) thread of its own.
 	 */
 	public synchronized void start() {

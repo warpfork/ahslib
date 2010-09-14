@@ -10,15 +10,22 @@ import java.util.*;
 
 public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	/**
+	 * The ReadHead returned by this factory method has no attached pumping scheme,
+	 * and must be pumped manually by some thread.
+	 * 
 	 * @param $rbc
 	 * @param $ts
 	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
-	public static <$T> ReadHead<$T> make(ReadableByteChannel $rbc, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {	// ain't that just a mouthful
+	public static <$T> ReadHead<$T> make(ReadableByteChannel $rbc, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
 		return new Channelwise<$T>($rbc, (Channelwise.ChunkBuilder<$T>)$ts);
 	}
 	
 	/**
+	 * The ReadHead returned by this factory method already involves a pumping scheme
+	 * (via the PumperSelector), and thus need not be pumped manually by any other
+	 * threads (though there is no harm in doing so other than wasted time).
+	 * 
 	 * @param $base
 	 *                should already be connected and in a non-blocking state.
 	 * @param $ps
@@ -33,6 +40,10 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	}
 	
 	/**
+	 * The ReadHead returned by this factory method already involves a pumping scheme
+	 * (via PumperSelector), and thus need not be pumped manually by any other
+	 * threads (though there is no harm in doing so other than wasted time).
+	 * 
 	 * @param $base
 	 *                should already be connected and in a non-blocking state.
 	 * @param $ps
@@ -44,6 +55,36 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	 */
 	public static <$T> ReadHead<$T> make(SocketChannel $base, PumperSelector $ps, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
 		return new ChannelwiseSelecting<$T>($base, $ps, (Channelwise.ChunkBuilder<$T>)$ts);
+	}
+	
+	/**
+	 * The ReadHead returned by this factory method already involves a pumping scheme
+	 * (via {@link PumperSelector#getDefault()}), and thus need not be pumped manually
+	 * by any other threads (though there is no harm in doing so other than wasted
+	 * time).
+	 * 
+	 * @param $base
+	 *                should already be connected and in a non-blocking state.
+	 * @param $ts
+	 *                Translator (or stack thereof) to use in processing chunks.
+	 */
+	public static <$T> ReadHead<$T> make(DatagramChannel $base, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
+		return new ChannelwiseSelecting<$T>($base, PumperSelector.getDefault(), (Channelwise.ChunkBuilder<$T>)$ts);
+	}
+	
+	/**
+	 * The ReadHead returned by this factory method already involves a pumping scheme
+	 * (via {@link PumperSelector#getDefault()}), and thus need not be pumped manually
+	 * by any other threads (though there is no harm in doing so other than wasted
+	 * time).
+	 * 
+	 * @param $base
+	 *                should already be connected and in a non-blocking state.
+	 * @param $ts
+	 *                Translator (or stack thereof) to use in processing chunks.
+	 */
+	public static <$T> ReadHead<$T> make(SocketChannel $base, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
+		return new ChannelwiseSelecting<$T>($base, PumperSelector.getDefault(), (Channelwise.ChunkBuilder<$T>)$ts);
 	}
 	
 	
