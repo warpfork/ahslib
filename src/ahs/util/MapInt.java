@@ -32,11 +32,11 @@ public class MapInt {
 
 		@SuppressWarnings("unchecked")	// seriously, look one damn line down from the cast.
 		public AtomicInteger get(Object $key) {
-			AtomicInteger $i = get($key);
+			AtomicInteger $i = $core.get($key);
 			if ($i == null) {
 				$i = makeDefault();
 				try {
-					put(($K)$key,$i);
+					$core.put(($K)$key,$i);
 				} catch (ClassCastException $e) { /* kay! */ }
 			}
 			return $i;

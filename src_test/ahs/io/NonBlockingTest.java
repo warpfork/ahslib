@@ -17,7 +17,7 @@ import java.util.*;
  * @author hash
  *
  */
-public class NonBlockingTest extends TestCase {
+public class NonBlockingTest extends JUnitTestCase {
 	//	http://rox-xmlrpc.sourceforge.net/niotut/
 	
 	public void setUp() {

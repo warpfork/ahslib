@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 import java.lang.reflect.*;
 
 
-public class AnnotationTest extends TestCase {
+public class AnnotationTest extends JUnitTestCase {
 	@Encodable(styles={Enc.DEFAULT, Enc.SELECTED})
 	private static class Encable {
 		public  @Enc					String $public;

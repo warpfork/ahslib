@@ -2,7 +2,7 @@ package ahs.util;
 
 import ahs.test.*;
 
-public class ByteVectorTest extends TestCase {
+public class ByteVectorTest extends JUnitTestCase {
 	private static final byte[] TARR0	= new byte[] { 0x12, 0x34, (byte)0xFF, -0x80, (byte)0xE4, 0x00 }; 
 	private static final byte[] TARR0_0_3	= new byte[] { 0x12, 0x34, (byte)0xFF };
 	private static final byte[] TARR0_3_6	= new byte[] { -0x80, (byte)0xE4, 0x00 };

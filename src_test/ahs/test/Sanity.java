@@ -15,7 +15,7 @@ import static java.lang.Math.*;
  * sanity checks when you've been debugging something that <i>seems</i> simple for endless
  * hours.
  */
-public class Sanity extends TestCase {
+public class Sanity extends JUnitTestCase {
 	//CONCLUSION: breaking a loop means the incrementor is not excuted that last time.
 	//CONCLUSION: the incrementor is only executed when the end of the loop body is reached.
 	//OUTPUT: after loop: 4\nafter loop: 6\n

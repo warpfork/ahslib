@@ -9,7 +9,7 @@ import java.nio.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
-public class ReadHeadStreamToByteBufferTest extends TestCase {
+public class ReadHeadStreamToByteBufferTest extends JUnitTestCase {
 	public void setUp() {
 		$dat1 = new ByteArrayInputStream(new byte[] { 0x0, 0x1, 0x2, 0x3,    0x4, 0x5, 0x6, 0x7,    0x8, 0x9, 0xA });
 		$dat2 = new ByteArrayInputStream(Big);

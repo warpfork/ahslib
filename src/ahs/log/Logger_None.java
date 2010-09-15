@@ -26,6 +26,7 @@ public class Logger_None extends Logger {
 	public void debug(String $category, String $message, Throwable $ex) {}
 	public void debug(String $category, String $message) {}
 	public void debug(String $message, Throwable $ex) {}
+	public void debug(Class<?> $category, Throwable $ex) {}
 	public void debug(String $message) {}
 	public void debug(Class<?> $category, String $message, Throwable $ex) {}
 	public void debug(Object $category, String $message, Throwable $ex) {}
@@ -35,6 +36,7 @@ public class Logger_None extends Logger {
 	public void error(String $category, String $message, Throwable $ex) {}
 	public void error(String $category, String $message) {}
 	public void error(String $message, Throwable $ex) {}
+	public void error(Class<?> $category, Throwable $ex) {}
 	public void error(String $message) {}
 	public void error(Class<?> $category, String $message, Throwable $ex) {}
 	public void error(Object $category, String $message, Throwable $ex) {}
@@ -44,6 +46,7 @@ public class Logger_None extends Logger {
 	public void info(String $category, String $message, Throwable $ex) {}
 	public void info(String $category, String $message) {}
 	public void info(String $message, Throwable $ex) {}
+	public void info(Class<?> $category, Throwable $ex) {}
 	public void info(String $message) {}
 	public void info(Class<?> $category, String $message, Throwable $ex) {}
 	public void info(Object $category, String $message, Throwable $ex) {}
@@ -53,6 +56,7 @@ public class Logger_None extends Logger {
 	public void trace(String $category, String $message, Throwable $ex) {}
 	public void trace(String $category, String $message) {}
 	public void trace(String $message, Throwable $ex) {}
+	public void trace(Class<?> $category, Throwable $ex) {}
 	public void trace(String $message) {}
 	public void trace(Class<?> $category, String $message, Throwable $ex) {}
 	public void trace(Object $category, String $message, Throwable $ex) {}
@@ -62,6 +66,7 @@ public class Logger_None extends Logger {
 	public void warn(String $category, String $message, Throwable $ex) {}
 	public void warn(String $category, String $message) {}
 	public void warn(String $message, Throwable $ex) {}
+	public void warn(Class<?> $category, Throwable $ex) {}
 	public void warn(String $message) {}
 	public void warn(Class<?> $category, String $message, Throwable $ex) {}
 	public void warn(Object $category, String $message, Throwable $ex) {}

@@ -2,7 +2,7 @@ package ahs.test;
 
 import ahs.util.Strings;
 
-public class StringsTest extends TestCase {
+public class StringsTest extends JUnitTestCase {
 	public void testParting() {
 		//getPartAfter
 		assertEquals("qwerzjkl;",	Strings.getPartAfter("asdfzqwerzjkl;","z"));

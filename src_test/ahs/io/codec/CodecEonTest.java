@@ -15,7 +15,7 @@ import java.util.*;
  * @author hash
  * 
  */
-public class CodecEonTest extends TestCase {
+public class CodecEonTest extends JUnitTestCase {
 	/**
 	 * Simplest possible target.  Contains no fields.  None.
 	 */

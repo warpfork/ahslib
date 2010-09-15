@@ -7,7 +7,7 @@ import ahs.io.codec.json.*;
 
 import java.util.*;
 
-public class BitVectorTest extends TestCase {
+public class BitVectorTest extends JUnitTestCase {
 	public void testBitSetStupidity() {
 		BitSet $bs = new BitSet(3);
 		$bs.set(2);	// so we get "001"

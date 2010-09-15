@@ -11,7 +11,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class BabbleTest extends TestCase {
+public class BabbleTest extends JUnitTestCase {
 	public void setUp() {
 		X.saye("");	// if running from the command line put a break after that dang period junit shoves in there
 		LOG.DEBUG();

@@ -2,7 +2,7 @@ package ahs.test;
 
 // java -server -Xmx3000m -cp ./bin/:./lib/* org.junit.runner.JUnitCore ahs.test.Interrupt
 
-public class Interrupt extends TestCase {
+public class Interrupt extends JUnitTestCase {
 	public void testKillable() {
 		Object $x = new Object();
 		for (int $i = 0; $i < 100000; $i++) {

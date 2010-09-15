@@ -2,7 +2,7 @@ package ahs.io;
 
 import ahs.test.*;
 
-public class PipeTest extends TestCase {
+public class PipeTest extends JUnitTestCase {
 	public void testRead() {
 		Pipe<String> $pipe = new Pipe<String>();
 		$pipe.SINK.write("asdf");

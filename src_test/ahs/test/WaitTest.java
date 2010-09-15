@@ -2,7 +2,7 @@ package ahs.test;
 
 import ahs.util.*;
 
-public class WaitTest extends TestCase {
+public class WaitTest extends JUnitTestCase {
 	public void doLoop(final int $pause, final int $times, final int $error) {
 		long $start = X.time();
 		for (int $i = 0; $i < $times; $i++)

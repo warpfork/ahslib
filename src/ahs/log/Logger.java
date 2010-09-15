@@ -131,6 +131,10 @@ public class Logger {
 		this.$writer = logger;
 	}
 	
+	public void error(Class<?> $category, Throwable $ex) {
+		if (ERROR) $writer.log(LEVEL_ERROR, $category.getCanonicalName(), null, $ex);
+	}
+	
 	public void error(String $message, Throwable $ex) {
 		if (ERROR) $writer.log(LEVEL_ERROR, null, $message, $ex);
 	}
@@ -161,6 +165,10 @@ public class Logger {
 	
 	public void error(Object $category, String $message) {
 		if (ERROR) $writer.log(LEVEL_ERROR, $category.getClass().getCanonicalName(), $message, null);
+	}
+	
+	public void warn(Class<?> $category, Throwable $ex) {
+		if (WARN) $writer.log(LEVEL_WARN, $category.getCanonicalName(), null, $ex);
 	}
 	
 	public void warn(String $message, Throwable $ex) {
@@ -195,6 +203,10 @@ public class Logger {
 		if (WARN) $writer.log(LEVEL_WARN, $category.getClass().getCanonicalName(), $message, null);
 	}
 	
+	public void info(Class<?> $category, Throwable $ex) {
+		if (INFO) $writer.log(LEVEL_INFO, $category.getCanonicalName(), null, $ex);
+	}
+	
 	public void info(String $message, Throwable $ex) {
 		if (INFO) $writer.log(LEVEL_INFO, null, $message, $ex);
 	}
@@ -227,6 +239,10 @@ public class Logger {
 		if (INFO) $writer.log(LEVEL_INFO, $category.getClass().getCanonicalName(), $message, null);
 	}
 	
+	public void debug(Class<?> $category, Throwable $ex) {
+		if (DEBUG) $writer.log(LEVEL_DEBUG, $category.getCanonicalName(), null, $ex);
+	}
+	
 	public void debug(String $message, Throwable $ex) {
 		if (DEBUG) $writer.log(LEVEL_DEBUG, null, $message, $ex);
 	}
@@ -257,6 +273,10 @@ public class Logger {
 	
 	public void debug(Object $category, String $message) {
 		if (DEBUG) $writer.log(LEVEL_DEBUG, $category.getClass().getCanonicalName(), $message, null);
+	}
+	
+	public void trace(Class<?> $category, Throwable $ex) {
+		if (TRACE) $writer.log(LEVEL_TRACE, $category.getCanonicalName(), null, $ex);
 	}
 	
 	public void trace(String $message, Throwable $ex) {

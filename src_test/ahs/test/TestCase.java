@@ -1,48 +1,52 @@
 package ahs.test;
 
-import ahs.util.*;
+import ahs.log.*;
 
-import junit.framework.*;
-
-public class TestCase extends junit.framework.TestCase {
-	public TestCase() {
-		super();
+/**
+ * I believe JUnit is fundamentally flawed in several of its design choices. Most
+ * significantly of these is that it delays reporting of exceptions it catches and errors
+ * it detects until normal program termination. This is ridiculous, as it actually
+ * severely impedes the detection of errors serious enough to disrupt program flow out of
+ * normal bounds that result in timely termination.
+ * 
+ * Behold, a replacement: this class simply passes errors and exceptions it encounters on
+ * to a logger. Exceptions that bubble out of a test stop that test and all subsequent
+ * tests; asserts failed do not.
+ * 
+ * @author hash
+ * 
+ */
+public abstract class TestCase implements Runnable {
+	public TestCase(Logger $log) {
+		this.$log = $log;
 	}
 	
-	public TestCase(String $name) {
-		super($name);
-	}
-	
-	
-	public void assertInstanceOf(Class<?> $klass, Object $obj) {
-		if ($obj == null)
-			fail("null is never an instance of anything.");
+	public void run() {
 		try {
-			$klass.cast($obj);
-		} catch ( ClassCastException $e ) {
-			fail($e.getMessage());
+			runTests();
+		} catch (Exception $e) {
+			$log.error(this.getClass(), $e);
 		}
 	}
 	
+	private final Logger $log;
 	
+	protected abstract void runTests() throws Exception;
 	
-	
-//	public void assertEquals(byte[] $ba, byte[] $bb) {
-//		if ($ba.length != $bb.length) fail();
-//		for (int $i = 0; $i < $ba.length; $i++)
-//			assertEquals($ba[$i],$bb[$i]);
-//	}
-	public void assertEquals(byte[] $a, byte[] $b) {
-		assertEquals(Arr.toString($a),Arr.toString($b));
-	}
-	public void assertEquals(char[] $a, char[] $b) {
-		assertEquals(Arr.toString($a),Arr.toString($b));
+	public void assertEquals(int $expected, int $actual) {
+		if ($expected != $actual) $log.error(this.getClass(), new AssertionFailedError());
 	}
 	
-	public void assertNotEquals(byte[] $a, byte[] $b) {
-		try {
-			assertEquals($a, $b);
-		} catch (AssertionFailedError $e) { /* Good, we wanted that */ return; }
-		fail("want not eq");
+	public void assertEquals(String $message, int $expected, int $actual) {
+		if ($expected != $actual) $log.error(this.getClass(), new AssertionFailedError($message));
+	}
+	
+	
+	
+	private static class AssertionFailedError extends Error {
+		public AssertionFailedError() { super(); }
+		public AssertionFailedError(String $arg0) { super($arg0); }
+		public AssertionFailedError(Throwable $arg0) { super($arg0); }
+		public AssertionFailedError(String $arg0, Throwable $arg1) { super($arg0, $arg1); }
 	}
 }

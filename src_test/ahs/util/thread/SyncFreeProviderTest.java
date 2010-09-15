@@ -6,7 +6,7 @@ import ahs.test.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
 
-public class SyncFreeProviderTest extends TestCase {
+public class SyncFreeProviderTest extends JUnitTestCase {
 	public static class Counter {
 		private int $i = 0;
 		public int get() { return $i; }

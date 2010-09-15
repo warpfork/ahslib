@@ -2,7 +2,7 @@ package ahs.util;
 
 import ahs.test.*;
 
-public class PrimitivesTest extends TestCase {
+public class PrimitivesTest extends JUnitTestCase {
 	public void testIntBytes() {
 		intBytesTrial(0);
 		intBytesTrial(1);
