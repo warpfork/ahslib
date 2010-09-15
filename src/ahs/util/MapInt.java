@@ -5,12 +5,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.*;
 
 public class MapInt {
-	public static <$K> Map<$K,AtomicInteger> decorate(Map<$K,AtomicInteger> $m) {
-		return new AtomicDecorator<$K>($m, 0);
-	}
-	
-	
-	
 	/**
 	 * Adds the value of every key in the second map to the keys in the first map. If
 	 * a key is not present in the first map, it is added with a default operation
@@ -27,7 +21,7 @@ public class MapInt {
 		return $m;
 	}
 	
-	private static class AtomicDecorator<$K> implements Map<$K,AtomicInteger> {
+	public static class AtomicDecorator<$K> implements Map<$K,AtomicInteger> {
 		public AtomicDecorator(Map<$K,AtomicInteger> $core, final int $default) {
 			this.$core = $core;
 			this.$default = $default;
@@ -35,25 +29,15 @@ public class MapInt {
 		
 		private final int	$default;
 		Map<$K,AtomicInteger>	$core;
-		
-		
-		public void add($K $key, int $i) {
-			safeGet($key).addAndGet($i);
-		}
-		public void add($K $key, AtomicInteger $i) {
-			safeGet($key).addAndGet($i.get());
-		}
-		
-		public void addAll(Map<? extends $K,AtomicInteger> $t) {
-			for (Map.Entry<? extends $K,AtomicInteger> $ent : $t.entrySet())
-				safeGet($ent.getKey()).addAndGet($ent.getValue().get());
-		}
-		
-		private AtomicInteger safeGet($K $key) {
+
+		@SuppressWarnings("unchecked")	// seriously, look one damn line down from the cast.
+		public AtomicInteger get(Object $key) {
 			AtomicInteger $i = get($key);
 			if ($i == null) {
 				$i = makeDefault();
-				put($key,$i);
+				try {
+					put(($K)$key,$i);
+				} catch (ClassCastException $e) { /* kay! */ }
 			}
 			return $i;
 		}
@@ -79,10 +63,6 @@ public class MapInt {
 
 		public Set<Entry<$K,AtomicInteger>> entrySet() {
 			return $core.entrySet();
-		}
-
-		public AtomicInteger get(Object $key) {
-			return $core.get($key);
 		}
 
 		public boolean isEmpty() {
