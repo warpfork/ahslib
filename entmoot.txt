@@ -36,11 +36,11 @@ ENT:DONE! keep a unified interface to both JSON and the new binary encoding sche
 ENT: revisit existing methods for building JSONObject and JSONArray instances from strings.
 	- Inline comments must be handled correctly (since we will always want this to comprise our configuration file format, and thus be extremely human-friendly).
 
-ENT: complete the new *[Read/Write]Head systems for dealing with "big" IO and standardized chunking of streams.
+ENT:DONE!: complete the new *[Read/Write]Head systems for dealing with "big" IO and standardized chunking of streams.
 	- DONE: ReadHead and implementers for blocking streams
 	- DONE: in-program pipes, genericly
-	- DONE: need  implementers for NIO channel stuff
-	- need translator-like implementers that are going to get you from babble to eon objects ready to be fed to codecs
+	- DONE: need implementers for NIO channel stuff
+	- DONE: need translator-like implementers that are going to get you from babble to eon objects ready to be fed to codecs
 
 ENT: lay out a simple set of convenience functions for more "transaction"-like file system interaction.
 	- We're not aiming for anything like a full versioned filesystem or even necessarily guarantees of atomicity on a greater than one file scale; just jumping around so that if a write fails to complete, the old file is still somewhere handy and so is the partial write.
