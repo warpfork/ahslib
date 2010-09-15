@@ -99,6 +99,16 @@ public class InterruptableSemaphore {
 		}
 	}
 	
+	public void release(int $p) {
+		$lock.lock();
+		try {
+			$permits += $p;
+			$permitsAvailable.signal();
+		} finally {
+			$lock.unlock();
+		}
+	}
+	
 	public void interrupt() {
 		$lock.lock();
 		try {
