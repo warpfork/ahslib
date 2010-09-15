@@ -14,7 +14,7 @@ public class MapInt {
 	 */
 	public static <$TK,$K extends $TK> Map<$K,AtomicInteger> addAll(Map<$K,AtomicInteger> $m, Map<$TK,AtomicInteger> $t) {
 		for (Map.Entry<$TK,AtomicInteger> $ent : $t.entrySet()) {
-			AtomicInteger $i = $m.get($ent);
+			AtomicInteger $i = $m.get($ent.getKey());
 			if ($i == null) $i = new AtomicInteger();
 			$i.addAndGet($ent.getValue().get());
 		}
@@ -22,25 +22,39 @@ public class MapInt {
 	}
 	
 	public static class AtomicDecorator<$K> implements Map<$K,AtomicInteger> {
-		public AtomicDecorator(Map<$K,AtomicInteger> $core, final int $default) {
+		/**
+		 * @param $keyClass
+		 *                if you knew why I needed this, you'd probably cry.
+		 */
+		public AtomicDecorator(Map<$K,AtomicInteger> $core, final int $default, Class<$K> $keyClass) {
 			this.$core = $core;
 			this.$default = $default;
+			this.$keyClass = $keyClass;
 		}
 		
-		private final int	$default;
-		Map<$K,AtomicInteger>	$core;
-
-		@SuppressWarnings("unchecked")	// seriously, look one damn line down from the cast.
+		private final int		$default;
+		private Map<$K,AtomicInteger>	$core;
+		private Class<$K>		$keyClass;
+		
 		public AtomicInteger get(Object $key) {
 			AtomicInteger $i = $core.get($key);
 			if ($i == null) {
 				$i = makeDefault();
 				try {
-					$core.put(($K)$key,$i);
-				} catch (ClassCastException $e) { /* kay! */ }
+					// I can't actually cast directly to the generic type $K.
+					// If I try to do so, the type information is erased at runtime...
+					// so the compiler will let me do it (with a warning)...
+					// but it will actually put an object of the wrong type inside of the map.
+					// And then you just cry as generic type safety is suddenly nothing but false comfort.
+					//$core.put(($K)$key,$i);
+					$core.put($keyClass.cast($key), $i);
+				} catch (ClassCastException $e) {
+					return null;
+				}
 			}
 			return $i;
 		}
+		
 		private AtomicInteger makeDefault() {
 			return new AtomicInteger($default);
 		}
