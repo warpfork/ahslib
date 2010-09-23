@@ -45,13 +45,20 @@ public abstract class TestCase implements Runnable {
 	
 	protected abstract void runTests() throws Exception;
 	
-	public void assertEquals(int $expected, int $actual) {
-		if ($expected != $actual) $log.error(this.getClass(), DEF, new AssertionFailedError("assertion failed -- "+$expected+" != "+$actual+"."));
+	public boolean assertEquals(int $expected, int $actual) {
+		if ($expected != $actual) {
+			$log.error(this.getClass(), DEF, new AssertionFailedError("assertion failed -- "+$expected+" != "+$actual+"."));
+			return false;
+		} return true;
 	}
 	
-	public void assertEquals(String $message, int $expected, int $actual) {
-		if ($expected != $actual) $log.error(this.getClass(), DEF, new AssertionFailedError("assertion \""+$message+"\" failed -- "+$expected+" != "+$actual+"."));
-		else if ($confirm) $log.info(this.getClass(), "assertion \""+$message+"\" passed -- "+$expected+" == "+$actual+".");
+	public boolean assertEquals(String $message, int $expected, int $actual) {
+		if ($expected != $actual) {
+			$log.error(this.getClass(), DEF, new AssertionFailedError("assertion \""+$message+"\" failed -- "+$expected+" != "+$actual+"."));
+			return false;
+		}
+		if ($confirm) $log.info(this.getClass(), "assertion \"" + $message + "\" passed -- " + $expected + " == " + $actual + ".");
+		return true;
 	}
 	
 	
