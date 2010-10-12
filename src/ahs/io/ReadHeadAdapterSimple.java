@@ -14,6 +14,7 @@ import java.util.*;
  * @author hash
  * 
  */
+@Deprecated()
 public abstract class ReadHeadAdapterSimple<$T> implements ReadHead<$T> {
 	protected ReadHeadAdapterSimple() {
 		this.$pipe = new Pipe<$T>();

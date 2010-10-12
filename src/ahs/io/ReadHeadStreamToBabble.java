@@ -25,6 +25,7 @@ import java.util.*;
  * @author hash
  * 
  */
+@Deprecated()
 public class ReadHeadStreamToBabble extends ReadHeadAdapterSimple<ByteBuffer> {
 	public ReadHeadStreamToBabble(Socket $sock) throws IOException {
 		this(new BufferedInputStream($sock.getInputStream()));

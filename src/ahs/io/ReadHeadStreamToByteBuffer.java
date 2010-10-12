@@ -7,6 +7,7 @@ import java.io.*;
 import java.nio.*;
 import java.util.*;
 
+@Deprecated()
 public class ReadHeadStreamToByteBuffer extends ReadHeadAdapterSimple<ByteBuffer> {
 	public ReadHeadStreamToByteBuffer(InputStream $base, int $blockSize) {
 		super();

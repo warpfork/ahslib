@@ -183,7 +183,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			});
 		}
 		
-		private final ChunkBuilder<$T>			$trans;
+		private final ChunkBuilder<$T>			$trans;	// I'd druther have this be in the Adapter itself up by the pipe... but ChunkBuilder has a generic type that involves the nonblocking channel bit, so I can't generalize quite that much.
 		private final PumpT				$pump;
 		private final InfallibleReadableByteChannel	$irbc;
 		
@@ -263,10 +263,10 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		}
 		
 		
-
+		
 		/**
 		 * Hides all exceptions from the client, rerouting them elsewhere.
-		 * IOException thrown from the read method cause the method to return 0;
+		 * IOException thrown from the read method causes the method to return 0;
 		 * if the ExceptionHandler doesn't do something in response to the
 		 * exception when it gets it (like simply closing the channel), it's quite
 		 * likely that the read method will keep getting pumped with no productive

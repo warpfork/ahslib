@@ -22,10 +22,10 @@ public final class EonReadHead {
 				TranslatorStack.make(
 						new ReadHeadAdapter.Channelwise.BabbleTranslator(),
 						new Eon.TranslatorFromByteBuffer($co)
-				)				
+				)
 		);
 	}
-
+	
 	public static ReadHead<EonObject> make(DatagramChannel $base, PumperSelector $ps, EonCodec $co) {
 		return ReadHeadAdapter.make(
 				$base,
@@ -33,7 +33,7 @@ public final class EonReadHead {
 				TranslatorStack.make(
 						new ReadHeadAdapter.Channelwise.BabbleTranslator(),
 						new Eon.TranslatorFromByteBuffer($co)
-				)				
+				)
 		);
 	}
 	
@@ -44,7 +44,7 @@ public final class EonReadHead {
 				TranslatorStack.make(
 						new ReadHeadAdapter.Channelwise.BabbleTranslator(),
 						new Eon.TranslatorFromByteBuffer($co)
-				)				
+				)
 		);
 	}
 	

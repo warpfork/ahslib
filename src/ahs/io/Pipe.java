@@ -8,7 +8,7 @@ import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class Pipe<$T> {
+public class Pipe<$T> implements Flow<$T> {
 	public Pipe() {
 		$closed = new boolean[] { false };
 		$queue = new ConcurrentLinkedQueue<$T>();
@@ -43,6 +43,14 @@ public class Pipe<$T> {
 	 */
 	private final InterruptableSemaphore	$gate;
 	private final boolean[]			$closed;
+	
+	public Source source() {
+		return SRC;
+	}
+	
+	public Sink sink() {
+		return SINK;
+	}
 	
 	public int size() {
 		return $gate.availablePermits();

@@ -13,8 +13,8 @@ import java.util.*;
  * <p>
  * In keeping with the philosophy that the WriteHead and ReadHead interfaces are for
  * dealing with "semantically meaningful" chunks of information, WriteHead provides no
- * notion of "flush" that is typical of some other stream interfaces, as it all chunks
- * should be meaningful enough to warrant "flushing" immediately upon write.
+ * notion of "flush" that is typical of some other stream interfaces, as all chunks should
+ * be meaningful enough to warrant "flushing" immediately upon write.
  * </p>
  * 
  * <p>

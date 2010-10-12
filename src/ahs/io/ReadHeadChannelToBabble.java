@@ -14,6 +14,7 @@ import java.nio.channels.*;
  * @author hash
  * 
  */
+@Deprecated()
 public class ReadHeadChannelToBabble extends ReadHeadAdapterSimple<ByteBuffer> {
 	/**
 	 * @param $base
