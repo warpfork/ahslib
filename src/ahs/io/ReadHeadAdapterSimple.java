@@ -9,7 +9,12 @@ import java.util.*;
 
 /**
  * This abstraction allows one to make a whole ReadHead simply by specifying some details
- * of the pump body and the close method.
+ * of the pump body and the close method; however, it's nowhere near as pleasant to use as
+ * simply interfacing with ReadHeadAdapter via TranslatorStack when it comes to creating
+ * protocol stacks, and for that reason its use is not recommended (in particular,
+ * creating one implementor of this class does not allow one to recycle code should one
+ * need to create another protocol layer unless one is comfortable with needless usage of
+ * multiple buffers and resulting convolutions of thread management).
  * 
  * @author hash
  * 
