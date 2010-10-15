@@ -22,7 +22,6 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 		
 		// pick out and put in the semblance of a class name we want
 		// also, check if that class will allow itself to be encoded like this
-		// and finally check if we're just supposed to use the "all fields" shortcut.
 		Encodable $cenc = $class.getAnnotation(Encodable.class);
 		if ($cenc == null)
 			throw new UnencodableException("Class to be encoded must be annotated with the @Encodable interface.");
@@ -38,7 +37,8 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 			else
 				$classname = $key;
 		}
-		
+
+		// and finally check if we're just supposed to use the "all fields" shortcut
 		$allFields = $cenc.all_fields();
 	}
 	

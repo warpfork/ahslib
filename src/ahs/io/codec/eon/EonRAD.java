@@ -47,7 +47,7 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 		this.$selector = $selector;
 	}
 	public EonRAD(Class<$T> $class) throws UnencodableException {
-		this($class, Enc.DEFAULT);
+		this($class, Encodable.DEFAULT);
 	}
 	
 	private Class<$T> $class;
@@ -75,7 +75,7 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 				$con.setAccessible(true);
 				$x = $con.newInstance((Encodable)null);
 			} catch (NoSuchMethodException $e) {
-				throw new UnencodableException("reflection problem: a constructor acceptable a single Encodable argument must be available.",$e);
+				throw new UnencodableException("reflection problem: a (no-op) constructor accepting a single Encodable argument must be available.",$e);
 			} catch (InvocationTargetException $e) {
 				throw new UnencodableException("reflection problem: a constructor threw exception.",$e);
 			}
