@@ -11,45 +11,58 @@ import java.lang.reflect.*;
  * Encodable annotation.
  * 
  * @param <$T>
- *                can be <code>java.lang.Object</code> for all I care, though more
- *                precision is generally better.
  */
 public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
-	public EonRAE() {
-		this(Enc.DEFAULT);
+	public EonRAE(Class<$T> $class) throws UnencodableException {
+		this($class, Encodable.DEFAULT);
 	}
-	public EonRAE(String $selector) {
+	public EonRAE(Class<$T> $class, String $selector) throws UnencodableException {
+		this.$class = $class;
 		this.$selector = $selector;
+		
+		// pick out and put in the semblance of a class name we want
+		// also, check if that class will allow itself to be encoded like this
+		// and finally check if we're just supposed to use the "all fields" shortcut.
+		Encodable $cenc = $class.getAnnotation(Encodable.class);
+		if ($cenc == null)
+			throw new UnencodableException("Class to be encoded must be annotated with the @Encodable interface.");
+		else {
+			if (!Arr.contains($cenc.styles(), $selector))
+				throw new UnencodableException("Class to be encoded must be annotated to accept the style that this Encoder is configured for (selected=\""+$selector+"\", accept="+Arr.toString($cenc.styles())+").");
+			
+			String $key = $cenc.value();
+			if ($key.equals(Encodable.NONE))
+				$classname = "";
+			else if ($key.equals(Encodable.DEFAULT))
+				$classname = null;
+			else
+				$classname = $key;
+		}
+		
+		$allFields = $cenc.all_fields();
 	}
 	
-	private String $selector;
+	private final Class<$T>	$class;
+	private final String	$selector;
+	private final String	$classname;
+	private final boolean	$allFields;
 	
-	public JsonObject encode(EonCodec $codec, $T $x) throws TranslationException {
+	public EonObject encode(EonCodec $codec, $T $x) throws TranslationException {
 		try {
-			JsonObject $jo = new JsonObject();
+			EonObject $jo = $codec.newObj();
 			String $key;
 			
-			// pick out and put in the semblance of a class name we want
-			// also, check if that class will allow itself to be encoded like this
-			Class<?> $class = $x.getClass();
-			Encodable $cenc = $class.getAnnotation(Encodable.class);
-			if ($cenc == null)
-				throw new UnencodableException("Class to be encoded must be annotated with the @Encodable interface.");
-			else {
-				if (!Arr.contains($cenc.styles(), $selector))
-					throw new UnencodableException("Class to be encoded must be annotated to accept the style that this Encoder is configured for (selected=\""+$selector+"\", accept="+Arr.toString($cenc.styles())+").");
-				
-				$key = $cenc.value();
-				if ($key.equals(Encodable.NONE))
-					; /* nothing */
-				else if ($key.equals(Encodable.DEFAULT))
-					$jo.putKlass($x);
-				else
-					$jo.putKlass($key);
+			// put in the appropriate class name tag
+			if ($classname == null) {
+				$jo.putKlass($x);
+			} else if ($classname == "") {
+				; /* nothing */
+			} else {
+				$jo.putKlass($classname);
 			}
 			
 			// walk across fields and serialize the non-static ones
-			if ($cenc.all_fields()) {	// all of them, regardless of whether that particular field is annotated
+			if ($allFields) {	// all of them, regardless of whether that particular field is annotated
 				for (Field $f : $class.getDeclaredFields()) {
 					$f.setAccessible(true);
 					int $mod = $f.getModifiers();
