@@ -10,8 +10,10 @@ import mcon.base.*;
 
 public class FAK0 implements KeySystemIbeFak {
 	public FAK0() {
-		
+		$d = new DigesterMD5();
 	}
+
+	private final Digester $d;
 	
 	/** {@inheritDoc} */
 	public KeyFakPrv generateKey(KeyFakPub $ko) {
@@ -48,7 +50,6 @@ public class FAK0 implements KeySystemIbeFak {
 	
 	/** {@inheritDoc} */
 	public byte[] sign(byte[] $text, KeyFakPrv $myKey) {
-		Digester $d = new DigesterMD5();
 		byte[] $sig = $d.digest(Arr.cat($myKey.getEncoded(), $text));
 		try {
 			return MCON.CODECPROV.get().simple("Sig", Base64.encode($myKey.getEncoded()), $sig).serialize();
@@ -60,7 +61,6 @@ public class FAK0 implements KeySystemIbeFak {
 	
 	/** {@inheritDoc} */
 	public boolean verify(byte[] $text, byte[] $sig, KeyFakPub $signerKey) {
-		Digester $d = new DigesterMD5();
 		try {
 			EonObject $jo = MCON.CODECPROV.get().newObj();
 			$jo.deserialize($text);
