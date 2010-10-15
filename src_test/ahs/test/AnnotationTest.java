@@ -80,7 +80,7 @@ public class AnnotationTest extends JUnitTestCase {
 		Encable $e = new Encable("pub","priv");
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Encable.class, new EonRAE<Encable>(Enc.DEFAULT));
+		$codec.putHook(Encable.class, new EonRAE<Encable>(Encable.class, Enc.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
@@ -94,7 +94,7 @@ public class AnnotationTest extends JUnitTestCase {
 		Encable $e = new Encable("pub","priv");
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Encable.class, new EonRAE<Encable>(Enc.SELECTED));
+		$codec.putHook(Encable.class, new EonRAE<Encable>(Encable.class, Enc.SELECTED));
 		
 		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
@@ -107,7 +107,7 @@ public class AnnotationTest extends JUnitTestCase {
 		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Enc.DEFAULT));
+		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Encable2.class, Enc.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
@@ -122,7 +122,7 @@ public class AnnotationTest extends JUnitTestCase {
 		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Enc.SELECTED));
+		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Encable2.class, Enc.SELECTED));
 		
 		try {
 			EonObject $v = $codec.encode($e);
@@ -136,7 +136,7 @@ public class AnnotationTest extends JUnitTestCase {
 		Encable2 $e = new Encable2("pub",null,"ABBA");
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Enc.DEFAULT));
+		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Encable2.class, Enc.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
@@ -151,7 +151,7 @@ public class AnnotationTest extends JUnitTestCase {
 		Encable2 $e = new Encable2("pub","priv",null);
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Enc.DEFAULT));
+		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Encable2.class, Enc.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
 		X.saye($v.toString());
@@ -166,7 +166,7 @@ public class AnnotationTest extends JUnitTestCase {
 		Encable $e = new Encable("pub","priv");
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Encable.class, new EonRAE<Encable>(Enc.DEFAULT));
+		$codec.putHook(Encable.class, new EonRAE<Encable>(Encable.class, Enc.DEFAULT));
 		$codec.putHook(Encable.class, new EonRAD<Encable>(Encable.class, Enc.DEFAULT));
 		
 		EonObject $v = $codec.encode($e);
@@ -180,8 +180,8 @@ public class AnnotationTest extends JUnitTestCase {
 		Big $b = new Big(new Little("asdf"));
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Big.class, new EonRAE<Big>());
-		$codec.putHook(Little.class, new EonRAE<Little>());
+		$codec.putHook(Big.class, new EonRAE<Big>(Big.class));
+		$codec.putHook(Little.class, new EonRAE<Little>(Little.class));
 		
 		EonObject $v = $codec.encode($b);
 		X.saye($v.toString());
@@ -197,8 +197,8 @@ public class AnnotationTest extends JUnitTestCase {
 		Big $b = new Big(new Little("asdf"));
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Big.class, new EonRAE<Big>());
-		$codec.putHook(Little.class, new EonRAE<Little>());
+		$codec.putHook(Big.class, new EonRAE<Big>(Big.class));
+		$codec.putHook(Little.class, new EonRAE<Little>(Little.class));
 		$codec.putHook(Big.class, new EonRAD<Big>(Big.class));
 		$codec.putHook(Little.class, new EonRAD<Little>(Little.class));
 		
