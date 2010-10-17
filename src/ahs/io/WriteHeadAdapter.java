@@ -42,7 +42,7 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 		private final ChunkBuilder<$T>			$trans;
 		private final ByteBuffer			$preint;
 		private final InfallibleWriteableByteChannel	$iwbc;
-		 
+		
 		public void write($T $chunk) throws IOException {
 			ByteBuffer $bats = $trans.translate($chunk);
 			$preint.clear();
