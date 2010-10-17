@@ -9,10 +9,12 @@ import ahs.util.*;
 import mcon.base.*;
 
 public class FAK0 implements KeySystemIbeFak {
-	public FAK0() {
+	public FAK0(EonCodec $codec) {
+		this.$codec = $codec;
 		$d = new DigesterMD5();
 	}
-
+	
+	private final EonCodec $codec;
 	private final Digester $d;
 	
 	/** {@inheritDoc} */
@@ -28,7 +30,7 @@ public class FAK0 implements KeySystemIbeFak {
 	/** {@inheritDoc} */
 	public byte[] encrypt(byte[] $plaintext, KeyFakPub $ko) {
 		try {
-			return MCON.CODECPROV.get().simple("Enc", Base64.encode($ko.getEncoded()), $plaintext).serialize();
+			return $codec.simple("Enc", Base64.encode($ko.getEncoded()), $plaintext).serialize();
 		} catch (TranslationException $e) {
 			X.cry($e);
 			return null;
@@ -38,7 +40,7 @@ public class FAK0 implements KeySystemIbeFak {
 	/** {@inheritDoc} */
 	public byte[] decrypt(byte[] $ciphertext, KeyFakPrv $kx) {
 		try {
-			EonObject $jo = MCON.CODECPROV.get().newObj();
+			EonObject $jo = $codec.newObj();
 			$jo.deserialize($ciphertext);
 			$jo.assertKlass("Enc");
 			if (!Arr.equals($kx.getEncoded(), Base64.decode($jo.getName()))) return null;
@@ -52,7 +54,7 @@ public class FAK0 implements KeySystemIbeFak {
 	public byte[] sign(byte[] $text, KeyFakPrv $myKey) {
 		byte[] $sig = $d.digest(Arr.cat($myKey.getEncoded(), $text));
 		try {
-			return MCON.CODECPROV.get().simple("Sig", Base64.encode($myKey.getEncoded()), $sig).serialize();
+			return $codec.simple("Sig", Base64.encode($myKey.getEncoded()), $sig).serialize();
 		} catch (TranslationException $e) {
 			X.cry($e);
 			return null;
@@ -62,7 +64,7 @@ public class FAK0 implements KeySystemIbeFak {
 	/** {@inheritDoc} */
 	public boolean verify(byte[] $text, byte[] $sig, KeyFakPub $signerKey) {
 		try {
-			EonObject $jo = MCON.CODECPROV.get().newObj();
+			EonObject $jo = $codec.newObj();
 			$jo.deserialize($text);
 			$jo.assertKlass("Sig");
 			if (!Arr.equals($signerKey.getEncoded(), Base64.decode($jo.getName()))) return false;
@@ -82,7 +84,7 @@ public class FAK0 implements KeySystemIbeFak {
 	
 	/** {@inheritDoc} */
 	public KeyFakPub decodePublicKey(byte[] $koe) throws TranslationException {
-		EonObject $jo = MCON.CODECPROV.get().newObj();
+		EonObject $jo = $codec.newObj();
 		$jo.deserialize($koe);
 		return new KeyFakPub(BitVector.DECODER.decode(null, $jo));
 	}
@@ -94,7 +96,7 @@ public class FAK0 implements KeySystemIbeFak {
 	
 	/** {@inheritDoc} */
 	public KeyFakPrv decodePrivateKey(byte[] $kxe) throws TranslationException {
-		EonObject $jo = MCON.CODECPROV.get().newObj();
+		EonObject $jo = $codec.newObj();
 		$jo.deserialize($kxe);
 		return new KeyFakPrv(BitVector.DECODER.decode(null, $jo));
 	}

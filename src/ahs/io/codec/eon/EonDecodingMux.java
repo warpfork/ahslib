@@ -7,25 +7,33 @@ import ahs.io.codec.Codec.*;
 import java.util.*;
 
 /**
+ * <p>
  * Use this class to implement polymorphism in codecs by enrolling multiple instantiable
  * classes that share a common interface in this "seed", along with their encoders and
  * decoders. The mux shifts the "MAGICWORD_CLASS" field to the "MAGICWORD_HINT" field upon
  * encoding, and places the common interface's class in the "MAGICWORD_CLASS" field; the
  * process is reversed in decoding -- this means that the mux'd instantiable classes
  * enrolled in the mux must not use the "MAGICWORD_HINT" data field themselves, but
- * otherwise any existing encoders and decoders should be usable transparently..
+ * otherwise any existing encoders and decoders should be usable transparently.
+ * </p>
  * 
+ * <p>
  * Calling the enroll(*) functions of this class also calls the putHook(*) methods on the
  * parent codec. Encoding and decoding hooks for the $FACE type are placed in the parent
  * codec at construction time.
+ * </p>
  * 
+ * <p>
  * Once this mux is configured, all references to it can be safely discarded -- it will be
  * used internally by the parent codec in a transparent fashion. Simply give the parent
  * codec instances for encoding and decoding as normal, but giving it the common interface
  * ($FACE) as the target class.
+ * </p>
  * 
- * Beware that the decoding process for a muxed object mutates the given EonObject as
+ * <p>
+ * Be aware that the decoding process for a muxed object mutates the given EonObject as
  * opposed to cloning it (specifically, it sets the MAGICWORD_CLASS field).
+ * </p>
  * 
  * @author hash
  * 
@@ -45,7 +53,7 @@ public class EonDecodingMux<$FACE> {
 	private void initialize() {
 		$parent.putHook($klass, new Dencoder<EonCodec,EonObject,$FACE>() {
 			public EonObject encode(EonCodec $codec, $FACE $x) throws TranslationException {
-				EonObject $eo = $parent.encode($x.getClass().cast($x));	// dynamically cast it back as precise as it can get so we don't end up hitting the interface's encode hook infinitely
+				EonObject $eo = $parent.encode($x);	// even though $x currently has the type $FACE, later the parent codec will use $x.getClass... which will have more information, and thus keep the encoder from looping back to the $FACE target.	
 				$eo.put(Eon.MAGICWORD_HINT, $eo.getKlass());
 				$eo.putKlass(EonDecodingMux.this.$klass);
 				return $eo;
