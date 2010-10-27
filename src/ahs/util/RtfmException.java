@@ -1,6 +1,6 @@
 package ahs.util;
 
-public class RtfmException extends Exception {
+public class RtfmException extends IllegalArgumentException {
 	public RtfmException() {
 		super();
 	}
