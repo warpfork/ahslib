@@ -18,12 +18,12 @@ public class JsonCodec extends EonCodec {
 		super(OBJPROVIDER, ARRPROVIDER);
 	}
 	
-	private static final Factory<JsonObject>	OBJPROVIDER	= new Factory<JsonObject>() {
+	public static final Factory<JsonObject>	OBJPROVIDER	= new Factory<JsonObject>() {
 										public JsonObject make() {
 											return new JsonObject();
 										}
 									};
-	private static final Factory<JsonArray>		ARRPROVIDER	= new Factory<JsonArray>() {
+	public static final Factory<JsonArray>	ARRPROVIDER	= new Factory<JsonArray>() {
 										public JsonArray make() {
 											return new JsonArray();
 										}

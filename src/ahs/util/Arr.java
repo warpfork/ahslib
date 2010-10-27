@@ -1,7 +1,7 @@
 package ahs.util;
 
 import java.util.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 
 /**
  * Similar to java.util.Arrays, but with some added functionality. Helps maintain sanity
@@ -52,6 +52,13 @@ public class Arr {
 		byte[] $v = new byte[$bb.limit()];
 		$bb.rewind();
 		$bb.get($v);
+		return $v;
+	}
+	
+	public static float[] toArray(FloatBuffer $b) {
+		float[] $v = new float[$b.limit()];
+		$b.rewind();
+		$b.get($v);
 		return $v;
 	}
 	
@@ -299,7 +306,20 @@ public class Arr {
 		int $i = 0;
 		for (byte[] $b : $bs) {
 			System.arraycopy($b, 0, $d, $i, $b.length);
-			 $i += $b.length;
+			$i += $b.length;
+		}
+		return $d;
+	}
+	
+	public static final float[] cat(float[]... $bs) {
+		int $len = 0;
+		for (float[] $b : $bs)
+			$len += $b.length;
+		float[] $d = new float[$len];
+		int $i = 0;
+		for (float[] $b : $bs) {
+			System.arraycopy($b, 0, $d, $i, $b.length);
+			$i += $b.length;
 		}
 		return $d;
 	}
