@@ -18,7 +18,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
 	public static <$T> ReadHead<$T> make(ReadableByteChannel $rbc, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
-		return new Channelwise<$T>($rbc, (Channelwise.ChunkBuilder<$T>)$ts);
+		return new Channelwise<$T>($rbc, $ts);
 	}
 	
 	/**
@@ -36,7 +36,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
 	public static <$T> ReadHead<$T> make(DatagramChannel $base, PumperSelector $ps, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
-		return new ChannelwiseSelecting<$T>($base, $ps, (Channelwise.ChunkBuilder<$T>)$ts);
+		return new ChannelwiseSelecting<$T>($base, $ps, $ts);
 	}
 	
 	/**
@@ -54,7 +54,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
 	public static <$T> ReadHead<$T> make(SocketChannel $base, PumperSelector $ps, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
-		return new ChannelwiseSelecting<$T>($base, $ps, (Channelwise.ChunkBuilder<$T>)$ts);
+		return new ChannelwiseSelecting<$T>($base, $ps, $ts);
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
 	public static <$T> ReadHead<$T> make(DatagramChannel $base, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
-		return new ChannelwiseSelecting<$T>($base, PumperSelector.getDefault(), (Channelwise.ChunkBuilder<$T>)$ts);
+		return new ChannelwiseSelecting<$T>($base, PumperSelector.getDefault(), $ts);
 	}
 	
 	/**
@@ -84,7 +84,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	 *                Translator (or stack thereof) to use in processing chunks.
 	 */
 	public static <$T> ReadHead<$T> make(SocketChannel $base, Translator<Channelwise.InfallibleReadableByteChannel, $T> $ts) {
-		return new ChannelwiseSelecting<$T>($base, PumperSelector.getDefault(), (Channelwise.ChunkBuilder<$T>)$ts);
+		return new ChannelwiseSelecting<$T>($base, PumperSelector.getDefault(), $ts);
 	}
 	
 	
@@ -171,7 +171,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	
 	
 	public static class Channelwise<$T> extends ReadHeadAdapter<$T> {
-		public Channelwise(ReadableByteChannel $rbc, ChunkBuilder<$T> $ts) {
+		public Channelwise(ReadableByteChannel $rbc, Translator<InfallibleReadableByteChannel,$T> $ts) {
 			this.$pump = new PumpT();
 			this.$trans = $ts;
 			this.$irbc = new InfallibleReadableByteChannel($rbc, new ExceptionHandler<IOException>() {
@@ -183,9 +183,9 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			});
 		}
 		
-		private final ChunkBuilder<$T>			$trans;	// I'd druther have this be in the Adapter itself up by the pipe... but ChunkBuilder has a generic type that involves the nonblocking channel bit, so I can't generalize quite that much.
-		private final PumpT				$pump;
-		private final InfallibleReadableByteChannel	$irbc;
+		private final Translator<InfallibleReadableByteChannel,$T>	$trans;	// I'd druther have this be in the Adapter itself up by the pipe... but ChunkBuilder has a generic type that involves the nonblocking channel bit, so I can't generalize quite that much.
+		private final PumpT						$pump;
+		private final InfallibleReadableByteChannel			$irbc;
 		
 		public Pump getPump() {
 			return $pump;
@@ -272,10 +272,10 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		 * likely that the read method will keep getting pumped with no productive
 		 * result.
 		 */
-		private static class InfallibleReadableByteChannel implements ReadableByteChannel {
+		static class InfallibleReadableByteChannel implements ReadableByteChannel {
 			private InfallibleReadableByteChannel(ReadableByteChannel $bc, ExceptionHandler<IOException> $eh) {
-				$bc = $bc;
-				$eh = $eh;
+				this.$bc = $bc;
+				this.$eh = $eh;
 			}
 			
 			private ExceptionHandler<IOException>	$eh;
@@ -355,7 +355,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		 *                Translator (or stack thereof) to use in processing
 		 *                chunks.
 		 */
-		public ChannelwiseSelecting(DatagramChannel $base, PumperSelector $ps, ChunkBuilder<$T> $ts) {
+		public ChannelwiseSelecting(DatagramChannel $base, PumperSelector $ps, Translator<InfallibleReadableByteChannel,$T> $ts) {
 			super($base, $ts);
 			this.$ps = $ps;
 			$ps.register($base, getPump());
@@ -372,7 +372,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		 *                Translator (or stack thereof) to use in processing
 		 *                chunks.
 		 */
-		public ChannelwiseSelecting(SocketChannel $base, PumperSelector $ps, ChunkBuilder<$T> $ts) {
+		public ChannelwiseSelecting(SocketChannel $base, PumperSelector $ps, Translator<InfallibleReadableByteChannel,$T> $ts) {
 			super($base, $ts);
 			this.$ps = $ps;
 			$ps.register($base, getPump());

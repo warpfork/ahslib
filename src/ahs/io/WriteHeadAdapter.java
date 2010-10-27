@@ -8,7 +8,7 @@ import java.util.*;
 
 public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 	public static <$T> WriteHead<$T> make(WritableByteChannel $wbc, Translator<$T, ByteBuffer> $ts) {
-		return new Channelwise<$T>($wbc, (Channelwise.ChunkBuilder<$T>)$ts);
+		return new Channelwise<$T>($wbc, $ts);
 	}
 	
 	//TODO:AHS: someday write more factories here that accept PumperSelector as an arg and do fully nonblocking writes with buffering and etc.
@@ -27,7 +27,7 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 	
 	
 	public static class Channelwise<$T> extends WriteHeadAdapter<$T> {
-		public Channelwise(WritableByteChannel $wbc, ChunkBuilder<$T> $ts) {
+		public Channelwise(WritableByteChannel $wbc, Translator<$T, ByteBuffer> $ts) {
 			$trans = $ts;
 			$preint	= ByteBuffer.allocate(4);
 			$iwbc = new InfallibleWriteableByteChannel($wbc, new ExceptionHandler<IOException>() {
@@ -39,7 +39,7 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 			});
 		}
 		
-		private final ChunkBuilder<$T>			$trans;
+		private final Translator<$T, ByteBuffer>	$trans;
 		private final ByteBuffer			$preint;
 		private final InfallibleWriteableByteChannel	$iwbc;
 		
@@ -93,8 +93,8 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 	 */
 	private static class InfallibleWriteableByteChannel implements WritableByteChannel {
 		private InfallibleWriteableByteChannel(WritableByteChannel $bc, ExceptionHandler<IOException> $eh) {
-			$bc = $bc;
-			$eh = $eh;
+			this.$bc = $bc;
+			this.$eh = $eh;
 		}
 		
 		private ExceptionHandler<IOException>	$eh;
