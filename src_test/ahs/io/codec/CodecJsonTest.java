@@ -132,7 +132,7 @@ public class CodecJsonTest extends CodecEonTest {
 		$mux.enroll(Oc.class, new Oc.Den());
 		
 		Oc $x1 = new Oc(Arr.asList(new Ob[] { new Ob("before the cream sits out too long"), new Ob("you must whip it"), new Ob("whip it"), new Ob("whip it good") } ));
-		JsonObject $c = $jc.encode($x1, Ox.class);
+		JsonObject $c = $jc.encode($x1, Ox.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
 		X.saye($c.toString());	// mind the placement of this toString... for this mux, it's different if you put it after the decode!
 		Ox $x2 = $jc.decode($c, Ox.class);
 		
@@ -145,7 +145,7 @@ public class CodecJsonTest extends CodecEonTest {
 		$mux.enroll(Oc.class, new Oc.Den());
 		
 		Ob $x1 = new Ob("whip it");
-		JsonObject $c = $jc.encode($x1, Ox.class);
+		JsonObject $c = $jc.encode($x1, Ox.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
 		X.saye($c.toString());	// mind the placement of this toString... for this mux, it's different if you put it after the decode!
 		Ob $x2 = (Ob)$jc.decode($c, Ox.class);
 		

@@ -53,7 +53,7 @@ public class EonDecodingMux<$FACE> {
 	private void initialize() {
 		$parent.putHook($klass, new Dencoder<EonCodec,EonObject,$FACE>() {
 			public EonObject encode(EonCodec $codec, $FACE $x) throws TranslationException {
-				EonObject $eo = $parent.encode($x);	// even though $x currently has the type $FACE, later the parent codec will use $x.getClass... which will have more information, and thus keep the encoder from looping back to the $FACE target.	
+				EonObject $eo = $parent.encode($x);	// even though $x currently has the type $FACE, later the parent codec will use $x.getClass... which will have more information, and thus keep the encoder from looping back to the $FACE target.
 				$eo.put(Eon.MAGICWORD_HINT, $eo.getKlass());
 				$eo.putKlass(EonDecodingMux.this.$klass);
 				return $eo;
@@ -61,7 +61,7 @@ public class EonDecodingMux<$FACE> {
 			
 			public $FACE decode(EonCodec $codec, EonObject $eo) throws TranslationException {
 				$eo.assertKlass(EonDecodingMux.this.$klass);
-				String $hint = $eo.getString(Eon.MAGICWORD_HINT);
+				String $hint = $eo.getString(Eon.MAGICWORD_HINT);	// yes, this throws a translation exception if a hint isn't found.
 				Class<? extends $FACE> $t = $demux.get($hint);
 				if ($t == null) throw new TranslationException("Decoding dispatch hook not found for hint \"" + $hint + "\""); 
 				$eo.putKlass($hint);

@@ -63,8 +63,10 @@ public class TranslatorStack<$FROM, $TO> implements Translator<$FROM, $TO> {
 	@SuppressWarnings("unchecked")	// runtime safety invariants are enforced by factory methods.
 	public $TO translate($FROM $x) throws TranslationException {
 		Object $v = $x;
-		for (Translator<?,?> $t : $dat)
+		for (Translator<?,?> $t : $dat) {
 			$v = ((Translator<Object,Object>)$t).translate($v);
+			if ($v == null) break;
+		}
 		return ($TO)$v;
 	}
 }

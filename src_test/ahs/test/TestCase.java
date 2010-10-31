@@ -61,7 +61,9 @@ public abstract class TestCase implements Runnable {
 		return true;
 	}
 	
-	
+	//future work:
+	//   i'd like to implement a breakIfFailed method that throws a Failure exception if any the assertions made within this case (i.e. method) have failed.
+	//   the point here is to provide a balance between making it convenient to get readouts of assertions on multiple states, but also to quit when the developer deems that things have gone wrong enough.
 	
 	private static class AssertionFailedError extends Error {
 		public AssertionFailedError() { super(); }
