@@ -1,5 +1,7 @@
 package ahs.io.codec.ebon;
 
+import ahs.io.*;
+import ahs.io.codec.*;
 import ahs.io.codec.eon.*;
 import ahs.util.*;
 
@@ -7,10 +9,223 @@ import java.io.*;
 import java.util.*;
 
 public class EbonArray implements EonArray {
+	public EbonArray() {
+		$arr = new ArrayList<Object>();
+	}
+	
+	public EbonArray(int $capacity) {
+		$arr = new ArrayList<Object>($capacity);
+	}
 	
 	private List<Object> $arr;
 	
+	public int size() {
+		return $arr.size();
+	}
 	
+	protected Object opt(int $index) {
+		return $arr.get($index);
+	}
+	
+	protected Object get(int $index) throws EbonException {
+		Object $o = opt($index);
+		if ($o == null) throw new EbonException("EbonArray[" + $index + "] not found.");
+		return $o;
+	}
+	
+	public void put(int $index, byte[] $val) {
+		$arr.add($index, $val);
+	}
+	
+	public byte[] getBytes(int $index) throws EbonException {
+		Object $x = get($index);
+		if ($x instanceof byte[]) {
+			return (byte[]) $x;
+		} else {
+			throw new EbonException("EbonArray[" + $index + "] is not a byte[].");
+		}
+	}
+	
+	public byte[] optBytes(int $index) {
+		return optBytes($index, null);
+	}
+	
+	public byte[] optBytes(int $index, byte[] $default) {
+		Object $x = opt($index);
+		if ($x == null)
+			return $default;
+		else if ($x instanceof byte[])
+			return (byte[]) $x;
+		else
+			return $default;
+	}
+	
+	public void put(int $index, boolean $val) {
+		$arr.add($index, $val);
+	}
+	
+	public boolean getBoolean(int $index) throws EbonException {
+		Object $x = get($index);
+		if ($x instanceof Boolean) {
+			return ($x.equals(Boolean.TRUE));
+		} else {
+			throw new EbonException("EbonArray[" + $index + "] is not a Boolean.");
+		}
+	}
+	
+	public boolean optBoolean(int $index, boolean $default) {
+		Object $x = opt($index);
+		if ($x == null)
+			return $default;
+		else if ($x instanceof Boolean)
+			return ($x.equals(Boolean.TRUE));
+		else
+			return $default;
+	}
+
+	public void put(int $index, double $val) {
+		$arr.add($index, $val);
+	}
+	
+	public double getDouble(int $index) throws EbonException {
+		Object $x = get($index);
+		if ($x instanceof Double) {
+			return ((Double) $x).doubleValue();
+		} else {
+			throw new EbonException("EbonArray[" + $index + "] is not a Double.");
+		}
+	}
+
+	public double optDouble(int $index, double $default) {
+		Object $x = opt($index);
+		if ($x == null)
+			return $default;
+		else if ($x instanceof Double)
+			return ((Double) $x).doubleValue();
+		else
+			return $default;
+	}
+
+	public void put(int $index, int $val) {
+		$arr.add($index, $val);
+	}
+
+	public int getInt(int $index) throws EbonException {
+		Object $x = get($index);
+		if ($x instanceof Integer) {
+			return ((Integer) $x).intValue();
+		} else {
+			throw new EbonException("EbonArray[" + $index + "] is not an Integer.");
+		}
+	}
+
+	public int optInt(int $index, int $default) {
+		Object $x = opt($index);
+		if ($x == null)
+			return $default;
+		else if ($x instanceof Integer)
+			return ((Integer) $x).intValue();
+		else
+			return $default;
+	}
+
+	public void put(int $index, long $val)  {
+		$arr.add($index, $val);
+	}
+
+	public long getLong(int $index) throws EbonException {
+		Object $x = get($index);
+		if ($x instanceof Long) {
+			return ((Long) $x).longValue();
+		} else {
+			throw new EbonException("EbonArray[" + $index + "] is not a Long.");
+		}
+	}
+
+	public long optLong(int $index, long $default) {
+		Object $x = opt($index);
+		if ($x == null)
+			return $default;
+		else if ($x instanceof Long)
+			return ((Long) $x).longValue();
+		else
+			return $default;
+	}
+
+	public void put(int $index, String $val) {
+		$arr.add($index, $val);
+	}
+
+	public String getString(int $index) throws EbonException {
+		Object $x = get($index);
+		if ($x instanceof String) {
+			return (String) $x;
+		} else {
+			throw new EbonException("EbonArray[" + $index + "] is not a String.");
+		}
+	}
+
+	public String optString(int $index) {
+		return optString($index, null);
+	}
+
+	public String optString(int $index, String $default) {
+		Object $x = opt($index);
+		if ($x == null)
+			return $default;
+		else if ($x instanceof String)
+			return (String) $x;
+		else
+			return $default;
+	}
+
+	public void put(int $index, EonObject $val) {
+		$arr.add($index, $val);
+	}
+
+	public EbonObject getObj(int $index) throws EbonException {
+		Object $x = get($index);
+		if ($x instanceof EbonObject) {
+			return (EbonObject) $x;
+		} else {
+			throw new EbonException("EbonArray[" + $index + "] is not an EbonObject.");
+		}
+	}
+
+	public EbonObject optObj(int $index) {
+		Object $x = opt($index);
+		if ($x == null)
+			return null;
+		else if ($x instanceof EbonObject)
+			return (EbonObject) $x;
+		else
+			return null;
+	}
+
+	public void put(int $index, EonArray $val) {
+		$arr.add($index, $val);
+	}
+
+	public EbonArray getArr(int $index) throws EbonException {
+		Object $x = get($index);
+		if ($x instanceof EbonArray) {
+			return (EbonArray) $x;
+		} else {
+			throw new EbonException("EbonArray[" + $index + "] is not an EbonArray.");
+		}
+	}
+
+	public EbonArray optArr(int $index) {
+		Object $x = opt($index);
+		if ($x == null)
+			return null;
+		else if ($x instanceof EbonArray)
+			return (EbonArray) $x;
+		else
+			return null;
+	}
+	
+
 	
 	
 	public byte[] serialize() throws EbonException {

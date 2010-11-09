@@ -88,16 +88,16 @@ public class EbonObject implements EonObject {
 	}
 	
 	public void put(String $key, boolean $val) {
-		put($key, new Boolean($val));
+		$map.put($key, $val);
 	}
 	
 	public void put(String $key, String $val) {
-		$map.put($key, (Object) $val);
+		$map.put($key, $val);
 	}
 	
 	public void put(String $key, EonObject $val) {
 		if ($val.getClass() != EbonObject.class) throw new IllegalArgumentException("EonObject isn't willing to deal with nested EonObject other than EbonObject.");
-		$map.put($key, (Object) $val);
+		$map.put($key, $val);
 	}
 	
 	public void put(String $key, EonArray $val) {
@@ -164,7 +164,7 @@ public class EbonObject implements EonObject {
 	}
 	
 	public void put(String $key, double $val) {
-		$map.put($key, Double.valueOf($val));
+		$map.put($key, $val);
 	}
 	
 	public double getDouble(String $key) throws EbonException {
@@ -264,12 +264,12 @@ public class EbonObject implements EonObject {
 		}
 	}
 	
-	public EonObject optObj(String $key) {
+	public EbonObject optObj(String $key) {
 		Object $x = opt($key);
 		if ($x == null)
 			return null;
-		else if ($x instanceof EonObject)
-			return (EonObject) $x;
+		else if ($x instanceof EbonObject)
+			return (EbonObject) $x;
 		else
 			return null;
 	}
