@@ -41,7 +41,7 @@ public class FAK0 implements KeySystemIbeFak {
 	public byte[] decrypt(byte[] $ciphertext, KeyFakPrv $kx) {
 		try {
 			EonObject $jo = $codec.newObj();
-			$jo.deserialize($ciphertext);
+			$jo.deserialize($ciphertext);	// this happens 160 fucking times, most of them for no good reason.  FIX.
 			$jo.assertKlass("Enc");
 			if (!Arr.equals($kx.getEncoded(), Base64.decode($jo.getName()))) return null;
 			return $jo.getByteData();
