@@ -10,7 +10,7 @@ import mcon.base.*;
 
 public class FAK0 implements KeySystemIbeFak {
 	public FAK0(EonCodec $codec) {
-		this.$codec = $codec;
+		this.$codec = KeySystemIbeFak.HACK;
 		$d = new DigesterMD5();
 	}
 	
