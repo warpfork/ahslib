@@ -1,0 +1,64 @@
+<p>
+	The <span class=package>ahs.io</span> package represents the most significant part of the <span class=ahsname>AHS</span> library.  It regards not only simple filesystem input/output, but also network communcation (both blocking and nonblocking), and efficiently synchronized inter-thread communication -- all with <i>the exact same interface<i> that gives you control of the threading model (in collaboration with the <span class=package>ahs.thread</span> package, which in turn gives you both simple one-line drop-in solutions as well as an interface for customization needs).
+</p>
+
+<p>
+	Furthermore, the <span class=package>ahs.io package</span> (and in particular, the <span class=package>ahs.io.codec</span> package) concerns itself not just with raw bytes scurrying around, but also with <i>semantic</i> data.  Thus, it contains general purpose tools for rapidly constructing entire stacks of multiplexing message protocols, and serializing data to your choice of either human-readable JSON or an efficient binary scheme (EBON).  At the simplest, one can construct entire protocols by just making classes with the fields desired, annotating them with an interface that defines which fields are to be serializable, and then let the reflective interface do magic for you.  For more complex needs or when the efficiency overhead of reflection is a concern, concise interfaces allow extension to arbitrary encoding and decoding schemes.
+</p>
+
+<p>
+	The entire system is fastideously conscious of observing and utilizing type safety at every level -- at no point does the developer have to compromise type safety for generality when using this library.
+</p>
+
+<p>
+	(One caveat: I haven't bothered to detect or deal with cyclic datastructures when it comes to codecs.  It's coming someday, but it's an extremely low priority.)
+</p>
+
+
+<ul>
+	<li>Introduction
+	<ul>
+		<li>The concept of "semantic data".
+			<p>
+				The <span class=ahsname>AHS</span> library is designed around the belief that data should retain semantic meaning as much as possible.  In the situation of IO, that just means things should be objects with fields instead of collections of byte arrays as much as possible.  This is a fairly major difference in philosophy from the java.io and java.nio packages, which deal with nothing but primitives.
+			</p>
+			<p>
+				Semantic data should be able to be translated into other formats of semantic data.  This thought isn't new, and it's essentially a restatement of the concept of protocol stacks.  The <span class=ahsname>AHS</span> library expresses this directly with the Translator interface and TranslatorStack class.
+			</p>
+			<p>
+				This is the reason why ReadHead and WriteHead use generic types (and why things like java.nio.channels.Pipe have competitors in ahs.io.Pipe).
+			</p>
+		</li>
+		<li>ReadHead and WriteHead
+			<p>
+				ReadHead and WriteHead are expressions of that central theme of "semantic data", and also expressions of the belief that blocking and nonblocking IO should be interchangable.  Read their javadocs well.
+			</p>
+			<p>
+				Both accept a single generic type.  This is the "message" type that they deal with (so, presumably it's going to be muxed; it might actually be an interface rather than an instantiable class with fields for serialization).  ReadHead and WriteHead instances tend to come in pairs: in the case of pipes, one acts as a sink and the other the source; in the case of network sockets, one is for sending to the remote machine and the other is for recieving.
+			</p>
+			<p>
+				ReadHead and WriteHead are meant to support multithreading effortlessly.  TODO WriteHeadAdapter.Channelwise isn't actually thread safe!
+			</p>
+			<p>
+				Implementation-wise, these interfaces are made to work by providing some levels of buffering that function to make underlying blocking and nonblocking channels operable in identical fashion, allowing higher levels of the program to choose on a per-request basis whether or not they want to block for the next chunk of data.
+			</p>
+		</li>
+		<li>Codecs
+			<p>
+				Repeat after me: building message protocols should not be hard.
+			</p>
+			<p>
+				Repeat after me: building message protocols should not be hard.
+			</p>
+			<p>
+				Repeat after me: building message protocols should not be hard.
+			</p>
+			<p>
+				Repeat after me: building message protocols should not be hard.
+			</p>
+			<p>
+				Seriously, though.  It shouldn't.  Applications need expressive serialization, and often.  The <span class=ahsname>AHS</span> library is committed to providing the most painless, rapid-development-friendly interfaces for general purpose serialization possible -- and doing it with type safety.
+			</p>
+		</li>
+	</ul></li>
+</ul>
