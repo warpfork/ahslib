@@ -1,5 +1,5 @@
 <p>
-	The <span class=package>ahs.io</span> package represents the most significant part of the <span class=ahsname>AHS</span> library.  It regards not only simple filesystem input/output, but also network communcation (both blocking and nonblocking), and efficiently synchronized inter-thread communication -- all with <i>the exact same interface<i> that gives you control of the threading model (in collaboration with the <span class=package>ahs.thread</span> package, which in turn gives you both simple one-line drop-in solutions as well as an interface for customization needs).
+	The <span class=package>ahs.io</span> package represents the most significant part of the <span class=ahsname>AHS</span> library.  It regards not only simple filesystem input/output, but also network communication (both blocking and nonblocking), and efficiently synchronized inter-thread communication -- all with <i>the exact same interface<i> that gives you control of the threading model (in collaboration with the <span class=package>ahs.thread</span> package, which in turn gives you both simple one-line drop-in solutions as well as an interface for customization needs).
 </p>
 
 <p>
@@ -7,7 +7,7 @@
 </p>
 
 <p>
-	The entire system is fastideously conscious of observing and utilizing type safety at every level -- at no point does the developer have to compromise type safety for generality when using this library.
+	The entire system is fastidiously conscious of observing and utilizing type safety at every level -- at no point does the developer have to compromise type safety for generality when using this library.
 </p>
 
 
@@ -25,7 +25,7 @@
 				Semantic data should be able to be translated into other formats of semantic data.  This thought isn't new, and it's essentially a restatement of the concept of protocol stacks.  The <span class=ahsname>AHS</span> library expresses this directly with the Translator interface and TranslatorStack class.
 			</p>
 			<p>
-				The idea is simple: a developer can write an implementation of Translator that converts from type A to type B, and other that converts from type B to type C.  Then, use both to construct a new instace of TranslatorStack, and you get something that itself implements Translator from type A to type C.
+				The idea is simple: a developer can write an implementation of Translator that converts from type A to type B, and other that converts from type B to type C.  Then, use both to construct a new instance of TranslatorStack, and you get something that itself implements Translator from type A to type C.
 			</p>
 			<p>
 				This kind of utility can be useful in all sorts of ways, but it's great in particular for setting up clean and clear general purpose serialization, so translation stacks will pop up again when codecs come in to play.
@@ -33,10 +33,10 @@
 		</li>
 		<li>ReadHead and WriteHead
 			<p>
-				ReadHead and WriteHead are expressions of that central theme of "semantic data", and also expressions of the belief that blocking and nonblocking IO should be interchangable.  Read their javadocs well.
+				ReadHead and WriteHead are expressions of that central theme of "semantic data", and also expressions of the belief that blocking and nonblocking IO should be interchangeable.  Read their javadocs well.
 			</p>
 			<p>
-				Both accept a single generic type.  This is the "message" type that they deal with (so, presumably it's going to be muxed; it might actually be an interface rather than an instantiable class with fields for serialization).  ReadHead and WriteHead instances tend to come in pairs: in the case of pipes, one acts as a sink and the other the source; in the case of network sockets, one is for sending to the remote machine and the other is for recieving.
+				Both accept a single generic type.  This is the "message" type that they deal with (so, presumably it's going to be muxed; it might actually be an interface rather than an instantiable class with fields for serialization).  ReadHead and WriteHead instances tend to come in pairs: in the case of pipes, one acts as a sink and the other the source; in the case of network sockets, one is for sending to the remote machine and the other is for receiving.
 			</p>
 			<p>
 				ReadHead and WriteHead are meant to support multithreading effortlessly.
@@ -69,3 +69,5 @@
 		</li>
 	</ul></li>
 </ul>
+
+
