@@ -10,9 +10,6 @@
 	The entire system is fastideously conscious of observing and utilizing type safety at every level -- at no point does the developer have to compromise type safety for generality when using this library.
 </p>
 
-<p>
-	(One caveat: I haven't bothered to detect or deal with cyclic datastructures when it comes to codecs.  It's coming someday, but it's an extremely low priority.)
-</p>
 
 
 <ul>
@@ -20,13 +17,18 @@
 	<ul>
 		<li>The concept of "semantic data".
 			<p>
-				The <span class=ahsname>AHS</span> library is designed around the belief that data should retain semantic meaning as much as possible.  In the situation of IO, that just means things should be objects with fields instead of collections of byte arrays as much as possible.  This is a fairly major difference in philosophy from the java.io and java.nio packages, which deal with nothing but primitives.
+				The <span class=ahsname>AHS</span> library is designed around the belief that data should retain semantic meaning as much as possible.  In the situation of IO, that just means things should be objects with fields instead of collections of byte arrays as much as possible. A developer should be able to work with a simple API that allows the sending and receiving of entire chunks of data that represent fully meaningful objects in their own right.  This is a fairly major difference in philosophy from the java.io and java.nio packages, which deal with nothing but primitives and always deal with buffering in terms of piling up bytes thoughtlessly.
 			</p>
+		</li>
+		<li>Translation Stacks
 			<p>
 				Semantic data should be able to be translated into other formats of semantic data.  This thought isn't new, and it's essentially a restatement of the concept of protocol stacks.  The <span class=ahsname>AHS</span> library expresses this directly with the Translator interface and TranslatorStack class.
 			</p>
 			<p>
-				This is the reason why ReadHead and WriteHead use generic types (and why things like java.nio.channels.Pipe have competitors in ahs.io.Pipe).
+				The idea is simple: a developer can write an implementation of Translator that converts from type A to type B, and other that converts from type B to type C.  Then, use both to construct a new instace of TranslatorStack, and you get something that itself implements Translator from type A to type C.
+			</p>
+			<p>
+				This kind of utility can be useful in all sorts of ways, but it's great in particular for setting up clean and clear general purpose serialization, so translation stacks will pop up again when codecs come in to play.
 			</p>
 		</li>
 		<li>ReadHead and WriteHead
@@ -37,7 +39,9 @@
 				Both accept a single generic type.  This is the "message" type that they deal with (so, presumably it's going to be muxed; it might actually be an interface rather than an instantiable class with fields for serialization).  ReadHead and WriteHead instances tend to come in pairs: in the case of pipes, one acts as a sink and the other the source; in the case of network sockets, one is for sending to the remote machine and the other is for recieving.
 			</p>
 			<p>
-				ReadHead and WriteHead are meant to support multithreading effortlessly.  TODO WriteHeadAdapter.Channelwise isn't actually thread safe!
+				ReadHead and WriteHead are meant to support multithreading effortlessly.
+				
+				TODO WriteHeadAdapter.Channelwise isn't actually thread safe!
 			</p>
 			<p>
 				Implementation-wise, these interfaces are made to work by providing some levels of buffering that function to make underlying blocking and nonblocking channels operable in identical fashion, allowing higher levels of the program to choose on a per-request basis whether or not they want to block for the next chunk of data.
@@ -54,11 +58,14 @@
 				Repeat after me: building message protocols should not be hard.
 			</p>
 			<p>
-				Repeat after me: building message protocols should not be hard.
-			</p>
-			<p>
 				Seriously, though.  It shouldn't.  Applications need expressive serialization, and often.  The <span class=ahsname>AHS</span> library is committed to providing the most painless, rapid-development-friendly interfaces for general purpose serialization possible -- and doing it with type safety.
 			</p>
+		</li>
+	</ul></li>
+	<li>Caveats
+	<ul>
+		<li>
+			I haven't bothered to detect or deal with cyclic datastructures when it comes to codecs.  It's coming someday, but it's an extremely low priority.  In the meantime, if you have a structure that contains cyclic reference when in memory, you can easily jump around this by just not tagging one of the fields in the pair that's creating the cyclic reference with the ENC interface, and any of the reflective-annotative encoding tools will skip it; either that or write your own Encoder implementor.
 		</li>
 	</ul></li>
 </ul>
