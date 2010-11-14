@@ -1,5 +1,14 @@
+<html><head><style>
+p		{ text-indent:4ex; }
+li h5		{ font-size:16pt; font-weight:bold; line-height:0; }
+li li h5	{ font-size:14pt; font-weight:bold; line-height:0; }
+li li li h5	{ font-size:13pt; font-weight:bold; line-height:0; }
+li li li li h5	{ font-size:12pt; font-weight:bold; line-height:0; }
+</style></head>
+<body><table width=700px align=center><tr><td>
+
 <p>
-	The <span class=package>ahs.io</span> package represents the most significant part of the <span class=ahsname>AHS</span> library.  It regards not only simple filesystem input/output, but also network communication (both blocking and nonblocking), and efficiently synchronized inter-thread communication -- all with <i>the exact same interface<i> that gives you control of the threading model (in collaboration with the <span class=package>ahs.thread</span> package, which in turn gives you both simple one-line drop-in solutions as well as an interface for customization needs).
+	The <span class=package>ahs.io</span> package represents the most significant part of the <span class=ahsname>AHS</span> library.  It regards not only simple filesystem input/output, but also network communication (both blocking and nonblocking), and efficiently synchronized inter-thread communication -- all with <i>the exact same interface</i> that gives you control of the threading model (in collaboration with the <span class=package>ahs.thread</span> package, which in turn gives you both simple one-line drop-in solutions as well as an interface for customization needs).
 </p>
 
 <p>
@@ -13,14 +22,14 @@
 
 
 <ul>
-	<li>Introduction
+	<li><h5>Introduction</h5>
 	<ul>
-		<li>The concept of "semantic data".
+		<li><h5>The concept of "semantic data".</h5>
 			<p>
 				The <span class=ahsname>AHS</span> library is designed around the belief that data should retain semantic meaning as much as possible.  In the situation of IO, that just means things should be objects with fields instead of collections of byte arrays as much as possible. A developer should be able to work with a simple API that allows the sending and receiving of entire chunks of data that represent fully meaningful objects in their own right.  This is a fairly major difference in philosophy from the java.io and java.nio packages, which deal with nothing but primitives and always deal with buffering in terms of piling up bytes thoughtlessly.
 			</p>
 		</li>
-		<li>Translation Stacks
+		<li><h5>Translation Stacks</h5>
 			<p>
 				Semantic data should be able to be translated into other formats of semantic data.  This thought isn't new, and it's essentially a restatement of the concept of protocol stacks.  The <span class=ahsname>AHS</span> library expresses this directly with the Translator interface and TranslatorStack class.
 			</p>
@@ -28,10 +37,10 @@
 				The idea is simple: a developer can write an implementation of Translator that converts from type A to type B, and other that converts from type B to type C.  Then, use both to construct a new instance of TranslatorStack, and you get something that itself implements Translator from type A to type C.
 			</p>
 			<p>
-				This kind of utility can be useful in all sorts of ways, but it's great in particular for setting up clean and clear general purpose serialization, so translation stacks will pop up again when codecs come in to play.
+				This kind of utility can be useful in all sorts of ways, but it's great in particular for setting up clean and clear general purpose serialization, so translation stacks will pop up again when codecs come in to play and everything comes together.
 			</p>
 		</li>
-		<li>ReadHead and WriteHead
+		<li><h5>ReadHead and WriteHead</h5>
 			<p>
 				ReadHead and WriteHead are expressions of that central theme of "semantic data", and also expressions of the belief that blocking and nonblocking IO should be interchangeable.  Read their javadocs well.
 			</p>
@@ -46,8 +55,11 @@
 			<p>
 				Implementation-wise, these interfaces are made to work by providing some levels of buffering that function to make underlying blocking and nonblocking channels operable in identical fashion, allowing higher levels of the program to choose on a per-request basis whether or not they want to block for the next chunk of data.
 			</p>
+			<p>
+				(Oh, and check this out: ahs.io.ReadHeadSocketChannel actually makes accepting new network connections obey the same ReadHead interface as Pipes and everything else.  Abstraction for the win!)
+			</p>
 		</li>
-		<li>Codecs
+		<li><h5>Codecs</h5>
 			<p>
 				Repeat after me: building message protocols should not be hard.
 			</p>
@@ -60,14 +72,64 @@
 			<p>
 				Seriously, though.  It shouldn't.  Applications need expressive serialization, and often.  The <span class=ahsname>AHS</span> library is committed to providing the most painless, rapid-development-friendly interfaces for general purpose serialization possible -- and doing it with type safety.
 			</p>
+			<ul>
+				<li><h5>The Big Picture</h5>
+					<p>
+						The most general form of codecs (the ahs.io.codec.Codec interface) is so insanely generic it may make your eyes bleed to look at; honestly, I recommend you ignore it.  In practice, EonCodec is what you should use, and is what this introduction will talk about.
+					</p>
+					<p>
+						The basic design behind EonCodec isn't complicated: suppose everything can be represented as a map of key-value pairs.  Call that map an EonObject and set it up with gettings and setters for all of the primitives, and other EonObjects.  Tack on some other convenience things like a method that puts a string in the map representing the name of the class the map resents.  Now create an Encoder -- it translates a instance of some specific class into an instance of EonObject by just putting its fields into the map.  Create a Decoder that does the reverse.  (And yes, there is an EonArray as well; I'm just glossing over that because it works exactly like you would expect it to.)
+					</p>
+					<p>
+						These Encoder and Decoder implementations then get enrolled together in a Codec.  The Codec hands instances to itself to every encode or decode call, which allows the Encoders and Decoders to use the Codec recursively on every field they want to serialize that isn't a primitive.  Thus, a developer can build Encoder and Decoder objects that have knowledge specific to only one class in good observance of object-oriented paradigms, and turn these into universally effective systems.
+					</p>
+				</li>
+				<li><h5>Switching Encodings</h5>
+					<p>
+						If you're looking at the source while you read this, you may have already noticed that EonObject is actually just an interface.  It's currently implemented in two forms: JsonObject, and EbonObject.  These two implementions are essentially the same except for the way they serialize to bytes; JSON is effectively human-readable, while EBON is a binary format and much more efficient in both output size and decoding time.  These cover the most commonly occuring needs, but of course you're free to implement your own formats as well.  Any Eon object can be translated to a ByteBuffer and back by Eon.TranslatorToByteBuffer and Eon.TranslatorFromByteBuffer repectively.
+					</p>
+					<p>
+						It's possible to switch between which specific kind of EonObject an EonCodec uses within a single line of code -- just switch the factories that you hand to the constructor of EonCodec.  For examples of the difference between an EonCodec backed by the JSON format versus the EBON format, just take a quick glance at the source of JsonCodec and EbonCodec.  (They both extend EonCodec and are both essentially identical except for the what they hand to the superconstructor.)
+					</p>
+				</li>
+				<li><h5>Easy as Pie</h5>
+					<p>
+						In practice, it's even easier than all that, because you don't really have to build your own Encoder and Decoder implemenations!  Check out the classes EonRAE and EonRAD.  (RAE and RAD stand for "reflective annotative [en/de]coder".)  They use -- as the name implies -- java's reflection utilities to be able to automatically transform any class to a representative EonObject and back again.  
+					</p>
+					<p>
+						The developer has control over this via two annotations: Encodable and Enc.  Tag a class with Encodable to let EonRAE and EonRAD know they're allowed to operate on it, and then tag the fields that you want to be encoded with the Enc annotation.  Now when you're setting up your codec, just enroll an EonRAE instance and an EonRAD instance for the class tagged with Encodable, just like you would have with any other Encoder and Decoder.  That's it.  (There's also a couple of cool forms of shorthand you can use within those annotations and also some more options for polymorphism, but that's advanced stuff; read the javadoc and the source for more on that.)
+					</p>
+					<p>
+						So all in all, this is actually <i>easier</i> than making a pie -- have you ever tried to get a good homemade merangue that doesn't collapse?
+					</p>
+				</li>
+				<li><h5>Multiplexing and Demultiplexing</h5>
+					<p>
+						See EonDecodingMux.  When constructing the mux, specify an interface or superclass that all of the specific message types can be cast to (this is the mux's "face" type).  After that, it's pretty much just like having a codec within a codec: all you have to do is enroll Encoders and Decoders for each class that will be within the mux (and again, it can just be EonRAE and EonRAD across the board), and then enroll the mux in the codec.  There's a little extra magic that goes on in the background, but it's pretty much totally concealed.  You can now just tell the codec to encode any of the muxed objects to the "face" type, and later decode any of them to the same "face" type, and you get polymorphic behavior.  To get the actual types back out, use the standard java instanceof operator or the getClass() method.  Check out ahs.io.codec.CodecJsonTest#testMuxing() for an example (it's the in src_ahs_test directory).
+					</p>
+				</li>
+			</ul></li>
+		</li>
+		<li><h5>Putting it all Together</h5>
+			<p>
+				EonCodec gives you a tool to translate any java object to an EonObject and back again.  There are Translator classes to convert any EonObject to a ByteBuffer and back again.  The final piece of the puzzle is this: some Translator implementations actually 'translate' ByteBuffer instances onto a Socket.
+			</p>
+			<p>
+				TODO get an example from mcon.net.TransportTcp.
+			</p>
 		</li>
 	</ul></li>
-	<li>Caveats
+	<li><h5>Caveats</h5>
 	<ul>
+		<li>
+			A codec instance is essentially thread-safe for encoding and decoding.  It is -not- thread safe when it comes to adding Encoders and Decoders; do that setup ahead of time.  Also, since a codec keeps only a single instance of the enrolled Encoder or Decoder, it is possible for a non-thread-safe instance to be enrolled, which in effect may make the entire codec non-thread-safe if those Encoders or Decoders are used... so don't do that.  Encoders and Decoders should be re-entrant (or at least VERY noisily documented if they are not).
+		</li>
 		<li>
 			I haven't bothered to detect or deal with cyclic datastructures when it comes to codecs.  It's coming someday, but it's an extremely low priority.  In the meantime, if you have a structure that contains cyclic reference when in memory, you can easily jump around this by just not tagging one of the fields in the pair that's creating the cyclic reference with the ENC interface, and any of the reflective-annotative encoding tools will skip it; either that or write your own Encoder implementor.
 		</li>
 	</ul></li>
 </ul>
+
+</td></tr></table></body></html>
 
 
