@@ -1,0 +1,10 @@
+#!/bin/bash
+javadoc \
+	-sourcepath $(sep ";" ../src*) \
+	-d javadoc \
+	-use \
+	-version \
+	-author \
+	-group "AHS Library" "ahs.*" \
+	"$@" \
+    $(findds ../src* -follow | grep "\.java")
