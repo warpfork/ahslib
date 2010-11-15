@@ -12,7 +12,8 @@ public final class Eon {
 	 * Assumes the entire ByteBuffer is backed by an accessible array and the entire
 	 * thing should be used from beginning to end, ignoring position. (If this is not
 	 * acceptable in your present situation, consider using the
-	 * {@link ahs.util.Arr#makeWrapped(ByteBuffer)} function.)
+	 * {@link ahs.util.Arr#makeWrapped(ByteBuffer)} function and have fun with the
+	 * extra overhead.)
 	 */
 	public static class TranslatorFromByteBuffer implements Translator<ByteBuffer,EonObject> {
 		public TranslatorFromByteBuffer(EonCodec $co) {

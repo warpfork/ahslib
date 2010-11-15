@@ -48,7 +48,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	
 	
 	
-
+	
 	private class PumpT implements Pump {
 		public boolean isDone() {
 			return isClosed();

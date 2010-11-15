@@ -69,4 +69,15 @@ public class TranslatorStack<$FROM, $TO> implements Translator<$FROM, $TO> {
 		}
 		return ($TO)$v;
 	}
+	
+	/**
+	 * I honestly wish I didn't have to have this method. It's intended for the really
+	 * nasty case in WriteHeadAdapter where sometimes I need to be able to see the
+	 * bottom guy on the stack to do a little extra configuration on him so he can get
+	 * his base channel. Really, really icky. If I can find a way to refactor this out
+	 * someday, I'd love to.
+	 */
+	List<Translator<?,?>> expose() {
+		return Collections.unmodifiableList($dat);
+	}
 }

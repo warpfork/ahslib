@@ -27,7 +27,8 @@ import java.util.*;
  * 
  * @param <$CODE>
  *                The type of object used to represent the encoded version of the data. A
- *                typical example might be ahs.json.JSONObject.
+ *                typical example might be ahs.io.codec.json.JsonObject or
+ *                ahs.io.codec.ebon.EbonObject.
  */
 public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder);

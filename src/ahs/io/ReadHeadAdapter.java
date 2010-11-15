@@ -168,8 +168,6 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	
 	
 	
-	
-	
 	public static class Channelwise<$T> extends ReadHeadAdapter<$T> {
 		public Channelwise(ReadableByteChannel $rbc, Translator<InfallibleReadableByteChannel,$T> $ts) {
 			this.$pump = new PumpT();
@@ -177,7 +175,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			this.$irbc = new InfallibleReadableByteChannel($rbc, new ExceptionHandler<IOException>() {
 				public void hear(IOException $e) {
 					ExceptionHandler<IOException> $dated_eh = $eh;
-					$irbc.close();	// this could kinda loop, but the method shouldn't KEEP throwing exceptions.
+					$irbc.close();	//XXX:AHS: i'm not actually sure that we should always close the underlying channel when it screams at us.  on the other hand, that is what most of the java.io stuff does.
 					if ($dated_eh != null) $dated_eh.hear($e);
 				}
 			});
@@ -197,10 +195,6 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			
 			// in subclasses that Know about PumperSelector, it's advisable to override this to cancel the key after closing the channel.
 		}
-		
-		
-		
-		
 		
 		// acts by going all the way to the BOTTOM of the stack,
 		//  then handing things up to the translation stack,
@@ -237,8 +231,6 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			}
 		}
 		
-		
-		
 		// both the first entry in a TranslatorStack as well as the entire stack itself should be able to implement this, really.
 		public static interface ChunkBuilder<$CHUNK> extends Translator<InfallibleReadableByteChannel,$CHUNK> {
 			// this interface really only exists so i had someplace to put this javadoc.
@@ -262,49 +254,33 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			public $CHUNK translate(InfallibleReadableByteChannel $bc) throws TranslationException;
 		}
 		
-		
-		
 		/**
-		 * Hides all exceptions from the client, rerouting them elsewhere.
-		 * IOException thrown from the read method causes the method to return 0;
-		 * if the ExceptionHandler doesn't do something in response to the
-		 * exception when it gets it (like simply closing the channel), it's quite
-		 * likely that the read method will keep getting pumped with no productive
-		 * result.
+		 * <p>
+		 * This actually 'translates' bytes off of a communication channel. The
+		 * bytes should look like a series of 4-byte signed integer lengths,
+		 * followed by an arbitrary blob of the size specified by the int. The
+		 * size bytes are discarded after being used to determine the blob, and
+		 * the blob is wrapped in a ByteBuffer and returned as the result of the
+		 * translation.
+		 * </p>
+		 * 
+		 * <p>
+		 * It is NOT possible to use the same instance of a BabbleTranslator in
+		 * several TranslationStack for any purpose if threads are involved. Since
+		 * a BabbleTranslator has no way to enforce the atomicity of some of its
+		 * internal operations without becoming a blocking system, it must keep
+		 * state.
+		 * </p>
+		 * 
+		 * <p>
+		 * As explained in the ChunkBuilder interface, the translate method may
+		 * return null for any given invocation if there is not immediately (i.e.
+		 * in a nonblocking sense) sufficient data readable to get a full blob.
+		 * </p>
+		 * 
+		 * @author hash
+		 * 
 		 */
-		static class InfallibleReadableByteChannel implements ReadableByteChannel {
-			private InfallibleReadableByteChannel(ReadableByteChannel $bc, ExceptionHandler<IOException> $eh) {
-				this.$bc = $bc;
-				this.$eh = $eh;
-			}
-			
-			private ExceptionHandler<IOException>	$eh;
-			private ReadableByteChannel		$bc;
-			
-			public void close() {
-				try {
-					$bc.close();
-				} catch (IOException $ioe) {
-					$eh.hear($ioe);
-				}
-			}
-			
-			public boolean isOpen() {
-				return $bc.isOpen();
-			}
-			
-			public int read(ByteBuffer $dst) {
-				try {
-					return $bc.read($dst);
-				} catch (IOException $ioe) {
-					$eh.hear($ioe);
-					return -1;
-				}
-			}
-		}
-		
-		
-		
 		public static class BabbleTranslator implements ChunkBuilder<ByteBuffer> {
 			public BabbleTranslator() {}
 			
@@ -339,7 +315,17 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 			}
 		}
 	}
-
+	
+	/**
+	 * This class just takes the Channelwise class and relates it with a
+	 * PumperSelector so that the user never has to worry about pumping the
+	 * Channelwise instance directly. It also takes care of deregistering the Pump
+	 * once the channel is closed.
+	 * 
+	 * @author hash
+	 * 
+	 * @param <$T>
+	 */
 	public static class ChannelwiseSelecting<$T> extends Channelwise<$T> {
 		// i would LOVE to have made more general constructors, but it's impossible to find a higher level of abstraction that is both selectable and readable
 		// and i can't even sling together a new hack interface to unify them because everything in the selectable hierarchy is abstract classes (never interfaces)! 
@@ -383,6 +369,48 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		public void close() throws IOException {
 			$ps.deregister(getPump());
 			super.close();
+		}
+	}
+	
+	
+	
+	
+	/**
+	 * Hides all exceptions from the client, rerouting them elsewhere.
+	 * IOException thrown from the read method causes the method to return 0;
+	 * if the ExceptionHandler doesn't do something in response to the
+	 * exception when it gets it (like simply closing the channel), it's quite
+	 * likely that the read method will keep getting pumped with no productive
+	 * result.
+	 */
+	static class InfallibleReadableByteChannel implements ReadableByteChannel {
+		private InfallibleReadableByteChannel(ReadableByteChannel $bc, ExceptionHandler<IOException> $eh) {
+			this.$bc = $bc;
+			this.$eh = $eh;
+		}
+		
+		private ExceptionHandler<IOException>	$eh;
+		private ReadableByteChannel		$bc;
+		
+		public void close() {
+			try {
+				$bc.close();
+			} catch (IOException $ioe) {
+				$eh.hear($ioe);
+			}
+		}
+		
+		public boolean isOpen() {
+			return $bc.isOpen();
+		}
+		
+		public int read(ByteBuffer $dst) {
+			try {
+				return $bc.read($dst);
+			} catch (IOException $ioe) {
+				$eh.hear($ioe);
+				return -1;
+			}
 		}
 	}
 }
