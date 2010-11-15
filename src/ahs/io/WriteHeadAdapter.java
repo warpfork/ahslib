@@ -73,12 +73,16 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 		private final InfallibleWritableByteChannel			$iwbc;
 		
 		public void write($T $chunk) throws TranslationException {
-			$trans.translate($chunk);
+			synchronized ($trans) {
+				$trans.translate($chunk);
+			}
 		}
 		
 		public void writeAll(Collection<? extends $T> $chunks) throws TranslationException {
-			for ($T $chunk : $chunks)
-				write($chunk);
+			synchronized ($trans) {
+				for ($T $chunk : $chunks)
+					write($chunk);
+			}
 		}
 		
 		public boolean hasRoom() {

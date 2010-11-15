@@ -18,8 +18,11 @@ import java.util.*;
 public final class EonWriteHead {
 	public static WriteHead<EonObject> make(WritableByteChannel $wbc, EonCodec $co) {
 		return WriteHeadAdapter.make(
-				$wbc, 
-				new Eon.TranslatorToByteBuffer($co)
+				$wbc,
+				TranslatorStack.make(
+						new Eon.TranslatorToByteBuffer($co),
+						new WriteHeadAdapter.ChannelwiseUnbuffered.BabbleTranslator()
+				)
 		);
 	}
 	

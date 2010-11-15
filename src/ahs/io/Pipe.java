@@ -17,7 +17,7 @@ public class Pipe<$T> implements Flow<$T> {
 		SINK = new Sink();
 	}
 	
-	// i'm perfectly capable of using just the ReadHead and WriteHead interfaces internally as well... but this lets clients avoid having to always wrap the write calls in a no-op try-catch block.
+	// i'm perfectly capable of using just the ReadHead and WriteHead interfaces internally as well... but this lets clients avoid having to always wrap the write calls in a no-op try-catch block that actually happens to be unreachable.
 	public final Source			SRC;
 	public final Sink			SINK;
 	private volatile Listener<ReadHead<$T>>	$el;
@@ -152,6 +152,7 @@ public class Pipe<$T> implements Flow<$T> {
 		
 		public void writeAll(Collection<? extends $T> $chunks) {
 			// at first i thought i could implement this with addAll on the queue and a single big release... not actually so.  addAll on the queue can throw exceptions but still have made partial progress.
+			// so while this is guaranteed to add all elements of the collection in their original order without interference by other threads, reading threads may actually be able to read the first elements from the collection before the last ones have been entered.
 			synchronized ($queue) {
 				for ($T $chunk : $chunks)
 					write($chunk);
