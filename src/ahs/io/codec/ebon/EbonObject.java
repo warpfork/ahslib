@@ -13,6 +13,7 @@ public class EbonObject implements EonObject {
 	
 	private Map<String,Object> $map;
 	
+	
 	public String getKlass() {
 		return optString(Eon.MAGICWORD_CLASS,null);
 	}
@@ -311,7 +312,7 @@ public class EbonObject implements EonObject {
 		//SOMEDAY:AHS: wants me an ordered map that performs more like a linked list than that TreeMap thang -- i only ever want fifo traversal and a comparator for that is not my favorite idea.
 		
 		try {
-			$dou.writeChar('o');
+			$dou.writeByte((byte)'o');
 			$dou.writeInt($map.size());
 			for (Map.Entry<String,Object> $ent : $map.entrySet()) {
 				byte[] $k = $ent.getKey().getBytes(Strings.UTF_8);
@@ -321,27 +322,27 @@ public class EbonObject implements EonObject {
 				Object $x = $ent.getValue();
 				if ($x instanceof byte[]) {
 					byte[] $y = (byte[]) $x;
-					$dou.writeChar('[');
+					$dou.writeByte((byte)'[');
 					$dou.writeInt($y.length);
 					$dou.write($y);
 				} else if ($x instanceof Boolean) {
-					$dou.writeChar('b');
+					$dou.writeByte((byte)'b');
 					$dou.writeBoolean($x.equals(Boolean.TRUE));
 				} else if ($x instanceof Double) {
-					$dou.writeChar('d');
+					$dou.writeByte((byte)'d');
 					$dou.writeDouble((Double) $x);
 				} else if ($x instanceof Integer) {
-					$dou.writeChar('i');
+					$dou.writeByte((byte)'i');
 					$dou.writeInt((Integer) $x);
 				} else if ($x instanceof Long) {
-					$dou.writeChar('l');
+					$dou.writeByte((byte)'l');
 					$dou.writeLong((Long) $x);
 				} else if ($x instanceof String) {
 					// it might seem a little strange here to just blast on past the methods DataOutputStream provides us for strings.
 					// however, we want the header to contain the length of the string _in_bytes_, so we can't use writeChars and have to do this hop-skip instead.
 					// (writeUTF is also kinda gross because it uses a modified UTF-8 instead of the real deal (and also has a 32k limit).)
 					byte[] $y = ((String) $x).getBytes(Strings.UTF_8);
-					$dou.writeChar('s');
+					$dou.writeByte((byte)'s');
 					$dou.writeInt($y.length);
 					$dou.write($y);
 				} else if ($x instanceof EbonObject) {
@@ -363,11 +364,11 @@ public class EbonObject implements EonObject {
 	
 	public void deserialize(DataInputStream $din) throws EbonException {
 		try {
-			if ('o' != $din.readChar()) throw new EbonException("An EbonObject serial must begin with 'o'.");
+			if ('o' != $din.readByte()) throw new EbonException("An EbonObject serial must begin with 'o'.");
 			final int $mapl = $din.readInt();
 			int $len;	// temp bucket
 			byte[] $bats;	// temp bucket
-			char $switch;	// temp bucket
+			byte $switch;	// temp bucket
 			String $key;	// self explanitory
 			Object $win;	// self explanitory
 			for (int $i = 0; $i < $mapl; $i++) {
@@ -377,7 +378,7 @@ public class EbonObject implements EonObject {
 				$key = new String($bats, Strings.UTF_8);
 				if (has($key)) throw new EbonException("Duplicate key \"" + $key + "\"");
 				
-				$switch = $din.readChar();
+				$switch = $din.readByte();
 				switch ($switch) {
 					case '[':
 						$len = $din.readInt();
@@ -422,5 +423,33 @@ public class EbonObject implements EonObject {
 			// ought not happen.  we can't really get io exceptions from reading from an internal buffer we just declared...
 			throw new EbonException($e);
 		}
+	}
+	
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((this.$map == null) ? 0 : this.$map.hashCode());
+		return result;
+	}
+	
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		EbonObject other = (EbonObject) obj;
+		if (this.$map == null) {
+			if (other.$map != null) return false;
+		} else if (!this.$map.equals(other.$map)) return false;
+		return true;
+	}
+
+	public String toString() {
+		return "EbonObject [$map=" + this.$map + "]";
+		//try {
+		//	return Arr.toString(this.serialize());
+		//} catch (EbonException $e) {
+		//	$e.printStackTrace();
+		//	return "";
+		//}
 	}
 }
