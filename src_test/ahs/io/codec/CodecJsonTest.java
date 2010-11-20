@@ -2,6 +2,7 @@ package ahs.io.codec;
 
 import ahs.io.*;
 import ahs.io.codec.*;
+import ahs.io.codec.ebon.*;
 import ahs.io.codec.eon.*;
 import ahs.io.codec.json.*;
 import ahs.test.*;
@@ -10,18 +11,19 @@ import ahs.util.*;
 import java.util.*;
 
 public class CodecJsonTest extends CodecEonTest {
-	public void setUp() throws Exception {
-		super.setUp();
-		X.saye("");
+	public CodecJsonTest() {
+		super(new JsonCodec());
 	}
+	
+	// methods below this is out of date and test odd things like the order of strings which aren't necessary actually required to be that consistent.  i should probably just throw them away.
 	
 	public void testTrivial() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		$jc.putHook(Oa.class, new Oa.Den());
+		$jc.putHook(Oe.class, new Oe.Den());
 		
-		Oa $x1 = new Oa();
+		Oe $x1 = new Oe();
 		JsonObject $c = $jc.encode($x1);
-		Oa $x2 = $jc.decode($c, Oa.class);
+		Oe $x2 = $jc.decode($c, Oe.class);
 
 		X.saye($c.toString());
 		
@@ -30,11 +32,11 @@ public class CodecJsonTest extends CodecEonTest {
 	
 	public void testTrivialSerial() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		$jc.putHook(Oa.class, new Oa.Den());
+		$jc.putHook(Oe.class, new Oe.Den());
 		
-		Oa $x1 = new Oa();
+		Oe $x1 = new Oe();
 		byte[] $c = $jc.serialize($x1);
-		Oa $x2 = $jc.deserialize($c, Oa.class);
+		Oe $x2 = $jc.deserialize($c, Oe.class);
 		
 		assertEquals($x1, $x2);
 	}
@@ -46,11 +48,11 @@ public class CodecJsonTest extends CodecEonTest {
 	 */
 	public void testBasic() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		$jc.putHook(Ob.class, new Ob.Den());
+		$jc.putHook(O1p.class, new O1p.Den());
 		
-		Ob $x1 = new Ob("whip it");
+		O1p $x1 = new O1p("whip it");
 		JsonObject $c = $jc.encode($x1);
-		Ob $x2 = $jc.decode($c, Ob.class);
+		O1p $x2 = $jc.decode($c, O1p.class);
 
 		X.saye($c.toString());
 		
@@ -59,12 +61,12 @@ public class CodecJsonTest extends CodecEonTest {
 	
 	public void testBasicString() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		$jc.putHook(Ob.class, new Ob.Den());
+		$jc.putHook(O1p.class, new O1p.Den());
 		
-		Ob $x1 = new Ob("whip it");
+		O1p $x1 = new O1p("whip it");
 		JsonObject $c = $jc.encode($x1);
 		
-		assertEquals("{\"#\":\"Ob\",\"$\":\"dat\",\"%\":\"whip it\"}", $c.toString());
+		assertEquals("{\"#\":\"O1p\",\"$\":\"dat\",\"%\":\"whip it\"}", $c.toString());
 	}
 	
 	
@@ -76,12 +78,12 @@ public class CodecJsonTest extends CodecEonTest {
 	 */
 	public void testList() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		$jc.putHook(Ob.class, new Ob.Den());
-		$jc.putHook(Oc.class, new Oc.Den());
+		$jc.putHook(O1p.class, new O1p.Den());
+		$jc.putHook(Ol.class, new Ol.Den());
 		
-		Oc $x1 = new Oc(Arr.asList(new Ob[] { new Ob("before the cream sits out too long"), new Ob("you must whip it"), new Ob("whip it"), new Ob("whip it good") } ));
+		Ol $x1 = new Ol(Arr.asList(new O1p[] { new O1p("before the cream sits out too long"), new O1p("you must whip it"), new O1p("whip it"), new O1p("whip it good") } ));
 		JsonObject $c = $jc.encode($x1);
-		Oc $x2 = $jc.decode($c, Oc.class);
+		Ol $x2 = $jc.decode($c, Ol.class);
 		
 		X.saye($c.toString());
 		
@@ -94,14 +96,14 @@ public class CodecJsonTest extends CodecEonTest {
 	 */
 	public void testListFailFromMissingDencoder() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		$jc.putHook(Oc.class, new Oc.Den());
+		$jc.putHook(Ol.class, new Ol.Den());
 		
 		try {
-			Oc $toy = new Oc(Arr.asList(new Ob[] { new Ob("whip it") }));
+			Ol $toy = new Ol(Arr.asList(new O1p[] { new O1p("whip it") }));
 			$jc.encode($toy);
 			fail("Encoding should have failed.");
 		} catch (TranslationException $e) {
-			assertEquals("Encoding dispatch hook not found for ahs.io.codec.CodecEonTest$Ob",$e.getMessage());	
+			assertEquals("Encoding dispatch hook not found for ahs.io.codec.CodecEonTest$O1p",$e.getMessage());	
 		}
 	}
 	
@@ -111,12 +113,12 @@ public class CodecJsonTest extends CodecEonTest {
 	 */
 	public void testListWithDenseDencoder() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		$jc.putHook(Ob.class, new Ob.Den());
-		$jc.putHook(Oc.class, new Oc.Dense());
+		$jc.putHook(O1p.class, new O1p.Den());
+		$jc.putHook(Ol.class, new Ol.Dense());
 		
-		Oc $x1 = new Oc(Arr.asList(new Ob[] { new Ob("before the cream sits out too long"), new Ob("you must whip it"), new Ob("whip it"), new Ob("whip it good") } ));
+		Ol $x1 = new Ol(Arr.asList(new O1p[] { new O1p("before the cream sits out too long"), new O1p("you must whip it"), new O1p("whip it"), new O1p("whip it good") } ));
 		JsonObject $c = $jc.encode($x1);
-		Oc $x2 = $jc.decode($c, Oc.class);
+		Ol $x2 = $jc.decode($c, Ol.class);
 		
 		X.saye($c.toString());
 		
@@ -127,27 +129,27 @@ public class CodecJsonTest extends CodecEonTest {
 	
 	public void testMuxing() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		EonDecodingMux<Ox> $mux = new EonDecodingMux<Ox>($jc, Ox.class);
-		$mux.enroll(Ob.class, new Ob.Den());
-		$mux.enroll(Oc.class, new Oc.Den());
+		EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($jc, OFace.class);
+		$mux.enroll(O1p.class, new O1p.Den());
+		$mux.enroll(Ol.class, new Ol.Den());
 		
-		Oc $x1 = new Oc(Arr.asList(new Ob[] { new Ob("before the cream sits out too long"), new Ob("you must whip it"), new Ob("whip it"), new Ob("whip it good") } ));
-		JsonObject $c = $jc.encode($x1, Ox.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
+		Ol $x1 = new Ol(Arr.asList(new O1p[] { new O1p("before the cream sits out too long"), new O1p("you must whip it"), new O1p("whip it"), new O1p("whip it good") } ));
+		JsonObject $c = $jc.encode($x1, OFace.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
 		X.saye($c.toString());	// mind the placement of this toString... for this mux, it's different if you put it after the decode!
-		Ox $x2 = $jc.decode($c, Ox.class);
+		OFace $x2 = $jc.decode($c, OFace.class);
 		
 		assertEquals($x1, $x2);
 	}
 	public void testMuxing2() throws TranslationException {
 		JsonCodec $jc = new JsonCodec();
-		EonDecodingMux<Ox> $mux = new EonDecodingMux<Ox>($jc, Ox.class);
-		$mux.enroll(Ob.class, new Ob.Den());
-		$mux.enroll(Oc.class, new Oc.Den());
+		EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($jc, OFace.class);
+		$mux.enroll(O1p.class, new O1p.Den());
+		$mux.enroll(Ol.class, new Ol.Den());
 		
-		Ob $x1 = new Ob("whip it");
-		JsonObject $c = $jc.encode($x1, Ox.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
+		O1p $x1 = new O1p("whip it");
+		JsonObject $c = $jc.encode($x1, OFace.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
 		X.saye($c.toString());	// mind the placement of this toString... for this mux, it's different if you put it after the decode!
-		Ob $x2 = (Ob)$jc.decode($c, Ox.class);
+		O1p $x2 = (O1p)$jc.decode($c, OFace.class);
 		
 		assertEquals($x1, $x2);
 	}

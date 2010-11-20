@@ -244,34 +244,34 @@ public class EbonArray implements EonArray {
 		//SOMEDAY:AHS: wants me an ordered map that performs more like a linked list than that TreeMap thang -- i only ever want fifo traversal and a comparator for that is not my favorite idea.
 		
 		try {
-			$dou.writeChar('a');
+			$dou.writeByte((byte)'a');
 			final int $arrl = $arr.size();
 			$dou.writeInt($arrl);
 			for (int $i = 0; $i < $arrl; $i++) {
 				Object $x = $arr.get($i);
 				if ($x instanceof byte[]) {
 					byte[] $y = (byte[]) $x;
-					$dou.writeChar('[');
+					$dou.writeByte((byte)'[');
 					$dou.writeInt($y.length);
 					$dou.write($y);
 				} else if ($x instanceof Boolean) {
-					$dou.writeChar('b');
+					$dou.writeByte((byte)'b');
 					$dou.writeBoolean($x.equals(Boolean.TRUE));
 				} else if ($x instanceof Double) {
-					$dou.writeChar('d');
+					$dou.writeByte((byte)'d');
 					$dou.writeDouble((Double) $x);
 				} else if ($x instanceof Integer) {
-					$dou.writeChar('i');
+					$dou.writeByte((byte)'i');
 					$dou.writeInt((Integer) $x);
 				} else if ($x instanceof Long) {
-					$dou.writeChar('l');
+					$dou.writeByte((byte)'l');
 					$dou.writeLong((Long) $x);
 				} else if ($x instanceof String) {
 					// it might seem a little strange here to just blast on past the methods DataOutputStream provides us for strings.
 					// however, we want the header to contain the length of the string _in_bytes_, so we can't use writeChars and have to do this hop-skip instead.
 					// (writeUTF is also kinda gross because it uses a modified UTF-8 instead of the real deal (and also has a 32k limit).)
 					byte[] $y = ((String) $x).getBytes(Strings.UTF_8);
-					$dou.writeChar('s');
+					$dou.writeByte((byte)'s');
 					$dou.writeInt($y.length);
 					$dou.write($y);
 				} else if ($x instanceof EbonObject) {
@@ -304,10 +304,10 @@ public class EbonArray implements EonArray {
 			final int $arrl = $din.readInt();
 			int $len;	// temp bucket
 			byte[] $bats;	// temp bucket
-			char $switch;	// temp bucket
+			byte $switch;	// temp bucket
 			Object $win;	// self explanitory
 			for (int $i = 0; $i < $arrl; $i++) {
-				$switch = $din.readChar();
+				$switch = $din.readByte();
 				switch ($switch) {
 					case '[':
 						$len = $din.readInt();
@@ -349,7 +349,8 @@ public class EbonArray implements EonArray {
 		} catch (EOFException $e) {
 			throw new EbonException("Unexpected end of EbonArray.", $e);
 		} catch (IOException $e) {
-			// ought not happen.  we can't really get io exceptions from reading from an internal buffer we just declared...
+			if ($e instanceof EbonException) throw (EbonException)$e;	// i hate this line so
+			// we can't really get io exceptions from reading from an internal buffer we just declared...
 			throw new EbonException($e);
 		}
 	}

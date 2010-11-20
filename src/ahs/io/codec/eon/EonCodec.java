@@ -40,6 +40,9 @@ public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 	public <$TARG> byte[] serialize($TARG $datclr) throws TranslationException {
 		return encode($datclr).serialize();
 	}
+	public <$TARG> byte[] serialize($TARG $datclr, Class<$TARG> $class) throws TranslationException {
+		return encode($datclr, $class).serialize();
+	}
 	
 	public EonObject deserialize(byte[] $bar) throws TranslationException {
 		EonObject $eo = $objProvider.make();

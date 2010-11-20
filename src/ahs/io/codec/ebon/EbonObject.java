@@ -426,8 +426,8 @@ public class EbonObject implements EonObject {
 		} catch (EOFException $e) {
 			throw new EbonException("Unexpected end of EbonObject.", $e);
 		} catch (IOException $e) {
-			// we can't really get io exceptions from reading from an internal buffer we just declared...
 			if ($e instanceof EbonException) throw (EbonException)$e;	// i hate this line so
+			// we can't really get io exceptions from reading from an internal buffer we just declared...
 			throw new EbonException($e);
 		}
 	}
