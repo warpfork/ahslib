@@ -359,12 +359,18 @@ public class EbonObject implements EonObject {
 	
 	public void deserialize(byte[] $bats) throws EbonException {
 		DataInputStream $din = new DataInputStream(new ByteArrayInputStream($bats));
+		byte $bat;
+		try {
+			$bat = $din.readByte();
+		} catch (IOException $e) {
+			throw new EbonException($e);
+		}
+		if ('o' != $bat) throw new EbonException("An EbonObject serial must begin with 'o'.");
 		deserialize($din);
 	}
 	
 	public void deserialize(DataInputStream $din) throws EbonException {
 		try {
-			if ('o' != $din.readByte()) throw new EbonException("An EbonObject serial must begin with 'o'.");
 			final int $mapl = $din.readInt();
 			int $len;	// temp bucket
 			byte[] $bats;	// temp bucket
@@ -420,7 +426,8 @@ public class EbonObject implements EonObject {
 		} catch (EOFException $e) {
 			throw new EbonException("Unexpected end of EbonObject.", $e);
 		} catch (IOException $e) {
-			// ought not happen.  we can't really get io exceptions from reading from an internal buffer we just declared...
+			// we can't really get io exceptions from reading from an internal buffer we just declared...
+			if ($e instanceof EbonException) throw (EbonException)$e;	// i hate this line so
 			throw new EbonException($e);
 		}
 	}
@@ -445,11 +452,13 @@ public class EbonObject implements EonObject {
 
 	public String toString() {
 		return "EbonObject [$map=" + this.$map + "]";
-		//try {
-		//	return Arr.toString(this.serialize());
-		//} catch (EbonException $e) {
-		//	$e.printStackTrace();
-		//	return "";
-		//}
+	}
+	
+	public String toArrStr() {
+		try {
+			return Arr.toString(this.serialize());
+		} catch (EbonException $e) {
+			return X.toString($e);
+		}
 	}
 }

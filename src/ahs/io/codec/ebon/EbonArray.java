@@ -289,12 +289,18 @@ public class EbonArray implements EonArray {
 	
 	public void deserialize(byte[] $bats) throws EbonException {
 		DataInputStream $din = new DataInputStream(new ByteArrayInputStream($bats));
+		byte $bat;
+		try {
+			$bat = $din.readByte();
+		} catch (IOException $e) {
+			throw new EbonException($e);
+		}
+		if ('a' != $bat) throw new EbonException("An EbonArray serial must begin with 'a'.");
 		deserialize($din);
 	}
 	
 	public void deserialize(DataInputStream $din) throws EbonException {
 		try {
-			if ('a' != $din.readChar()) throw new EbonException("An EbonArray serial must begin with 'a'.");
 			final int $arrl = $din.readInt();
 			int $len;	// temp bucket
 			byte[] $bats;	// temp bucket
