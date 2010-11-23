@@ -232,7 +232,7 @@ public class EbonArray implements EonArray {
 		ByteArrayOutputStream $bah = new ByteArrayOutputStream(128);
 		DataOutputStream $dou = new DataOutputStream($bah);
 		serialize($dou);
-		return $bah.toByteArray();	//FIXME: this is absurd.  i do NOT want to do a full copy here but the api is raping me.
+		return $bah.toByteArray();	//FIXME:AHS:EFFIC: this is absurd.  i do NOT want to do a full copy here but the api is raping me.
 	}
 	
 	/**

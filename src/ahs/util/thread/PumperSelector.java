@@ -123,7 +123,7 @@ public class PumperSelector implements Pumper {
 						if ($evt.channel() instanceof ServerSocketChannel) $evt.channel().register($selector, SelectionKey.OP_ACCEPT, $evt.pump());
 						else $evt.channel().register($selector, SelectionKey.OP_READ, $evt.pump());
 					} catch (ClosedChannelException $e) {
-						X.cry($e); //XXX: i'm not sure if this is okay... what if the remote connection closes the connection between the register call and when the event comes out of the pipe here?
+						X.cry($e); //XXX:AHS: i'm not sure if this is okay... what if the remote connection closes the connection between the register call and when the event comes out of the pipe here?
 					}
 				} else if ($evt instanceof Event_Dereg) {
 					if ($evt.channel() == null) for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {

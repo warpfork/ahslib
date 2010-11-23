@@ -71,7 +71,7 @@ public class Multibuffer {
 		
 		public PrintStream getPrintStream() {
 			throw new ImBored();
-			//TODO:AHS make a damn print stream
+			//TODO:AHS: make a damn print stream
 			// this is actually hard, because of the stupid constructor private default constructor on printstream.
 			// i don wanna go to bytes and back!
 		}
