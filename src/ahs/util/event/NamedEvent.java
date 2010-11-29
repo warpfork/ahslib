@@ -1,5 +1,38 @@
 package ahs.util.event;
 
+import ahs.util.*;
+
+// there is a SERIOUS limitation on the utility of this that comes from basic problems of generics in the Java language.
+// consider the following code that WORKS:
+
+//public static void fuck(String $wef) {
+//	EventDispatch<NamedEvent<String>> $ed = new EventDispatch<NamedEvent<String>>();
+//	Listener<NamedEvent<String>> $t = new Listener<NamedEvent<String>>() {
+//		public void hear(NamedEvent<String> $x) {
+//		}
+//	};
+//	NamedEvent<String> $u = new NamedEvent<String>($wef);
+//	$t.hear($u);
+//	$ed.put($u, $t);
+//}
+
+// and compare to this code that DOES NOT:
+
+//public static void fuck(String $wef) {
+//	EventDispatch<NamedEvent> $ed = new EventDispatch<NamedEvent>();
+//	Listener<NamedEvent<String>> $t = new Listener<NamedEvent<String>>() {
+//		public void hear(NamedEvent<String> $x) {
+//		}
+//	};
+//	NamedEvent<String> $u = new NamedEvent<String>($wef);
+//	$t.hear($u);
+//	$ed.put($u, $t);
+//}
+
+// if you watch to be able to disbatch multiple event types, you can run into difficulties with nested generics.
+
+
+
 public class NamedEvent<$T> implements Event {
 	public NamedEvent(String $name) {
 		this.$name = $name.intern();
