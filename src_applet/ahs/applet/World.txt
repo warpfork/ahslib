@@ -6,6 +6,8 @@ import java.applet.*;
 import java.io.*;
 import java.util.*;
 
+// these things are... not general enough for the ahs package, necessarily.  it's composing convenient basic stuff, but... shmer.
+
 public class World implements DomContact {
 	public World(DomContact $d) {
 		$dom = $d;
@@ -73,30 +75,5 @@ public class World implements DomContact {
 		//setAttribute ("main", "style.position",		"absolute");
 		//setAttribute ("main", "style.top",		"0");
 		//setAttribute ("main", "style.width",		"100%");
-	}
-
-	public Object eval(String... $strs) {
-		return this.$dom.eval($strs);
-	}
-	public Map<String,String> getQueryMap() {
-		return this.$dom.getQueryMap();
-	}
-	public void setContent(String $id, String $body) {
-		this.$dom.setContent($id, $body);
-	}
-	public String getContent(String $id) {
-		return this.$dom.getContent($id);
-	}
-	public void appendContent(String $id, String $body) {
-		this.$dom.appendContent($id, $body);
-	}
-	public void clearContent(String $id) {
-		this.$dom.clearContent($id);
-	}
-	public String getAttribute(String $id, String $key) {
-		return this.$dom.getAttribute($id, $key);
-	}
-	public void setAttribute(String $id, String $key, String $value) {
-		this.$dom.setAttribute($id, $key, $value);
 	}
 }
