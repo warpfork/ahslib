@@ -18,7 +18,7 @@ import java.nio.channels.*;
 public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	// I could have done all this with some interesting hacks and extending ReadHeadAdapter.ChannelwiseSelecting and hurling around wild nulls and having Translator with a shitload of state (including the serversocket) and making more abstract methods about closure state... but that seemed like more work than it was worth just to keep the same pump.  Oh, and I guess there would have been issues with exceptions from different places too. 
 	
-	public ReadHeadSocketChannel(InetSocketAddress $localBinding, PumperSelector $ps) throws IOException {
+	public ReadHeadSocketChannel(SocketAddress $localBinding, PumperSelector $ps) throws IOException {
 		this.$pump = new PumpT();
 		
 		$ssc = ServerSocketChannel.open();
