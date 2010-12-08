@@ -28,7 +28,15 @@ public class Arr {
 	}
 	
 	
-
+	
+	public static Map<String,String> asMap(String[][] $nx2) {
+		Map<String,String> $v = new HashMap<String,String>($nx2.length);
+		for (String[] $s : $nx2)
+			$v.put($s[0], $s[1]);
+		return $v;
+	}
+	
+	
 	/**
 	 * <p>
 	 * After this method returns, the given ByteBuffer's position will match its

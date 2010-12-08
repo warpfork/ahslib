@@ -101,14 +101,14 @@ public abstract class TestCase implements Runnable {
 	}
 	
 	public boolean assertEquals(Object $expected, Object $actual) {
-		if ($expected != $actual) {
+		if (!$expected.equals($actual)) {
 			$failures++;
 			$log.error(this.getClass(), DEF, new AssertionFailedError("assertion failed -- expected "+$expected+" != "+$actual+" actual."));
 			return false;
 		} return true;
 	}
 	public boolean assertEquals(String $message, Object $expected, Object $actual) {
-		if ($expected != $actual) {
+		if (!$expected.equals($actual)) {
 			$failures++;
 			$log.error(this.getClass(), DEF, new AssertionFailedError("assertion \""+$message+"\" failed -- expected "+$expected+" != "+$actual+" actual."));
 			return false;
@@ -153,14 +153,14 @@ public abstract class TestCase implements Runnable {
 	//  String
 	////////////////
 	public boolean assertEquals(String $expected, String $actual) {
-		if ($expected != $actual) {
+		if (!$expected.equals($actual)) {
 			$failures++;
 			$log.error(this.getClass(), DEF, new AssertionFailedError("assertion failed -- expected "+$expected+" != "+$actual+" actual."));
 			return false;
 		} return true;
 	}
 	public boolean assertEquals(String $message, String $expected, String $actual) {
-		if ($expected != $actual) {
+		if (!$expected.equals($actual)) {
 			$failures++;
 			$log.error(this.getClass(), DEF, new AssertionFailedError("assertion \""+$message+"\" failed -- expected "+$expected+" != "+$actual+" actual."));
 			return false;
