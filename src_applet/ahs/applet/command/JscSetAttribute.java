@@ -1,6 +1,8 @@
 package ahs.applet.command;
 
-public class JscSetAttribute implements JsCommand {
+import ahs.applet.DomContact.Exposure;
+
+public class JscSetAttribute extends JsCommand.Adapter<Object> {
 	public JscSetAttribute(String $domObjId, String $attrib, String $value) {
 		this.$domObjId = $domObjId;
 		this.$attrib = $attrib;
@@ -10,12 +12,9 @@ public class JscSetAttribute implements JsCommand {
 	public String $domObjId;
 	public String $attrib;
 	public String $value;
-	
-	public static String compose(String $domObjId, String $attrib, String $value) {
-		return "document.getElementById("+$domObjId+")."+$attrib+"=\""+$value+"\";";
-	}
-	
-	public String toEvalString() {
-		return compose($domObjId, $attrib, $value);
+
+	protected Object execute(Exposure $power) throws Exception {
+		$power.eval("document.getElementById(", $domObjId, ").", $attrib, "=\"", $value, "\";");
+		return null;	// yarly
 	}
 }
