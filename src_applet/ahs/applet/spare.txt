@@ -11,46 +11,6 @@
 
 	
 	
-	
-	
-		
-	private static final String CRIT = 
-		"function gebi($id)  {	return document.getElementById($id);		}	\\n" + 
-		"function gebt($tag) {	return document.getElementsByTagName($tag);	}	\\n" + 
-		"function newe($tag) {	return document.createElement($tag);		}	\\n" + 
-		"function newt($txt) {	return document.createTextNode($txt);		}	\\n" + 
-		"\\n" +
-		"function removeElement(element) {						\\n" + 
-		"	if (!element) return false;						\\n" + 
-		"	element.parentNode.removeChild(element);				\\n" + 
-		"	delete element;								\\n" + 
-		"	return true;								\\n" + 
-		"}										\\n" + 
-		"" + 
-		"";
-	private void insertCrit() {
-		eval("dS = document.createElement('script'); dS.type = 'text/javascript'; dS.innerHTML = \""+CRIT+"\"; document.getElementsByTagName('head')[0].appendChild(dS);");
-		eval("gebt('head')[0].id = 'head';");
-		eval("gebt('body')[0].id = 'body';");
-		eval("dB = newe('div'); dB.id = 'main'; gebi('body').appendChild(dB);");
-		eval("dB = newe('div'); dB.id = 'dev'; dB.style.visibility = 'hidden'; gebi('body').appendChild(dB);");
-		eval("gebi('main').focus()");
-	}
-	
-	
-	
-	
-	
-	public void setAttribute(String $id, String $key, String $value) {
-		eval("gebi('",$id,"').",$key,"=\"",$value,"\";");
-	}
-	public String getAttribute(String $id, String $key) {
-		return eval("gebi('",$id,"').",$key,";")+"";
-	}
-	public void appendContent(String $id, String $body) {
-		eval("gebi('",$id,"').innerHTML+=\"",$body,"\";");
-	}
-
 
 
 

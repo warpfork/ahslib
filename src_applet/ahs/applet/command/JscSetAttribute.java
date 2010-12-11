@@ -9,12 +9,12 @@ public class JscSetAttribute extends JsCommand.Adapter<Object> {
 		this.$value = $value;
 	}
 	
-	public String $domObjId;
-	public String $attrib;
-	public String $value;
+	private String $domObjId;
+	private String $attrib;
+	private String $value;
 
 	protected Object execute(Exposure $power) throws Exception {
-		$power.eval("document.getElementById(", $domObjId, ").", $attrib, "=\"", $value, "\";");
+		$power.eval("document.getElementById(\"", $domObjId, "\").", $attrib, "=\"", $value, "\";");
 		return null;	// yarly
 	}
 }

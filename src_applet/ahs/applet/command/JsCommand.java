@@ -13,6 +13,7 @@ public interface JsCommand<$V> extends Future<$V> {
 	
 	
 	
+	
 	/**
 	 * This adapter lets one forgo the annoyance of caching results and thread control
 	 * and such as the JsCommand interface tends to require and just provide a single
@@ -47,11 +48,12 @@ public interface JsCommand<$V> extends Future<$V> {
 		
 		
 		
-		private FutureFuck	$cunt;
+		private FutureFuck		$cunt;
+		private static final Runnable	GODDAMNIT = new Runnable() { public void run() { /* NOTHING. */ } };
 		
 		private class FutureFuck extends FutureTask<$V> {
 			public FutureFuck() {
-				super(null);	// if i override all the run methods, it should never have an opportunity to touch that null callable
+				super(GODDAMNIT, null);	// just giving a null callable actually causes a null pointer exception right in the constructor even though i'm explicitly overridding all the methods that could ever touch it.  sigh.
 			}
 			
 			private DomContact.Exposure $power;

@@ -5,6 +5,14 @@ import ahs.applet.DomContact.Exposure;
 import java.util.*;
 import java.util.regex.*;
 
+/**
+ * Grabs the "window location" from a browser window and parses the GET part of the it to
+ * produce a Map<String,String> that maps keys to values; if the GET contains the same key
+ * multiple times, the map will contain the value set in the last instance.
+ * 
+ * @author hash
+ * 
+ */
 public class JscGetQueryGet extends JsCommand.Adapter<Map<String,String>> {
 	public JscGetQueryGet() {
 		// we're pretty easy.
