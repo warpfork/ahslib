@@ -10,7 +10,7 @@ import netscape.javascript.*;
 public class DomContactJso implements DomContact.Exposure {
 	public DomContactJso(Applet $applet) {
 		$jso = JSObject.getWindow($applet);
-		$precommand = new StringBuffer();
+		$precommand = new StringBuffer(1024);
 	}
 	
 	private JSObject	$jso;
