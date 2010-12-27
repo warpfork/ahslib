@@ -95,6 +95,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	
 	protected ReadHeadAdapter() {
 		$pipe = new Pipe<$T>();
+		$eh = ExceptionHandler.STDERR_IOEXCEPTION;	// notice this default.  it's not silent.
 	}
 	
 	protected final Pipe<$T>		$pipe;
@@ -170,6 +171,7 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	
 	public static class Channelwise<$T> extends ReadHeadAdapter<$T> {
 		public Channelwise(ReadableByteChannel $rbc, Translator<InfallibleReadableByteChannel,$T> $ts) {
+			super();
 			this.$pump = new PumpT();
 			this.$trans = $ts;
 			this.$irbc = new InfallibleReadableByteChannel($rbc, new ExceptionHandler<IOException>() {

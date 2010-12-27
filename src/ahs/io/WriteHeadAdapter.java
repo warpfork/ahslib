@@ -17,7 +17,9 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 	//TODO:AHS: someday write more factories here that accept PumperSelector as an arg and do fully nonblocking writes with buffering and etc.
 	
 	
-	
+	protected WriteHeadAdapter() {
+		$eh = ExceptionHandler.STDERR_IOEXCEPTION;	// notice this default.  it's not silent.
+	}
 	
 	protected ExceptionHandler<IOException>	$eh;
 	
@@ -53,6 +55,7 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 	 */
 	public static class ChannelwiseUnbuffered<$T> extends WriteHeadAdapter<$T> {
 		public ChannelwiseUnbuffered(WritableByteChannel $wbc, Translator<$T, InfallibleWritableByteChannel> $ts) {
+			super();
 			$trans = $ts;
 			$iwbc = new InfallibleWritableByteChannel($wbc, new ExceptionHandler<IOException>() {
 				public void hear(IOException $e) {

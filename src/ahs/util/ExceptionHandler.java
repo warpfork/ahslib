@@ -24,7 +24,7 @@ public interface ExceptionHandler<$T extends Throwable> extends Listener<$T> {
 		}
 	};
 	
-	public static final ExceptionHandler<? extends IOException> STDERR_IOEXCEPTION = new ExceptionHandler<IOException>() {
+	public static final ExceptionHandler<IOException> STDERR_IOEXCEPTION = new ExceptionHandler<IOException>() {
 		/**
 		 * Punts the Throwable's stack trace to the standard error stream.
 		 */
