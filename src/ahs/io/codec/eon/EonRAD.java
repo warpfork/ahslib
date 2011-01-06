@@ -88,9 +88,9 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 					if (Modifier.isStatic($mod)) continue;
 					Enc $anno = $f.getAnnotation(Enc.class);
 					if ($anno != null) {
-						if ($anno.key().isEmpty())
+						if ($anno.value().isEmpty())
 							$key = $f.getName();
-						else $key = $anno.key(); 
+						else $key = $anno.value(); 
 						
 						decodeField($codec, $jo, $key, $f, $x);
 					} else {
@@ -104,10 +104,10 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 					if (Modifier.isStatic($mod)) continue;
 					Enc $anno = $f.getAnnotation(Enc.class);
 					if ($anno != null) {
-						if (Arr.contains($anno.value(), $selector)) {
-							if ($anno.key().isEmpty())
+						if (Arr.contains($anno.selected(), $selector)) {
+							if ($anno.value().isEmpty())
 								$key = $f.getName();
-							else $key = $anno.key(); 
+							else $key = $anno.value(); 
 
 							decodeField($codec, $jo, $key, $f, $x);
 						}

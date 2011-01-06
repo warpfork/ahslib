@@ -11,4 +11,30 @@ public class Pair<A, B> {
 	
 	public A getA() { return $a; }
 	public B getB() { return $b; }
+	
+	public String toString() {
+		return "Pair [$a=" + this.$a + ", $b=" + this.$b + "]";
+	}
+	
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((this.$a == null) ? 0 : this.$a.hashCode());
+		result = prime * result + ((this.$b == null) ? 0 : this.$b.hashCode());
+		return result;
+	}
+	
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		Pair<?,?> other = (Pair<?,?>) obj;
+		if (this.$a == null) {
+			if (other.$a != null) return false;
+		} else if (!this.$a.equals(other.$a)) return false;
+		if (this.$b == null) {
+			if (other.$b != null) return false;
+		} else if (!this.$b.equals(other.$b)) return false;
+		return true;
+	}
 }

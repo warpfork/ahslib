@@ -6,8 +6,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface Enc {
-	String[] value() default { DEFAULT };
-	String key() default "";	// I wish this could just be null.
+	String value() default "";	// I wish this could just be null.
+	String[] selected() default { DEFAULT };
 	public static final String DEFAULT = "$";
 	public static final String SELECTED = "!";
 	// someday it might behoove us to have an instantiableClass field here.  otherwise, how can we deal with generic interfaces (List<?> being a prime example)?

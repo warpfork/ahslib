@@ -207,6 +207,15 @@ public class IOForge {
 			if ($os != null) $os.close();
 		}
 	}
+	public static void saveFile(String $bah, File $dest) throws IOException {
+		PrintStream $os = null;
+		try {
+			$os = new PrintStream(new FileOutputStream($dest, false));
+			$os.print($bah);
+		} finally {
+			if ($os != null) $os.close();
+		}
+	}
 	public static void appendFile(byte[] $bah, File $dest) throws IOException {
 		OutputStream $os = null;
 		try {
@@ -274,7 +283,7 @@ public class IOForge {
 	 * @throws IOException
 	 *                 if the destination is not writable, or in case of HTTP error.
 	 */
-	public static void saveFile(String $request, File $dest) throws IOException {
+	public static void saveRequest(String $request, File $dest) throws IOException {
 		InputStream $bis = new BufferedInputStream(forgeInput($request));
 		OutputStream $os = new BufferedOutputStream(new FileOutputStream($dest));
 		byte[] $buf = new byte[512];
