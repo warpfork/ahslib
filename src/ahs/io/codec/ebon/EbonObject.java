@@ -461,4 +461,8 @@ public class EbonObject implements EonObject {
 			return X.toString($e);
 		}
 	}
+	
+	public Set<Map.Entry<String,Object>> entrySet() {
+		return $map.entrySet();
+	}
 }

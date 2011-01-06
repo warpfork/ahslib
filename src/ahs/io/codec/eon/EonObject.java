@@ -5,6 +5,8 @@ import ahs.io.codec.*;
 import ahs.io.codec.json.*;
 import ahs.util.*;
 
+import java.util.*;
+
 // it's not impossible that a large number of these fields will eventually want to throw Unencodable exceptions
 //   i'm worried about key portability -- for example, i suspect xml will be less permissive than json.
 //      i really don't understand why ANYONE uses xml EVER.
@@ -63,6 +65,7 @@ public interface EonObject {
 	public byte[] serialize() throws TranslationException;
 	public void deserialize(byte[] $bats) throws TranslationException;
 	
+	public Set<Map.Entry<String,Object>> entrySet();
 	
 	/**
 	 * This adapter provides wrappers around most of the basic methods that provide
