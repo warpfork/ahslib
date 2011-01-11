@@ -88,18 +88,6 @@ public class BitVector {
 	public BitSet	$bs;
 	private int	$len;
 	
-	@Deprecated
-	public BitVector(JsonObject $jo) throws JsonException {
-		$jo.assertKlass(BitVector.class);
-		$len = $jo.getInt("l");
-		$bs = BitSet.valueOf($jo.getByteData());
-	}
-
-	@Deprecated
-	public JsonObject toJSON() throws TranslationException {
-		return (JsonObject)ENCODER.encode(JsonCodec.X, this);
-	}
-
 	/* BEGIN EON CODEC BLOCK */
 	public static final Encoder<EonCodec,EonObject,BitVector> ENCODER;
 	public static final Decoder<EonCodec,EonObject,BitVector> DECODER;

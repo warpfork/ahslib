@@ -3,8 +3,6 @@ package ahs.test;
 import ahs.log.*;
 import ahs.util.*;
 
-import junit.framework.*;
-
 /**
  * <p>
  * I believe JUnit is fundamentally flawed in several of its design choices. Most

@@ -14,7 +14,7 @@ public class AnnotationTest extends JUnitTestCase {
 	@Encodable(styles={Enc.DEFAULT, Enc.SELECTED})
 	private static class Encable {
 		public  @Enc					String $public;
-		private @Enc({Enc.DEFAULT,Enc.SELECTED})	String $private;
+		private @Enc(selected={Enc.DEFAULT,Enc.SELECTED})	String $private;
 		
 		/** just for reflective instantiability */
 		private Encable(Encodable $x) {}
@@ -29,9 +29,9 @@ public class AnnotationTest extends JUnitTestCase {
 	
 	@Encodable(value="classname")
 	private static class Encable2 {
-		public  @Enc(key="o")					String $public;
-		private @Enc(key="x", value={Enc.DEFAULT,Enc.SELECTED})	String $private;
-		private @Enc(key="b")					byte[] $bees;
+		public  @Enc("o")					String $public;
+		private @Enc(value="x", selected={Enc.DEFAULT,Enc.SELECTED})	String $private;
+		private @Enc("b")					byte[] $bees;
 		
 		public Encable2(String $public, String $private, String $bees) {
 			this.$public = $public;
