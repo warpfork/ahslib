@@ -23,7 +23,7 @@ public class MemoryMonitor {
 	}
 	
 	
-
+	
 	public static void reportAll(Resolution $res) {
 		for (MemoryPoolMXBean $pool : getBeans()) {
 			X.saye("MEM POOL \""+$pool.getName()+"\"");
