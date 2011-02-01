@@ -1,4 +1,4 @@
-package ahs.crypto.bc;
+package ahs.crypto;
 
 /**
  * Interface for the face of a mux.

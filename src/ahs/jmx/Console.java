@@ -40,11 +40,6 @@ public class Console {
 		}.start();
 	}
 	
-	public Console(String $windowTitle, Runnable $callback) {
-		this($windowTitle);
-		$callback.run();
-	}
-	
 	
 	
 	
