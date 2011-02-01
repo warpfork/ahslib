@@ -79,8 +79,8 @@ public class Logger {
 	 * necessary.
 	 */
 	public void snapshot() {
-		$ps.format("%d\t%f\t%d\t%d\t%d\t%d\n",
-				RTB.getUptime() / 1000,			// i'm a fan of seconds, believe it or not
+		$ps.format("%f\t%f\t%d\t%d\t%d\t%d\n",
+				RTB.getUptime() / 1000F,		// i'm a fan of seconds, believe it or not
 				$cpumon.getTotalUsageNormalized(),	// i assume you're going to graph this externally and so having a consistent 0..100 is a good thing?  otherwise there's no guarantee you'd know for sure what the upper bound would be from this data alone if you never reached it.
 				$memb_all.getHeapMemoryUsage().getUsed() / (1024*1024),
 				$memb_young.getUsage().getUsed() / (1024*1024),
