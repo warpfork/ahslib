@@ -10,7 +10,7 @@ public class CpuMonitor {
 	}
 	
 	
-	private static final OperatingSystemMXBean	OSB	= ManagementFactory.getOperatingSystemMXBean();
+	private static final OperatingSystemMXBean	OSB	= (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 	private static final RuntimeMXBean		RTB	= ManagementFactory.getRuntimeMXBean();
 	private static final int			nCPUs	= OSB.getAvailableProcessors();
 	

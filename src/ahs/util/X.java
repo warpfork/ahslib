@@ -118,20 +118,26 @@ public class X {
 		chillUntil(X.time()+$ms);
 	}
 	public static void chillUntil(final long $end) {
+		try {
+			chillUntilInterruptably($end);
+		} catch (InterruptedException $e) {
+			cry($e);	// i just don't feel like writing a try-catch block outside of this guy, really.
+		}
+	}
+	public static void chillInterruptably(final long $ms) throws InterruptedException {
+		chillUntilInterruptably(X.time()+$ms);
+	}
+	public static void chillUntilInterruptably(final long $end) throws InterruptedException {
 		long $dist = $end - X.time();
 		if ($dist <= 0) return; // without wasting time allocating a temporary object and synchronizing on it
 		
 		final Object $x = new Object();
 		synchronized ($x) {
 			do {
-				try {
-					$x.wait($dist);
-				} catch (InterruptedException $e) {
-					cry($e);
-				}
+				$x.wait($dist);
 				$dist = $end - X.time();
 			} while ($dist > 0);
-		}
+		}	
 	}
 	
 	public static void wait(final Object $sync) {

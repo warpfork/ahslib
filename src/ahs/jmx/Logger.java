@@ -1,5 +1,7 @@
 package ahs.jmx;
 
+import ahs.util.*;
+
 import java.io.*;
 import java.lang.management.*;
 import java.util.*;
@@ -24,8 +26,8 @@ import java.util.*;
  * 
  */
 public class Logger {
-	public Logger(File $outputFile) {
-		//TODO:AHS: IOForge should really have something for this ready.
+	public Logger(File $outputFile) throws FileNotFoundException {
+		this(new PrintStream($outputFile));
 	}
 	
 	public Logger(PrintStream $output) {
@@ -77,14 +79,32 @@ public class Logger {
 	 * necessary.
 	 */
 	public void snapshot() {
-		$ps.format("%d\t%d\t%d\t%d\t%d\t%d\n",
-				RTB.getUptime(),
+		$ps.format("%d\t%f\t%d\t%d\t%d\t%d\n",
+				RTB.getUptime() / 1000,			// i'm a fan of seconds, believe it or not
 				$cpumon.getTotalUsageNormalized(),	// i assume you're going to graph this externally and so having a consistent 0..100 is a good thing?  otherwise there's no guarantee you'd know for sure what the upper bound would be from this data alone if you never reached it.
-				$memb_all.getHeapMemoryUsage(),
+				$memb_all.getHeapMemoryUsage().getUsed() / (1024*1024),
 				$memb_young.getUsage().getUsed() / (1024*1024),
 				$memb_survivor.getUsage().getUsed() / (1024*1024),
 				$memb_old.getUsage().getUsed() / (1024*1024)
 		);
 		$ps.flush();
+	}
+	
+	public void automate(final int $frequency) {
+		Thread $t = new Thread("ahs.jmx.Logger automation") {
+			public void run() {
+				while (true) {
+					try {
+						X.chillInterruptably($frequency);	// sooo yeh this can drift.  but i really don't much care.
+					} catch (InterruptedException $e) {
+						// we're being told to just stop, i guess.
+						break;
+					}
+					snapshot();
+				}
+			}
+		};
+		$t.setDaemon(true);
+		$t.start();
 	}
 }
