@@ -10,7 +10,7 @@ import java.util.*;
  * Produces a stream where each line contains datapoints about system resource usage
  * metrics at a point in time.
  * 
- * "msUptime percentCpuUse mbHeapTotal mbHeapYoung mbHeapSurvivor mbHeapOld"
+ * "uptime percentCpuUse mbHeapTotal mbHeapYoung mbHeapSurvivor mbHeapOld"
  * 
  * It is also possible to log the currently committed sizes of all heaps, but this class
  * doesn't do it. It is unfortunately NOT possible to get the percent usage per CPU core.
