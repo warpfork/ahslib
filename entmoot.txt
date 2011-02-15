@@ -10,29 +10,31 @@ ENT:DONE!: update arrangement of libraries within svn and workspace.
 			- but still Doing It Wrong, because any included libraries should be under version control as well, and any sane version control system supports getting revisions by date... thus, it's trivial to check out sets of things from a single date; at worst you've hit one of the small windows where one repo is updated and another is pending, in which case you can just try again with a date a few seconds in the future.
 			- but still Doing It Wrong, because remember how you can daisy chain symlinks to do whatever you want?  You can use that to point to the checkout of a specific revision of the library if you have that need (and subversion will note as much if you do the version-numbered link within your project).
 		- also, see points about the benefits of all this on the below item.
-	- even when dealing with an external library that we wish to view as essentially static, jars (especially compiled ones containing only .class files) should not be used.  The entire source should be placed handily within the workspace and symlinked into every relevant project (just like everything else, i.e. libraries we're actively developing such as the ahs).
+	- DONE: even when dealing with an external library that we wish to view as essentially static, jars (especially compiled ones containing only .class files) should not be used.  The entire source should be placed handily within the workspace and symlinked into every relevant project (just like everything else, i.e. libraries we're actively developing such as the ahs).
 		- this makes consulting the source easier (including eclipse's autogeneration of docs on the fly with zero configuration).
 		- this allows compilation of any "final product" jars to compile their own .class files for only those classes needed, minimizing jar size and avoiding the clusterfuck of nested jars (and eliding the alternate option of needing multiple jars to constitute a workable program).
+			- this is highly significant in applet production, since the first load time can be a huge impression on usability.
 
 ENT:DONE! upgrade ahs.io.codec.* interfaces to fully support a "hint"able system for decoding.
 
 ENT: unify a helper library for applying bouncy castle crypto.
 	- draw this from the experimental pool in the secserv project when it reaches greater maturity.
 
-ENT:DONE!: create a new encoding format more sympathetic to binary than JSON.
-	- DONE: We desperately need a scheme which does not suffer from data expansion when storing raw bytes (JSON, like any scheme that attempts to stay close to ascii, has this problem in spades because it has no alternative recourse to Base64 or its ilk).
-	- DONE: Want all fields headed by length parameters instead of using schemes involving special characters and escaping.
-
-ENT:DONE! keep a unified interface to both JSON and the new binary encoding scheme.
-
 ENT: revisit existing methods for building JSONObject and JSONArray instances from strings.
 	- Inline comments must be handled correctly (since we will always want this to comprise our configuration file format, and thus be extremely human-friendly).
+		- there are some questions here about writing config back again.  i don't think i've ever intended to bother remembering where comments are -- how would you do that correctly, in general?
 
-ENT:DONE!: complete the new *[Read/Write]Head systems for dealing with "big" IO and standardized chunking of streams.
+ENT: add YAML support to Eon (at least some of it, on the reading side... YAML overall is insane.)
+
+ENT: complete the new *[Read/Write]Head systems for dealing with "big" IO and standardized chunking of streams.
 	- DONE: ReadHead and implementers for blocking streams
 	- DONE: in-program pipes, genericly
 	- DONE: need implementers for NIO channel stuff
 	- DONE: need translator-like implementers that are going to get you from babble to eon objects ready to be fed to codecs
+	- need to give a little more consideration to the local filesystem.
+		- in particular, it's a little odd that we have translator stacks for going straight onto the network but nothing comparable for the local filesystem (and that's not saying i think it's necessary for the local filesystem, mind you).
+	- buffering WriteHead
+	- consider layers for byte counting?  prolly more of a translator thing.	
 
 ENT: lay out a simple set of convenience functions for more "transaction"-like file system interaction.
 	- We're not aiming for anything like a full versioned filesystem or even necessarily guarantees of atomicity on a greater than one file scale; just jumping around so that if a write fails to complete, the old file is still somewhere handy and so is the partial write.
