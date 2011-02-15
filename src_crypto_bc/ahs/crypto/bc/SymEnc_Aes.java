@@ -4,6 +4,7 @@ import ahs.io.*;
 import ahs.io.codec.*;
 import ahs.io.codec.eon.*;
 import ahs.util.*;
+import ahs.crypto.*;
 
 import org.bouncycastle.crypto.*;
 import org.bouncycastle.crypto.engines.*;
@@ -19,7 +20,7 @@ import org.bouncycastle.crypto.params.*;
  * @author hash
  *
  */
-public class SymEnc_Aes {
+public class SymEnc_Aes implements CryptoContainer {
 	public void wrap(byte[] $cleartext, ParametersWithIV $key) {
 		// build the system
 		BufferedBlockCipher $cipher = new PaddedBufferedBlockCipher(

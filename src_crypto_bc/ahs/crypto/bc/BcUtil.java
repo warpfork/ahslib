@@ -25,4 +25,22 @@ public class BcUtil {
 		
 		return $park;
 	}
+
+	static byte[] invokeCipher(BufferedBlockCipher $cipher, byte[]... $bletchley) throws DataLengthException, IllegalStateException, InvalidCipherTextException {
+		int $size = 0;
+		for (byte[] $bletch : $bletchley)
+			$size += $bletch.length;
+		
+		$size = $cipher.getOutputSize($size);
+		byte[] $park = new byte[$size];
+		int $olen = 0;
+		for (byte[] $bletch : $bletchley)
+			$olen += $cipher.processBytes($bletch, 0, $bletch.length, $park, $olen);	// we're quite confident there's no DataLengthException from here, but there is a possibility on the next line.
+		$olen += $cipher.doFinal($park, $olen);							// there's no super easy way to tell in this context whether or not input must be block aligned.
+		
+		if ($olen < $size)	// $cipher.getOutputSize(*) lied to us!  now we have to make a new smaller array so we aren't returning evil nulls :(
+			Arr.copyFromBeginning($park, $olen);
+		
+		return $park;
+	}
 }
