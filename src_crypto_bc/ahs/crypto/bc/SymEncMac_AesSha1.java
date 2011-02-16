@@ -43,8 +43,11 @@ public class SymEncMac_AesSha1 {	// this naming scheme... make sure it's looking
 	        return new SymEncMac_AesSha1($ciphertext, $resBuf);
 	}
 	
-	
-	
+	// engine class must remember the last key used
+	// can we make one single cleartext type with all appropiate methods?
+	//	no, because authentication is a complex question and has key type issues up the wazoo.
+	//	for just sym enc and sym mac it would probs be doable though.
+	// delayed computation of mac and such until asked for it: doesn't jive well with concept of a cleartext class.  jives better with just asking the engine (?).
 	
 	
 	
