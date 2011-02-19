@@ -345,6 +345,9 @@ public class BitVector {
 	}
 	
 	public byte[] toByteArray() {
+		return toByteArray_t3();
+	}
+	byte[] toByteArray_t1() {
 		int $n = (($len - 1) / 8) + 1;
 		byte[] $eax = new byte[$n];
 		for (int $i = 0; $i < $n; $i++) {
@@ -357,6 +360,21 @@ public class BitVector {
 			if (get($o + 5)) $eax[$i] |= 4;
 			if (get($o + 6)) $eax[$i] |= 2;
 			if (get($o + 7)) $eax[$i] |= 1;
+		}
+		return $eax;
+	}
+	byte[] toByteArray_t3() {
+		int $n = (($len - 1) / 8) + 1;
+		byte[] $eax = new byte[$n];
+		for (int $i = 0, $o = 0; $o < $n; $o++) {
+			if (get($i++)) $eax[$o] |= 128;
+			if (get($i++)) $eax[$o] |= 64;
+			if (get($i++)) $eax[$o] |= 32;
+			if (get($i++)) $eax[$o] |= 16;
+			if (get($i++)) $eax[$o] |= 8;
+			if (get($i++)) $eax[$o] |= 4;
+			if (get($i++)) $eax[$o] |= 2;
+			if (get($i++)) $eax[$o] |= 1;
 		}
 		return $eax;
 	}
