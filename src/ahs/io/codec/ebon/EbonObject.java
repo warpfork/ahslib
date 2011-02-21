@@ -369,8 +369,13 @@ public class EbonObject implements EonObject {
 		deserialize($din);
 	}
 	
-	public void deserialize(DataInputStream $din) throws EbonException {
+	void deserialize(DataInputStream $din) throws EbonException {
 		try {
+			// i can see one wanting to skip over entire entries.  perhaps the format should accomodate this by including a binary length field (even though it is not necessary because a byte array of such size is never allocated).  it would also help with basic validity/sanity checking.
+			// but there would be costs in that: you'd have to write recursively into many buffers, then go back and merge them all in order to be able to get the length field correct and at the beginning of each block.  that results in a lot of relatively sizable copy operations that we just don't need.
+			// deferred-decoding implementations would also end up doing tons of unnecessary copies for every field they defer the decoding of, to the point that i suspect the overhead would be worse than just doing all the damn decoding at once in nearly every situation.
+			// anyway, any implementation that needs to defend itself from protocol-level attacks like a packet that claims its about to have a 2GB field needs to implement something where it throws exceptions as soon as the total number of reserved bytes is about to go past a limit, because attacks based on small but almost infinitely nested fields can be just as dangerous.
+			// ...incidentally, did you realize that you can make an infinitely long eon object by fragmenting binary chunks when they get over 2GB in size and the make sort of a linked list out of it?  true fact.
 			final int $mapl = $din.readInt();
 			int $len;	// temp bucket
 			byte[] $bats;	// temp bucket
@@ -379,6 +384,7 @@ public class EbonObject implements EonObject {
 			Object $win;	// self explanitory
 			for (int $i = 0; $i < $mapl; $i++) {
 				$len = $din.readShort();
+				if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a key to be longer than remaining data.");
 				$bats = new byte[$len];
 				$din.read($bats);
 				$key = new String($bats, Strings.UTF_8);
@@ -388,6 +394,7 @@ public class EbonObject implements EonObject {
 				switch ($switch) {
 					case '[':
 						$len = $din.readInt();
+						if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a field to be longer than remaining data.");
 						$bats = new byte[$len];
 						$din.read($bats);
 						$win = $bats;
@@ -406,9 +413,10 @@ public class EbonObject implements EonObject {
 						break;
 					case 's':
 						$len = $din.readInt();
+						if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a field to be longer than remaining data.");
 						$bats = new byte[$len];
 						$din.read($bats);
-						$win = new String($bats, Strings.UTF_8);
+						$win = new String($bats, Strings.UTF_8);	//XXX:AHS:EFFIC: it would be nice if there was a factory for strings that would let me read from DataInputStream directly without that intermediate byte array copy.
 						break;
 					case 'o':
 						$win = new EbonObject();

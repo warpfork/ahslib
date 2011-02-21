@@ -310,6 +310,7 @@ public class EbonArray implements EonArray {
 				switch ($switch) {
 					case '[':
 						$len = $din.readInt();
+						if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a field to be longer than remaining data.");
 						$bats = new byte[$len];
 						$din.read($bats);
 						$win = $bats;
@@ -328,9 +329,10 @@ public class EbonArray implements EonArray {
 						break;
 					case 's':
 						$len = $din.readInt();
+						if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a field to be longer than remaining data.");
 						$bats = new byte[$len];
 						$din.read($bats);
-						$win = new String($bats, Strings.UTF_8);
+						$win = new String($bats, Strings.UTF_8);	//XXX:AHS:EFFIC: it would be nice if there was a factory for strings that would let me read from DataInputStream directly without that intermediate byte array copy.
 						break;
 					case 'o':
 						$win = new EbonObject();
