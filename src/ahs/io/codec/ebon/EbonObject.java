@@ -297,10 +297,10 @@ public class EbonObject implements EonObject {
 	
 	
 	public byte[] serialize() throws EbonException {
-		ByteArrayOutputStream $bah = new ByteArrayOutputStream(128);
+		Bah $bah = new Bah(128);
 		DataOutputStream $dou = new DataOutputStream($bah);
 		serialize($dou);
-		return $bah.toByteArray();	//FIXME:AHS:EFFIC: this is absurd.  i do NOT want to do a full copy here but the api is raping me.
+		return $bah.getByteArray();
 	}
 	
 	/**
