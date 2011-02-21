@@ -7,21 +7,23 @@ import ahs.util.*;
 public class KeyFakPrv implements KeyIbePrv {
 	public KeyFakPrv(BitVector $bat) {
 		$x = $bat;
+		try {
+			$serial = BitVector.ENCODER.encode(KeySystemIbeFak.HACK, $x).serialize();
+		} catch (TranslationException $e) {
+			throw new MajorBug("what the hell.");
+		}
 	}
 	
-	private BitVector $x;
+	private final BitVector $x;
+	private final byte[] $serial;
 	
 	public String getAlgorithm() {
 		return KeySystemIbeFak.ALGORITHM;
 	}
-
+	
+	/** DNMR OMFG DNMR */
 	public byte[] getEncoded() {
-		try {
-			return BitVector.ENCODER.encode(KeySystemIbeFak.HACK, $x).serialize();
-		} catch (TranslationException $e) {
-			X.cry($e);
-			return null;
-		}
+		return $serial;
 	}
 
 	public String getFormat() {

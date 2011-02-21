@@ -30,7 +30,11 @@ public class FAK0 implements KeySystemIbeFak {
 	/** {@inheritDoc} */
 	public byte[] encrypt(byte[] $plaintext, KeyFakPub $ko) {
 		try {
-			return $codec.simple("Enc", Base64.encode($ko.getEncoded()), $plaintext).serialize();
+			EonObject $eo = $codec.newObj();
+			$eo.putKlass("Enc");
+			$eo.put("k", $ko.getEncoded());
+			$eo.putData($plaintext);
+			return $eo.serialize();
 		} catch (TranslationException $e) {
 			X.cry($e);
 			return null;
@@ -43,7 +47,7 @@ public class FAK0 implements KeySystemIbeFak {
 			EonObject $jo = $codec.newObj();
 			$jo.deserialize($ciphertext);
 			$jo.assertKlass("Enc");
-			if (!Arr.equals($kx.getEncoded(), Base64.decode($jo.getName()))) return null;
+			if (!Arr.equals($kx.getEncoded(), $jo.getBytes("k"))) return null;
 			return $jo.getByteData();
 		} catch (TranslationException $e) {
 			return null;
@@ -54,7 +58,11 @@ public class FAK0 implements KeySystemIbeFak {
 	public byte[] sign(byte[] $text, KeyFakPrv $myKey) {
 		byte[] $sig = $d.digest(Arr.cat($myKey.getEncoded(), $text));
 		try {
-			return $codec.simple("Sig", Base64.encode($myKey.getEncoded()), $sig).serialize();
+			EonObject $eo = $codec.newObj();
+			$eo.putKlass("Sig");
+			$eo.put("k", $myKey.getEncoded());
+			$eo.putData($sig);
+			return $eo.serialize();
 		} catch (TranslationException $e) {
 			X.cry($e);
 			return null;
@@ -67,7 +75,7 @@ public class FAK0 implements KeySystemIbeFak {
 			EonObject $jo = $codec.newObj();
 			$jo.deserialize($text);
 			$jo.assertKlass("Sig");
-			if (!Arr.equals($signerKey.getEncoded(), Base64.decode($jo.getName()))) return false;
+			if (!Arr.equals($signerKey.getEncoded(), $jo.getBytes("k"))) return false;
 			byte[] $resig = $d.digest(Arr.cat($signerKey.getEncoded(), $text));
 			return Arr.equals($resig, $jo.getByteData());
 		} catch (TranslationException $e) {

@@ -14,7 +14,7 @@ public class KeyFakPub implements KeyIbePub {
 	public String getAlgorithm() {
 		return KeySystemIbeFak.ALGORITHM;
 	}
-
+	
 	public byte[] getEncoded() {
 		try {
 			return BitVector.ENCODER.encode(KeySystemIbeFak.HACK, $x).serialize();
@@ -23,18 +23,18 @@ public class KeyFakPub implements KeyIbePub {
 			return null;
 		}
 	}
-
+	
 	public String getFormat() {
 		return KeySystemIbeFak.ALGORITHM;
 	}
-
+	
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((this.$x == null) ? 0 : this.$x.hashCode());
 		return result;
 	}
-
+	
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (obj == null) return false;
