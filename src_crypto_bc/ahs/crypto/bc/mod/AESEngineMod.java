@@ -18,11 +18,8 @@ import org.bouncycastle.crypto.params.*;
  * the original KeyParameter. However, this also means that if you ever mutate that byte
  * array, you're going to get yourself in a world of trouble, because now the engine won't
  * notice, and it's not going to update its key schedule even though you probably think
- * you gave it a new key, and boy are you going to be in for a sorry surprise.
- * 
- * Also, though encryption and decryption mode both use the same key schedule in AES,
- * switching the between these two modes does unfortunately still require regenerating the
- * key schedule, due to limits on what I can really do here with this extending hack.
+ * you gave it a new key, and boy are you going to be in for a sorry surprise when you
+ * figure out what an idea you were about pointers.
  * 
  * @author hash
  */
@@ -32,11 +29,14 @@ public class AESEngineMod extends AESFastEngine {
 					
 	public void init(boolean $forEncryption, CipherParameters $params) {
 		tryToHelp: {
-			if ($lastEdMode != $forEncryption) break tryToHelp;
-			if (!($params instanceof KeyParameter)) break tryToHelp;
-			if ($lastKey != ((KeyParameter) $params).getKey()) break tryToHelp;
+			if ($lastEdMode != $forEncryption)
+				break tryToHelp;
+			if (!($params instanceof KeyParameter))	// this is just going to throw anyway, but i'll let them do it rather than replicate the exception here.
+				break tryToHelp;
+			if ($lastKey != ((KeyParameter)$params).getKey())
+				break tryToHelp;
 			return;
 		}
-		super.init($forEncryption, $params); // this is just going to throw anyway, but i'll let them do it rather than replicate the exception here.
+		super.init($forEncryption, $params);
 	}
 }
