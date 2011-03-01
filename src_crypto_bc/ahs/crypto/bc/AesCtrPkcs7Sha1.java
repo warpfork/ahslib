@@ -29,11 +29,8 @@ public class AesCtrPkcs7Sha1 {
 	
 	private final BufferedBlockCipher	$cipher;
 	private final HMac			$hmac;
-	
-	// boy, i should would like to be able to make some optimizations by caching here, but it turns out you can't set a new IV in BC without also re-doing the key initialization!  Ain't that just a dandy.
-	//    AH!  i -CAN- do it!  override the init function in AESFastEngine to do the check.  it has to do it walking the whole array instead of doing pointer-eq on the array since i can't save it from the copyfuck in KeyParameter without a fairly high degree of evil, but that's okay.  and also i could do an extend hack on KP.  or save KP at this level.  yeah, the AESEngine should def just do a peq on the byte array.   
-//	private byte[]				$lastKey;
-//	private byte[]				$lastMacKey;
+	private KeyParameter			$lastKey;
+	private KeyParameter			$lastMacKey;
 	
 	/**
 	 * This method uses a zero-block as an IV -- do NOT encrypt with the same key
@@ -46,14 +43,23 @@ public class AesCtrPkcs7Sha1 {
 	 * @return CiphertextSymmetric
 	 */
 	public CiphertextSymmetric encrypt(Ks $key, byte[] $cleartext) {
-		
+		return null;	//TODO:AHS:CRYPTO: key derivation.  probably ought to be doable somewhere fairly central.
+		// hmm.  if i keep this peq-for-effic-cipher-reuse requirement up then this derivation thing won't like it much.  but then i suppose if you're accessing the system through this interface you probably don't expect to be reusing these keys anyway.
 	}
-	
 	
 	public CiphertextSymmetric encrypt(Ks $key, Kc $iv, Ks $mackey, byte[] $cleartext) {
 		// init the bitch
-		$cipher.init(true, new ParametersWithIV(new KeyParameter($key.getBytes()), $iv.getBytes()));
-		$hmac.init(new KeyParameter($mackey.getBytes()));
+		if ($key.getBytes() != $lastKey.getKey()) {
+			$lastKey = new KeyParameter($key.getBytes());	// this still copies the data into a new array goddamnit.  need to extend KP.
+			$cipher.init(true, new ParametersWithIV($lastKey, $iv.getBytes()));
+		}
+		
+		if ($mackey.getBytes() != $lastMacKey.getKey()) {
+			$lastMacKey = new KeyParameter($mackey.getBytes());	// this still copies the data into a new array goddamnit.  need to extend KP.
+			$hmac.init($lastMacKey);
+		}
+		// we did make the assumptions above that if we didn't need to init then reset would already have been done.
+		// since any entrance to this function that doesn't result in an init definitely had the last state of those systems being a doFinal which in turn did a reset... yeah, we're good.
 		
 		// crunch the numbers
 		byte[] $ciphertext = null;
@@ -69,13 +75,4 @@ public class AesCtrPkcs7Sha1 {
 		// victory
 		return CiphertextSymmetric.storeEncMac($iv, $ciphertext, $mac);
 	}
-	
-	// engine class must remember the last key used
-	// can we make one single cleartext type with all appropiate methods?
-	//	no, because authentication is a complex question and has key type issues up the wazoo.
-	//	for just sym enc and sym mac it would probs be doable though.
-	// delayed computation of mac and such until asked for it: doesn't jive well with concept of a cleartext class.  jives better with just asking the engine (?).
-	
-	
-	
 }
