@@ -1,10 +1,13 @@
 package ahs.crypto.bc;
 
 import ahs.crypto.*;
+import ahs.crypto.bc.mod.*;
 import ahs.io.*;
 import ahs.io.codec.*;
 import ahs.io.codec.eon.*;
 import ahs.util.*;
+
+import java.util.*;
 
 import org.bouncycastle.crypto.*;
 import org.bouncycastle.crypto.digests.*;
@@ -21,7 +24,7 @@ public class AesCtrPkcs7Sha1 {
 	public AesCtrPkcs7Sha1() {
 		// build the system
 		$cipher = new PaddedBufferedBlockCipher(
-			new SICBlockCipher(new AESFastEngine()),	// i've decided to frown upon CBC because of the bug i noticed with IVs in that code.
+			new SICBlockCipher(new AESEngineMod()),	// i've decided to frown upon CBC because of the bug i noticed with IVs in that code.
 			new PKCS7Padding()
 		);
 		$hmac = new HMac(new SHA1Digest());
@@ -29,34 +32,53 @@ public class AesCtrPkcs7Sha1 {
 	
 	private final BufferedBlockCipher	$cipher;
 	private final HMac			$hmac;
-	private KeyParameter			$lastKey;
-	private KeyParameter			$lastMacKey;
+	private byte[]				$lastKey;
+	private byte[]				$lastMacKey;
+	
+	
+	
+	public List<Integer> getValidKeySizes() {
+		return Arr.asList(32,24,16);	// 128,192,256
+	}
 	
 	/**
 	 * This method uses a zero-block as an IV -- do NOT encrypt with the same key
-	 * twice when using this function or both ciphertexts will be compromised.
+	 * twice when using this function or both ciphertexts will be compromised. (This
+	 * is not typically a sensible thing to do with a key, but an example situation in
+	 * which this is actually perfectly reasonable usage is when the base key is a
+	 * one-time use key using in some larger scheme (typically sent in a message
+	 * itself encrypted assymetrically or resulting from an agreement scheme).
 	 * 
 	 * @param $key
-	 *                this key will not be used directly; rather, an encryption and a
-	 *                mac key will be derived from it.  Both will be 256 bits.
+	 *                this key will not be used directly; rather, an encryption key
+	 *                and a mac key will be derived from it, both of the same size as
+	 *                this key.
 	 * @param $cleartext
 	 * @return CiphertextSymmetric
 	 */
 	public CiphertextSymmetric encrypt(Ks $key, byte[] $cleartext) {
-		return null;	//TODO:AHS:CRYPTO: key derivation.  probably ought to be doable somewhere fairly central.
-		// hmm.  if i keep this peq-for-effic-cipher-reuse requirement up then this derivation thing won't like it much.  but then i suppose if you're accessing the system through this interface you probably don't expect to be reusing these keys anyway.
+		Ks[] $kss = BcUtil.deriveKeys($key, 345, 2);
+		return encrypt($kss[0], new Kc(new byte[] { 0 }), $kss[1], $cleartext);
 	}
 	
+	/**
+	 * @param $key The key for symmetric encryption.
+	 * @param $iv The Initialization Vector to use in encryption.
+	 * @param $mackey The key to use to construct MAC for authenticity.
+	 * @param $cleartext
+	 * @return CiphertextSymmetric
+	 */
 	public CiphertextSymmetric encrypt(Ks $key, Kc $iv, Ks $mackey, byte[] $cleartext) {
 		// init the bitch
-		if ($key.getBytes() != $lastKey.getKey()) {
-			$lastKey = new KeyParameter($key.getBytes());	// this still copies the data into a new array goddamnit.  need to extend KP.
-			$cipher.init(true, new ParametersWithIV($lastKey, $iv.getBytes()));
+		if ($lastKey != $key.getBytes()) {
+			$lastKey = $key.getBytes();
+			$cipher.init(true, new ParametersWithIV(new KeyParamMod($key.getBytes()), $iv.getBytes()));
+			// damnit, BC... i want different exceptions for an invalid IV and an invalid key, or at the very least i'd like it if you threw them from different functions so i could tell them apart by careful calling and multiple try blocks.  but noooooo.
 		}
 		
-		if ($mackey.getBytes() != $lastMacKey.getKey()) {
-			$lastMacKey = new KeyParameter($mackey.getBytes());	// this still copies the data into a new array goddamnit.  need to extend KP.
-			$hmac.init($lastMacKey);
+		if ($lastMacKey != $mackey.getBytes()) {
+			$lastMacKey = $mackey.getBytes();
+			$hmac.init(new KeyParamMod($mackey.getBytes()));
 		}
 		// we did make the assumptions above that if we didn't need to init then reset would already have been done.
 		// since any entrance to this function that doesn't result in an init definitely had the last state of those systems being a doFinal which in turn did a reset... yeah, we're good.

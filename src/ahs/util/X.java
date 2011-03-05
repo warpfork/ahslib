@@ -53,6 +53,20 @@ public class X {
 	}
 	
 	/**
+	 * Shorthand for System.out.println(Strings.toHex(byte[])).
+	 */
+	public static void say(byte[] $s) {
+		System.out.println(Strings.toHex($s));
+	}
+	
+	/**
+	 * Shorthand for System.err.println(Strings.toHex(byte[])).
+	 */
+	public static void saye(byte[] $s) {
+		System.err.println(Strings.toHex($s));
+	}
+	
+	/**
 	 * @return ms
 	 */
 	public static long time() {

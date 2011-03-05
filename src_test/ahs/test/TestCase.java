@@ -51,6 +51,11 @@ public abstract class TestCase implements Runnable {
 	
 	
 	
+	// i wish java had function pointers sometimes.  this is one of those times.  i could just actually have the try block in here so the class given actually matters.  maybe i'll implement that in the next generation tester when i'm actually using a Callable or something.
+	public void exceptionExpected(Class<? extends Throwable> $c) {
+		$failures++;
+		$log.error(this.getClass(), DEF, new AssertionFailedError("assertion failed -- expected an "+$c.getCanonicalName()+" to be thrown."));
+	}
 	
 	////////////////
 	//  BOOLEAN
@@ -221,6 +226,8 @@ public abstract class TestCase implements Runnable {
 //		$failures = 0;
 //	}
 	
+	//future work:
+	//   i think it should be more or less possible to provide an interface to retrofit ahs TestCase to JUnit, which would be handy for folks that like the ability integrate JUnit with eclipse plugins or the like.
 	
 	
 	private static class AssertionFailedError extends Error {

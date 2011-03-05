@@ -1,13 +1,14 @@
 package ahs.crypto.bc;
 
+import ahs.crypto.*;
 import ahs.util.*;
-
 import org.bouncycastle.crypto.*;
+import org.bouncycastle.crypto.digests.*;
 
 public class BcUtil {
 	/**
 	 * @param $cipher must already be initialized.  May be in either encrypt or decrypt mode.
-	 * @param $bletch bytes to work on.  will not be modified.
+	 * @param $bletch bytes to work on.  will not be modified.  (can be either the ciphertext or the cleartext depending on what mode the cipher is in.)
 	 * @return the processed bytes (in new memory).
 	 * @throws DataLengthException if the input is not block size aligned and should be.
 	 * @throws IllegalStateException if the underlying cipher is not initialized.
@@ -42,5 +43,37 @@ public class BcUtil {
 			Arr.copyFromBeginning($park, $olen);
 		
 		return $park;
+	}
+	
+	/**
+	 * Derives symmetric keys by hashing a given key along with a predicable nonce to
+	 * produce more keys of the same length. The derived keys are random unless the
+	 * base key and the nonce are known.
+	 * 
+	 * @param $baseKey
+	 *                a symmetric key to derive more keys from.
+	 * @param $baseModified
+	 *                will be converted to bytes and prepended to the base key for
+	 *                hashing (this will be incremented before each derivation in the
+	 *                case of $keyCount > 1).
+	 * @param $keyCount
+	 *                how many new keys to derive.
+	 * @return an array of size $keyCount containing new symmetric keys.
+	 */
+	static Ks[] deriveKeys(Ks $baseKey, int $baseModified, int $keyCount) {
+		Ks[] $v = new Ks[$keyCount];
+		Digest $dig = new SHA1Digest();
+		final int $rounds = $baseKey.getBytes().length / $dig.getDigestSize() +1;
+		byte[] $fwee = new byte[$rounds * $dig.getDigestSize()];
+		for (int $i = 0; $i < $keyCount; $i++) {
+			for (int $round = 0; $round < $rounds; $round++) {
+				$dig.update(Primitives.byteArrayFromInt($baseModified+$i), 0, 4);	// make each key different
+				$dig.update(Primitives.byteArrayFromInt($round), 0, 4);			// make each chunk of a key different if it takes more than one digest to get enough material
+				$dig.update($baseKey.getBytes(), 0, $baseKey.getBytes().length);
+				$dig.doFinal($fwee, $rounds * $dig.getDigestSize());
+			}
+			$v[$i] = new Ks.Basic(Arr.copyFromBeginning($fwee, $baseKey.getBytes().length));
+		}
+		return $v;
 	}
 }

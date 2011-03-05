@@ -28,6 +28,10 @@ public class Strings {
 		return new String(Arr.toArray($bats), UTF_8);
 	}
 	
+	public static final byte[] toBytes(String $s) {
+		return $s.getBytes(UTF_8);
+	}
+	
 //////////////////////////////////////////////////////////////// PARTING FUCTIONS
 	// default to returning the original string if the pattern is not found
 	

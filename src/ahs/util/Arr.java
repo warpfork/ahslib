@@ -246,6 +246,7 @@ public class Arr {
 		return copyOfRange($a, $start, $a.length);
 	}
 	
+	// a.k.a. trunk(byte[], int)?
 	public static final byte[] copyFromBeginning(byte[] $a, int $length) {
 		byte[] $v = new byte[$length];
 		System.arraycopy($a, 0, $v, 0, $length);

@@ -6,8 +6,6 @@ import ahs.io.codec.eon.*;
 import ahs.io.codec.json.*;
 import ahs.util.*;
 
-import mcon.base.*;
-
 public class FAK0 implements KeySystemIbeFak {
 	public FAK0(EonCodec $codec) {
 		this.$codec = KeySystemIbeFak.HACK;
