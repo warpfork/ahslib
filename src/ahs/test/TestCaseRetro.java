@@ -15,7 +15,19 @@ import ahs.util.*;
  * <p>
  * Behold, a replacement: this class simply passes errors and exceptions it encounters on
  * to a logger. Exceptions that bubble out of a test stop that test and all subsequent
- * tests; asserts failed do not.
+ * tests; asserts failed do not unless it is explicitly requested that they do so (this
+ * allows a series assertions to be used to report on the state of several critical
+ * variables at once so that the developer can easily get a more complete picture of the
+ * system state before aborting the test).
+ * </p>
+ * 
+ * <p>
+ * Units of a test will not be multithreaded. I believe that if a project's tests benefit
+ * from mulithreading, it is the designer that should declare this, and is not for the
+ * testing system to presume. For the same reason, the ordering of execution of tests is
+ * clear and respected, because often a set of tests progresses from one state to the next
+ * and thus order of execution is important. These are two choices again firmly at odds
+ * with the design philosophy behind JUnit.
  * </p>
  * 
  * <p>
@@ -24,10 +36,14 @@ import ahs.util.*;
  * </p>
  * 
  * @author hash
- * 
+ * @deprecated This system is being replaced by one in which the concrete subclasses
+ *             provide a list of runnable units instead of simply overriding the entire
+ *             runTests method, which will allow the abstract TestCase system to take more
+ *             observance of the delination between units without assuming compliance from
+ *             concrete subclasses.
  */
-public abstract class TestCase implements Runnable {
-	public TestCase(Logger $log, boolean $enableConfirmation) {
+public abstract class TestCaseRetro implements Runnable {
+	public TestCaseRetro(Logger $log, boolean $enableConfirmation) {
 		this.$log = $log;
 		this.$confirm = $enableConfirmation;
 //		resetFailures();
@@ -213,21 +229,6 @@ public abstract class TestCase implements Runnable {
 	
 	
 	
-	//future work:
-	//   i'd like to implement a breakIfFailed method that throws a Failure exception if any the assertions made within this case (i.e. method) have failed.
-	//   the point here is to provide a balance between making it convenient to get readouts of assertions on multiple states, but also to quit when the developer deems that things have gone wrong enough.
-	//
-	// of course, the problem here is that our current interface doesn't actually give this class knowledge of where cases in a unit begin and end, so it's kinda hard to make counters set and reset sanely.
-	//
-//	public void breakIfFailed() throws AssertionFailedError {
-//		if ($failures > 0) throw new AssertionFailedError("breaking: "+$failures+" failures.");
-//	}
-//	private void resetFailures() {
-//		$failures = 0;
-//	}
-	
-	//future work:
-	//   i think it should be more or less possible to provide an interface to retrofit ahs TestCase to JUnit, which would be handy for folks that like the ability integrate JUnit with eclipse plugins or the like.
 	
 	
 	private static class AssertionFailedError extends Error {
