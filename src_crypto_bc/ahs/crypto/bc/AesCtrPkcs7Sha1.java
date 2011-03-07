@@ -41,6 +41,8 @@ public class AesCtrPkcs7Sha1 {
 		return Arr.asList(32,24,16);	// 128,192,256
 	}
 	
+	//TODO:AHS:CRYPTO: make a method that figures out what the IV was by the end of making a ciphertext.  we want this so we can re-encrypt something to the same key but a new IV, which in secserv could end up saving tons of unnecessary key granting/changing messages.
+	
 	/**
 	 * This method uses a zero-block as an IV -- do NOT encrypt with the same key
 	 * twice when using this function or both ciphertexts will be compromised. (This
