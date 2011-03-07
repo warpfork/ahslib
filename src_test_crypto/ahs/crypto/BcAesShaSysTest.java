@@ -19,7 +19,7 @@ public class BcAesShaSysTest extends TestCase {
 	}
 	
 	public BcAesShaSysTest() {
-		super(new Logger(Logger.LEVEL_INFO), true);
+		super(new Logger(Logger.LEVEL_DEBUG), true);
 	}
 	
 	public BcAesShaSysTest(Logger $log, boolean $enableConfirmation) {

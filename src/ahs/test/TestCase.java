@@ -30,9 +30,12 @@ public abstract class TestCase implements Runnable {
 			
 			try {
 				resetFailures();
+				
+				$log.info(this, "starting test unit "+$unit.getName()+"...");
 				$unit.call();
-				//TODO log INFO
+				$log.info(this, "test unit "+$unit.getName()+" passed successfully!");
 			} catch (Throwable $e) {
+				//TODO mind you the breakIfFailed method... i'm not sure if that's supposed to kill the entire case or not?  probably is, since if you just want to give up on one unit you can simply return.  ah, but then the whole unit would be reported successful, and that's wrong.  so, more thought required on what's the most intuitive interface there.
 				if ($unit.expectExceptionType() != null) {
 					// some kind of exception was expected.
 					if ($unit.expectExceptionType().isAssignableFrom($e.getClass())) {
@@ -77,9 +80,14 @@ public abstract class TestCase implements Runnable {
 		 * entire Case are aborted.
 		 */
 		public <$T extends Exception> Class<$T> expectExceptionType() { return null; }
+		// this method often seems to cause warnings about unchecked conversion in subclasses even when the return type is obviously legitimate, but i'm unsure of why.
 		
 		public void breakIfFailed() throws AssertionFailed {
 			if ($failures > 0) throw new AssertionFailed("breaking: "+$failures+" failures.");
+		}
+		
+		public final String getName() {
+			return getClass().getCanonicalName();
 		}
 	}
 	
