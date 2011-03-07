@@ -1,7 +1,6 @@
 package ahs.test;
 
 import ahs.log.*;
-import ahs.test.TestCaseRetro.*;
 import ahs.util.*;
 
 import java.util.*;
@@ -13,7 +12,7 @@ public abstract class TestCase implements Runnable {
 	 * @param $log
 	 *                Fatal failures that cause the entire case to fail to complete
 	 *                are logged at ERROR level; failed assertions without a unit are
-	 *                logged at WARN level; units that pass as logged at INFO leve,
+	 *                logged at WARN level; units that pass as logged at INFO level,
 	 *                and confirmations of individually passed assertions (if enabled)
 	 *                are logged at DEBUG level.
 	 * @param $enableConfirmation
@@ -31,27 +30,29 @@ public abstract class TestCase implements Runnable {
 			try {
 				resetFailures();
 				
-				$log.info(this, "starting test unit "+$unit.getName()+"...");
+				$log.info(this, "TEST UNIT "+$unit.getName()+" STARTING...");
 				$unit.call();
-				$log.info(this, "test unit "+$unit.getName()+" passed successfully!");
+				$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
+			} catch (AssertionFatal $e) {
+				$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
+				break;
+			} catch (AssertionFailed $e) {
+				$log.error(this.getClass(), "TEST UNIT "+$unit.getName()+" ABORTED.\n", $e);
 			} catch (Throwable $e) {
-				//TODO mind you the breakIfFailed method... i'm not sure if that's supposed to kill the entire case or not?  probably is, since if you just want to give up on one unit you can simply return.  ah, but then the whole unit would be reported successful, and that's wrong.  so, more thought required on what's the most intuitive interface there.
 				if ($unit.expectExceptionType() != null) {
 					// some kind of exception was expected.
 					if ($unit.expectExceptionType().isAssignableFrom($e.getClass())) {
 						// and it was this kind that was expected, so this is good.
-						//TODO log INFO
+						assertInstanceOf($unit.expectExceptionType(), $e);	// generates a normal confirmation message
+						$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
 					} else {
 						// and it wasn't this kind.  this represents fatal failure.
-						//TODO log ERROR
-						//TODO die
+						$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
 						break;
 					}
 				} else {
 					// no exception was expected.  any exception represents fatal failure.
-					//TODO log ERROR
-					$log.error(this.getClass(), "fatal exception",  $e);
-					//TODO die
+					$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
 					break;
 				}
 			}
@@ -81,9 +82,12 @@ public abstract class TestCase implements Runnable {
 		 */
 		public <$T extends Exception> Class<$T> expectExceptionType() { return null; }
 		// this method often seems to cause warnings about unchecked conversion in subclasses even when the return type is obviously legitimate, but i'm unsure of why.
-		
+
 		public void breakIfFailed() throws AssertionFailed {
 			if ($failures > 0) throw new AssertionFailed("breaking: "+$failures+" failures.");
+		}
+		public void breakCaseIfFailed() throws AssertionFatal {
+			if ($failures > 0) throw new AssertionFatal("breaking case: "+$failures+" failures.");
 		}
 		
 		public final String getName() {
@@ -101,27 +105,27 @@ public abstract class TestCase implements Runnable {
 	// it might be a clarity enhancement to do quotation marks around the actual and expected values depending on type, though, which i don't do right now.
 	static String messageFail(String $label, Object $expected, Object $actual) {
 		if ($label == null)
-			return "assertion \"" + $label + "\" failed -- expected " + $expected + " != " + $actual + " actual.";
-		else
 			return "assertion failed -- expected " + $expected + " != " + $actual + " actual.";
+		else
+			return "assertion \"" + $label + "\" failed -- expected " + $expected + " != " + $actual + " actual.";
 	}
 	static String messagePass(String $label, Object $expected, Object $actual) {
 		if ($label == null)
-			return "assertion \"" + $label + "\" passed -- expected " + $expected + " == " + $actual + " actual.";
-		else
 			return "assertion passed -- expected " + $expected + " == " + $actual + " actual.";
+		else
+			return "assertion \"" + $label + "\" passed -- expected " + $expected + " == " + $actual + " actual.";
 	}	// i'm not recycling code in the above two because i think someday i might do some alignment stuff, in which case the above become more complicated cases.
 	static String messageFail(String $label, String $message) {
 		if ($label == null)
-			return "assertion \"" + $label + "\" failed -- " +$message;
-		else
 			return "assertion failed -- " + $message;
+		else
+			return "assertion \"" + $label + "\" failed -- " +$message;
 	}
 	static String messagePass(String $label, String $message) {
 		if ($label == null)
-			return "assertion \"" + $label + "\" passed -- " + $message;
-		else
 			return "assertion passed -- " + $message;
+		else
+			return "assertion \"" + $label + "\" passed -- " + $message;
 	}
 	// note that failure messages get wrapped in exceptions and then given to the logger (with a constant message of "assertion failed")
 	//  whereas success messages get passed to the logger as actual messages (with no exception attached).
@@ -143,19 +147,19 @@ public abstract class TestCase implements Runnable {
 	public boolean assertEquals(boolean $expected, boolean $actual) {
 		return assertEquals(null, $expected, $actual);
 	}
-	public boolean assertTrue(String $message, boolean $bool) {
-		return assertEquals($message, true, $bool);
+	public boolean assertTrue(String $label, boolean $bool) {
+		return assertEquals($label, true, $bool);
 	}
-	public boolean assertFalse(String $message, boolean $bool) {
-		return assertEquals($message, false, $bool);
+	public boolean assertFalse(String $label, boolean $bool) {
+		return assertEquals($label, false, $bool);
 	}
-	public boolean assertEquals(String $message, boolean $expected, boolean $actual) {
+	public boolean assertEquals(String $label, boolean $expected, boolean $actual) {
 		if ($expected != $actual) {
 			$failures++;
-			$log.warn(this.getClass(), new AssertionFailed(messageFail($message, $expected, $actual)));
+			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}
-		if ($confirm) $log.debug(this.getClass(), messagePass($message, $expected, $actual));
+		if ($confirm) $log.debug(this.getClass(), messagePass($label, $expected, $actual));
 		return true;
 	}
 	
@@ -166,49 +170,49 @@ public abstract class TestCase implements Runnable {
 	public boolean assertSame(Object $expected, Object $actual) {
 		return assertSame(null, $expected, $actual);
 	}
-	public boolean assertSame(String $message, Object $expected, Object $actual) {
+	public boolean assertSame(String $label, Object $expected, Object $actual) {
 		if ($expected != $actual) {
 			$failures++;
-			$log.warn(this.getClass(), new AssertionFailed(messageFail($message, $expected, $actual)));
+			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}
-		if ($confirm) $log.debug(this.getClass(), messagePass($message, $expected, $actual));
+		if ($confirm) $log.debug(this.getClass(), messagePass($label, $expected, $actual));
 		return true;
 	}
 	public boolean assertNull(Object $actual) {
 		return assertSame(null, null, $actual);
 	}
-	public boolean assertNull(String $message, Object $actual) {
-		return assertSame($message, null, $actual);
+	public boolean assertNull(String $label, Object $actual) {
+		return assertSame($label, null, $actual);
 	}
 	public boolean assertEquals(Object $expected, Object $actual) {
 		return assertEquals(null, $expected, $actual);
 	}
-	public boolean assertEquals(String $message, Object $expected, Object $actual) {
+	public boolean assertEquals(String $label, Object $expected, Object $actual) {
 		if (!$expected.equals($actual)) {
 			$failures++;
-			$log.warn(this.getClass(), new AssertionFailed(messageFail($message, $expected, $actual)));
+			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}
-		if ($confirm) $log.debug(this.getClass(), messagePass($message, $expected, $actual));
+		if ($confirm) $log.debug(this.getClass(), messagePass($label, $expected, $actual));
 		return true;
 	}
 	public boolean assertInstanceOf(Class<?> $klass, Object $obj) {
 		return assertInstanceOf(null, $klass, $obj);
 	}
-	public boolean assertInstanceOf(String $message, Class<?> $klass, Object $obj) {
+	public boolean assertInstanceOf(String $label, Class<?> $klass, Object $obj) {
 		if ($obj == null) {
 			$failures++;
-			$log.warn(this.getClass(), new AssertionFailed(messageFail($message, "null is never an instance of anything, and certainly not "+$klass+".")));
+			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, "null is never an instance of anything, and certainly not "+$klass+".")));
 			return false;
 		}
 		try {
 			$klass.cast($obj);
-			if ($confirm) $log.debug(this.getClass(), messagePass($message, $obj.getClass().getCanonicalName()+"\" is an instance of \""+$klass.getCanonicalName()+"\""));
+			if ($confirm) $log.debug(this.getClass(), messagePass($label, "\""+$obj.getClass().getCanonicalName()+"\" is an instance of \""+$klass.getCanonicalName()+"\""));
 			return true;
 		} catch (ClassCastException $e) {
 			$failures++;
-			$log.warn(this.getClass(), new AssertionFailed(messageFail($message, $e.getMessage()+".")));
+			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $e.getMessage()+".")));
 			return false;
 		}
 	}
@@ -221,8 +225,8 @@ public abstract class TestCase implements Runnable {
 	public boolean assertEquals(String $expected, String $actual) {
 		return assertEquals(null, (Object)$expected, (Object)$actual);
 	}
-	public boolean assertEquals(String $message, String $expected, String $actual) {
-		return assertEquals($message, (Object)$expected, (Object)$actual);
+	public boolean assertEquals(String $label, String $expected, String $actual) {
+		return assertEquals($label, (Object)$expected, (Object)$actual);
 	}
 	
 	
@@ -232,13 +236,13 @@ public abstract class TestCase implements Runnable {
 	public boolean assertEquals(int $expected, int $actual) {
 		return assertEquals(null, $expected, $actual);
 	}
-	public boolean assertEquals(String $message, int $expected, int $actual) {
+	public boolean assertEquals(String $label, int $expected, int $actual) {
 		if ($expected != $actual) {
 			$failures++;
-			$log.warn(this.getClass(), new AssertionFailed(messageFail($message, $expected, $actual)));
+			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}
-		if ($confirm) $log.debug(this.getClass(), messagePass($message, $expected, $actual));
+		if ($confirm) $log.debug(this.getClass(), messagePass($label, $expected, $actual));
 		return true;
 	}
 	
@@ -246,16 +250,21 @@ public abstract class TestCase implements Runnable {
 	////////////////
 	//  BYTE
 	////////////////
-	public boolean assertEquals(byte[] $a, byte[] $b) {
-		return assertEquals(Arr.toString($a),Arr.toString($b));
+	public boolean assertEquals(byte[] $expected, byte[] $actual) {
+		return assertEquals(null, $expected, $actual);
 	}
-	
+	public boolean assertEquals(String $label, byte[] $expected, byte[] $actual) {
+		return assertEquals($label, Strings.toHex($expected), Strings.toHex($actual));
+	}
 	
 	////////////////
 	//  CHAR
 	////////////////
-	public boolean assertEquals(char[] $a, char[] $b) {
-		return assertEquals(Arr.toString($a),Arr.toString($b));
+	public boolean assertEquals(char[] $expected, char[] $actual) {
+		return assertEquals(null, $expected, $actual);
+	}
+	public boolean assertEquals(String $label, char[] $expected, char[] $actual) {
+		return assertEquals($label, Arr.toString($expected), Arr.toString($actual));
 	}
 	
 	
@@ -268,10 +277,16 @@ public abstract class TestCase implements Runnable {
 		public AssertionFailed(Throwable $arg0) { super($arg0); }
 		public AssertionFailed(String $arg0, Throwable $arg1) { super($arg0, $arg1); }
 	}
+	private static class AssertionFatal extends AssertionFailed {
+		public AssertionFatal() { super(); }
+		public AssertionFatal(String $arg0) { super($arg0); }
+		public AssertionFatal(Throwable $arg0) { super($arg0); }
+		public AssertionFatal(String $arg0, Throwable $arg1) { super($arg0, $arg1); }
+	}
 	
-	// Note!  You cannot make methods like:
-//	assertNotEquals(byte[] $a, byte[] $b) {
-//		return !assertEquals($a, $b);
+	// Note!  You can not make methods like:
+	//	assertNotEquals(byte[] $a, byte[] $b) {
+	//		return !assertEquals($a, $b);
 	// because they'll still do the failure count and the log messages backwards inside.
 	
 	//future work:
