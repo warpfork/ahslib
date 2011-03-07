@@ -42,6 +42,7 @@ import ahs.util.*;
  *             observance of the delination between units without assuming compliance from
  *             concrete subclasses.
  */
+// there's also a ton of confirms missing here and just an incredibly shitty lack of internal abstraction
 public abstract class TestCaseRetro implements Runnable {
 	public TestCaseRetro(Logger $log, boolean $enableConfirmation) {
 		this.$log = $log;
@@ -77,18 +78,10 @@ public abstract class TestCaseRetro implements Runnable {
 	//  BOOLEAN
 	////////////////
 	public boolean assertTrue(boolean $bool) {
-		if (!$bool) {
-			$failures++;
-			$log.error(this.getClass(), DEF, new AssertionFailedError("assertion failed -- expected true != false actual."));
-			return false;
-		} return true;
+		return assertEquals(true, $bool);
 	}
 	public boolean assertFalse(boolean $bool) {
-		if ($bool) {
-			$failures++;
-			$log.error(this.getClass(), DEF, new AssertionFailedError("assertion failed -- expected true != false actual."));
-			return false;
-		} return true;
+		return assertEquals(false, $bool);
 	}
 	public boolean assertEquals(boolean $expected, boolean $actual) {
 		if ($expected != $actual) {

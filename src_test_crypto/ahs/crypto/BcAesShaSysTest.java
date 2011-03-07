@@ -3,12 +3,14 @@ package ahs.crypto;
 import ahs.io.*;
 import ahs.log.*;
 import ahs.test.*;
+import ahs.test.TestCase.*;
 import ahs.util.*;
 import ahs.util.Strings;
 import ahs.crypto.bc.*;
 
 import java.nio.*;
 import java.util.*;
+
 import org.bouncycastle.util.*;
 
 public class BcAesShaSysTest extends TestCase {
@@ -23,14 +25,16 @@ public class BcAesShaSysTest extends TestCase {
 	public BcAesShaSysTest(Logger $log, boolean $enableConfirmation) {
 		super($log, $enableConfirmation);
 	}
-
-	protected void runTests() throws Exception {
-		testAnything();
-		testInvalidIv();
-		testInvalidKey();
-		testInvalidMacKey();
-		testCiphertextConsistency();
-		testKeyReuse();
+	
+	public List<Unit> getUnits() {
+		return Arr.asList(
+				new TestAnything(),
+				new TestInvalidIv(),
+				new TestInvalidKey(),
+				new TestInvalidMacKey(),
+				new TestCiphertextConsistency(),
+				new TestKeyReuse()
+		);
 	}
 	
 	private static final byte[]	$c1	= Strings.toBytes("oh god I'm covered in bees");
@@ -50,98 +54,114 @@ public class BcAesShaSysTest extends TestCase {
 		$c10m = $t.array();
 	}
 	
-	private void testAnything() {
-		AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
-		CiphertextSymmetric $cph = $sys.encrypt(
-				$ks1,
-				$kc1,
-				$ks2,
-				$c1
-		);
+	private class TestAnything extends TestCase.Unit { 
+		public Object call() {
+			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			CiphertextSymmetric $cph = $sys.encrypt(
+					$ks1,
+					$kc1,
+					$ks2,
+					$c1
+			);
+			return null;
+		}
 	}
 	
-	private void testInvalidIv() {
-		AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
-		try {
+	private class TestInvalidIv extends TestCase.Unit {
+		public Class<ArrayIndexOutOfBoundsException> expectExceptionType(){
+			return ArrayIndexOutOfBoundsException.class;
+		}
+		
+		public Object call() {
+			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
 					$kcws,
 					$ks2,
 					$c1
 			);
-			exceptionExpected(ArrayIndexOutOfBoundsException.class);
-		} catch (ArrayIndexOutOfBoundsException $e) {
-			/* win */
+			return null;
 		}
 	}
 	
-	private void testInvalidKey() {
-		AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
-		try {
+	private class TestInvalidKey extends TestCase.Unit {
+		public Class<IllegalArgumentException> expectExceptionType(){
+			return IllegalArgumentException.class;
+		}
+		
+		public Object call() {
+			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ksws,
 					$kc1,
 					$ks2,
 					$c1
 			);
-			exceptionExpected(IllegalArgumentException.class);
-		} catch (IllegalArgumentException $e) {
-			/* win */
+			return null;
 		}
 	}
 	
-	private void testInvalidMacKey() {
-		AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
-		CiphertextSymmetric $cph = $sys.encrypt(
-				$ks1,
-				$kc1,
-				$ksws,
-				$c1
-		);
-		// It's pretty hard to come up with something that actually qualifies as an invalid MAC key.
-		// Having a MAC key longer than needed results in hashing and then trimming of the hash; having a MAC key shorter than needed results in padding with zeros.
-		// For SHA1, the appropriate HMAC key length is 64 bytes. 
+	private class TestInvalidMacKey extends TestCase.Unit {
+		public Object call() {
+			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			CiphertextSymmetric $cph = $sys.encrypt(
+					$ks1,
+					$kc1,
+					$ksws,
+					$c1
+			);
+			// It's pretty hard to come up with something that actually qualifies as an invalid MAC key.
+			// Having a MAC key longer than needed results in hashing and then trimming of the hash; having a MAC key shorter than needed results in padding with zeros.
+			// For SHA1, the appropriate HMAC key length is 64 bytes. 
+			return null;
+		}
 	}
 
-	private void testCiphertextConsistency() {
-		AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
-		CiphertextSymmetric $cph = $sys.encrypt(
-				$ks1,
-				$kc1,
-				$ks2,
-				$c1
-		);
-		assertEquals(
-				$cph.getIv().getBytes(),
-				$kc1.getBytes()
-		);
-		assertEquals(
-				$cph.getBody(),
-				Strings.fromHex("F33CF5161F48DA46249E4276081DCE0A5BF00A95F96284F753E524FCAFA9BDFE")
-		);
-		assertEquals(
-				$cph.getMac(),
-				Strings.fromHex("A2E025C02A21392EA17ADC2C0FE12CDC66F5C3C9")
-		);
+	private class TestCiphertextConsistency extends TestCase.Unit {
+		public Object call() {
+			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			CiphertextSymmetric $cph = $sys.encrypt(
+					$ks1,
+					$kc1,
+					$ks2,
+					$c1
+			);
+			assertEquals(
+					$cph.getIv().getBytes(),
+					$kc1.getBytes()
+			);
+			assertEquals(
+					$cph.getBody(),
+					Strings.fromHex("F33CF5161F48DA46249E4276081DCE0A5BF00A95F96284F753E524FCAFA9BDFE")
+			);
+			assertEquals(
+					$cph.getMac(),
+					Strings.fromHex("A2E025C02A21392EA17ADC2C0FE12CDC66F5C3C9")
+			);
+			return null;
+		}
 	}
 
-	private void testKeyReuse() {
-		AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
-		CiphertextSymmetric $cph1 = $sys.encrypt(
-				$ks1,
-				$kc1,
-				$ks2,
-				$c1
-		);
-		CiphertextSymmetric $cph2 = $sys.encrypt(
-				$ks1,
-				$kc1,
-				$ks2,
-				$c1
-		);
-		assertEquals(
-				$cph1.getBody(),
-				$cph2.getBody()
-		);
+	private class TestKeyReuse extends TestCase.Unit {
+		public Object call() {
+			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			CiphertextSymmetric $cph1 = $sys.encrypt(
+					$ks1,
+					$kc1,
+					$ks2,
+					$c1
+			);
+			CiphertextSymmetric $cph2 = $sys.encrypt(
+					$ks1,
+					$kc1,
+					$ks2,
+					$c1
+			);
+			assertEquals(
+					$cph1.getBody(),
+					$cph2.getBody()
+			);
+			return null;
+		}
 	}
 }
