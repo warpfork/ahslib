@@ -61,6 +61,20 @@ public abstract class TestCase implements Runnable {
 			}
 		}
 	}
+	
+	/**
+	 * <p>
+	 * Called when the entire test case is aborted (i.e. a unit throws an unexpected
+	 * exception or AssertionFatal). Default behavior is forceful termination of the
+	 * program via {@link System#exit(int)}.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note that the entire test case is <b>not</b> considered aborted when a single
+	 * unit of the case fails or or aborted, and as such this method will not be
+	 * called in that situation.
+	 * </p>
+	 */
 	public void abort() {
 		System.exit(42);
 	}
