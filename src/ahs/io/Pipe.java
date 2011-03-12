@@ -102,6 +102,9 @@ public class Pipe<$T> implements Flow<$T> {
 			return readAllNow();
 		}
 		
+		/**
+		 * {@inheritDoc}
+		 */
 		public List<$T> readAllNow() {
 			synchronized ($queue) {
 				int $p = $gate.drainPermits();

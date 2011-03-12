@@ -356,8 +356,10 @@ public class Logger {
 				$sb.append($category);
 				$sb.append("] ");
 			}
-			
-			$sb.append($message);
+
+			if ($message != null) {
+				$sb.append($message);
+			}
 			
 			if ($e != null) $sb.append('\n').append(X.toString($e));
 			
