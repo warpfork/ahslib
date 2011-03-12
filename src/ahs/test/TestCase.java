@@ -35,6 +35,7 @@ public abstract class TestCase implements Runnable {
 				$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
 			} catch (AssertionFatal $e) {
 				$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
+				abort();
 				break;
 			} catch (AssertionFailed $e) {
 				$log.error(this.getClass(), "TEST UNIT "+$unit.getName()+" ABORTED.\n", $e);
@@ -48,15 +49,20 @@ public abstract class TestCase implements Runnable {
 					} else {
 						// and it wasn't this kind.  this represents fatal failure.
 						$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
+						abort();
 						break;
 					}
 				} else {
 					// no exception was expected.  any exception represents fatal failure.
 					$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
+					abort();
 					break;
 				}
 			}
 		}
+	}
+	public void abort() {
+		System.exit(42);
 	}
 	
 	private final Logger		$log;
@@ -91,7 +97,8 @@ public abstract class TestCase implements Runnable {
 		}
 		
 		public final String getName() {
-			return getClass().getCanonicalName();
+			String[] $arrg = getClass().getCanonicalName().split("\\Q.\\E");
+			return $arrg[$arrg.length-1];
 		}
 	}
 	

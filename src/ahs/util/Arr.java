@@ -333,6 +333,10 @@ public class Arr {
 		return $d;
 	}
 	
+	// surprisingly, if you try to just name this method "asList", it compiles, but you can never actually use it without a complaint about ambiguity.
+	public static final <T> List<T> asTypedList(Class<T> $klass, T... $a) {
+		return java.util.Arrays.asList($a);
+	}
 
 	////////////////////////////////////////////////////////////////
 	//////// FUCKERS:
