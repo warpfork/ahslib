@@ -34,11 +34,11 @@ public abstract class TestCase implements Runnable {
 				$unit.call();
 				$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
 			} catch (AssertionFatal $e) {
-				$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
+				$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
 				abort();
 				break;
 			} catch (AssertionFailed $e) {
-				$log.error(this.getClass(), "TEST UNIT "+$unit.getName()+" ABORTED.\n", $e);
+				$log.error(this.getClass(), "TEST UNIT "+$unit.getName()+" ABORTED.", $e);
 			} catch (Throwable $e) {
 				if ($unit.expectExceptionType() != null) {
 					// some kind of exception was expected.
@@ -48,13 +48,13 @@ public abstract class TestCase implements Runnable {
 						$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
 					} else {
 						// and it wasn't this kind.  this represents fatal failure.
-						$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
+						$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
 						abort();
 						break;
 					}
 				} else {
 					// no exception was expected.  any exception represents fatal failure.
-					$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.\n", $e);
+					$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
 					abort();
 					break;
 				}
@@ -118,7 +118,7 @@ public abstract class TestCase implements Runnable {
 	
 	
 	
-	private void resetFailures() {
+	protected void resetFailures() {
 		$failures = 0;
 	}
 	
