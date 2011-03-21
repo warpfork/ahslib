@@ -79,7 +79,7 @@ public abstract class TestCase implements Runnable {
 		System.exit(42);
 	}
 	
-	private final Logger		$log;
+	protected final Logger		$log;
 	private boolean			$confirm;
 	private int			$failures;
 	
