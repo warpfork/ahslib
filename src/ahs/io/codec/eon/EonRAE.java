@@ -4,6 +4,7 @@ import ahs.io.*;
 import ahs.io.codec.*;
 import ahs.io.codec.json.*;
 import ahs.util.*;
+
 import java.lang.reflect.*;
 
 /**
@@ -108,11 +109,11 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 		if ($typo == byte[].class)
 			$eo.put($key, (byte[])$f.get($x));
 		else if ($typo == double[].class)
-			;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			throw new ImBored();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
 		else if ($typo == int[].class)
-			;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			throw new ImBored();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
 		else if ($typo == long[].class)
-			;//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			throw new ImBored();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
 		else if ($typo == boolean.class)
 			$eo.put($key, $f.getBoolean($x));
 		else if ($typo == double.class)
