@@ -26,6 +26,7 @@ public abstract class TestCase implements Runnable {
 		List<Unit> $units = getUnits();	// list is assumed immutable on pain of death or idiocy
 		for (int $i = 0; $i < $units.size(); $i++) {
 			Unit $unit = $units.get($i);
+			if ($unit == null) continue;
 			
 			try {
 				resetFailures();
