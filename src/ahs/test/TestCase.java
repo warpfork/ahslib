@@ -293,13 +293,13 @@ public abstract class TestCase implements Runnable {
 	
 	
 	
-	private static class AssertionFailed extends Error {
+	public static class AssertionFailed extends Error {
 		public AssertionFailed() { super(); }
 		public AssertionFailed(String $arg0) { super($arg0); }
 		public AssertionFailed(Throwable $arg0) { super($arg0); }
 		public AssertionFailed(String $arg0, Throwable $arg1) { super($arg0, $arg1); }
 	}
-	private static class AssertionFatal extends AssertionFailed {
+	public static class AssertionFatal extends AssertionFailed {
 		public AssertionFatal() { super(); }
 		public AssertionFatal(String $arg0) { super($arg0); }
 		public AssertionFatal(Throwable $arg0) { super($arg0); }
