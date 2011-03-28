@@ -68,6 +68,7 @@ public class BcAesShaSysTest extends TestCase {
 	}
 	
 	private class TestInvalidIv extends TestCase.Unit {
+		@SuppressWarnings("unchecked")
 		public Class<ArrayIndexOutOfBoundsException> expectExceptionType(){
 			return ArrayIndexOutOfBoundsException.class;
 		}
@@ -85,6 +86,7 @@ public class BcAesShaSysTest extends TestCase {
 	}
 	
 	private class TestInvalidKey extends TestCase.Unit {
+		@SuppressWarnings("unchecked")
 		public Class<IllegalArgumentException> expectExceptionType(){
 			return IllegalArgumentException.class;
 		}

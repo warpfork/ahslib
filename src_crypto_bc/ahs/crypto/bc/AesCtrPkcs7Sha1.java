@@ -18,9 +18,6 @@ import org.bouncycastle.crypto.paddings.*;
 import org.bouncycastle.crypto.params.*;
 
 public class AesCtrPkcs7Sha1 {
-	// this naming scheme... make sure it's looking forward to discrimination between enc-then-mac and mac-then-enc.  (i don't expect i'll ever do the "and" pattern because the stupid in that is just obvious.)
-	// SymEncMac_AesSha1 isn't really sufficient discription.  it's more like SymEncMac_AesCtrPkcs7Sha1.  but then the first half is a little redundant too, i suppose.
-	
 	public AesCtrPkcs7Sha1() {
 		// build the system
 		$cipher = new PaddedBufferedBlockCipher(
@@ -34,14 +31,15 @@ public class AesCtrPkcs7Sha1 {
 	private final HMac			$hmac;
 	private byte[]				$lastKey;
 	private byte[]				$lastMacKey;
-	
+	public static final List<Integer>	VALID_KEY_SIZES = Collections.unmodifiableList(Arr.asList(32,24,16));	// 128,192,256	
 	
 	
 	public List<Integer> getValidKeySizes() {
-		return Arr.asList(32,24,16);	// 128,192,256
+		return VALID_KEY_SIZES;
+		// perhaps some sort of general purpose key-fabrication and/or validation factories should be returned by methods like this in the eventual resolution of a general interface for worker classes like this.
 	}
 	
-	//TODO:AHS:CRYPTO: make a method that figures out what the IV was by the end of making a ciphertext.  we want this so we can re-encrypt something to the same key but a new IV, which in secserv could end up saving tons of unnecessary key granting/changing messages.
+	//TODO:AHS:CRYPTO: make a method that figures out what the IV was by the end of making a ciphertext.
 	
 	/**
 	 * This method uses a zero-block as an IV -- do NOT encrypt with the same key

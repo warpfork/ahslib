@@ -502,7 +502,7 @@ public class ByteVector implements Comparable<ByteVector> {
 	
 	
 	public String toString() {
-		return new String($d,Strings.UTF_8);
+		return Strings.toHex($d);
 	}
 	
 	/**

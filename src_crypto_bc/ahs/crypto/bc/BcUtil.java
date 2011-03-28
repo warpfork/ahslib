@@ -27,7 +27,16 @@ public class BcUtil {
 		return $park;
 	}
 
+	/**
+	 * @param $cipher must already be initialized.  May be in either encrypt or decrypt mode.
+	 * @param $bletchley an array of byte arrays to work on; they act as if cat'd together as pushed into the cipher.  will not be modified.  (can be either the ciphertext or the cleartext depending on what mode the cipher is in.)
+	 * @return the processed bytes (in new memory).
+	 * @throws DataLengthException if the input is not block size aligned and should be.
+	 * @throws IllegalStateException if the underlying cipher is not initialized.
+	 * @throws InvalidCipherTextException if padding is expected and not found.
+	 */
 	static byte[] invokeCipher(BufferedBlockCipher $cipher, byte[]... $bletchley) throws DataLengthException, IllegalStateException, InvalidCipherTextException {
+		// this code is VERY similar to invokeCipher with a single byte array instead of a bunch of them.  however, they are written separately to avoid wasting time cat'ing all of $bletchley together, since loading it into the cipher object involves an array copy of its own.
 		int $size = 0;
 		for (byte[] $bletch : $bletchley)
 			$size += $bletch.length;
