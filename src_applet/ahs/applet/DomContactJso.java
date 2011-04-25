@@ -18,7 +18,7 @@ public class DomContactJso implements DomContact.Exposure {
 	
 	public synchronized Object eval(String... $strs) {
 		if ($strs.length == 0) return null;
-		if ($strs.length == 1) $jso.eval($strs[0]);
+		if ($strs.length == 1) return $jso.eval($strs[0]);
 		return $jso.eval(condense($strs));
 	}
 	private synchronized String condense(String... $strs) {
