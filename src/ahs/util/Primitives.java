@@ -41,10 +41,11 @@ public class Primitives {
 	
 	
 	
-
+	
 	public static final byte[]		EMPTY_BYTE		= new byte[0];
 	public static final String[]		EMPTY_STRING		= new String[0];
 	public static final ByteBuffer[]	EMPTY_BYTEBUFFER	= new ByteBuffer[0];
+	public static final ByteVector[]	EMPTY_BYTEVECTOR	= new ByteVector[0];
 	
 	
 	

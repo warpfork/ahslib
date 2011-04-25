@@ -114,6 +114,7 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 			throw new ImBored();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
 		else if ($typo == long[].class)
 			throw new ImBored();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+		//NOTE: Arrays.deepToString is an example of how to treat arbitrarily typed primitive arrays properly
 		else if ($typo == boolean.class)
 			$eo.put($key, $f.getBoolean($x));
 		else if ($typo == double.class)
