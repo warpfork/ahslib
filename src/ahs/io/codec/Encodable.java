@@ -23,11 +23,21 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 public @interface Encodable {
 	/**
+	 * <p>
 	 * This string specifies the value that the encoder should use for a classname if
 	 * the encoder has no other more specific instructions. However, this is only an
 	 * advisory: it's completely legit for an encoder implementation to wayside this
 	 * flag completely (though {@link ahs.io.codec.eon.EonRAE} and
 	 * {@link ahs.io.codec.eon.EonRAD} respect it).
+	 * </p>
+	 * 
+	 * <p>
+	 * Two special values exist, declared in {@link #DEFAULT} and {@link #NONE}.
+	 * <tt>DEFAULT</tt> instructs the use of the cannonical class name of the
+	 * annotated class and is the default if no value is explicitly provided;
+	 * <tt>NONE</tt> instructs that NO type name is to be inserted into the encoding,
+	 * nor checked upon decoding.
+	 * </p>
 	 */
 	String value() default DEFAULT;
 	String[] styles() default { DEFAULT };
@@ -35,9 +45,11 @@ public @interface Encodable {
 	public static final String NONE = "!";
 	
 	/**
+	 * <p>
 	 * Setting this flag to true causes encoders to assume that every non-static field
 	 * in a class is subject to encoding. If left false (the default), encoders skip
 	 * all fields not annotated with {@link Enc}.
+	 * </p>
 	 */
 	boolean all_fields() default false;
 }
