@@ -42,10 +42,11 @@ public class Primitives {
 	
 	
 	
+	// things named EMPTY_[primitive] refer to arrays; everything else means the "empty" form of that object, whatever that means (usually a wrapper of an empty primitive).
 	public static final byte[]		EMPTY_BYTE		= new byte[0];
 	public static final String[]		EMPTY_STRING		= new String[0];
-	public static final ByteBuffer[]	EMPTY_BYTEBUFFER	= new ByteBuffer[0];
-	public static final ByteVector[]	EMPTY_BYTEVECTOR	= new ByteVector[0];
+	public static final ByteBuffer		EMPTY_BYTEBUFFER	= ByteBuffer.wrap(EMPTY_BYTE);
+	public static final ByteVector		EMPTY_BYTEVECTOR	= new ByteVector(EMPTY_BYTE);
 	
 	
 	
