@@ -1,5 +1,6 @@
 package ahs.log;
 
+import ahs.io.*;
 import ahs.util.*;
 import ahs.util.thread.*;
 
@@ -9,24 +10,24 @@ import java.util.*;
 /**
  * Logging level is variable and can be set at runtime. In a single threaded application,
  * putting one of these in a centrally available static field might be advisable;
- * otherwise, in multithreaded cont$exts, setting up a SyncFreeProvider is advisable.
- **/
+ * otherwise, in multithreaded contexts, setting up a SyncFreeProvider is advisable.
+ */
 public class Logger {
 	public Logger() {
 		this(LEVEL_INFO);
 	}
-	
 	public Logger(int $level) {
 		this($level, System.err);
 	}
-	
 	public Logger(int $level, PrintStream $ps) {
-		this($level, new Writer($ps));
+		this($level, new StandardWriter($ps));
 	}
-	
 	public Logger(int $level, Writer $writer) {
 		set($level);
 		this.$writer = $writer;
+	}
+	public static Logger logPlainToFile(int $level, File $file) {
+		return new Logger($level, new VapidWriter(IOForge.makePrintStreamNoGuff($file)));
 	}
 	
 		
@@ -37,7 +38,7 @@ public class Logger {
 		return makeProvider($level, System.err);
 	}
 	public static SyncFreeProvider<Logger> makeProvider(final int $level, final PrintStream $ps) {
-		return makeProvider($level, new Writer($ps));
+		return makeProvider($level, new StandardWriter($ps));
 	}
 	public static SyncFreeProvider<Logger> makeProvider(final int $level, final Writer $writer) {
 		return new SyncFreeProvider<Logger>(new Factory<Logger>() {
@@ -313,8 +314,19 @@ public class Logger {
 	
 	
 	
-	public static class Writer {
-		public Writer(PrintStream $ps) {
+	
+	public static interface Writer {
+		public void log(int $level, String $category, String $message, Throwable $e);
+	}	
+	
+	/**
+	 * Good for human reading; pretty mediocre for machine parsing. Prints a time in
+	 * minute and seconds since logger start, then the log level as a string, then the
+	 * thread id, then the category in brackets, then the message, and the stack trace
+	 * of an exception on the following line.
+	 */
+	public static class StandardWriter implements Writer {
+		public StandardWriter(PrintStream $ps) {
 			this.$ps = $ps;
 		}
 		
@@ -360,6 +372,35 @@ public class Logger {
 			if ($message != null) {
 				$sb.append($message);
 			}
+			
+			if ($e != null) {
+				$sb.append('\n').append(X.toString($e));
+			}
+			
+			$ps.println($sb.toString());
+		}
+	}
+	
+	
+	//XXX:AHS:LOG: make a writer that outputs json.  it'd be my fav -- one json object per line is an epicly awesome combination of grep'able and machine parsable and still readable.
+	
+
+	/**
+	 * Writes nothing but the message (and/or exception, since those are bedfellows)
+	 * -- no category, timestamp, level, thread-id, nothing. For when you want
+	 * something that fits the Logger interface but is dead-simple.
+	 */
+	public static class VapidWriter implements Writer {
+		public VapidWriter(PrintStream $ps) {
+			this.$ps = $ps;
+		}
+		
+		private PrintStream $ps;
+		
+		public void log(int $level, String $category, String $message, Throwable $e) {
+			StringBuilder $sb = new StringBuilder(256);
+			
+			if ($message != null) $sb.append($message);
 			
 			if ($e != null) $sb.append('\n').append(X.toString($e));
 			

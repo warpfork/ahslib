@@ -174,6 +174,27 @@ public class IOForge {
 	
 	
 	
+	/**
+	 * <p>
+	 * Convenience method for times when you don't care about code quality and just
+	 * want to make a damn PrintStream in a chained constructor call or when declaring
+	 * a static final variable without making seven lines of static initializer just
+	 * to catch an exception that you're going to throw up your hands in despair and
+	 * crash on anyway.
+	 * </p>
+	 * 
+	 * <p>
+	 * In other words, this throws an Error if it can't give you the stream.
+	 * </p>
+	 */
+	public static PrintStream makePrintStreamNoGuff(File $file) {
+		try {
+			return new PrintStream($file);
+		} catch (FileNotFoundException $e) {
+			throw new Error($e);
+		}
+	}
+	
 	
 	
 	
