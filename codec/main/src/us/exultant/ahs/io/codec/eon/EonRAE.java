@@ -2,7 +2,6 @@ package us.exultant.ahs.io.codec.eon;
 
 import us.exultant.ahs.io.*;
 import us.exultant.ahs.io.codec.*;
-import us.exultant.ahs.io.codec.json.*;
 import us.exultant.ahs.util.*;
 
 import java.lang.reflect.*;
