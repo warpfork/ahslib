@@ -1,4 +1,7 @@
 /*
+ * Forked from the original Apache version and modified.
+ */
+/*
  * The Apache Software License, Version 1.1
  *
  *
@@ -69,7 +72,7 @@ package us.exultant.ahs.util;
  * 
  * @author Jeffrey Rodriguez
  * @author Sandy Gao
- * @version $Id: Base64.java,v 1.8 2003/05/08 20:11:55 elena Exp $
+ * @author hash
  */
 public final class Base64 {
 	
