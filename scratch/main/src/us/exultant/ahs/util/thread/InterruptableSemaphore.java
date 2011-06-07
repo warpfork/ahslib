@@ -11,6 +11,14 @@ import java.util.concurrent.locks.*;
  * </p>
  * 
  * <p>
+ * An example of a potential use for this kind of functionality in a semaphore is when the
+ * semaphore is to be used in as a gateway controlling access to some sort of data stream
+ * or work flow which can be terminated -- after the stream being gated has been
+ * terminated, it would be inappropriate to ever again block on a read, overriding the
+ * normal reasoning that a semaphore with zero permits must block.
+ * </p>
+ * 
+ * <p>
  * This implementation is not sufficiently flexible to offer all of the options of the
  * standard java Semaphore (such as timeouts).
  * </p>
