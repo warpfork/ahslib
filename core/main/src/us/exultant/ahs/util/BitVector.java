@@ -92,7 +92,7 @@ public class BitVector {
 	public static final Encoder<EonCodec,EonObject,BitVector> ENCODER;
 	public static final Decoder<EonCodec,EonObject,BitVector> DECODER;
 	static { EonDencoder $t = new EonDencoder(); ENCODER = $t; DECODER = $t; }
-	public static class EonDencoder implements ahs.io.codec.Dencoder<EonCodec,EonObject,BitVector> {
+	public static class EonDencoder implements Dencoder<EonCodec,EonObject,BitVector> {
 		public EonObject encode(EonCodec $codec, BitVector $x) throws TranslationException {
 			EonObject $jo = $codec.simple("BiV", null, $x.toByteArray());
 			$jo.put("l", $x.$len);

@@ -56,7 +56,7 @@ public class Array<$C> implements List<$C> {
 	}
 
 	public void add(int $i, $C $x) {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 
 	public boolean addAll(Collection<? extends $C> $c) {
@@ -66,7 +66,7 @@ public class Array<$C> implements List<$C> {
 	}
 
 	public boolean addAll(int $arg0, Collection<? extends $C> $arg1) {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 
 	public void clear() {
@@ -102,19 +102,19 @@ public class Array<$C> implements List<$C> {
 	}
 
 	public Iterator<$C> iterator() {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 
 	public int lastIndexOf(Object $arg0) {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 
 	public ListIterator<$C> listIterator() {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 
 	public ListIterator<$C> listIterator(int $arg0) {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 	
 	public void move(int $oldStart, int $newStart, int $length) {
@@ -146,7 +146,7 @@ public class Array<$C> implements List<$C> {
 	}
 
 	public boolean retainAll(Collection<?> $arg0) {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 
 	public $C set(int $i, $C $x) {
@@ -164,7 +164,7 @@ public class Array<$C> implements List<$C> {
 	}
 
 	public List<$C> subList(int $arg0, int $arg1) {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 	
 	public $C[] getArray() {
@@ -172,11 +172,11 @@ public class Array<$C> implements List<$C> {
 	}
 	
 	public Object[] toArray() {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 
 	public <T> T[] toArray(T[] $arg0) {
-		throw new ahs.util.ImBored();
+		throw new us.exultant.ahs.util.ImBored();
 	}
 	
 	

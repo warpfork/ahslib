@@ -47,7 +47,7 @@ public class Primitives {
 	public static final String[]		EMPTY_STRING		= new String[0];
 	public static final ByteBuffer		EMPTY_BYTEBUFFER	= ByteBuffer.wrap(EMPTY_BYTE);
 	public static final ByteVector		EMPTY_BYTEVECTOR	= new ByteVector(EMPTY_BYTE);
-	
+	// consider the potential for replacing this with a SyncFreeProvider and some kind of map?  would be nice to remove references like these from core and yet maintain the non-need of repetition in client code.
 	
 	
 	

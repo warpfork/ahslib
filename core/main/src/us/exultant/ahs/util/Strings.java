@@ -338,7 +338,7 @@ public class Strings {
 		}
 		return new String($chars);
 		
-		//   also works.  Relative speed unknown (but presumed worse):
+		//   also works.  Relative speed untested (but presumed worse):
 		//
 		//	char[] out = new char[$bah.length * 2]; // 2  hex characters per byte
 		//	for (int i = 0; i < $bah.length; i++) {
