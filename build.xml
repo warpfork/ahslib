@@ -15,5 +15,8 @@
 	<import file="build-common.xml"/>
 	
 	<compilemodule module="core"/>
+	<compilemodule module="codec"/>
+	<compilemodule module="codec.json"/>
+	<compilemodule module="codec.ebon"/>
 	<compilemodule module="scratch"/>
 </project>
