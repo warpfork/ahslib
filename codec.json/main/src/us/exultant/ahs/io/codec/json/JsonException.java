@@ -3,7 +3,7 @@ package us.exultant.ahs.io.codec.json;
 import us.exultant.ahs.io.*;
 
 /**
- * The JSONException is thrown by the JSON.org classes then things are amiss.
+ * The JSONException is thrown by the JSON.org classes when things are amiss.
  * 
  * @author JSON.org
  * @version 2008-09-18
