@@ -22,7 +22,7 @@
 	<macrodef name="compiletree">
 		<attribute name="module"/>	<!-- the module name -->
 		<attribute name="tree"/>	<!-- the tree name (i.e. 'main' or 'test', typically) -->
-		<element name="modclasspath" optional="true"/>
+		<element name="modtreeclasspath" optional="true"/>
 		<sequential>
 			<echo></echo>
 			<echo>Compiling module @{module} (tree @{tree})...</echo>
@@ -43,7 +43,7 @@
 				includeantruntime="false"
 				>
 				<classpath>
-					<modclasspath/>
+					<modtreeclasspath/>
 				</classpath>
 				<compilerarg value="-Xlint:unchecked"/>
 			</javac>
@@ -60,15 +60,15 @@
 		<sequential>
 			<ahsPathBin name="ahslib.compilemodule.@{module}.@{tree}.pbuild_main" module="@{module}" tree="main"/>
 			<compiletree module="@{module}" tree="main">
-				<modclasspath>
+				<modtreeclasspath>
 					<modclasspath />
-				</modclasspath>
+				</modtreeclasspath>
 			</compiletree>
 			<compiletree module="@{module}" tree="test">
-				<modclasspath>
+				<modtreeclasspath>
 					<path location="${pbuild_main}" />	<!-- Add the main classes to the classpath for unit test compilation. -->
 					<modclasspath />
-				</modclasspath>
+				</modtreeclasspath>
 			</compiletree>
 		</sequential>
 	</macrodef>

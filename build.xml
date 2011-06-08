@@ -14,9 +14,21 @@
 	
 	<import file="build-common.xml"/>
 	
+	<!-- this is more or less in order of dependency, aside from codecs being out in left field -->
 	<compilemodule module="core"/>
-	<compilemodule module="codec"/>
+
+	<ahsPathBin name="ahslib.codec.dependency.1" module="core" tree="main"/>
+	<compilemodule module="codec">
+		<modclasspath>
+			<path location="${ahslib.codec.dependency.1}" />
+		</modclasspath>
+	</compilemodule>
+	
+	<!-- 
 	<compilemodule module="codec.json"/>
 	<compilemodule module="codec.ebon"/>
+	<compilemodule module="threading"/>
+	<compilemodule module="io"/>
 	<compilemodule module="scratch"/>
+	 -->
 </project>
