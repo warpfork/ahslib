@@ -24,8 +24,16 @@
 		</modclasspath>
 	</compilemodule>
 	
+	<ahsPathBin name="ahslib.codec.json.dependency.1" module="core" tree="main"/>
+	<ahsPathBin name="ahslib.codec.json.dependency.2" module="codec" tree="main"/>
+	<compilemodule module="codec.json">
+		<modclasspath>
+			<path location="${ahslib.codec.json.dependency.1}" />
+			<path location="${ahslib.codec.json.dependency.2}" />
+		</modclasspath>
+	</compilemodule>
+	
 	<!-- 
-	<compilemodule module="codec.json"/>
 	<compilemodule module="codec.ebon"/>
 	<compilemodule module="threading"/>
 	<compilemodule module="io"/>
