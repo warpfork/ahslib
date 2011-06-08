@@ -16,7 +16,7 @@
 	
 	<!-- this is more or less in order of dependency, aside from codecs being out in left field -->
 	<compilemodule module="core"/>
-
+	
 	<ahsPathBin name="ahslib.codec.dependency.1" module="core" tree="main"/>
 	<compilemodule module="codec">
 		<modclasspath>
@@ -42,8 +42,14 @@
 		</modclasspath>
 	</compilemodule>
 	
+	<ahsPathBin name="ahslib.thread.dependency.1" module="core" tree="main"/>
+	<compilemodule module="thread">
+		<modclasspath>
+			<path location="${ahslib.thread.dependency.1}" />
+		</modclasspath>
+	</compilemodule>
+	
 	<!-- 
-	<compilemodule module="threading"/>
 	<compilemodule module="io"/>
 	<compilemodule module="scratch"/>
 	 -->
