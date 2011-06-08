@@ -1,6 +1,8 @@
 package us.exultant.ahs.io.codec.ebon;
 
-public class EbonException extends ahs.io.TranslationException {
+import us.exultant.ahs.io.*;
+
+public class EbonException extends TranslationException {
 	public EbonException() {
 		super();
 	}
