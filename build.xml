@@ -49,8 +49,18 @@
 		</modclasspath>
 	</compilemodule>
 	
+	<ahsPathBin name="ahslib.io.dependency.1" module="core" tree="main"/>
+	<ahsPathBin name="ahslib.io.dependency.2" module="thread" tree="main"/>
+	<ahsPathBin name="ahslib.io.dependency.3" module="codec" tree="main"/>
+	<compilemodule module="io">
+		<modclasspath>
+			<path location="${ahslib.io.dependency.1}" />
+			<path location="${ahslib.io.dependency.2}" />
+			<path location="${ahslib.io.dependency.3}" />
+		</modclasspath>
+	</compilemodule>
+	
 	<!-- 
-	<compilemodule module="io"/>
 	<compilemodule module="scratch"/>
 	 -->
 </project>
