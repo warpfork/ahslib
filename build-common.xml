@@ -72,4 +72,59 @@
 			</compiletree>
 		</sequential>
 	</macrodef>
+	
+	
+	<!-- This macro compiles javadoc for a module tree. -->
+	<macrodef name="javadoctree">
+		<attribute name="module"/>	<!-- the module name -->
+		<attribute name="tree"/>	<!-- the tree name (i.e. 'main' or 'test', typically) -->
+		<element name="modtreeclasspath" optional="true"/>
+		<sequential>
+			
+			<javadoc
+				destdir="dox/javadoc"
+				author="true"
+				version="true"
+				use="true"
+				windowtitle="Test API">
+				
+				<packageset dir="./core/main/src/" defaultexcludes="yes">
+					<include name="**"/>
+				</packageset>
+				<packageset dir="./codec/main/src/" defaultexcludes="yes">
+					<include name="**"/>
+				</packageset>
+				<packageset dir="./codec.ebon/main/src/" defaultexcludes="yes">
+					<include name="**"/>
+				</packageset>
+				<packageset dir="./codec.json/main/src/" defaultexcludes="yes">
+					<include name="**"/>
+				</packageset>
+				<packageset dir="./io/main/src/" defaultexcludes="yes">
+					<include name="**"/>
+				</packageset>
+				<!--
+				<packageset dir="./log/main/src/" defaultexcludes="yes">
+					<include name="**"/>
+				</packageset>
+				-->
+				<packageset dir="./thread/main/src/" defaultexcludes="yes">
+					<include name="**"/>
+				</packageset>
+				<!--
+				<packageset dir="./scratch/main/src/" defaultexcludes="yes">
+					<include name="**"/>
+				</packageset>
+				-->
+				
+				<!--<doctitle><![CDATA[<h1>Herp</h1>]]></doctitle>-->
+				<!--<bottom><![CDATA[<i>Derp.</i>]]></bottom>-->
+				<group title="Codec Core"	packages="us.exultant.ahs.io.codec*"/>
+				<group title="Codec (JSON)"	packages="us.exultant.ahs.io.codec.json*"/>
+				<group title="Codec (EBON)"	packages="us.exultant.ahs.io.codec.ebon*"/>
+				<group title="IO"		packages="us.exultant.ahs.io*"/>
+				<group title="Group 2 Packages" packages="com.dummy.test.b*:com.dummy.test.c*"/>
+			</javadoc>
+		</sequential>
+	</macrodef>
 </project>

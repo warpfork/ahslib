@@ -16,6 +16,7 @@
 	
 	<!-- this is more or less in order of dependency, aside from codecs being out in left field -->
 	<compilemodule module="core"/>
+	<javadoctree module="core" tree="main"/>
 	
 	<ahsPathBin name="ahslib.codec.dependency.1" module="core" tree="main"/>
 	<compilemodule module="codec">
@@ -62,5 +63,17 @@
 	
 	<!-- 
 	<compilemodule module="scratch"/>
+	
+	javadoc \
+	-sourcepath $(sep ";" ../src*) \
+	-d javadoc \
+	-use \
+	-version \
+	-author \
+	-group "AHS Library" "ahs.*" \
+	"$@" \
+	$(findds ../src* -follow | grep "\.java")
+	
 	 -->
+	
 </project>
