@@ -265,9 +265,6 @@ public class MessageFlood extends MconMessage {
 		<li><p>
 			I haven't bothered to detect or deal with cyclic datastructures when it comes to codecs.  It's coming someday, but it's an extremely low priority.  In the meantime, if you have a structure that contains cyclic reference when in memory, you can easily jump around this by just not tagging one of the fields in the pair that's creating the cyclic reference with the ENC interface, and any of the reflective-annotative encoding tools will skip it; either that or write your own Encoder implementor.
 		</p></li>
-		<li><p>
-			The EBON encoding scheme is relatively young.  It's tested, in as much as that most of MCON is using it already, but it's possible that there are some clunks that I just haven't thought to test for yet.  If any are found, fixing those will instantly become my highest priority. 
-		</p></li>
 	</ul></li>
 </ul>
 
