@@ -1,12 +1,9 @@
-<html><head><style>
-pre		{ font-family:monospace; }
-p		{ text-indent:4ex; }
-li h5		{ font-size:16pt; font-weight:bold; line-height:0; }
-li li h5	{ font-size:14pt; font-weight:bold; line-height:0; }
-li li li h5	{ font-size:13pt; font-weight:bold; line-height:0; }
-li li li li h5	{ font-size:12pt; font-weight:bold; line-height:0; }
-</style></head>
-<body><table width=700px align=center><tr><td>
+<?php require($_SERVER['DOCUMENT_ROOT']."/style/head.php"); ?>
+<?php echo head("exultant.us AHSlib"); ?>
+<?php echo theme(); ?>
+<link rel='stylesheet' href='../style.css' type='text/css'>
+<html id='ahslib-dox'><body class='std'>
+
 
 <p>
 	The <span class=package>ahs.crypto</span> packages attempt to provide a general set of interfaces that lets a designer specify what kind of properties (privacy, authentication, confidence, attribution, etc) a piece of binary data should have under what conditions, without directly immersing the designer in the exact details of every piece of key usage and what-to-mac-where-when sorts of things.
@@ -175,10 +172,5 @@ the way ahs is told to do it-->
 // of course, this all kinda breaks down where it glazes over all of the details of what mode was used to transform block ciphers into stream and so on, and while in the back of my mind i've visualized almost sort of a series of Translators that translate one CryptoContainer to another while maintaining accuracy of their privacy level tags, I'm not sure that's really in any way practical, and the number of decorators required seems almost combinatorial until I figure out something smart.
 
 
-
-
-
-
-</td></tr></table></body></html>
-
-
+</body></html>
+<?php echo foot(); ?>

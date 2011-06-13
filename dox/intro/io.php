@@ -1,12 +1,9 @@
-<html><head><style>
-pre		{ font-family:monospace; }
-p		{ text-indent:4ex; }
-li h5		{ font-size:16pt; font-weight:bold; line-height:0; }
-li li h5	{ font-size:14pt; font-weight:bold; line-height:0; }
-li li li h5	{ font-size:13pt; font-weight:bold; line-height:0; }
-li li li li h5	{ font-size:12pt; font-weight:bold; line-height:0; }
-</style></head>
-<body><table width=700px align=center><tr><td>
+<?php require($_SERVER['DOCUMENT_ROOT']."/style/head.php"); ?>
+<?php echo head("exultant.us AHSlib intro io"); ?>
+<?php echo theme(); ?>
+<link rel='stylesheet' href='../style.css' type='text/css'>
+<html id='ahslib-dox'><body class='std'>
+
 
 <p>
 	The <span class=package>ahs.io</span> package represents the most significant part of the <span class=ahsname>AHS</span> library.  It regards not only simple filesystem input/output, but also network communication (both blocking and nonblocking), and efficiently synchronized inter-thread communication -- all with <i>the exact same interface</i> that gives you control of the threading model (in collaboration with the <span class=package>ahs.thread</span> package, which in turn gives you both simple one-line drop-in solutions as well as an interface for customization needs).
@@ -274,6 +271,6 @@ public class MconCodec extends ahs.io.codec.eon.EonCodec {
 	</ul></li>
 </ul>
 
-</td></tr></table></body></html>
 
-
+</body></html>
+<?php echo foot(); ?>
