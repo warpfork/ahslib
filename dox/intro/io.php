@@ -123,22 +123,22 @@
 			</p>
 <pre>
 ReadHead&lt;MconMessage&gt; $src = ReadHeadAdapter.make(
-				$socketChannel,
-				$pumperSelector,
-				TranslatorStack.make(
-						new ReadHeadAdapter.Channelwise.BabbleTranslator(),
-						new Eon.TranslatorFromByteBuffer(MCON.CODEC),
-						MconMessage.TFE
-				)
-		);
+		$socketChannel,
+		$pumperSelector,
+		TranslatorStack.make(
+			new ReadHeadAdapter.Channelwise.BabbleTranslator(),
+			new Eon.TranslatorFromByteBuffer(MCON.CODEC),
+			MconMessage.TFE
+		)
+	);
 WriteHead&lt;MconMessage&gt;$sink = WriteHeadAdapter.make(
-				$socketChannel,
-				TranslatorStack.make(
-						MconMessage.TTE,
-						new Eon.TranslatorToByteBuffer(MCON.CODEC),
-						new WriteHeadAdapter.ChannelwiseUnbuffered.BabbleTranslator()
-				)
-		);
+		$socketChannel,
+		TranslatorStack.make(
+			MconMessage.TTE,
+			new Eon.TranslatorToByteBuffer(MCON.CODEC),
+			new WriteHeadAdapter.ChannelwiseUnbuffered.BabbleTranslator()
+		)
+	);
 </pre>
 			<p>
 				$socketChannel is just a java.nio.channels.SocketChannel.  $pumperSelector is an instance of <a href='../javadoc/ahs/util/thread/PumperSelector.html'>ahs.util.thread.PumperSelector</a> (which is essentially just a wrapper (or possibly asylum) around java.nio.channels.Selector; you can make one with the default constructor, start it, and forget about it).
@@ -147,22 +147,22 @@ WriteHead&lt;MconMessage&gt;$sink = WriteHeadAdapter.make(
 				What is that TTE and TFE crap, you say?  Glad you asked.  It's just a little shorthand for some translators that the MCON project code shares between all of its connections, since the translators happen to be fully reentrant.  Here they are:
 			</p>
 <pre>
-	public static final TranslatorFromEonObject	TFE	= new TranslatorFromEonObject();
-	public static final TranslatorToEonObject	TTE	= new TranslatorToEonObject();
-	public static class TranslatorFromEonObject implements Translator&lt;EonObject,MconMessage&gt; {
-		public TranslatorFromEonObject() {}
-		
-		public MconMessage translate(EonObject $eo) throws TranslationException {
-			return MCON.CODEC.decode($eo, MconMessage.class);
-		}
+public static final TranslatorFromEonObject	TFE	= new TranslatorFromEonObject();
+public static final TranslatorToEonObject	TTE	= new TranslatorToEonObject();
+public static class TranslatorFromEonObject implements Translator&lt;EonObject,MconMessage&gt; {
+	public TranslatorFromEonObject() {}
+	
+	public MconMessage translate(EonObject $eo) throws TranslationException {
+		return MCON.CODEC.decode($eo, MconMessage.class);
 	}
-	public static class TranslatorToEonObject implements Translator&lt;MconMessage,EonObject&gt; {
-		public TranslatorToEonObject() {}
-		
-		public EonObject translate(MconMessage $eo) throws TranslationException {
-			return MCON.CODEC.encode($eo, MconMessage.class);
-		}
+}
+public static class TranslatorToEonObject implements Translator&lt;MconMessage,EonObject&gt; {
+	public TranslatorToEonObject() {}
+	
+	public EonObject translate(MconMessage $eo) throws TranslationException {
+		return MCON.CODEC.encode($eo, MconMessage.class);
 	}
+}
 </pre>
 			<p>
 				And that's it.  As you might have guessed, the MconMessage class is the "face" class of a mux that's enrolled in the EonCodec instance MCON.CODEC, so there's a ton more functionality hidden there in the polymorphic behavior that the mux is providing.  So, if we look at how MCON.CODEC was made...
@@ -222,32 +222,32 @@ public class MconCodec extends ahs.io.codec.eon.EonCodec {
 				To wrap up the examples, let's look at the message classes themselves:
 			</p>
 <pre>
-		@Encodable(all_fields=true)
-		public class MessageFlood extends MconMessage {
-			private MessageFlood(Encodable $x) {}
-			public MessageFlood() {}
-			
-			public KeyComp		$hhid;
-			public DiscoFloodMess	$blob;
-			public int		$scop;
-			public KeyComp		$tid;
-		}
+@Encodable(all_fields=true)
+public class MessageFlood extends MconMessage {
+	private MessageFlood(Encodable $x) {}
+	public MessageFlood() {}
+	
+	public KeyComp		$hhid;
+	public DiscoFloodMess	$blob;
+	public int		$scop;
+	public KeyComp		$tid;
+}
 </pre>
 			<p>
 				...Yep, that's it.  Pretty short and sweet, eh?  You can also have private fields and do the whole getter/setter pattern thing; it makes no difference to the workings of the reflection used in EonRAE and EonRAD.  Here's another equivalent way to express the same thing:
 			</p>
 <pre>
-		@Encodable()
-		public class MessageFlood extends MconMessage {
-			private MessageFlood(Encodable $x) {}
-			public MessageFlood() {}
-			
-			@Enc public KeyComp		$hhid;
-			@Enc public DiscoFloodMess	$blob;
-			@Enc public int			$scop;
-			@Enc public KeyComp		$tid;
-			public String			$dontSerializeMe;
-		}
+@Encodable()
+public class MessageFlood extends MconMessage {
+	private MessageFlood(Encodable $x) {}
+	public MessageFlood() {}
+	
+	@Enc public KeyComp		$hhid;
+	@Enc public DiscoFloodMess	$blob;
+	@Enc public int			$scop;
+	@Enc public KeyComp		$tid;
+	public String			$dontSerializeMe;
+}
 </pre>
 			<p>
 				This example just skips the "all_fields" shorthand in the first example, and uses the Enc annotation to declare individual fields for serialization -- notice how you can use this to serialize only some of the fields in a class.
