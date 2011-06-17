@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="AHSlib" basedir="." default="compile">
+	<description>
+		The "And How Simple!" library provides open-source Java
+		solutions for rapid development of applications utilizing
+		networking, serialization/persistence, concurrency control, and
+		thread scheduling. The primary goals of AHSlib are remove
+		common drudgery from coding in java wherever possible, make
+		writing multithreaded applications easier, and codify common
+		design patterns so that good code becomes more self-documenting.
+		
+		AHSlib is tested for both stability and performance and comes
+		complete with an abundance of abstract interfaces that made it
+		sufficient to provide services to a diverse range of projects.
+	</description>
+	
+	<echo>Ant version:       ${ant.version}</echo>
+	<echo>Ant jvm version:   ${ant.java.version}</echo>
+	
+	<!--
+	<import file="build-common.xml"/> 
+	-->
+	
+	<target name="init">
+		<tstamp/>
+		<mkdir dir="build"/>
+		<mkdir dir="dist"/>
+		<mkdir dir="dox/javadoc"/>
+	</target>
+	
+
+	<target name="compile"
+		depends="
+			compile-core"
+		description="compile the source">
+	</target>
+	<target name="compile-core" depends="init">
+		<javac
+			srcdir="src"
+			destdir="build"
+			sourcepath=""
+			includes="us/exultant/ahs/core/**, us/exultant/ahs/util/**"
+			includeDestClasses="false"
+			debug="on"
+			deprecation="on"
+			optimize="on"
+			source="1.6"
+			target="1.6"
+			includeantruntime="false"
+			><!-- verbose="on" listfiles="on" -->
+			<classpath>
+				
+			</classpath>
+			<compilerarg value="-Xlint:unchecked"/>
+		</javac>
+	</target>
+	<target name="compile-codec" depends="compile-core">
+		<javac
+			srcdir="src"
+			destdir="build"
+			includes="us/exultant/ahs/codec/*, usus/exultant/ahs/codec/eon/*"
+			debug="on"
+			deprecation="on"
+			optimize="on"
+			source="1.6"
+			target="1.6"
+			includeantruntime="false"
+			><!-- verbose="on" listfiles="on" -->
+			<classpath>
+				
+			</classpath>
+			<compilerarg value="-Xlint:unchecked"/>
+		</javac>
+	</target>
+	
+	
+	<target name="clean" description="clean up">
+		<delete dir="build"/>
+		<delete dir="dist"/>
+	</target>
+	
+	
+	<target name="dox" depends="init" description="generate javadoc">
+		<javadoc
+			destdir="dox/javadoc"
+			author="true"
+			version="true"
+			use="true"
+			windowtitle="AHS Library">
+					
+			<packageset dir="./src/" defaultexcludes="yes">
+				<include name="**"/>
+				<exclude name="**todo**"/>
+			</packageset>
+			<group title="Core"				packages="us.exultant.ahs.core*,us.exultant.ahs.util*"/>
+			<group title="Codec Core"			packages="us.exultant.ahs.codec*"/>
+			<group title="Codec (JSON)"			packages="us.exultant.ahs.codec.json*"/>
+			<group title="Codec (EBON)"			packages="us.exultant.ahs.codec.ebon*"/>
+			<group title="Codec (Premade En/Decoders)"	packages="us.exultant.ahs.codec.eon.pre*"/>
+			<group title="Logging"				packages="us.exultant.ahs.log*"/>
+			<group title="Unit Testing"			packages="us.exultant.ahs.test*"/>
+			<group title="Thread"				packages="us.exultant.ahs.thread*"/>
+			<group title="IO"				packages="us.exultant.ahs.io*"/>
+			<group title="Crypto"				packages="us.exultant.ahs.crypto*"/>
+			<group title="Scratch"				packages="us.exultant.ahs.scratch*"/>
+		</javadoc>
+	</target>
+</project>
