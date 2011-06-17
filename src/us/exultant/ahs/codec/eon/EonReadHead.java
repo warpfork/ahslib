@@ -1,16 +1,13 @@
 package us.exultant.ahs.codec.eon;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.util.*;
 import us.exultant.ahs.io.*;
-
-import java.io.*;
-import java.nio.*;
 import java.nio.channels.*;
-import java.util.*;
 
 /**
  * Pretty much just a home for factories at this point.
+ * 
+ * FIXME: this functionality clearly belongs in IO more than codec... IO doesn't depend on codec yet, but i'm not opposed to allowing it to do so.
  * 
  * @author hash
  * 

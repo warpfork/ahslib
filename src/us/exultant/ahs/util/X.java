@@ -1,16 +1,10 @@
 package us.exultant.ahs.util;
 
-import java.awt.*;
 import java.io.*;
-import java.util.*;
 
 /**
- * Low cohesion in abundance.
- * 
- * Or, "loco", if you prefer.
- * 
- * 74A.
- * 
+ * Low cohesion static methods for variegated conveniences.
+ *  
  * @author hash
  *
  */

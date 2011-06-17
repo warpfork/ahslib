@@ -1,8 +1,6 @@
 package us.exultant.ahs.codec.eon;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.codec.*;
-
 import java.nio.*;
 import java.util.*;
 

@@ -1,7 +1,5 @@
 package us.exultant.ahs.core;
 
-import us.exultant.ahs.util.*;
-
 import java.io.*;
 import java.util.*;
 

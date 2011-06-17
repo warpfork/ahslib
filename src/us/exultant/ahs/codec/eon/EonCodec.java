@@ -1,9 +1,7 @@
 package us.exultant.ahs.codec.eon;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.util.*;
 import us.exultant.ahs.codec.*;
-
 import java.util.*;
 
 /**

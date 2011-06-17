@@ -1,7 +1,6 @@
 package us.exultant.ahs.scratch;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.*;
 
 public class MapInt {

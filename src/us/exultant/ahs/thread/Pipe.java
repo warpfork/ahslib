@@ -2,9 +2,7 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-
 import java.io.*;
-import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
 

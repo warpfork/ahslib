@@ -1,11 +1,8 @@
 package us.exultant.ahs.log;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.util.*;
 import us.exultant.ahs.thread.*;
 
-import java.io.*;
-import java.util.*;
 
 /**
  * Logging level is fixed to absolute none. Change providers to this in deployment

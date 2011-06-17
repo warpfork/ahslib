@@ -1,7 +1,6 @@
 package us.exultant.ahs.codec;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.codec.eon.*;
 
 /**
  * <p>

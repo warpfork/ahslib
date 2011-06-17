@@ -1,7 +1,6 @@
 package us.exultant.ahs.codec.json;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.codec.*;
 
 import java.io.IOException;
 import java.io.Writer;

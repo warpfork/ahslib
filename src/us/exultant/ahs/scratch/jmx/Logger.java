@@ -1,10 +1,8 @@
 package us.exultant.ahs.scratch.jmx;
 
 import us.exultant.ahs.util.*;
-
 import java.io.*;
 import java.lang.management.*;
-import java.util.*;
 
 /**
  * Produces a stream where each line contains datapoints about system resource usage

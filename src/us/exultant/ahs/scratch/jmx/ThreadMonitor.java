@@ -1,10 +1,8 @@
 package us.exultant.ahs.scratch.jmx;
 
-import us.exultant.ahs.scratch.jmx.MemoryMonitor.*;
 import us.exultant.ahs.scratch.view.*;
 
 import java.lang.management.*;
-import java.util.*;
 
 public class ThreadMonitor {
 	public static ThreadMXBean getBean() {

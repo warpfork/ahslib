@@ -4,7 +4,6 @@ import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 
 import java.io.*;
-import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;

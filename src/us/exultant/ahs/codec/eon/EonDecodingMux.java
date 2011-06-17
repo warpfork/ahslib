@@ -75,6 +75,6 @@ public class EonDecodingMux<$FACE> {
 	}
 
 	public <$T extends $FACE> void enroll(Class<$T> $klass, final Dencoder<EonCodec,EonObject,$T> $dencoder) {
-		enroll($klass, (Encoder<EonCodec,EonObject,$T>)$dencoder, (Decoder<EonCodec,EonObject,$T>) $dencoder);
+		enroll($klass, $dencoder, $dencoder);
 	}
 }

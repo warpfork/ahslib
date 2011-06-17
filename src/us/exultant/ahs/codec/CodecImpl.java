@@ -1,9 +1,6 @@
 package us.exultant.ahs.codec;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.util.*;
-import us.exultant.ahs.codec.Codec.*;
-
 import java.util.*;
 
 public class CodecImpl<$CODEC extends Codec<$CODEC, $CODE>, $CODE> implements Codec<$CODEC,$CODE> {
