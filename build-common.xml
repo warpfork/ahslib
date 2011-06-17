@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="AHSlibBuildCommon" basedir=".">
+	<macrodef name="ahsjavac">
+		<attribute name="module"/>
+		<attribute name="classes"/>
+		<attribute name="depends"/>
+		<sequential>
+			<mkdir dir="build/@{module}"/>
+			<javac
+				srcdir="src"
+				destdir="build/@{module}"
+				sourcepath=""
+				includes="@{classes}"
+				classpath="@{depends}"
+				debug="on"
+				deprecation="on"
+				optimize="on"
+				source="1.6"
+				target="1.6"
+				includeantruntime="false"
+				><!-- verbose="on" listfiles="on" -->
+				<compilerarg value="-Xlint:unchecked"/>
+			</javac>
+		</sequential>
+	</macrodef>
+</project>

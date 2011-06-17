@@ -16,10 +16,8 @@
 	
 	<echo>Ant version:       ${ant.version}</echo>
 	<echo>Ant jvm version:   ${ant.java.version}</echo>
-	
-	<!--
 	<import file="build-common.xml"/> 
-	-->
+	
 	
 	<target name="init">
 		<tstamp/>
@@ -43,42 +41,21 @@
 		description="pack jars">
 	</target>
 	<target name="compile-core" depends="init">
-		<mkdir dir="build/core"/>
-		<javac
-			srcdir="src"
-			destdir="build/core"
-			sourcepath=""
-			includes="us/exultant/ahs/core/**, us/exultant/ahs/util/**"
-			debug="on"
-			deprecation="on"
-			optimize="on"
-			source="1.6"
-			target="1.6"
-			includeantruntime="false"
-			><!-- verbose="on" listfiles="on" -->
-			<compilerarg value="-Xlint:unchecked"/>
-		</javac>
+		<ahsjavac
+			module="core"
+			classes="us/exultant/ahs/core/**, us/exultant/ahs/util/**"
+			depends=""
+		/>
 	</target>
 	<target name="dist-core" depends="compile-core">
 		<jar jarfile="dist/ahslib-core.jar" basedir="build/core"/>
 	</target>
 	<target name="compile-codec" depends="compile-core">
-		<mkdir dir="build/codec"/>
-		<javac
-			srcdir="src"
-			destdir="build/codec"
-			sourcepath=""
-			includes="us/exultant/ahs/codec/*, us/exultant/ahs/codec/eon/*"
-			classpath="build/core"
-			debug="on"
-			deprecation="on"
-			optimize="on"
-			source="1.6"
-			target="1.6"
-			includeantruntime="false"
-			><!-- verbose="on" listfiles="on" -->
-			<compilerarg value="-Xlint:unchecked"/>
-		</javac>
+		<ahsjavac
+			module="codec"
+			classes="us/exultant/ahs/codec/*, us/exultant/ahs/codec/eon/*"
+			depends="build/core"
+		/>
 	</target>
 	<target name="dist-codec" depends="compile-codec">
 		<jar jarfile="dist/ahslib-codec.jar" basedir="build/codec"/>
