@@ -126,7 +126,7 @@ public class SyncFreeProvider<$T> {
 	 * Not yet implemented.
 	 */
 	public void clearExpired() {
-		throw new ImBored();
+		throw new NotYetImplementedException();
 		//ThreadGroup $tg2 = Thread.currentThread().getThreadGroup(), $tg = $tg2;
 		//while ($tg2 != null) {
 		//	$tg = $tg2;

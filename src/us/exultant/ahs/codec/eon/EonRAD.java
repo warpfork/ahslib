@@ -129,11 +129,11 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 		if ($typo == byte[].class)
 			$f.set($x, $eo.getBytes($key));
 		else if ($typo == double[].class)
-			throw new ImBored();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			throw new NotYetImplementedException();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
 		else if ($typo == int[].class)
-			throw new ImBored();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			throw new NotYetImplementedException();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
 		else if ($typo == long[].class)
-			throw new ImBored();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
+			throw new NotYetImplementedException();//$eo.put($key, (SATAN)$value);	//TODO:AHS:CODEC: something with arrays
 		else if ($typo == boolean.class)
 			$f.set($x, $eo.getBoolean($key));
 		else if ($typo == double.class)

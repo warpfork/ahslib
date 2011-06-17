@@ -10,19 +10,19 @@ package us.exultant.ahs.util;
  * @author hash
  * 
  */
-public class ImBored extends UnsupportedOperationException {
-	public ImBored() {
+public class NotYetImplementedException extends UnsupportedOperationException {
+	public NotYetImplementedException() {
 	}
 	
-	public ImBored(String $message) {
+	public NotYetImplementedException(String $message) {
 		super($message);
 	}
 	
-	public ImBored(Throwable $cause) {
+	public NotYetImplementedException(Throwable $cause) {
 		super($cause);
 	}
 	
-	public ImBored(String $message, Throwable $cause) {
+	public NotYetImplementedException(String $message, Throwable $cause) {
 		super($message, $cause);
 	}
 }
