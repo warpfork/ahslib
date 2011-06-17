@@ -30,14 +30,18 @@
 	<target name="compile"
 		depends="
 			compile-core,
-			compile-codec"
+			compile-codec,
+			compile-codec-json,
+			compile-codec-ebon"
 		description="compile the source">
 	</target>
 	<target name="dist"
 		depends="
 			dist-core,
 			dist-codec,
-			dist-complete"
+			dist-codec-json,
+			dist-codec-ebon,
+			dist-complete"	
 		description="pack jars">
 	</target>
 	<target name="compile-core" depends="init">
@@ -60,10 +64,38 @@
 	<target name="dist-codec" depends="compile-codec">
 		<jar jarfile="dist/ahslib-codec.jar" basedir="build/codec"/>
 	</target>
-	<target name="dist-complete" depends="compile-core, compile-codec">
+	<target name="compile-codec-json" depends="compile-codec">
+		<ahsjavac
+			module="codec-json"
+			classes="us/exultant/ahs/codec/json/**"
+			depends="build/codec : build/core"
+		/>
+	</target>
+	<target name="dist-codec-json" depends="compile-codec-json">
+		<jar jarfile="dist/ahslib-codec-json.jar" basedir="build/codec-json"/>
+	</target>
+	<target name="compile-codec-ebon" depends="compile-codec">
+		<ahsjavac
+			module="codec-ebon"
+			classes="us/exultant/ahs/codec/ebon/**"
+			depends="build/codec : build/core"
+		/>
+	</target>
+	<target name="dist-codec-ebon" depends="compile-codec-ebon">
+		<jar jarfile="dist/ahslib-codec-ebon.jar" basedir="build/codec-ebon"/>
+	</target>
+	<target name="dist-complete" depends="
+			compile-core,
+			compile-codec,
+			compile-codec-json,
+			compile-codec-ebon
+		">
 		<jar jarfile="dist/ahslib-complete.jar">
 			<fileset dir="build/core"/>
 			<fileset dir="build/codec"/>
+			<fileset dir="build/codec-json"/>
+			<fileset dir="build/codec-ebon"/>
+			<!-- does not include scratch, and does not include anything with external dependancies. -->
 		</jar>
 	</target>
 	
