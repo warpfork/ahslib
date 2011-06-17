@@ -1,7 +1,7 @@
-package us.exultant.ahs.codec.eon;
+package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.io.*;
+import us.exultant.ahs.codec.eon.*;
 import java.nio.channels.*;
 
 /**
