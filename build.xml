@@ -32,7 +32,8 @@
 			compile-core,
 			compile-codec,
 			compile-codec-json,
-			compile-codec-ebon"
+			compile-codec-ebon,
+			compile-codec-pre"
 		description="compile the source">
 	</target>
 	<target name="dist"
@@ -41,6 +42,7 @@
 			dist-codec,
 			dist-codec-json,
 			dist-codec-ebon,
+			dist-codec-pre,
 			dist-complete"	
 		description="pack jars">
 	</target>
@@ -84,17 +86,29 @@
 	<target name="dist-codec-ebon" depends="compile-codec-ebon">
 		<jar jarfile="dist/ahslib-codec-ebon.jar" basedir="build/codec-ebon"/>
 	</target>
+	<target name="compile-codec-pre" depends="compile-codec">
+		<ahsjavac
+			module="codec-pre"
+			classes="us/exultant/ahs/codec/eon/pre/**"
+			depends="build/codec : build/core"
+		/>
+	</target>
+	<target name="dist-codec-pre" depends="compile-codec-pre">
+		<jar jarfile="dist/ahslib-codec-pre.jar" basedir="build/codec-pre"/>
+	</target>
 	<target name="dist-complete" depends="
 			compile-core,
 			compile-codec,
 			compile-codec-json,
-			compile-codec-ebon
+			compile-codec-ebon,
+			compile-codec-pre
 		">
 		<jar jarfile="dist/ahslib-complete.jar">
 			<fileset dir="build/core"/>
 			<fileset dir="build/codec"/>
 			<fileset dir="build/codec-json"/>
 			<fileset dir="build/codec-ebon"/>
+			<fileset dir="build/codec-pre"/>
 			<!-- does not include scratch, and does not include anything with external dependancies. -->
 		</jar>
 	</target>
