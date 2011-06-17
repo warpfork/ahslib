@@ -67,11 +67,11 @@ public class Primitives {
 	public static int intFromByteArray(byte[] $preint) {
 		return (($preint[0] & 0xFF) << 24) | (($preint[1] & 0xFF) << 16) | (($preint[2] & 0xFF) << 8) | $preint[3] & 0xFF;
 	}
-
+	
 	
 	
 	public static int intFromUnsignedByte(byte $b) {
-		return (int) $b & 0xFF;
+		return ($b & 0xFF);
 	}
 	
 

@@ -1,9 +1,4 @@
-package us.exultant.ahs.scratch;
-
-import us.exultant.ahs.io.*;
-import us.exultant.ahs.codec.*;
-import us.exultant.ahs.codec.eon.*;
-import us.exultant.ahs.codec.json.*;
+package us.exultant.ahs.util;
 
 import java.util.BitSet;
 
@@ -87,24 +82,6 @@ public class BitVector {
 	
 	public BitSet	$bs;
 	private int	$len;
-	
-	/* BEGIN EON CODEC BLOCK */
-	public static final Encoder<EonCodec,EonObject,BitVector> ENCODER;
-	public static final Decoder<EonCodec,EonObject,BitVector> DECODER;
-	static { EonDencoder $t = new EonDencoder(); ENCODER = $t; DECODER = $t; }
-	public static class EonDencoder implements Dencoder<EonCodec,EonObject,BitVector> {
-		public EonObject encode(EonCodec $codec, BitVector $x) throws TranslationException {
-			EonObject $jo = $codec.simple("BiV", null, $x.toByteArray());
-			$jo.put("l", $x.$len);
-			return $jo;
-		}
-		public BitVector decode(EonCodec $codec, EonObject $x) throws TranslationException {
-			$x.assertKlass("BiV");
-			return new BitVector($x.getByteData(),0,$x.getInt("l"));
-		}
-	}
-	/* END EON CODEC BLOCK */
-	
 	
 	// pad		-- extend to size
 	// chop		-- limit to size

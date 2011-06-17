@@ -1,11 +1,6 @@
-package us.exultant.ahs.scratch;
+package us.exultant.ahs.util;
 
-import us.exultant.ahs.io.*;
-import us.exultant.ahs.codec.*;
-import us.exultant.ahs.codec.eon.*;
-import us.exultant.ahs.codec.json.*;
 import us.exultant.ahs.util.Arr;
-
 import java.util.*;
 
 /**
@@ -92,21 +87,6 @@ public class ByteVector implements Comparable<ByteVector> {
 	}
 	
 	public byte[]	$d;
-	
-	/* BEGIN EON CODEC BLOCK */
-	public static final Encoder<EonCodec,EonObject,ByteVector> ENCODER;
-	public static final Decoder<EonCodec,EonObject,ByteVector> DECODER;
-	static { EonDencoder $t = new EonDencoder(); ENCODER = $t; DECODER = $t; }
-	public static class EonDencoder implements Dencoder<EonCodec,EonObject,ByteVector> {
-		public EonObject encode(EonCodec $codec, ByteVector $x) throws TranslationException {
-			return $codec.simple("ByV", null, $x.$d);
-		}
-		public ByteVector decode(EonCodec $codec, EonObject $x) throws TranslationException {
-			$x.assertKlass("ByV");
-			return new ByteVector($x.getByteData());
-		}
-	}
-	/* END EON CODEC BLOCK */
 	
 	// pad		-- extend to size
 	// chop		-- limit to size

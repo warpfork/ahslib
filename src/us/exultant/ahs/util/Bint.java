@@ -1,4 +1,4 @@
-package us.exultant.ahs.scratch;
+package us.exultant.ahs.util;
 
 import java.math.BigInteger;
 
@@ -31,7 +31,7 @@ public class Bint extends BigInteger {
 	public boolean isGreaterThan(long $n) {
 		return this.isGreaterThan(Bint.valueOf($n));
 	}
-	public boolean isGreaterThanZero() {	// these methods are more memory-efficient than the otherwise equivalent call to this.isGreaterThan(0);
+	public boolean isGreaterThanZero() {	// these methods are more GC-sparing than the otherwise equivalent call to this.isGreaterThan(0);
 		return this.isGreaterThan(super.ZERO);
 	}
 	public boolean isLessThan(BigInteger $n) {
