@@ -1,28 +1,7 @@
-#ahslib-dox #content {
-  font-family: serif;
-  font-size: 12pt;
-}
 #ahslib-dox #content pre {
   font-family: monospace;
   overflow: auto;
   white-space: pre;
   font-size: 10pt;
   border: 1px solid rgba(68, 68, 68, 0.5);
-}
-#ahslib-dox #content li h5 {
-  font-size: 16pt;
-  font-weight: bold;
-  margin: 1em 0;
-}
-#ahslib-dox #content li li h5 {
-  font-size: 14pt;
-  font-weight: bold;
-}
-#ahslib-dox #content li li li h5 {
-  font-size: 13pt;
-  font-weight: bold;
-}
-#ahslib-dox #content li li li li h5 {
-  font-size: 12pt;
-  font-weight: bold;
 }

@@ -20,14 +20,14 @@
 
 
 <ul>
-	<li><h5>Introduction</h5>
+	<li><h6>Introduction</h6>
 	<ul>
-		<li><h5>The concept of "semantic data".</h5>
+		<li><h6>The concept of "semantic data".</h6>
 			<p>
 				The <span class=ahsname>AHS</span> library is designed around the belief that data should retain semantic meaning as much as possible.  In the situation of IO, that just means things should be objects with fields instead of collections of byte arrays as much as possible. A developer should be able to work with a simple API that allows the sending and receiving of entire chunks of data that represent fully meaningful objects in their own right.  This is a fairly major difference in philosophy from the java.io and java.nio packages, which deal with nothing but primitives and always deal with buffering in terms of piling up bytes thoughtlessly.
 			</p>
 		</li>
-		<li><h5>Translation Stacks</h5>
+		<li><h6>Translation Stacks</h6>
 			<p>
 				Semantic data should be able to be translated into other formats of semantic data.  This thought isn't new, and it's essentially a restatement of the concept of protocol stacks.  The <span class=ahsname>AHS</span> library expresses this directly with the <a href='../javadoc/ahs/io/Translator.html'>Translator</a> interface and <a href='../javadoc/ahs/io/TranslatorStack.html'>TranslatorStack</a> class.
 			</p>
@@ -38,7 +38,7 @@
 				This kind of utility can be useful in all sorts of ways, but it's great in particular for setting up clean and clear general purpose serialization, so translation stacks will pop up again when codecs come in to play and everything comes together.
 			</p>
 		</li>
-		<li><h5>ReadHead and WriteHead</h5>
+		<li><h6>ReadHead and WriteHead</h6>
 			<p>
 				<a href='../javadoc/ahs/io/ReadHead.html'>ReadHead</a> and <a href='../javadoc/ahs/io/WriteHead.html'>WriteHead</a> are expressions of that central theme of "semantic data", and also expressions of the belief that blocking and nonblocking IO should be interchangeable.  Read their javadocs well.
 			</p>
@@ -52,7 +52,7 @@
 				(Oh, and check this out: <a href='../javadoc/ahs/io/ReadHeadSocketChannel.html'>ahs.io.ReadHeadSocketChannel</a> actually makes accepting new network connections obey the same ReadHead interface as binary network and filesystem IO and everything else.  Abstraction for the win!)
 			</p>
 		</li>
-		<li><h5>Pipes</h5>
+		<li><h6>Pipes</h6>
 			<p>
 				<a href='../javadoc/ahs/io/Pipe.html'>ahs.io.Pipe</a> is meant to be a powerful, general purpose tool that might well become one of your favorite helpers for writing multithreaded code.
 			</p>
@@ -63,7 +63,7 @@
 				Pipe can be used as a simple buffer or queue, but it can also function to efficiently shuttle data between arbitrarily massive groups of threads or act as a work queue.  Since it can be operated via the ReadHead interface, it lets the developer ask for whatever data is immediately available, or ask to have the next piece of data available even if it means waiting, or ask to wait until the Pipe is closed and then take whatever's left.  (It pops up in tons of places within the background of the ahs.io library: it does everything from making buffering in translator stacks work for sockets and filesystems uniformly to handling the flow control events in and out of the madness of java.nio.channels.Selector.)
 			</p>
 		</li>
-		<li><h5>Codecs</h5>
+		<li><h6>Codecs</h6>
 			<p>
 				Repeat after me: building message protocols should not be hard.
 			</p>
@@ -77,7 +77,7 @@
 				Seriously, though.  It shouldn't.  Applications need expressive serialization, and often.  The <span class=ahsname>AHS</span> library is committed to providing the most painless, rapid-development-friendly interfaces for general purpose serialization possible -- and doing it with type safety.
 			</p>
 			<ul>
-				<li><h5>The Big Picture</h5>
+				<li><h6>The Big Picture</h6>
 					<p>
 						The most general form of codecs (the <a href='../javadoc/ahs/io/codec/Codec.html'>ahs.io.codec.Codec</a> interface) is so insanely generic it may make your eyes bleed to look at; honestly, I recommend you ignore it.  In practice, <a href='../javadoc/ahs/io/codec/eon/EonCodec.html'>EonCodec</a> is what you should use, and is what this introduction will talk about.
 					</p>
@@ -88,7 +88,7 @@
 						These Encoder and Decoder implementations then get enrolled together in a Codec.  The Codec hands instances to itself to every encode or decode call, which allows the Encoders and Decoders to use the Codec recursively on every field they want to serialize that isn't a primitive.  Thus, a developer can build Encoder and Decoder objects that have knowledge specific to only one class in good observance of object-oriented paradigms, and turn these into universally effective systems.
 					</p>
 				</li>
-				<li><h5>Switching Encodings</h5>
+				<li><h6>Switching Encodings</h6>
 					<p>
 						If you're looking at the source while you read this, you may have already noticed that EonObject is actually just an interface.  It's currently implemented in two forms: <a href='../javadoc/ahs/io/codec/json/JsonObject.html'>JsonObject</a>, and <a href='../javadoc/ahs/io/codec/ebon/EbonObject.html'>EbonObject</a>.  These two implementions are essentially the same except for the way they serialize to bytes; JSON is effectively human-readable, while EBON is a binary format and much more efficient in both output size and decoding time.  These cover the most commonly occurring needs, but of course you're free to implement your own formats as well.  Any EonObject can be translated to a ByteBuffer and back by Eon.TranslatorToByteBuffer and Eon.TranslatorFromByteBuffer respectively.
 					</p>
@@ -96,7 +96,7 @@
 						It's possible to switch between which specific kind of EonObject an EonCodec uses within a single line of code -- just switch the factories that you hand to the constructor of EonCodec.  For examples of the difference between an EonCodec backed by the JSON format versus the EBON format, just take a quick glance at the source of <a href='../javadoc/ahs/io/codec/json/JsonCodec.html'>JsonCodec</a> and <a href='../javadoc/ahs/io/codec/ebon/EbonCodec.html'>EbonCodec</a>.  (They both extend EonCodec and are both essentially identical except for the what they hand to the superconstructor.)
 					</p>
 				</li>
-				<li><h5>Easy as Pie</h5>
+				<li><h6>Easy as Pie</h6>
 					<p>
 						In practice, it's even easier than all that, because you don't really have to build your own Encoder and Decoder implementations!  Check out the classes <a href='../javadoc/ahs/io/codec/eon/EonRAE.html'>EonRAE</a> and <a href='../javadoc/ahs/io/codec/eon/EonRAD.html'>EonRAD</a>.  (RAE and RAD stand for "reflective annotative [en/de]coder".)  They use -- as the name implies -- java's reflection utilities to be able to automatically transform any class to a representative EonObject and back again.  
 					</p>
@@ -107,14 +107,14 @@
 						So all in all, this is actually <i>easier</i> than making a pie -- have you ever tried to get a good homemade meringue that doesn't collapse?
 					</p>
 				</li>
-				<li><h5>Multiplexing and Demultiplexing</h5>
+				<li><h6>Multiplexing and Demultiplexing</h6>
 					<p>
 						See <a href='../javadoc/ahs/io/codec/eon/EonDecodingMux.html'>EonDecodingMux</a>.  When constructing the mux, specify an interface or superclass that all of the specific message types can be cast to (this is the mux's "face" type).  After that, it's pretty much just like having a codec within a codec: all you have to do is enroll Encoders and Decoders for each class that will be within the mux (and again, it can just be EonRAE and EonRAD across the board), and then enroll the mux in the codec.  There's a little extra magic that goes on in the background, but it's pretty much totally concealed.  You can now just tell the codec to encode any of the muxed objects to the "face" type, and later decode any of them to the same "face" type, and you get polymorphic behavior.  To get the actual types back out, use the standard java instanceof operator or the getClass() method.  Check out <a href='../../src_test/ahs/io/codec/CodecJsonTest.java'>ahs.io.codec.CodecJsonTest#testMuxing()</a>.
 					</p>
 				</li>
 			</ul></li>
 		</li>
-		<li><h5>Putting it all Together</h5>
+		<li><h6>Putting it all Together</h6>
 			<p>
 				EonCodec gives you a tool to translate any java object to an EonObject and back again.  There are Translator classes to convert any EonObject to a ByteBuffer and back again.  The final piece of the puzzle is this: some Translator implementations actually 'translate' ByteBuffer instances onto a ReadableByteChannel, and other 'translate' ByteBuffer instances off of a WritableByteChannel.  That brings us all the way to where java.nio can pick up and run with it down to the OS, and then the wire.
 			</p>
@@ -257,7 +257,7 @@ public class MessageFlood extends MconMessage {
 			</p>
 		</li>
 	</ul></li>
-	<li><h5>Caveats</h5>
+	<li><h6>Caveats</h6>
 	<ul>
 		<li><p>
 			A codec instance is essentially thread-safe for encoding and decoding.  It is -not- thread safe when it comes to adding Encoders and Decoders; do that setup ahead of time.  Also, since a codec keeps only a single instance of the enrolled Encoder or Decoder, it is possible for a non-thread-safe instance to be enrolled, which in effect may make the entire codec non-thread-safe if those Encoders or Decoders are used... so don't do that.  Encoders and Decoders should be re-entrant (or at least VERY noisily documented if they are not).
