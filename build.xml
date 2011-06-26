@@ -37,7 +37,8 @@
 			compile-log,
 			compile-test,
 			compile-test-junit,
-			compile-thread"
+			compile-thread,
+			compile-io"
 		description="compile the source">
 	</target>
 	<target name="dist"
@@ -51,6 +52,7 @@
 			dist-test,
 			dist-test-junit,
 			dist-thread,
+			dist-io,
 			dist-complete"
 		description="pack jars">
 	</target>
@@ -152,6 +154,17 @@
 		<jar jarfile="dist/ahslib-thread.jar" basedir="build/thread"/>
 	</target>
 	
+	<target name="compile-io" depends="compile-thread">
+		<ahsjavac
+			module="io"
+			classes="us/exultant/ahs/io/**"
+			depends="build/core : build/thread"
+		/>
+	</target>
+	<target name="dist-io" depends="compile-io">
+		<jar jarfile="dist/ahslib-io.jar" basedir="build/io"/>
+	</target>
+	
 	<target name="dist-complete" depends="
 			compile-core,
 			compile-codec,
@@ -161,7 +174,8 @@
 			compile-log,
 			compile-test,
 			compile-test-junit,
-			compile-thread
+			compile-thread,
+			compile-io
 		">
 		<jar jarfile="dist/ahslib-complete.jar">
 			<fileset dir="build/core"/>
@@ -173,6 +187,7 @@
 			<fileset dir="build/test"/>
 			<fileset dir="build/test-junit"/>
 			<fileset dir="build/thread"/>
+			<fileset dir="build/io"/>
 			<!-- does not include scratch, and does not include anything with external dependancies (except junit, because who cares). -->
 		</jar>
 	</target>
