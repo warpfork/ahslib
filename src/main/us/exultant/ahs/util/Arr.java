@@ -164,8 +164,9 @@ public class Arr {
 	
 	// THIS JUST ISN'T POSSIBLE.
 //	public static final <T> T[] copy(T[] $a) {
-//		T[] $v = (T[]) new Object[$a.length];
+//		// full of fail:	T[] $v = (T[]) new Object[$a.length];
 //		// also full of fail:	T[] $v = (T[]) Array.newInstance($a.getClass(), $a.length);
+//		// also full of fail:	T[] $v = $a.getClass().cast(Array.newInstance($a.getClass().getComponentType(), $a.length));
 //		System.arraycopy($a, 0, $v, 0, $a.length);
 //		return $v;
 //	}
