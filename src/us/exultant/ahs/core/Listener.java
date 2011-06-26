@@ -13,6 +13,14 @@ package us.exultant.ahs.core;
  * revealing more functions than necessary on the base class).
  * </p>
  * 
+ * <p>
+ * Listeners may be presumed to be reentrant or otherwise <b>thread-safe</b> whenever
+ * applied in the threading module of the AHS library! If a Listener cannot be safely
+ * entered by multiple threads concurrently, the {@link #hear(Object)} method should be
+ * synchronized and this departure from theme should be loudly documented due to the
+ * potential for this synchronization to have a large performance impact.
+ * </p>
+ * 
  * @author hash
  * 
  * @param <$M>
