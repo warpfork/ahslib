@@ -1,13 +1,10 @@
 package us.exultant.ahs.io;
 
-import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.HttpURLConnection;
-import java.nio.charset.*;
-import java.util.ArrayList;
-import java.util.List;
 import us.exultant.ahs.util.*;
+import java.io.*;
+import java.net.*;
+import java.nio.charset.*;
+import java.util.*;
 
 public class IOForge {
 	@Deprecated()
