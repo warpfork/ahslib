@@ -1,6 +1,7 @@
 package us.exultant.ahs.util;
 
 import java.util.*;
+import java.lang.reflect.Array;
 import java.nio.*;
 
 /**
@@ -93,7 +94,7 @@ public class Arr {
 	 * @return an array without any nulls.
 	 */
 	public static String[] arrayCleanse(String[] $arr) {
-		return arrayCleanseDestructive(Arr.copy($arr));
+		return arrayCleanseDestructive(Arr.copy($arr, String.class));
 		// you might think there'd be a more efficient way to do this... but you're wrong.
 		// you'll inevitably need a new array at the end for trimming (unless you're willing to double-walk it first and count)
 		// and you'll need a working array other than the original one in the meantime.
@@ -161,11 +162,20 @@ public class Arr {
 		return $v;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static final <T> T[] copy(T[] $a) {
-		T[] $v = (T[]) new Object[$a.length];
+	// THIS JUST ISN'T POSSIBLE.
+//	public static final <T> T[] copy(T[] $a) {
+//		T[] $v = (T[]) new Object[$a.length];
+//		// also full of fail:	T[] $v = (T[]) Array.newInstance($a.getClass(), $a.length);
+//		System.arraycopy($a, 0, $v, 0, $a.length);
+//		return $v;
+//	}
+	
+	public static final <T> T[] copy(T[] $a, Class<T> $k) {
+		@SuppressWarnings("unchecked")
+		T[] $v = (T[]) Array.newInstance($k, $a.length);
 		System.arraycopy($a, 0, $v, 0, $a.length);
 		return $v;
+		// this is extremely similiar to just return Arrays.copyOf($a, $a.length, $k); in 1.6, but this doesn't take the Class[] argument, which i expect may sometimes be a significant convenience.
 	}
 	
 	public static final short[] copy(short[] $a) {
