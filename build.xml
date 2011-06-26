@@ -112,13 +112,25 @@
 		<jar jarfile="dist/ahslib-log.jar" basedir="build/log"/>
 	</target>
 	
+	<target name="compile-test" depends="compile-log">
+		<ahsjavac
+			module="test"
+			classes="us/exultant/ahs/test/*.java"
+			depends="build/core : build/log"
+		/>
+	</target>
+	<target name="dist-test" depends="compile-test">
+		<jar jarfile="dist/ahslib-test.jar" basedir="build/test"/>
+	</target>
+	
 	<target name="dist-complete" depends="
 			compile-core,
 			compile-codec,
 			compile-codec-json,
 			compile-codec-ebon,
 			compile-codec-pre,
-			compile-log
+			compile-log,
+			compile-test
 		">
 		<jar jarfile="dist/ahslib-complete.jar">
 			<fileset dir="build/core"/>
@@ -127,7 +139,8 @@
 			<fileset dir="build/codec-ebon"/>
 			<fileset dir="build/codec-pre"/>
 			<fileset dir="build/log"/>
-			<!-- does not include scratch, and does not include anything with external dependancies. -->
+			<fileset dir="build/test"/>
+			<!-- does not include scratch, and does not include anything with external dependancies (except junit, because who cares). -->
 		</jar>
 	</target>
 	
