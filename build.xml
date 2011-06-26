@@ -36,7 +36,8 @@
 			compile-codec-pre,
 			compile-log,
 			compile-test,
-			compile-test-junit"
+			compile-test-junit,
+			compile-thread"
 		description="compile the source">
 	</target>
 	<target name="dist"
@@ -46,9 +47,10 @@
 			dist-codec-json,
 			dist-codec-ebon,
 			dist-codec-pre,
-			compile-log,
-			compile-test,
-			compile-test-junit,
+			dist-log,
+			dist-test,
+			dist-test-junit,
+			dist-thread,
 			dist-complete"
 		description="pack jars">
 	</target>
@@ -139,6 +141,17 @@
 		<jar jarfile="dist/ahslib-test-junit.jar" basedir="build/test-junit"/>
 	</target>
 	
+	<target name="compile-thread" depends="compile-core">
+		<ahsjavac
+			module="thread"
+			classes="us/exultant/ahs/thread/**"
+			depends="build/core"
+		/>
+	</target>
+	<target name="dist-thread" depends="compile-thread">
+		<jar jarfile="dist/ahslib-thread.jar" basedir="build/thread"/>
+	</target>
+	
 	<target name="dist-complete" depends="
 			compile-core,
 			compile-codec,
@@ -147,7 +160,8 @@
 			compile-codec-pre,
 			compile-log,
 			compile-test,
-			compile-test-junit
+			compile-test-junit,
+			compile-thread
 		">
 		<jar jarfile="dist/ahslib-complete.jar">
 			<fileset dir="build/core"/>
@@ -158,6 +172,7 @@
 			<fileset dir="build/log"/>
 			<fileset dir="build/test"/>
 			<fileset dir="build/test-junit"/>
+			<fileset dir="build/thread"/>
 			<!-- does not include scratch, and does not include anything with external dependancies (except junit, because who cares). -->
 		</jar>
 	</target>
