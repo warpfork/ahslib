@@ -36,13 +36,14 @@ import us.exultant.ahs.util.*;
  * </p>
  * 
  * @author hash
- * @deprecated This system is being replaced by one in which the concrete subclasses
+ * @deprecated This system is being replaced by {@link TestCase}, in which the concrete subclasses
  *             provide a list of runnable units instead of simply overriding the entire
  *             runTests method, which will allow the abstract TestCase system to take more
  *             observance of the delination between units without assuming compliance from
  *             concrete subclasses.
  */
 // there's also a ton of confirms missing here and just an incredibly shitty lack of internal abstraction
+@Deprecated()
 public abstract class TestCaseRetro implements Runnable {
 	public TestCaseRetro(Logger $log, boolean $enableConfirmation) {
 		this.$log = $log;
