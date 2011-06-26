@@ -1,6 +1,5 @@
 package us.exultant.ahs.log;
 
-import us.exultant.ahs.util.*;
 import java.io.*;
 
 /**
@@ -370,12 +369,13 @@ public class Logger {
 			if ($message != null) {
 				$sb.append($message);
 			}
+
+			$ps.println($sb.toString());
 			
 			if ($e != null) {
-				$sb.append('\n').append(X.toString($e));
+				$e.printStackTrace($ps);
+				$ps.print('\n');
 			}
-			
-			$ps.println($sb.toString());
 		}
 	}
 	
@@ -396,13 +396,12 @@ public class Logger {
 		private PrintStream $ps;
 		
 		public void log(int $level, String $category, String $message, Throwable $e) {
-			StringBuilder $sb = new StringBuilder(256);
+			if ($message != null) $ps.println($message);
 			
-			if ($message != null) $sb.append($message);
-			
-			if ($e != null) $sb.append('\n').append(X.toString($e));
-			
-			$ps.println($sb.toString());
+			if ($e != null) {
+				$e.printStackTrace($ps);
+				$ps.print('\n');
+			}
 		}
 	}
 }
