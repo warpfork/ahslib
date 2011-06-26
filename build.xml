@@ -21,7 +21,8 @@
 	
 	<target name="init">
 		<tstamp/>
-		<mkdir dir="build"/>
+		<mkdir dir="build/main"/>
+		<mkdir dir="build/test"/>
 		<mkdir dir="dist"/>
 		<mkdir dir="dox/javadoc"/>
 	</target>
@@ -56,113 +57,124 @@
 			dist-complete"
 		description="pack jars">
 	</target>
+	<target name="test"
+		depends="dist"
+		description="build tests">
+		<ahsjavac
+			tree="test"
+			module="test"
+			classes="us/exultant/ahs/test/*"
+			depends="lib/junit.jar : dist/ahslib-complete.jar"
+		/>
+	</target>
+	
 	<target name="compile-core" depends="init">
 		<ahsjavac
-			module="core"
+			module="main/core"
 			classes="us/exultant/ahs/core/**, us/exultant/ahs/util/**"
 			depends=""
 		/>
 	</target>
 	<target name="dist-core" depends="compile-core">
-		<jar jarfile="dist/ahslib-core.jar" basedir="build/core"/>
+		<jar jarfile="dist/ahslib-core.jar" basedir="build/main/core"/>
 	</target>
 	
 	<target name="compile-codec" depends="compile-core">
 		<ahsjavac
-			module="codec"
+			module="main/codec"
 			classes="us/exultant/ahs/codec/*, us/exultant/ahs/codec/eon/*"
-			depends="build/core"
+			depends="build/main/core"
 		/>
 	</target>
 	<target name="dist-codec" depends="compile-codec">
-		<jar jarfile="dist/ahslib-codec.jar" basedir="build/codec"/>
+		<jar jarfile="dist/ahslib-codec.jar" basedir="build/main/codec"/>
 	</target>
 	
 	<target name="compile-codec-json" depends="compile-codec">
 		<ahsjavac
-			module="codec-json"
+			module="main/codec-json"
 			classes="us/exultant/ahs/codec/json/**"
-			depends="build/codec : build/core"
+			depends="build/main/codec : build/main/core"
 		/>
 	</target>
 	<target name="dist-codec-json" depends="compile-codec-json">
-		<jar jarfile="dist/ahslib-codec-json.jar" basedir="build/codec-json"/>
+		<jar jarfile="dist/ahslib-codec-json.jar" basedir="build/main/codec-json"/>
 	</target>
 	
 	<target name="compile-codec-ebon" depends="compile-codec">
 		<ahsjavac
-			module="codec-ebon"
+			module="main/codec-ebon"
 			classes="us/exultant/ahs/codec/ebon/**"
-			depends="build/codec : build/core"
+			depends="build/main/codec : build/main/core"
 		/>
 	</target>
 	<target name="dist-codec-ebon" depends="compile-codec-ebon">
-		<jar jarfile="dist/ahslib-codec-ebon.jar" basedir="build/codec-ebon"/>
+		<jar jarfile="dist/ahslib-codec-ebon.jar" basedir="build/main/codec-ebon"/>
 	</target>
 		
 	<target name="compile-codec-pre" depends="compile-codec">
 		<ahsjavac
-			module="codec-pre"
+			module="main/codec-pre"
 			classes="us/exultant/ahs/codec/eon/pre/**"
-			depends="build/codec : build/core"
+			depends="build/main/codec : build/main/core"
 		/>
 	</target>
 	<target name="dist-codec-pre" depends="compile-codec-pre">
-		<jar jarfile="dist/ahslib-codec-pre.jar" basedir="build/codec-pre"/>
+		<jar jarfile="dist/ahslib-codec-pre.jar" basedir="build/main/codec-pre"/>
 	</target>
 	
 	<target name="compile-log" depends="compile-core">
 		<ahsjavac
-			module="log"
+			module="main/log"
 			classes="us/exultant/ahs/log/**"
-			depends="build/core"
+			depends="build/main/core"
 		/>
 	</target>
 	<target name="dist-log" depends="compile-log">
-		<jar jarfile="dist/ahslib-log.jar" basedir="build/log"/>
+		<jar jarfile="dist/ahslib-log.jar" basedir="build/main/log"/>
 	</target>
 	
 	<target name="compile-test" depends="compile-log">
 		<ahsjavac
-			module="test"
+			module="main/test"
 			classes="us/exultant/ahs/test/*.java"
-			depends="build/core : build/log"
+			depends="build/main/core : build/main/log"
 		/>
 	</target>
 	<target name="dist-test" depends="compile-test">
-		<jar jarfile="dist/ahslib-test.jar" basedir="build/test"/>
+		<jar jarfile="dist/ahslib-test.jar" basedir="build/main/test"/>
 	</target>
 	<target name="compile-test-junit" depends="compile-test">
 		<ahsjavac
-			module="test-junit"
+			module="main/test-junit"
 			classes="us/exultant/ahs/test/junit/**"
-			depends="build/core : build/log : lib/junit.jar"
+			depends="build/main/core : build/main/log : lib/junit.jar"
 		/>
 	</target>
 	<target name="dist-test-junit" depends="compile-test-junit">
-		<jar jarfile="dist/ahslib-test-junit.jar" basedir="build/test-junit"/>
+		<jar jarfile="dist/ahslib-test-junit.jar" basedir="build/main/test-junit"/>
 	</target>
 	
 	<target name="compile-thread" depends="compile-core">
 		<ahsjavac
-			module="thread"
+			module="main/thread"
 			classes="us/exultant/ahs/thread/**"
-			depends="build/core"
+			depends="build/main/core"
 		/>
 	</target>
 	<target name="dist-thread" depends="compile-thread">
-		<jar jarfile="dist/ahslib-thread.jar" basedir="build/thread"/>
+		<jar jarfile="dist/ahslib-thread.jar" basedir="build/main/thread"/>
 	</target>
 	
 	<target name="compile-io" depends="compile-thread">
 		<ahsjavac
-			module="io"
+			module="main/io"
 			classes="us/exultant/ahs/io/**"
-			depends="build/core : build/thread"
+			depends="build/main/core : build/main/thread"
 		/>
 	</target>
 	<target name="dist-io" depends="compile-io">
-		<jar jarfile="dist/ahslib-io.jar" basedir="build/io"/>
+		<jar jarfile="dist/ahslib-io.jar" basedir="build/main/io"/>
 	</target>
 	
 	<target name="dist-complete" depends="
@@ -178,16 +190,16 @@
 			compile-io
 		">
 		<jar jarfile="dist/ahslib-complete.jar">
-			<fileset dir="build/core"/>
-			<fileset dir="build/codec"/>
-			<fileset dir="build/codec-json"/>
-			<fileset dir="build/codec-ebon"/>
-			<fileset dir="build/codec-pre"/>
-			<fileset dir="build/log"/>
-			<fileset dir="build/test"/>
-			<fileset dir="build/test-junit"/>
-			<fileset dir="build/thread"/>
-			<fileset dir="build/io"/>
+			<fileset dir="build/main/core"/>
+			<fileset dir="build/main/codec"/>
+			<fileset dir="build/main/codec-json"/>
+			<fileset dir="build/main/codec-ebon"/>
+			<fileset dir="build/main/codec-pre"/>
+			<fileset dir="build/main/log"/>
+			<fileset dir="build/main/test"/>
+			<fileset dir="build/main/test-junit"/>
+			<fileset dir="build/main/thread"/>
+			<fileset dir="build/main/io"/>
 			<!-- does not include scratch, and does not include anything with external dependancies (except junit, because who cares). -->
 		</jar>
 	</target>

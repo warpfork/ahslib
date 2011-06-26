@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="AHSlibBuildCommon" basedir=".">
 	<macrodef name="ahsjavac">
+		<attribute name="tree" default="src"/>
 		<attribute name="module"/>
 		<attribute name="classes"/>
 		<attribute name="depends"/>
 		<sequential>
 			<mkdir dir="build/@{module}"/>
 			<javac
-				srcdir="src"
+				srcdir="@{tree}"
 				destdir="build/@{module}"
 				sourcepath=""
 				includes="@{classes}"
