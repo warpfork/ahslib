@@ -56,6 +56,7 @@
 	<target name="dist-core" depends="compile-core">
 		<jar jarfile="dist/ahslib-core.jar" basedir="build/core"/>
 	</target>
+	
 	<target name="compile-codec" depends="compile-core">
 		<ahsjavac
 			module="codec"
@@ -66,6 +67,7 @@
 	<target name="dist-codec" depends="compile-codec">
 		<jar jarfile="dist/ahslib-codec.jar" basedir="build/codec"/>
 	</target>
+	
 	<target name="compile-codec-json" depends="compile-codec">
 		<ahsjavac
 			module="codec-json"
@@ -76,6 +78,7 @@
 	<target name="dist-codec-json" depends="compile-codec-json">
 		<jar jarfile="dist/ahslib-codec-json.jar" basedir="build/codec-json"/>
 	</target>
+	
 	<target name="compile-codec-ebon" depends="compile-codec">
 		<ahsjavac
 			module="codec-ebon"
@@ -86,6 +89,7 @@
 	<target name="dist-codec-ebon" depends="compile-codec-ebon">
 		<jar jarfile="dist/ahslib-codec-ebon.jar" basedir="build/codec-ebon"/>
 	</target>
+		
 	<target name="compile-codec-pre" depends="compile-codec">
 		<ahsjavac
 			module="codec-pre"
@@ -96,12 +100,25 @@
 	<target name="dist-codec-pre" depends="compile-codec-pre">
 		<jar jarfile="dist/ahslib-codec-pre.jar" basedir="build/codec-pre"/>
 	</target>
+	
+	<target name="compile-log" depends="compile-core">
+		<ahsjavac
+			module="log"
+			classes="us/exultant/ahs/log/**"
+			depends="build/core"
+		/>
+	</target>
+	<target name="dist-log" depends="compile-log">
+		<jar jarfile="dist/ahslib-log.jar" basedir="build/log"/>
+	</target>
+	
 	<target name="dist-complete" depends="
 			compile-core,
 			compile-codec,
 			compile-codec-json,
 			compile-codec-ebon,
-			compile-codec-pre
+			compile-codec-pre,
+			compile-log
 		">
 		<jar jarfile="dist/ahslib-complete.jar">
 			<fileset dir="build/core"/>
@@ -109,6 +126,7 @@
 			<fileset dir="build/codec-json"/>
 			<fileset dir="build/codec-ebon"/>
 			<fileset dir="build/codec-pre"/>
+			<fileset dir="build/log"/>
 			<!-- does not include scratch, and does not include anything with external dependancies. -->
 		</jar>
 	</target>

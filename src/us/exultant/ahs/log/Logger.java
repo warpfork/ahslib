@@ -1,9 +1,6 @@
 package us.exultant.ahs.log;
 
-import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.thread.*;
-import us.exultant.ahs.io.*;
 import java.io.*;
 
 /**
@@ -25,11 +22,12 @@ public class Logger {
 		set($level);
 		this.$writer = $writer;
 	}
+	/* TODO:AHS:REFACTOR: these convenience methods can no longer exist here because of the modularization requirements.
 	public static Logger logPlainToFile(int $level, File $file) {
 		return new Logger($level, new VapidWriter(IOForge.makePrintStreamNoGuff($file)));
 	}
 	
-		
+	
 	public static SyncFreeProvider<Logger> makeProvider() {
 		return makeProvider(LEVEL_INFO);
 	}
@@ -46,6 +44,7 @@ public class Logger {
 			}
 		});
 	}
+	*/
 	
 	
 	

@@ -1,22 +1,10 @@
 package us.exultant.ahs.log;
 
-import us.exultant.ahs.core.*;
-import us.exultant.ahs.thread.*;
-
-
 /**
  * Logging level is fixed to absolute none. Change providers to this in deployment
  * products to try to gain a tiny, tiny, tiny amount of perforance.
  **/
 public class Logger_None extends Logger {
-	public static SyncFreeProvider<Logger> makeProvider() {
-		return new SyncFreeProvider<Logger>(new Factory<Logger>() {
-			public Logger make() {
-				return new Logger_None();
-			}
-		});
-	}
-
 	public void NONE() {}
 	public void set(int $level) {}
 	public void setLogger(Writer $logger) {}
