@@ -39,6 +39,7 @@ public class Arr {
 	
 	/**
 	 * <p>
+	 * Produces a new byte array by reading the contents of the given ByteBuffer.
 	 * After this method returns, the given ByteBuffer's position will match its
 	 * limit.
 	 * </p>
@@ -87,7 +88,7 @@ public class Arr {
 	//MAKEMORE
 	/**
 	 * Returns a new array with only non-null elements (in the same order as the old
-	 * array) truncated to the smallest size possible.
+	 * array) truncated to the smallest size possible.  The given array is not mutated.
 	 * 
 	 * @return an array without any nulls.
 	 */
@@ -103,7 +104,7 @@ public class Arr {
 	//MAKEMORE
 	/**
 	 * Mutates original, compacting all nulls to the end and all non-nulls to the
-	 * beginning (leaving array size unchanged, obviously). Returns a new array of the
+	 * beginning (leaving array size unchanged, obviously). Returns a new array in the
 	 * same order as the mutated old array, but truncated to contain only the non-null
 	 * elements.
 	 * 
