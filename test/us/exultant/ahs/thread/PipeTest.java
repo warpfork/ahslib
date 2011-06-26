@@ -1,6 +1,6 @@
-package us.exultant.ahs.io;
+package us.exultant.ahs.thread;
 
-import us.exultant.ahs.test.*;
+import us.exultant.ahs.test.junit.*;
 
 public class PipeTest extends JUnitTestCase {
 	public void testRead() {
@@ -28,6 +28,4 @@ public class PipeTest extends JUnitTestCase {
 		assertEquals("qwer",$pipe.SRC.read());
 		assertEquals(null,$pipe.SRC.readNow());
 	}
-	
-	
 }

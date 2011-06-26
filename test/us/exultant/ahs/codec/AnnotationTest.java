@@ -1,13 +1,10 @@
-package us.exultant.ahs.test;
+package us.exultant.ahs.codec;
 
-import us.exultant.ahs.io.*;
-import us.exultant.ahs.codec.*;
+import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
+import us.exultant.ahs.test.junit.*;
 import us.exultant.ahs.codec.eon.*;
 import us.exultant.ahs.codec.json.*;
-import us.exultant.ahs.util.*;
-
-import java.lang.annotation.*;
-import java.lang.reflect.*;
 
 
 public class AnnotationTest extends JUnitTestCase {

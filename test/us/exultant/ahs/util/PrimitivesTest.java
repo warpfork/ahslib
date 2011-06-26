@@ -1,6 +1,6 @@
 package us.exultant.ahs.util;
 
-import us.exultant.ahs.test.*;
+import us.exultant.ahs.test.junit.*;
 
 public class PrimitivesTest extends JUnitTestCase {
 	public void testIntBytes() {

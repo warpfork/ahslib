@@ -1,6 +1,6 @@
-package us.exultant.ahs.test;
+package us.exultant.ahs.util;
 
-import us.exultant.ahs.util.Strings;
+import us.exultant.ahs.test.junit.*;
 
 public class StringsTest extends JUnitTestCase {
 	public void testParting() {
