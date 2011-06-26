@@ -10,12 +10,15 @@ import java.util.List;
 import us.exultant.ahs.util.*;
 
 public class IOForge {
+	@Deprecated()
 	public static ReadHeadStreamToByteBuffer readFile(String $filename) throws FileNotFoundException {
 		return new ReadHeadStreamToByteBuffer(new FileInputStream($filename), 4096);
 	}
+	@Deprecated()
 	public static ReadHeadStreamToByteBuffer readFile(File $file) throws FileNotFoundException {
 		return new ReadHeadStreamToByteBuffer(new FileInputStream($file), 4096);
 	}
+	@Deprecated()
 	public static ReadHeadStreamToByteBuffer readResource(String $resource) throws FileNotFoundException {
 		return new ReadHeadStreamToByteBuffer(getResourceAsStream($resource), 4096);
 	}
@@ -29,22 +32,28 @@ public class IOForge {
 	public static byte[] readResourceRaw(String $resource) throws FileNotFoundException, IOException {
 		return readRaw(getResourceAsStream($resource));
 	}
-	
+
+	@Deprecated()
 	public static ReadHeadStreamToString readFileAsStringStream(File $file) throws FileNotFoundException {
 		return new ReadHeadStreamToString(new FileInputStream($file), Strings.UTF_8);
 	}
+	@Deprecated()
 	public static ReadHeadStreamToString readFileAsStringStream(File $file, Charset $cs) throws FileNotFoundException {
 		return new ReadHeadStreamToString(new FileInputStream($file), $cs);
 	}
+	@Deprecated()
 	public static ReadHeadStreamToString readFileAsStringStream(String $filename) throws FileNotFoundException {
 		return new ReadHeadStreamToString(new FileInputStream($filename), Strings.UTF_8);
 	}
+	@Deprecated()
 	public static ReadHeadStreamToString readFileAsStringStream(String $filename, Charset $cs) throws FileNotFoundException {
 		return new ReadHeadStreamToString(new FileInputStream($filename), $cs);
 	}
+	@Deprecated()
 	public static ReadHeadStreamToString readResourceAsStringStream(String $resource) throws FileNotFoundException {
 		return new ReadHeadStreamToString(getResourceAsStream($resource), Strings.UTF_8);
 	}
+	@Deprecated()
 	public static ReadHeadStreamToString readResourceAsStringStream(String $resource, Charset $cs) throws FileNotFoundException {
 		return new ReadHeadStreamToString(getResourceAsStream($resource), $cs);
 	}
