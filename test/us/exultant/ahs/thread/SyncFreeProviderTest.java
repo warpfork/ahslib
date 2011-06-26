@@ -1,10 +1,10 @@
 package us.exultant.ahs.thread;
 
-import us.exultant.ahs.util.*;
-import us.exultant.ahs.test.*;
-
 import java.util.*;
 import java.util.concurrent.locks.*;
+
+import us.exultant.ahs.test.junit.*;
+import us.exultant.ahs.util.*;
 
 public class SyncFreeProviderTest extends JUnitTestCase {
 	public static class Counter {

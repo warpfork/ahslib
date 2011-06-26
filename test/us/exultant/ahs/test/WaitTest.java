@@ -1,6 +1,7 @@
 package us.exultant.ahs.test;
 
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.test.junit.*;
 
 public class WaitTest extends JUnitTestCase {
 	public void doLoop(final int $pause, final int $times, final int $error) {
