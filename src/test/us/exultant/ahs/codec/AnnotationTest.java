@@ -119,11 +119,12 @@ public class AnnotationTest extends JUnitTestCase {
 		Encable2 $e = new Encable2("pub","priv","ABBA");
 		
 		EonCodec $codec = new JsonCodec();
-		$codec.putHook(Encable2.class, new EonRAE<Encable2>(Encable2.class, Enc.SELECTED));
 		
 		try {
-			EonObject $v = $codec.encode($e);
+			EonRAE<Encable2> $rae = new EonRAE<Encable2>(Encable2.class, Enc.SELECTED);
 			fail("this should have exploded.");
+			$codec.putHook(Encable2.class, $rae);
+			EonObject $v = $codec.encode($e);
 		} catch (UnencodableException $e1) {
 			/* good */
 		}
