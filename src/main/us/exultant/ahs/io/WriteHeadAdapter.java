@@ -9,7 +9,7 @@ import java.nio.channels.*;
 import java.util.*;
 
 public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
-	public static <$T> WriteHead<$T> make(WritableByteChannel $wbc, Translator<$T, InfallibleWritableByteChannel> $ts) {
+	public static <$T> WriteHead<$T> make(WritableByteChannel $wbc, Translator<$T, WritableByteChannelExceptionRedirector> $ts) {
 		return new ChannelwiseUnbuffered<$T>($wbc, $ts);
 	}
 	
@@ -54,10 +54,10 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 	 */
 	public static class ChannelwiseUnbuffered<$T> extends WriteHeadAdapter<$T> {
 		@SuppressWarnings("deprecation")	// this is the one place in the entire universe that's legitimately allowed to call that method.
-		public ChannelwiseUnbuffered(WritableByteChannel $wbc, Translator<$T, InfallibleWritableByteChannel> $ts) {
+		public ChannelwiseUnbuffered(WritableByteChannel $wbc, Translator<$T, WritableByteChannelExceptionRedirector> $ts) {
 			super();
 			$trans = $ts;
-			$iwbc = new InfallibleWritableByteChannel($wbc, new ExceptionHandler<IOException>() {
+			$iwbc = new WritableByteChannelExceptionRedirector($wbc, new ExceptionHandler<IOException>() {
 				public void hear(IOException $e) {
 					ExceptionHandler<IOException> $dated_eh = $eh;
 					$iwbc.close();	//XXX:AHS: i'm not actually sure that we should always close the underlying channel when it screams at us.  on the other hand, that is what most of the java.io stuff does.
@@ -72,8 +72,8 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 						((BabbleTranslator)$t).setBase($iwbc);
 		}
 		
-		private final Translator<$T,InfallibleWritableByteChannel>	$trans;
-		private final InfallibleWritableByteChannel			$iwbc;
+		private final Translator<$T,WritableByteChannelExceptionRedirector>	$trans;
+		private final WritableByteChannelExceptionRedirector			$iwbc;
 		
 		public void write($T $chunk) throws TranslationException {
 			synchronized ($trans) {
@@ -104,8 +104,8 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 		
 		
 		
-		public static interface ChunkBuilder<$CHUNK> extends Translator<$CHUNK,InfallibleWritableByteChannel> {
-			public InfallibleWritableByteChannel translate($CHUNK $m) throws TranslationException;
+		public static interface ChunkBuilder<$CHUNK> extends Translator<$CHUNK,WritableByteChannelExceptionRedirector> {
+			public WritableByteChannelExceptionRedirector translate($CHUNK $m) throws TranslationException;
 		}
 		
 		/**
@@ -144,15 +144,15 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 			
 			// i HATE this method.  it's really, really hard to even get access at it since this class usually gets hidden within a TranslatorStack.
 			// i'd hate it slightly less if i could at least put it in the ChunkBuilder interface, but then i'd have to make it public, which... ugh.
-			protected void setBase(InfallibleWritableByteChannel $base) {
+			protected void setBase(WritableByteChannelExceptionRedirector $base) {
 				if ($iwbc != null) throw new MajorBug(new IllegalStateException("Attempted to reset base channel.  This may be because someone tried to recycle a BabbleTranslator, which is not a good idea."));
 				$iwbc = $base;
 			}
 			
 			private final ByteBuffer		$preint	= ByteBuffer.allocate(4);
-			private InfallibleWritableByteChannel	$iwbc;	// effectively final.  but if, god forbid, you get multiple attempts to set it from multiple threads... well, you're in hell already, so i'm not going to try to help you.
+			private WritableByteChannelExceptionRedirector	$iwbc;	// effectively final.  but if, god forbid, you get multiple attempts to set it from multiple threads... well, you're in hell already, so i'm not going to try to help you.
 			
-			public InfallibleWritableByteChannel translate(ByteBuffer $blob) throws TranslationException {
+			public WritableByteChannelExceptionRedirector translate(ByteBuffer $blob) throws TranslationException {
 				$preint.clear();
 				$preint.putInt($blob.remaining());
 				$preint.rewind();
@@ -167,44 +167,6 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 					X.chill(7);	// this is the dirty hack.
 					$iwbc.write($lit);
 				}
-			}
-		}
-	}
-	
-	/**
-	 * Hides all exceptions from the client, rerouting them elsewhere.
-	 * IOException thrown from the write method causes the method to return 0;
-	 * if the ExceptionHandler doesn't do something in response to the
-	 * exception when it gets it (like simply closing the channel), it's quite
-	 * likely that mess will result.
-	 */
-	private static class InfallibleWritableByteChannel implements WritableByteChannel {
-		private InfallibleWritableByteChannel(WritableByteChannel $bc, ExceptionHandler<IOException> $eh) {
-			this.$bc = $bc;
-			this.$eh = $eh;
-		}
-		
-		private ExceptionHandler<IOException>	$eh;
-		private WritableByteChannel		$bc;
-		
-		public void close() {
-			try {
-				$bc.close();
-			} catch (IOException $ioe) {
-				$eh.hear($ioe);
-			}
-		}
-		
-		public boolean isOpen() {
-			return $bc.isOpen();
-		}
-		
-		public int write(ByteBuffer $dst) {
-			try {
-				return $bc.write($dst);
-			} catch (IOException $ioe) {
-				$eh.hear($ioe);
-				return -1;
 			}
 		}
 	}
