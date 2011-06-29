@@ -19,8 +19,8 @@ import java.util.List;
  * option for a file compression utility that allows you to specify any number
  * of files to compress.</p>
  * 
- * <p>This is an abstract class.  See its subclasses {@link ahs.scratch.jsap.Switch}, 
- * {@link ahs.scratch.jsap.FlaggedOption}, and {@link ahs.scratch.jsap.UnflaggedOption}
+ * <p>This is an abstract class.  See its subclasses {@link us.exultant.ahs.scratch.jsap.Switch}, 
+ * {@link us.exultant.ahs.scratch.jsap.FlaggedOption}, and {@link us.exultant.ahs.scratch.jsap.UnflaggedOption}
  * for details on the various types of parameters. Functionality common to all three
  * types of Parameters is described below.</p>
  * 
@@ -34,11 +34,11 @@ import java.util.List;
  * the JSAPResult object produced by JSAP.parse().
  *
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Switch
- * @see ahs.scratch.jsap.FlaggedOption
- * @see ahs.scratch.jsap.UnflaggedOption
- * @see ahs.scratch.jsap.JSAPResult#getBoolean(String)
- * @see ahs.scratch.jsap.JSAP#parse(String[])
+ * @see us.exultant.ahs.scratch.jsap.Switch
+ * @see us.exultant.ahs.scratch.jsap.FlaggedOption
+ * @see us.exultant.ahs.scratch.jsap.UnflaggedOption
+ * @see us.exultant.ahs.scratch.jsap.JSAPResult#getBoolean(String)
+ * @see us.exultant.ahs.scratch.jsap.JSAP#parse(String[])
  */
 @SuppressWarnings("rawtypes")
 public abstract class Parameter {
@@ -102,7 +102,7 @@ public abstract class Parameter {
      * @param locked if <code>TRUE</code>, locks this parameter.  if
      * <code>FALSE</code>, unlocks it.
      * @see
-     *    ahs.scratch.jsap.JSAP#registerParameter(Parameter)
+     *    us.exultant.ahs.scratch.jsap.JSAP#registerParameter(Parameter)
      */
     protected final void setLocked(boolean locked) {
         this.locked = locked;
@@ -241,8 +241,9 @@ public abstract class Parameter {
 	 * @return deprecated - use getSyntax()
 	 * @deprecated use getSyntax() instead
 	 */
+	@Deprecated
 	public final String getUsage() {
-		return (getSyntax());
+		return getSyntax();
 	}
 	
     /**

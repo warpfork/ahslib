@@ -23,7 +23,7 @@ import java.io.File;
  * @author  Eric Sword (made setters return "this", fixed bug triggered when
  *          file does not exist)
  * @since 1.4
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.net.URL
  */
 public class FileStringParser extends PropertyStringParser {
@@ -39,6 +39,7 @@ public class FileStringParser extends PropertyStringParser {
 	/** Creates a new FileStringParser.
 	 * @deprecated use {@link #getParser()}.
 	 */
+	@Deprecated
 	public FileStringParser() {
 		super();
 	}
@@ -52,9 +53,9 @@ public class FileStringParser extends PropertyStringParser {
 
 	public void setUp() throws ParseException {
 		BooleanStringParser bool = JSAP.BOOLEAN_PARSER;
-		setMustExist(((Boolean) bool.parse(getProperty(MUSTEXIST, (new Boolean(mustExist)).toString()))).booleanValue());
-		setMustBeDirectory(((Boolean) bool.parse(getProperty(MUSTBEDIRECTORY, (new Boolean(mustBeDirectory)).toString()))).booleanValue());
-		setMustBeFile(((Boolean) bool.parse(getProperty(MUSTBEFILE, (new Boolean(mustBeFile)).toString()))).booleanValue());
+		setMustExist(bool.parse(getProperty(MUSTEXIST, (new Boolean(mustExist)).toString())).booleanValue());
+		setMustBeDirectory(bool.parse(getProperty(MUSTBEDIRECTORY, (new Boolean(mustBeDirectory)).toString())).booleanValue());
+		setMustBeFile(bool.parse(getProperty(MUSTBEFILE, (new Boolean(mustBeFile)).toString())).booleanValue());
 	}
 
 	public FileStringParser setMustBeDirectory(boolean mustBeDirectory) {
@@ -99,7 +100,7 @@ public class FileStringParser extends PropertyStringParser {
 	 * @throws ParseException if <code>new File(arg)</code> throws a
 	 * NullPointerException.
 	 * @see java.io File
-	 * @see ahs.scratch.jsap.StringParser#parse(String)
+	 * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
 	 */
 	public Object parse(String arg) throws ParseException {
 		File result = null;

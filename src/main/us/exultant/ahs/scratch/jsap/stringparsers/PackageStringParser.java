@@ -10,13 +10,13 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing Packages.  The parse() method delegates the actual
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Packages.  The parse() method delegates the actual
  * parsing to <code>Package.getPackage(String)</code>, and returns the resulting
  * Package object.
  * If <code>Package.getPackage()</code> returns null, a ParseException is
  * thrown.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.lang.Package
  */
 public class PackageStringParser extends StringParser {
@@ -27,7 +27,7 @@ public class PackageStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#PACKAGE_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#PACKAGE_PARSER}.
 	 *  
 	 * @return a {@link PackageStringParser}.
 	 */
@@ -37,8 +37,9 @@ public class PackageStringParser extends StringParser {
 
 	/**
      * Creates a new PackageStringParser
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#PACKAGE_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#PACKAGE_PARSER}.
      */
+    @Deprecated
     public PackageStringParser() {
         super();
     }
@@ -56,7 +57,7 @@ public class PackageStringParser extends StringParser {
      * @throws ParseException if <code>Package.getPackage(arg)</code> returns
      * null.
      * @see java.lang.Package
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         Package result = Package.getPackage(arg);

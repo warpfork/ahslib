@@ -12,7 +12,7 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} that enforces a limited set of String options for its
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} that enforces a limited set of String options for its
  * values.
  * These values are provided in the constructor together with one or two parameters
  * that control the processing of these values.
@@ -67,6 +67,7 @@ public class EnumeratedStringParser extends StringParser {
 	 *         or is empty
 	 * @deprecated use {@link #getParser(String, boolean, boolean)}.
 	 */
+	@Deprecated
 	public EnumeratedStringParser(String validOptionValues, boolean caseSensitive, boolean checkOptionChars) throws IllegalArgumentException {
 		if (validOptionValues == null) {
 			throw new IllegalArgumentException("EnumeratedStringParser validOptions parameter is null");
@@ -128,6 +129,7 @@ public class EnumeratedStringParser extends StringParser {
 	 * @deprecated use {@link #getParser(String, boolean)}.
 	 * 
 	 */
+	@Deprecated
 	public EnumeratedStringParser(String validOptionValues, boolean caseSensitive) throws IllegalArgumentException {
 		this(validOptionValues, caseSensitive, true);
 	}
@@ -155,6 +157,7 @@ public class EnumeratedStringParser extends StringParser {
 	 * Constructs a new instance of EnumeratedStringParser.
 	 * @deprecated use {@link #getParser(String)}.
 	 */
+	@Deprecated
 	public EnumeratedStringParser(String validOptionValues) throws IllegalArgumentException {
 		this(validOptionValues, false, true);
 	}

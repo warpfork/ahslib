@@ -26,8 +26,8 @@ import java.util.List;
  * as the platform's path separator
  * character (":" on *nix and ";" on DOS/Windows as described above).
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Flagged
- * @see ahs.scratch.jsap.Option
+ * @see us.exultant.ahs.scratch.jsap.Flagged
+ * @see us.exultant.ahs.scratch.jsap.Option
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class Option extends Parameter {
@@ -122,7 +122,7 @@ public abstract class Option extends Parameter {
      * delegate.
      * @param stringParser the StringParser to which this Option's parse()
      * method should delegate.
-     * @see ahs.scratch.jsap.StringParser
+     * @see us.exultant.ahs.scratch.jsap.StringParser
      */
     protected final void internalSetStringParser(StringParser stringParser) {
         enforceParameterLock();
@@ -208,7 +208,7 @@ public abstract class Option extends Parameter {
      * with a JSAP.  If the StringParser requires any setup not taken care of
      * in its constructor, it should override StringParser.setUp().
      * @throws JSAPException if the underlying StringParser throws it.
-     * @see ahs.scratch.jsap.StringParser#setUp()
+     * @see us.exultant.ahs.scratch.jsap.StringParser#setUp()
      */
     protected void register() throws JSAPException {
         StringParser stringParser = getStringParser();
@@ -227,7 +227,7 @@ public abstract class Option extends Parameter {
      * from a JSAP.  If the StringParser requires any cleanup, it should
      * ovverride
      * StringParser.tearDown().
-     * @see ahs.scratch.jsap.StringParser#tearDown()
+     * @see us.exultant.ahs.scratch.jsap.StringParser#tearDown()
      */
     protected void unregister() {
         StringParser stringParser = getStringParser();

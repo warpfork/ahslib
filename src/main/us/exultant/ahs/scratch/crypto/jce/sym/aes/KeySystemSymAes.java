@@ -1,14 +1,9 @@
 package us.exultant.ahs.scratch.crypto.jce.sym.aes;
 
-import us.exultant.ahs.scratch.crypto.jce.sym.*;
-import us.exultant.ahs.scratch.crypto.jce.sym.aes.*;
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-
+import us.exultant.ahs.scratch.crypto.jce.sym.*;
 import java.security.*;
-import java.security.interfaces.*;
-import java.security.spec.*;
-
 import javax.crypto.*;
 import javax.crypto.spec.*;
 

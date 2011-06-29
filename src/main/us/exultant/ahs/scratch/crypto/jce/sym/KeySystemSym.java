@@ -1,11 +1,8 @@
 package us.exultant.ahs.scratch.crypto.jce.sym;
 
-import us.exultant.ahs.scratch.crypto.jce.*;
 import us.exultant.ahs.core.*;
-
+import us.exultant.ahs.scratch.crypto.jce.*;
 import java.security.*;
-import java.security.interfaces.*;
-import javax.crypto.*;
 
 /**
  * Implementors are not expected to provide internal synchronization; multiple threads

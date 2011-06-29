@@ -1,13 +1,9 @@
 package us.exultant.ahs.scratch.crypto.jce.est;
 
-import us.exultant.ahs.scratch.crypto.jce.*;
-import us.exultant.ahs.scratch.crypto.jce.sym.*;
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-
-import java.security.*;
-
-import javax.crypto.interfaces.*;
+import us.exultant.ahs.scratch.crypto.jce.*;
+import us.exultant.ahs.scratch.crypto.jce.sym.*;
 
 public interface KeySystemEst<$KEYPUB extends KeyEstPub, $KEYPRV extends KeyEstPrv, $KEYEST extends KeySym> extends KeySystem  {
 	public Tup2<$KEYPUB,$KEYPRV> generateKeys();

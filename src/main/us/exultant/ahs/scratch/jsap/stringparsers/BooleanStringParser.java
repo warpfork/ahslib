@@ -10,7 +10,7 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * <p>A {@link ahs.scratch.jsap.StringParser} for parsing Booleans.  This StringParser is also used
+ * <p>A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Booleans.  This StringParser is also used
  * internally
  * by the Switch class.</p>
  *
@@ -34,7 +34,7 @@ import us.exultant.ahs.scratch.jsap.ParseException;
  * 
  * <p>All other input throws a ParseException.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.lang.Boolean
  */
 public class BooleanStringParser extends StringParser {
@@ -45,7 +45,7 @@ public class BooleanStringParser extends StringParser {
 	 * 
 	 * <p>
 	 * Convenient access to the only instance returned by this method is available
-	 * through {@link ahs.scratch.jsap.JSAP#BOOLEAN_PARSER}.
+	 * through {@link us.exultant.ahs.scratch.jsap.JSAP#BOOLEAN_PARSER}.
 	 * 
 	 * @return a {@link BooleanStringParser}.
 	 */
@@ -58,8 +58,9 @@ public class BooleanStringParser extends StringParser {
 	 * Creates a new BooleanStringParser
 	 * 
 	 * @deprecated Use {@link #getParser()} or, even better,
-	 *             {@link ahs.scratch.jsap.JSAP#BOOLEAN_PARSER}.
+	 *             {@link us.exultant.ahs.scratch.jsap.JSAP#BOOLEAN_PARSER}.
 	 */
+	@Deprecated
 	public BooleanStringParser() {
 		super();
 	}

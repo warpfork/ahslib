@@ -13,7 +13,7 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing java.util.Date objects.  By default, arguments
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing java.util.Date objects.  By default, arguments
  * are parsed using the
  * java.text.SimpleDateFormat for the default locale.  The format can be
  * overridden using this StringParser's
@@ -32,7 +32,7 @@ import java.text.SimpleDateFormat;
  * registered with a JSAP object.
  *
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.util.Date
  * @see java.text.SimpleDateFormat
  */
@@ -56,6 +56,7 @@ public class DateStringParser extends PropertyStringParser {
      * Creates a new DateStringParser.
      * @deprecated Use {@link #getParser()}.
      */
+    @Deprecated
     public DateStringParser() {
         super();
     }

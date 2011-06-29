@@ -11,11 +11,11 @@ import us.exultant.ahs.scratch.jsap.ParseException;
 import java.math.BigDecimal;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing BigDecimals.  The parse() method delegates the
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing BigDecimals.  The parse() method delegates the
  * actual
  * parsing to BigDecimal's constructor.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.math.BigDecimal
  */
 public class BigDecimalStringParser extends StringParser {
@@ -26,7 +26,7 @@ public class BigDecimalStringParser extends StringParser {
 	 *
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#BIGDECIMAL_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#BIGDECIMAL_PARSER}.
 	 *  
 	 * @return a {@link BigDecimalStringParser}.
 	 */
@@ -37,8 +37,9 @@ public class BigDecimalStringParser extends StringParser {
 
 	/**
      * Creates a new BigDecimalStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#BIGDECIMAL_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#BIGDECIMAL_PARSER}.
      */
+    @Deprecated
     public BigDecimalStringParser() {
         super();
     }
@@ -57,7 +58,7 @@ public class BigDecimalStringParser extends StringParser {
      * @throws ParseException if <code>new BigDecimal(arg)</code> throws a
      * NumberFormatException.
      * @see BigDecimal
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         BigDecimal result = null;

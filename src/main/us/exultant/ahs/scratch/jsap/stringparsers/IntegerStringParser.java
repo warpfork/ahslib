@@ -10,10 +10,10 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing Integers.  The parse() method delegates the actual
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Integers.  The parse() method delegates the actual
  * parsing to Integer.decode(String).
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.lang.Integer
  */
 public class IntegerStringParser extends StringParser {
@@ -24,7 +24,7 @@ public class IntegerStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#INTEGER_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#INTEGER_PARSER}.
 	 *  
 	 * @return a {@link IntegerStringParser}.
 	 */
@@ -34,8 +34,9 @@ public class IntegerStringParser extends StringParser {
 
 	/**
      * Creates a new IntegerStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#INTEGER_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#INTEGER_PARSER}.
      */
+    @Deprecated
     public IntegerStringParser() {
         super();
     }
@@ -53,7 +54,7 @@ public class IntegerStringParser extends StringParser {
      * @throws ParseException if <code>Integer.decode(arg)</code> throws a
      * NumberFormatException.
      * @see java.lang.Integer
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         Integer result = null;

@@ -10,12 +10,12 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing Shorts.  The parse() method delegates the actual
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Shorts.  The parse() method delegates the actual
  * parsing to <code>Short.decode(String)</code>.  If <code>Short.decode()</code>
  * throws a
  * NumberFormatException, it is encapsulated in a ParseException and re-thrown.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.math.BigDecimal
  */
 public class ShortStringParser extends StringParser {
@@ -26,7 +26,7 @@ public class ShortStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#SHORT_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#SHORT_PARSER}.
 	 *  
 	 * @return a {@link ShortStringParser}.
 	 */
@@ -37,8 +37,9 @@ public class ShortStringParser extends StringParser {
 
 	/**
      * Creates a new ShortStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#SHORT_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#SHORT_PARSER}.
      */
+    @Deprecated
     public ShortStringParser() {
         super();
     }
@@ -56,7 +57,7 @@ public class ShortStringParser extends StringParser {
      * @throws ParseException if <code>Short.decode(arg)</code> throws a
      * NumberFormatException.
      * @see java.lang.Short
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         Short result = null;

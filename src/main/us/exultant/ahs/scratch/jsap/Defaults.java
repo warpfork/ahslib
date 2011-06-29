@@ -147,7 +147,7 @@ public class Defaults {
 	 *         specified ID, or null if no default values are defined.
 	 */
 	public String[] getDefault(String paramID) {
-		return ((String[]) defaults.get(paramID));
+		return defaults.get(paramID);
 	}
 	
 	/**

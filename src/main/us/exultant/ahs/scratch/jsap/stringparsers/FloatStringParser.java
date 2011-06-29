@@ -10,14 +10,14 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing Floats.  The <code>parse()</code> method delegates
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Floats.  The <code>parse()</code> method delegates
  * the actual
  * parsing to <code>new Float(String)</code>.  If <code>new Float(String)</code>
  * throws a NumberFormatException, it
  * is encapsulated in a ParseException and re-thrown.
  *
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.lang.Float
  */
 public class FloatStringParser extends StringParser {
@@ -28,7 +28,7 @@ public class FloatStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#FLOAT_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#FLOAT_PARSER}.
 	 *  
 	 * @return a {@link FloatStringParser}.
 	 */
@@ -39,8 +39,9 @@ public class FloatStringParser extends StringParser {
 
 	/**
      * Creates a new FloatStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#FLOAT_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#FLOAT_PARSER}.
      */
+    @Deprecated
     public FloatStringParser() {
         super();
     }
@@ -58,7 +59,7 @@ public class FloatStringParser extends StringParser {
      * @throws ParseException if <code>new Float(arg)</code> throws a
      * NumberFormatException.
      * @see java.lang.Float
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         Float result = null;

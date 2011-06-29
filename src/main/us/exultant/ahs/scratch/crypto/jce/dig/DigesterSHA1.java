@@ -1,9 +1,7 @@
 package us.exultant.ahs.scratch.crypto.jce.dig;
 
 import us.exultant.ahs.scratch.crypto.jce.*;
-import us.exultant.ahs.scratch.crypto.jce.dig.*;
 import us.exultant.ahs.util.*;
-
 import java.security.*;
 
 /**

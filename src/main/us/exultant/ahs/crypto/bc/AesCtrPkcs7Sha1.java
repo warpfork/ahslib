@@ -1,17 +1,11 @@
 package us.exultant.ahs.crypto.bc;
 
+import us.exultant.ahs.util.*;
 import us.exultant.ahs.crypto.*;
 import us.exultant.ahs.crypto.bc.mod.*;
-import us.exultant.ahs.io.*;
-import us.exultant.ahs.codec.*;
-import us.exultant.ahs.codec.eon.*;
-import us.exultant.ahs.util.*;
-
 import java.util.*;
-
 import org.bouncycastle.crypto.*;
 import org.bouncycastle.crypto.digests.*;
-import org.bouncycastle.crypto.engines.*;
 import org.bouncycastle.crypto.macs.*;
 import org.bouncycastle.crypto.modes.*;
 import org.bouncycastle.crypto.paddings.*;

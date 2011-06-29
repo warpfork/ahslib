@@ -14,12 +14,12 @@ import java.util.regex.Pattern;
 import us.exultant.ahs.scratch.jsap.ParseException;
 import us.exultant.ahs.scratch.jsap.StringParser;
 
-/** A {@link ahs.scratch.jsap.StringParser} that lets the user specify sizes with an optional unit.
+/** A {@link us.exultant.ahs.scratch.jsap.StringParser} that lets the user specify sizes with an optional unit.
  * 
  * <P>This parser will parse its argument using {@link #parseSize(CharSequence)}.
  * 
  * @author Sebastiano Vigna
- * @see ahs.scratch.jsap.stringparsers.IntSizeStringParser
+ * @see us.exultant.ahs.scratch.jsap.stringparsers.IntSizeStringParser
  */
 
 public class LongSizeStringParser extends StringParser {
@@ -42,7 +42,7 @@ public class LongSizeStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#LONGSIZE_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#LONGSIZE_PARSER}.
 	 *  
 	 * @return the only instance of a {@link LongSizeStringParser}.
 	 */
@@ -95,7 +95,7 @@ public class LongSizeStringParser extends StringParser {
 		BigInteger unitSize = BigInteger.ONE;
 
 		if ( unit != null ) {
-			Long unitSizeObj = (Long)UNIT2SIZE.get( unit );
+			Long unitSizeObj = UNIT2SIZE.get( unit );
 			if ( unitSizeObj == null ) throw new ParseException( "Invalid unit specification '" + unit + "'." );
 			unitSize = new BigInteger( unitSizeObj.toString() );
 		}

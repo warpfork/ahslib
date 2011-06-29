@@ -10,12 +10,12 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing Characters.  The parse() method requires an
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Characters.  The parse() method requires an
  * argument of length exactly
  * equal to 1 in order to perform the conversion; otherwise, a ParseException
  * is thrown.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.lang.Character
  */
 public class CharacterStringParser extends StringParser {
@@ -26,7 +26,7 @@ public class CharacterStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#CHARACTER_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#CHARACTER_PARSER}.
 	 *  
 	 * @return a {@link CharacterStringParser}.
 	 */
@@ -37,8 +37,9 @@ public class CharacterStringParser extends StringParser {
 
 	/**
      * Creates a new CharacterStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#CHARACTER_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#CHARACTER_PARSER}.
      */
+    @Deprecated
     public CharacterStringParser() {
         super();
     }
@@ -57,7 +58,7 @@ public class CharacterStringParser extends StringParser {
      * argument.
      * @throws ParseException if ( (arg==null) || (arg.length()!=1) )
      * @see java.lang.Character
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         if ((arg == null) || (arg.length() != 1)) {

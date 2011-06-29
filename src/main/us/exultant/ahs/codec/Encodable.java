@@ -5,11 +5,12 @@ import java.lang.annotation.*;
 /**
  * <p>
  * Encoders and decoders based on reflective annotation (namely
- * {@link ahs.codec.eon.EonRAE} and {@link ahs.codec.eon.EonRAD}) check for this
- * annotation's presense on a class in order to see if they are allowed to operate on it
- * (and how). Classes wishing to be available for reflective annotation based encoders and
- * decoders should be annotated with this type, and also provide a constructor
- * <code>private ClassName(Encodable $x)</code> (which generally has an empty body).
+ * {@link us.exultant.ahs.codec.eon.EonRAE} and {@link us.exultant.ahs.codec.eon.EonRAD})
+ * check for this annotation's presense on a class in order to see if they are allowed to
+ * operate on it (and how). Classes wishing to be available for reflective annotation
+ * based encoders and decoders should be annotated with this type, and also provide a
+ * constructor <code>private ClassName(Encodable $x)</code> (which generally has an empty
+ * body).
  * </p>
  * 
  * <p>
@@ -27,8 +28,8 @@ public @interface Encodable {
 	 * This string specifies the value that the encoder should use for a classname if
 	 * the encoder has no other more specific instructions. However, this is only an
 	 * advisory: it's completely legit for an encoder implementation to wayside this
-	 * flag completely (though {@link ahs.codec.eon.EonRAE} and
-	 * {@link ahs.codec.eon.EonRAD} respect it).
+	 * flag completely (though {@link us.exultant.ahs.codec.eon.EonRAE} and
+	 * {@link us.exultant.ahs.codec.eon.EonRAD} respect it).
 	 * </p>
 	 * 
 	 * <p>

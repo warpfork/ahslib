@@ -1,18 +1,14 @@
 package us.exultant.ahs.scratch.crypto.jce.est.dh;
 
-import us.exultant.ahs.scratch.crypto.jce.est.*;
-import us.exultant.ahs.scratch.crypto.jce.sym.aes.*;
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-
+import us.exultant.ahs.scratch.crypto.jce.sym.aes.*;
 import java.math.*;
 import java.security.*;
-import java.security.interfaces.*;
 import java.security.spec.*;
-
 import javax.crypto.*;
-import javax.crypto.spec.*;
 import javax.crypto.interfaces.*;
+import javax.crypto.spec.*;
 
 /**
  * @author hash

@@ -1,10 +1,6 @@
 package us.exultant.ahs.scratch.applet;
 
-import us.exultant.ahs.scratch.applet.command.*;
-
 import java.applet.*;
-import java.util.regex.*;
-
 import netscape.javascript.*;
 
 public class DomContactJso implements DomContact.Exposure {
@@ -26,14 +22,4 @@ public class DomContactJso implements DomContact.Exposure {
 		for (String $s : $strs) $precommand.append($s);
 		return $precommand.toString();
 	}
-	
-	
-	
-	//private static final String SSN = Matcher.quoteReplacement("\\n");
-	//private synchronized String condense(String... $strs) {
-	//	$precommand.setLength(0);
-	//	for (String $s : $strs) $precommand.append($s.replaceAll("\n", SSN));
-	//	//FIX-ME:AHS:APPLET: the above replace stuff deals with issues arrising from println stuff, and it's extremely dubious whether or not it should go here.
-	//	return $precommand.toString();
-	//}
 }

@@ -2,8 +2,6 @@ package us.exultant.ahs.scratch.crypto.jce.asm.rsa;
 
 import us.exultant.ahs.scratch.crypto.jce.asm.*;
 
-import java.security.interfaces.*;
-
 /**
  * @author hash
  *

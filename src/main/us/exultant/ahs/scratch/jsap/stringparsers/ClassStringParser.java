@@ -10,7 +10,7 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing Class objects.  The parse(arg) method calls
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Class objects.  The parse(arg) method calls
  * Class.forName(arg) and returns
  * the result.  If any exceptions are thrown by Class.forName(), they are
  * encapsulated in a ParseException
@@ -20,7 +20,7 @@ import us.exultant.ahs.scratch.jsap.ParseException;
  * same ClassLoader that loaded
  * this StringParser.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.lang.Class
  */
 public class ClassStringParser extends StringParser {
@@ -31,7 +31,7 @@ public class ClassStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#CLASS_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#CLASS_PARSER}.
 	 *  
 	 * @return a {@link ClassStringParser}.
 	 */
@@ -42,8 +42,9 @@ public class ClassStringParser extends StringParser {
 
 	/**
      * Creates a new ClassStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#CLASS_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#CLASS_PARSER}.
      */
+    @Deprecated
     public ClassStringParser() {
         super();
     }
@@ -62,7 +63,7 @@ public class ClassStringParser extends StringParser {
      * @throws ParseException if <code>Class.forName(arg)</code> throws an
      * exception.
      * @see java.lang.Class
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         Class<?> result = null;

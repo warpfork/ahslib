@@ -29,8 +29,8 @@ import java.util.List;
  * processing.
  * 
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.JSAP#parse(String)
- * @see ahs.scratch.jsap.JSAP#parse(String[])
+ * @see us.exultant.ahs.scratch.jsap.JSAP#parse(String)
+ * @see us.exultant.ahs.scratch.jsap.JSAP#parse(String[])
  */
 public class CommandLineTokenizer {
 	
@@ -106,7 +106,7 @@ public class CommandLineTokenizer {
 		}
 		
 		String[] result = new String[resultBuffer.size()];
-		return ((String[]) resultBuffer.toArray(result));
+		return resultBuffer.toArray(result);
 	}
 	
 }

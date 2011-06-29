@@ -13,7 +13,7 @@ import us.exultant.ahs.scratch.jsap.stringparsers.BooleanStringParser;
 /**
  * A Switch is a parameter whose presence alone is significant; another 
  * commonly used term for a Switch is "Flag".
- * Switches use a {@link ahs.scratch.jsap.stringparsers.BooleanStringParser}
+ * Switches use a {@link us.exultant.ahs.scratch.jsap.stringparsers.BooleanStringParser}
  * internally, so their results can be 
  * obtained from a JSAPResult using
  * the getBoolean() methods.
@@ -21,8 +21,8 @@ import us.exultant.ahs.scratch.jsap.stringparsers.BooleanStringParser;
  * <p>An example of a command line using a Switch is "dosomething -v", where 
  * "-v" might mean "verbose."  
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Flagged
- * @see ahs.scratch.jsap.stringparsers.BooleanStringParser
+ * @see us.exultant.ahs.scratch.jsap.Flagged
+ * @see us.exultant.ahs.scratch.jsap.stringparsers.BooleanStringParser
  */
 public class Switch extends Parameter implements Flagged {
 

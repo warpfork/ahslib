@@ -11,11 +11,11 @@ import us.exultant.ahs.scratch.jsap.ParseException;
 import java.math.BigInteger;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing BigIntegers.  The parse() method delegates the
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing BigIntegers.  The parse() method delegates the
  * actual
  * parsing to BigInteger's constructor.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.math.BigInteger
  */
 public class BigIntegerStringParser extends StringParser {
@@ -26,7 +26,7 @@ public class BigIntegerStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#BIGINTEGER_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#BIGINTEGER_PARSER}.
 	 *  
 	 * @return a {@link BigIntegerStringParser}.
 	 */
@@ -36,8 +36,9 @@ public class BigIntegerStringParser extends StringParser {
 
 	/**
      * Creates a new BigIntegerStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#BIGINTEGER_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#BIGINTEGER_PARSER}.
      */
+    @Deprecated
     public BigIntegerStringParser() {
         super();
     }
@@ -56,7 +57,7 @@ public class BigIntegerStringParser extends StringParser {
     * @throws ParseException if <code>new BigInteger(arg)</code> throws a
     * NumberFormatException.
     * @see BigInteger
-    * @see ahs.scratch.jsap.StringParser#parse(String)
+    * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
     */
     public Object parse(String arg) throws ParseException {
         BigInteger result = null;

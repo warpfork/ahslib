@@ -6,13 +6,8 @@ package us.exultant.ahs.scratch.jsap;
  * LICENSE.TXT file.
  */
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.*;
-
 import us.exultant.ahs.scratch.jsap.stringparsers.*;
-//import us.exultant.ahs.scratch.jsap.xml.JSAPConfig;
-
 
 /**
  * The core class of the JSAP (Java Simple Argument Parser) API.
@@ -59,7 +54,7 @@ import us.exultant.ahs.scratch.jsap.stringparsers.*;
  * <p>
  * If you don't want to register all your parameters manually as shown above, the JSAP API
  * provides a custom ANT task that will generate a custom JSAP subclass to suit your
- * needs. See ahs.scratch.jsap.ant.JSAPAntTask for details.
+ * needs. See us.exultant.ahs.scratch.jsap.ant.JSAPAntTask for details.
  * </p>
  * <p>
  * See the accompanying documentation for examples and further information.
@@ -113,16 +108,16 @@ public class JSAP {
 	/**
 	 * Does not have a short flag.
 	 * 
-	 * @see ahs.scratch.jsap.FlaggedOption
-	 * @see ahs.scratch.jsap.UnflaggedOption
+	 * @see us.exultant.ahs.scratch.jsap.FlaggedOption
+	 * @see us.exultant.ahs.scratch.jsap.UnflaggedOption
 	 */
 	public static final char			NO_SHORTFLAG			= '\0';
 	
 	/**
 	 * Does not have a long flag.
 	 * 
-	 * @see ahs.scratch.jsap.FlaggedOption
-	 * @see ahs.scratch.jsap.UnflaggedOption
+	 * @see us.exultant.ahs.scratch.jsap.FlaggedOption
+	 * @see us.exultant.ahs.scratch.jsap.UnflaggedOption
 	 */
 	public static final String			NO_LONGFLAG			= null;
 	
@@ -185,14 +180,14 @@ public class JSAP {
 	/**
 	 * The parameter consumes the command line.
 	 * 
-	 * @see ahs.scratch.jsap.UnflaggedOption#setGreedy(boolean)
+	 * @see us.exultant.ahs.scratch.jsap.UnflaggedOption#setGreedy(boolean)
 	 */
 	public static final boolean			GREEDY				= true;
 	
 	/**
 	 * The parameter does not consume the command line.
 	 * 
-	 * @see ahs.scratch.jsap.UnflaggedOption#setGreedy(boolean)
+	 * @see us.exultant.ahs.scratch.jsap.UnflaggedOption#setGreedy(boolean)
 	 */
 	public static final boolean			NOT_GREEDY			= false;
 	
@@ -204,32 +199,32 @@ public class JSAP {
 	/**
 	 * The parameter has no help text.
 	 * 
-	 * @see ahs.scratch.jsap.Parameter#setHelp(String)
+	 * @see us.exultant.ahs.scratch.jsap.Parameter#setHelp(String)
 	 */
 	public static final String			NO_HELP				= null;
 	
 	/**
 	 * The only instance of a
-	 * {@link ahs.scratch.jsap.stringparsers.BigDecimalStringParser}.
+	 * {@link us.exultant.ahs.scratch.jsap.stringparsers.BigDecimalStringParser}.
 	 */
 	
 	public static final BigDecimalStringParser	BIGDECIMAL_PARSER		= BigDecimalStringParser.getParser();
 	
 	/**
 	 * The only instance of a
-	 * {@link ahs.scratch.jsap.stringparsers.BigIntegerStringParser}.
+	 * {@link us.exultant.ahs.scratch.jsap.stringparsers.BigIntegerStringParser}.
 	 */
 	
 	public static final BigIntegerStringParser	BIGINTEGER_PARSER		= BigIntegerStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.BooleanStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.BooleanStringParser}.
 	 */
 	
 	public static final BooleanStringParser		BOOLEAN_PARSER			= BooleanStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.ByteStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.ByteStringParser}.
 	 */
 	
 	public static final ByteStringParser		BYTE_PARSER			= ByteStringParser.getParser();
@@ -237,90 +232,90 @@ public class JSAP {
 
 	/**
 	 * The only instance of a
-	 * {@link ahs.scratch.jsap.stringparsers.CharacterStringParser}.
+	 * {@link us.exultant.ahs.scratch.jsap.stringparsers.CharacterStringParser}.
 	 */
 	
 	public static final CharacterStringParser	CHARACTER_PARSER		= CharacterStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.ClassStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.ClassStringParser}.
 	 */
 	
 	public static final ClassStringParser		CLASS_PARSER			= ClassStringParser.getParser();
 	
 
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.ColorStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.ColorStringParser}.
 	 */
 	
 	public static final ColorStringParser		COLOR_PARSER			= ColorStringParser.getParser();
 	
 
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.DoubleStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.DoubleStringParser}.
 	 */
 	
 	public static final DoubleStringParser		DOUBLE_PARSER			= DoubleStringParser.getParser();
 	
 
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.FloatStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.FloatStringParser}.
 	 */
 	
 	public static final FloatStringParser		FLOAT_PARSER			= FloatStringParser.getParser();
 	
 	/**
 	 * The only instance of a
-	 * {@link ahs.scratch.jsap.stringparsers.InetAddressStringParser}.
+	 * {@link us.exultant.ahs.scratch.jsap.stringparsers.InetAddressStringParser}.
 	 */
 	
 	public static final InetAddressStringParser	INETADDRESS_PARSER		= InetAddressStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.IntegerStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.IntegerStringParser}.
 	 */
 	
 	public static final IntegerStringParser		INTEGER_PARSER			= IntegerStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.IntSizeStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.IntSizeStringParser}.
 	 */
 	
 	public static final IntSizeStringParser		INTSIZE_PARSER			= IntSizeStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.LongSizeStringParser}
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.LongSizeStringParser}
 	 * .
 	 */
 	
 	public static final LongSizeStringParser	LONGSIZE_PARSER			= LongSizeStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.LongStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.LongStringParser}.
 	 */
 	
 	public static final LongStringParser		LONG_PARSER			= LongStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.PackageStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.PackageStringParser}.
 	 */
 	
 	public static final PackageStringParser		PACKAGE_PARSER			= PackageStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.ShortStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.ShortStringParser}.
 	 */
 	
 	public static final ShortStringParser		SHORT_PARSER			= ShortStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.StringStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.StringStringParser}.
 	 */
 	
 	public static final StringStringParser		STRING_PARSER			= StringStringParser.getParser();
 	
 	/**
-	 * The only instance of a {@link ahs.scratch.jsap.stringparsers.URLStringParser}.
+	 * The only instance of a {@link us.exultant.ahs.scratch.jsap.stringparsers.URLStringParser}.
 	 */
 	
 	public static final URLStringParser		URL_PARSER			= URLStringParser.getParser();
@@ -623,7 +618,7 @@ public class JSAP {
 	 *         Parameter with the specified ID is defined in this JSAP.
 	 */
 	public Parameter getByID(String id) {
-		return ((Parameter) paramsByID.get(id));
+		return paramsByID.get(id);
 	}
 	
 	/**
@@ -687,7 +682,7 @@ public class JSAP {
 	 * 
 	 * @param ds
 	 *                the DefaultSource to append to the DefaultSource chain.
-	 * @see ahs.scratch.jsap.DefaultSource
+	 * @see us.exultant.ahs.scratch.jsap.DefaultSource
 	 */
 	public void registerDefaultSource(DefaultSource ds) {
 		defaultSources.add(ds);
@@ -749,7 +744,7 @@ public class JSAP {
 	 *                the ExceptionMap object within which any encountered exceptions
 	 *                will be returned.
 	 * @return a Defaults object representing the Defaults of the entire JSAP.
-	 * @see ahs.scratch.jsap.DefaultSource#getDefaults(IDMap, ExceptionMap)
+	 * @see us.exultant.ahs.scratch.jsap.DefaultSource#getDefaults(IDMap, ExceptionMap)
 	 */
 	protected Defaults getDefaults(ExceptionMap exceptionMap) {
 		Defaults defaults = new Defaults();
@@ -887,7 +882,7 @@ public class JSAP {
 	 * cleanup.
 	 */
 	public void finalize() {
-		Parameter[] params = (Parameter[]) paramsByDeclarationOrder.toArray(new Parameter[0]);
+		Parameter[] params = paramsByDeclarationOrder.toArray(new Parameter[0]);
 		int paramCount = params.length;
 		for (int i = 0; i < paramCount; ++i) {
 			unregisterParameter(params[i]);

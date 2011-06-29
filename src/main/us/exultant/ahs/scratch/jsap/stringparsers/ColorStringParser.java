@@ -13,7 +13,7 @@ import java.awt.Color;
 import java.util.StringTokenizer;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing java.awt.Color objects.  Color information can be
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing java.awt.Color objects.  Color information can be
  * specified in a variety
  * of formats:
  * 
@@ -37,7 +37,7 @@ import java.util.StringTokenizer;
  * If the specified argument does not match any of these formats, a
  * ParseException is thrown.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.awt.Color
  */
 public class ColorStringParser extends StringParser {
@@ -48,7 +48,7 @@ public class ColorStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#COLOR_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#COLOR_PARSER}.
 	 *  
 	 * @return a {@link ColorStringParser}.
 	 */
@@ -59,8 +59,9 @@ public class ColorStringParser extends StringParser {
 
 	/**
      * Creates a new ColorStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#COLOR_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#COLOR_PARSER}.
      */
+    @Deprecated
     public ColorStringParser() {
         super();
     }

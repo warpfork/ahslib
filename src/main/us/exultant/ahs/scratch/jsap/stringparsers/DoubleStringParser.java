@@ -10,12 +10,12 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing Doubles.  The parse() method delegates the actual
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Doubles.  The parse() method delegates the actual
  * parsing to new Double(String).  If a NumberFormatException is thrown by new
  * Double(String), it
  * is encapsulated in a ParseException and re-thrown.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.lang.Double
  */
 public class DoubleStringParser extends StringParser {
@@ -26,7 +26,7 @@ public class DoubleStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#DOUBLE_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#DOUBLE_PARSER}.
 	 *  
 	 * @return a {@link DoubleStringParser}.
 	 */
@@ -37,8 +37,9 @@ public class DoubleStringParser extends StringParser {
 
 	/**
      * Creates a new DoubleStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#DOUBLE_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#DOUBLE_PARSER}.
      */
+    @Deprecated
     public DoubleStringParser() {
         super();
     }
@@ -56,7 +57,7 @@ public class DoubleStringParser extends StringParser {
      * @throws ParseException if <code>new Double(arg)</code> throws a
      * NumberFormatException.
      * @see java.lang.Double
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         Double result = null;

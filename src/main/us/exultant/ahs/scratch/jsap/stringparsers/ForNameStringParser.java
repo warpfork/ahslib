@@ -12,11 +12,11 @@ import us.exultant.ahs.scratch.jsap.ParseException;
 import us.exultant.ahs.scratch.jsap.StringParser;
 
 
-/** A {@link ahs.scratch.jsap.StringParser} that passes the
+/** A {@link us.exultant.ahs.scratch.jsap.StringParser} that passes the
  * argument to a static method of signature <code>forName(String)</code> of a specified class.
  * 
  * <P>Note that, for instance, this parser can be used with {@link java.lang.Class} (resulting in a 
- * string parser identical to {@link ahs.scratch.jsap.stringparsers.ClassStringParser}),
+ * string parser identical to {@link us.exultant.ahs.scratch.jsap.stringparsers.ClassStringParser}),
  * but also {@link java.nio.charset.Charset}, and more generally, any class using the <code>forName(String)</code>
  * convention.
  *

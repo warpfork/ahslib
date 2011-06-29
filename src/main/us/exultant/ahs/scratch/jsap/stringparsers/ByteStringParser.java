@@ -10,10 +10,10 @@ import us.exultant.ahs.scratch.jsap.StringParser;
 import us.exultant.ahs.scratch.jsap.ParseException;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} for parsing Bytes.  The parse() method delegates the actual
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} for parsing Bytes.  The parse() method delegates the actual
  * parsing to Byte.decode(String).
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
  * @see java.lang.Byte
  */
 public class ByteStringParser extends StringParser {
@@ -24,7 +24,7 @@ public class ByteStringParser extends StringParser {
 	 * 
 	 * <p>Convenient access to the only instance returned by
 	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#BYTE_PARSER}.
+	 * {@link us.exultant.ahs.scratch.jsap.JSAP#BYTE_PARSER}.
 	 *  
 	 * @return a {@link ByteStringParser}.
 	 */
@@ -35,8 +35,9 @@ public class ByteStringParser extends StringParser {
 
 	/**
      * Creates a new ByteStringParser.
-     * @deprecated Use {@link #getParser()} or, even better, {@link ahs.scratch.jsap.JSAP#BYTE_PARSER}.
+     * @deprecated Use {@link #getParser()} or, even better, {@link us.exultant.ahs.scratch.jsap.JSAP#BYTE_PARSER}.
      */
+    @Deprecated
     public ByteStringParser() {
         super();
     }
@@ -52,7 +53,7 @@ public class ByteStringParser extends StringParser {
      * @throws ParseException if <code>Byte.decode(arg)</code> throws a
      * NumberFormatException.
      * @see java.lang.Byte
-     * @see ahs.scratch.jsap.StringParser#parse(String)
+     * @see us.exultant.ahs.scratch.jsap.StringParser#parse(String)
      */
     public Object parse(String arg) throws ParseException {
         Byte result = null;

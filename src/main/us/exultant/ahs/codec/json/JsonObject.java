@@ -349,9 +349,9 @@ public class JsonObject implements EonObject {
 					} else if (result.getClass().isArray()) {
 						map.put(key, new JsonArray(result, includeSuperClass));
 					} else if (result instanceof Collection) { // List or Set
-						map.put(key, new JsonArray((Collection<?>) result, includeSuperClass));
+						map.put(key, new JsonArray(result, includeSuperClass));
 					} else if (result instanceof Map) {
-						map.put(key, new JsonObject((Map<?,?>) result, includeSuperClass));
+						map.put(key, new JsonObject(result, includeSuperClass));
 					} else if (isStandardProperty(result.getClass())) { // Primitives, String and Wrapper
 						map.put(key, result);
 					} else {
@@ -793,7 +793,7 @@ public class JsonObject implements EonObject {
 		String[] names = new String[length];
 		int j = 0;
 		while (i.hasNext()) {
-			names[j] = (String) i.next();
+			names[j] = i.next();
 			j += 1;
 		}
 		return names;
@@ -1581,8 +1581,8 @@ public class JsonObject implements EonObject {
 		}
 		if (value instanceof Number) { return numberToString((Number) value); }
 		if (value instanceof Boolean || value instanceof JsonObject || value instanceof JsonArray) { return value.toString(); }
-		if (value instanceof Map) { return new JsonObject((Map<?,?>) value).toString(); }
-		if (value instanceof Collection) { return new JsonArray((Collection<?>) value).toString(); }
+		if (value instanceof Map) { return new JsonObject(value).toString(); }
+		if (value instanceof Collection) { return new JsonArray(value).toString(); }
 		if (value.getClass().isArray()) { return new JsonArray(value).toString(); }
 		return quote(value.toString());
 	}
@@ -1620,8 +1620,8 @@ public class JsonObject implements EonObject {
 		if (value instanceof Boolean) { return value.toString(); }
 		if (value instanceof JsonObject) { return ((JsonObject) value).toString(indentFactor, indent); }
 		if (value instanceof JsonArray) { return ((JsonArray) value).toString(indentFactor, indent); }
-		if (value instanceof Map) { return new JsonObject((Map<?,?>) value).toString(indentFactor, indent); }
-		if (value instanceof Collection) { return new JsonArray((Collection<?>) value).toString(indentFactor, indent); }
+		if (value instanceof Map) { return new JsonObject(value).toString(indentFactor, indent); }
+		if (value instanceof Collection) { return new JsonArray(value).toString(indentFactor, indent); }
 		if (value.getClass().isArray()) { return new JsonArray(value).toString(indentFactor, indent); }
 		return quote(value.toString());
 	}
@@ -1639,8 +1639,8 @@ public class JsonObject implements EonObject {
 		if (value instanceof Boolean) { return value.toString(); }
 		if (value instanceof JsonObject) { return ((JsonObject) value).toString(indentFactor, indent); }
 		if (value instanceof JsonArray) { return ((JsonArray) value).toString(indentFactor, indent); }
-		if (value instanceof Map) { return new JsonObject((Map<?,?>) value).toString(indentFactor, indent); }
-		if (value instanceof Collection) { return new JsonArray((Collection<?>) value).toString(indentFactor, indent); }
+		if (value instanceof Map) { return new JsonObject(value).toString(indentFactor, indent); }
+		if (value instanceof Collection) { return new JsonArray(value).toString(indentFactor, indent); }
 		if (value.getClass().isArray()) { return new JsonArray(value).toString(indentFactor, indent); }
 		return quote(value.toString());
 	}
