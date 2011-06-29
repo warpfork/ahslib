@@ -1,4 +1,4 @@
-package us.exultant.ahs.test;
+package us.exultant.ahs.crypto;
 
 import java.security.*;
 import java.util.*;

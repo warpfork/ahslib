@@ -1,24 +1,19 @@
 package us.exultant.ahs.util;
 
-import us.exultant.ahs.test.*;
-import us.exultant.ahs.io.*;
-import us.exultant.ahs.codec.*;
-import us.exultant.ahs.codec.json.*;
-
-import java.util.*;
+import us.exultant.ahs.test.junit.*;
 
 public class BitVectorTestSpeed extends JUnitTestCase {
 	public static final int LOTS = 1000000;
 	
 	//LOTS = 100000000 =>
-	//0.00102737
-	//0.00105995	// i think this one is funny but 'm too lazy to run it again
-	//0.00172712
+	//0.00102737	0.00108977
+	//0.00105995	0.00112417	// yup, look at that.  t3 is consistently slower (ever so slightly) than t1... but only when doing them longer.
+	//0.00172712	0.00168323
 	
 	//LOTS = 1000000 =>
-	//0.001178
-	//0.001106
-	//0.00182
+	//0.001178	0.001234
+	//0.001106	0.001195
+	//0.00182	0.001814
 	
 	
 	public void testToByteArray_t1() {

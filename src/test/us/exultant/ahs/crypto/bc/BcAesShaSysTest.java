@@ -1,17 +1,11 @@
-package us.exultant.ahs.crypto;
+package us.exultant.ahs.crypto.bc;
 
-import us.exultant.ahs.io.*;
+import us.exultant.ahs.util.*;
 import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
-import us.exultant.ahs.test.TestCase.*;
-import us.exultant.ahs.util.*;
-import us.exultant.ahs.util.Strings;
-import us.exultant.ahs.crypto.bc.*;
-
+import us.exultant.ahs.crypto.*;
 import java.nio.*;
 import java.util.*;
-
-import org.bouncycastle.util.*;
 
 public class BcAesShaSysTest extends TestCase {
 	public static void main(String... $args) {

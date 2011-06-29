@@ -1,10 +1,9 @@
 package us.exultant.ahs.util;
 
-import us.exultant.ahs.test.*;
-import us.exultant.ahs.io.*;
-import us.exultant.ahs.codec.*;
+import us.exultant.ahs.core.*;
+import us.exultant.ahs.test.junit.*;
 import us.exultant.ahs.codec.json.*;
-
+import us.exultant.ahs.codec.eon.pre.BitVectorDencoder;
 import java.util.*;
 
 public class BitVectorTest extends JUnitTestCase {
@@ -20,7 +19,7 @@ public class BitVectorTest extends JUnitTestCase {
 		$bs = new BitSet(15);
 		$bs.set(2);
 		assertEquals(false,$bs.get(900));
-		assertEquals(3,$bs.length());	// FUCK YOU!  JESUS FUCKING CHRIST!
+		assertEquals(3,$bs.length());	// length on bitset has no bearing on what length you tell it to have.
 	}
 	
 	public void testStringConstructor() {
@@ -191,8 +190,8 @@ public class BitVectorTest extends JUnitTestCase {
 	
 	public void testJsonSerialization() throws TranslationException {
 		JsonCodec $codec = new JsonCodec();
-		$codec.putHook(BitVector.class, BitVector.ENCODER);
-		$codec.putHook(BitVector.class, BitVector.DECODER);
+		$codec.putHook(BitVector.class, BitVectorDencoder.ENCODER);
+		$codec.putHook(BitVector.class, BitVectorDencoder.DECODER);
 		BitVector $bv, $bv2;
 		JsonObject $jo;
 		

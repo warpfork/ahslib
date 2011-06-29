@@ -1,6 +1,6 @@
 package us.exultant.ahs.util;
 
-import us.exultant.ahs.test.*;
+import us.exultant.ahs.test.junit.*;
 
 public class ByteVectorTest extends JUnitTestCase {
 	private static final byte[] TARR0	= new byte[] { 0x12, 0x34, (byte)0xFF, -0x80, (byte)0xE4, 0x00 }; 
