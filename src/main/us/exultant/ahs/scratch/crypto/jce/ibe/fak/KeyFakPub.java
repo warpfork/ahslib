@@ -1,15 +1,15 @@
 package us.exultant.ahs.scratch.crypto.jce.ibe.fak;
 
-import us.exultant.ahs.scratch.BitVector;
-import us.exultant.ahs.scratch.crypto.jce.ibe.*;
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.scratch.crypto.jce.ibe.*;
+import us.exultant.ahs.codec.eon.pre.*;
 
 public class KeyFakPub implements KeyIbePub {
 	public KeyFakPub(BitVector $bat) {
 		$x = $bat;
 		try {
-			$serial = BitVector.ENCODER.encode(KeySystemIbeFak.HACK, $x).serialize();
+			$serial = BitVectorDencoder.ENCODER.encode(KeySystemIbeFak.HACK, $x).serialize();
 		} catch (TranslationException $e) {
 			throw new MajorBug("what the hell.");
 		}

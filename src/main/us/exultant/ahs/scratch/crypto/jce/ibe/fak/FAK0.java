@@ -1,10 +1,10 @@
 package us.exultant.ahs.scratch.crypto.jce.ibe.fak;
 
-import us.exultant.ahs.scratch.crypto.jce.dig.*;
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.codec.eon.*;
-import us.exultant.ahs.codec.json.*;
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.scratch.crypto.jce.dig.*;
+import us.exultant.ahs.codec.eon.*;
+import us.exultant.ahs.codec.eon.pre.*;
 
 public class FAK0 implements KeySystemIbeFak {
 	public FAK0(EonCodec $codec) {
@@ -92,7 +92,7 @@ public class FAK0 implements KeySystemIbeFak {
 	public KeyFakPub decodePublicKey(byte[] $koe) throws TranslationException {
 		EonObject $jo = $codec.newObj();
 		$jo.deserialize($koe);
-		return new KeyFakPub(BitVector.DECODER.decode(null, $jo));
+		return new KeyFakPub(BitVectorDencoder.DECODER.decode(null, $jo));
 	}
 	
 	/** {@inheritDoc} */
@@ -104,6 +104,6 @@ public class FAK0 implements KeySystemIbeFak {
 	public KeyFakPrv decodePrivateKey(byte[] $kxe) throws TranslationException {
 		EonObject $jo = $codec.newObj();
 		$jo.deserialize($kxe);
-		return new KeyFakPrv(BitVector.DECODER.decode(null, $jo));
+		return new KeyFakPrv(BitVectorDencoder.DECODER.decode(null, $jo));
 	}
 }
