@@ -4,7 +4,6 @@ import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.thread.*;
 import us.exultant.ahs.thread.Pipe;
-
 import java.io.*;
 import java.nio.channels.*;
 import java.util.*;
@@ -28,13 +27,21 @@ import java.util.*;
  * @author hash
  * 
  */
+// worth reading before dealing with nio: http://rox-xmlrpc.sourceforge.net/niotut/
 public class PumperSelector implements Pumper {
+	/**
+	 * <p>
+	 * Constructs a new PumperSelector with an open {@link Selector} backing it. The
+	 * new PumperSelector is ready to accept registrations, but must still be started
+	 * before it will take any action.
+	 * </p>
+	 */
 	public PumperSelector() {
 		Selector $bees = null;
 		try {
 			$bees = Selector.open();
 		} catch (IOException $e) {
-			X.cry($e);
+			X.cry($e);	// there's approximately zero documentation of what could cause this, but I assume if it happens then your VM is seriously fucked. 
 		}
 		$selector = $bees;
 		$pipe = new Pipe<Event>();
@@ -54,25 +61,30 @@ public class PumperSelector implements Pumper {
 	 * </p>
 	 * 
 	 * <p>
-	 * This method uses lazy instantiation which is NOT thread-safe... but it's fine
-	 * as long as it's used once from a single thread first.
+	 * This method is performs lazy instantiation, is thread-safe, and the returned
+	 * PumperSelector is already started in its own daemon thread when returned.
 	 * </p>
 	 * 
-	 * @return the default single PumperSelector for this VM (already started in its
-	 *         own daemon thread).
+	 * @return the default single PumperSelector for this VM.
 	 */
 	public static PumperSelector getDefault() {
-		if ($default == null) {
-			$default = new PumperSelector();
-			$default.start();
-		}
-		return $default;
+		return SingletonHolder.INSTANCE;
+	}
+
+	private static class SingletonHolder {
+		public static final PumperSelector INSTANCE = new PumperSelector();
 	}
 	
-	private static PumperSelector	$default;
-	
 	/**
+	 * <p>
 	 * Starts the pump in a brand new (daemon) thread of its own.
+	 * </p>
+	 * 
+	 * <p>
+	 * Thread safety: go nuts. No, really. It is possible to safely register channels
+	 * before and after starting the selector, and it's even fine to register channels
+	 * from other threads while in the middle of starting the selector.
+	 * </p>
 	 */
 	public synchronized void start() {
 		Thread $t = new Thread(this, "SelectorPumper");
@@ -96,13 +108,17 @@ public class PumperSelector implements Pumper {
 	 */
 	public void run() {
 		while (true) {
+			// if you get a notification of new registration event right here,
+			//  whether on the first look or the nth, you're still fine:
+			//  the selector remembers that it's been wakeup'd since it was last in this following part of the loop,
+			//   so that call will still return immediately, and everything is kosher.
+			
+			// poke the selector for events
 			try {
-				// block for events
-				$selector.select();
+				$selector.select();	// blocks until channel events or wakeups triggered by the event pipe's listener.
 			} catch (IOException $e) {
 				X.cry($e);
 			}
-			
 			{ // Get list of selection keys with pending events
 				Iterator<SelectionKey> $itr = $selector.selectedKeys().iterator();
 				
@@ -117,6 +133,8 @@ public class PumperSelector implements Pumper {
 				}
 			}
 			
+			// check for new registration or deregistration events.
+			//  (note that it is critical to do this before the first select operation, since otherwise anyone who does all their registrations before running this method would have their registrations block until the first event (which would never happen)!)
 			List<Event> $evts = $pipe.SRC.readAllNow();
 			for (Event $evt : $evts) {
 				if ($evt instanceof Event_Reg) {
@@ -124,7 +142,7 @@ public class PumperSelector implements Pumper {
 						if ($evt.channel() instanceof ServerSocketChannel) $evt.channel().register($selector, SelectionKey.OP_ACCEPT, $evt.pump());
 						else $evt.channel().register($selector, SelectionKey.OP_READ, $evt.pump());
 					} catch (ClosedChannelException $e) {
-						X.cry($e); //XXX:AHS: i'm not sure if this is okay... what if the remote connection closes the connection between the register call and when the event comes out of the pipe here?
+						X.cry($e); //XXX:AHS: i'm not sure if this is okay... what if the remote connection closes the connection between the register call and when the event comes out of the pipe here?  i honestly don't know what kind of a response that would properly deserve here, though.  ignore it and wait for someone else to ask about that channel again and notice the foo?
 					}
 				} else if ($evt instanceof Event_Dereg) {
 					if ($evt.channel() == null) for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
