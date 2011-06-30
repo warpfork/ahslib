@@ -137,6 +137,18 @@ public abstract class TestCase implements Runnable {
 		else
 			return "assertion \"" + $label + "\" passed -- expected " + $expected + " == " + $actual + " actual.";
 	}	// i'm not recycling code in the above two because i think someday i might do some alignment stuff, in which case the above become more complicated cases.
+	static String messageFailNot(String $label, Object $expected, Object $actual) {
+		if ($label == null)
+			return "assertion failed -- unexpected " + $expected + " == " + $actual + " actual.";
+		else
+			return "assertion \"" + $label + "\" failed -- unexpected " + $expected + " == " + $actual + " actual.";
+	}
+	static String messagePassNot(String $label, Object $expected, Object $actual) {
+		if ($label == null)
+			return "assertion passed -- expected " + $expected + " != " + $actual + " actual.";
+		else
+			return "assertion \"" + $label + "\" passed -- expected " + $expected + " != " + $actual + " actual.";
+	}
 	static String messageFail(String $label, String $message) {
 		if ($label == null)
 			return "assertion failed -- " + $message;
@@ -199,6 +211,18 @@ public abstract class TestCase implements Runnable {
 			return false;
 		}
 		if ($confirm) $log.debug(this.getClass(), messagePass($label, $expected, $actual));
+		return true;
+	}
+	public boolean assertNotSame(Object $expected, Object $actual) {
+		return assertNotSame(null, $expected, $actual);
+	}
+	public boolean assertNotSame(String $label, Object $expected, Object $actual) {
+		if ($expected == $actual) {
+			$failures++;
+			$log.warn(this.getClass(), new AssertionFailed(messageFailNot($label, $expected, $actual)));
+			return false;
+		}
+		if ($confirm) $log.debug(this.getClass(), messagePassNot($label, $expected, $actual));
 		return true;
 	}
 	public boolean assertNull(Object $actual) {
