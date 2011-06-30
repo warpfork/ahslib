@@ -60,33 +60,75 @@ import java.util.*;
  * string that isn't even in the map but still maps to a nonempty bucket, the automatic
  * interning of the strings by the JVM doesn't turn out to save you... a full O(n)
  * equality check is still required on any strings in the target hash bucket that aren't
- * equal to the requested string. In this example situation, in order to effect the most
- * complete possible speed-up of the HashMap, you would have to use some placeholder or
- * decorator around the key which implements a strawman {@link Object#equals(Object)}
- * method that returns nothing but the results of a pointer equality check.
+ * equal to the requested string.
+ * </p>
+ * 
+ * <p>
+ * This example demonstrates the somewhat bothersome fact that members of Java Collections
+ * Framework tend not to be able to make as much use of the functionality that can be
+ * established with Intern unless the {@link Object#equals(Object)} method is nothing but
+ * a pointer equality check. There are two ways around this to effect the most complete
+ * possible speed-up of the HashMap:
+ * <ol>
+ * <li>use some placeholder or decorator around the key which implements a strawman
+ * {@link Object#equals(Object)} method that returns nothing but the results of a pointer
+ * equality check.
+ * <li>change the {@link Object#equals(Object)} of the type to be nothing but pointer
+ * equals, then use an Intern instance produced with a Comparator that implements the more
+ * complete concept of equality. This option will have better performance than the
+ * previous and save you from the inconvenince of fiddling with wrapper objects in all
+ * your calls, but is only possible when {@link Object#equals(Object)} checks nothing but
+ * pointer equality.
+ * </ol>
+ * </p>
+ * 
+ * <h3>A note on threading and multiple instances of Intern:</h3>
+ * 
+ * <p>
+ * Intern instances are NOT thread-safe in any way. If you want thread-safe interning, it
+ * can none the less be done, and even without synchronization(!). As long as you set up
+ * one instance of Intern per thread and do all the same interning (with the same objects)
+ * before putting those threads to work (and the "work" only includes optInterning),
+ * everything works out fine: you get the same concept of interned objects across all the
+ * threads with zero synchronization overhead.
  * </p>
  * 
  * @author hash
  * 
  * @param <$T>
  */
-
-//* <p>
-//* (This example demonstrates the somewhat bothersome fact that members of Java
-//* Collections Framework tend not to be able to make as much use of the functionality that
-//* can be established with Intern unless the {@link Object#equals(Object)} method is
-//* nothing but a pointer equality check, which can be inconvenient if the key type isn't
-//* one within your own code base.)
-//* </p>
-// once you finish this, also don't forget to add to the other doc about and say that decorators not the only way.
 public class Intern<$T> {
+	/**
+	 * Produces a new, empty Intern. The {@link Object#equals(Object)} method will be
+	 * used to determine the matching of all interned objects.
+	 */
 	public Intern() {
-		$map = new HashMap<Object,$T>();
+		this((Comparator<$T>)null);
 	}
-//	public Intern(Comparator<$T> $comp) {
-//		$map = new HashMap<$T,$T>();
-//		this.$comp = $comp;
-//	}
+	
+	/**
+	 * Beware that when using this form, a LOT of highly detailed assumptions are made
+	 * about the nature of equality check invocations and orderings in the
+	 * {@link HashMap} class. It is not inconcievable that a JVM using a standard
+	 * library other than Sun's will trip.
+	 * 
+	 * @param $comp
+	 */
+	public Intern(Comparator<$T> $comp) {
+		$map = new HashMap<Object,$T>();
+		this.$comp = $comp;
+	}
+	
+	/**
+	 * Copy constructor. All interned objects are copied, as is the comparator if any
+	 * (which implies that comparators are expected to be reentrant).
+	 * 
+	 * @param $toCopy
+	 */
+	public Intern(Intern<$T> $toCopy) {
+		this.$map = new HashMap<Object,$T>($toCopy.$map);
+		this.$comp = $toCopy.$comp;
+	}
 	
 	/**
 	 * Does it seem somewhat oddly inefficient to store a pointer to a thing indexed
@@ -95,11 +137,17 @@ public class Intern<$T> {
 	 */
 	protected final HashMap<Object,$T> $map;
 	
-//	private final Comparator<$T> $comp;
-	// so, this is a complicated idea
-	// we can wrap an incoming $x in something with a snazzy equals method based on this and use that on our internal map
-	//  which would have the radical improvement of letting $T have a peq equals method for use everywhere else and get that effic bonus real smooth even in std Collections stuff
-	// this really gets into the guts of map implementations though.  we're basically relying on situations where x.equals(y) not necessarily iff y.equals(x).
+	/**
+	 * If set, this causes a complicated idea to come into swing. We wrap an incoming
+	 * $x in something with a snazzy equals method based on this and use that on our
+	 * internal map. This lets us make the radical improvement of letting $T have a
+	 * pointer-equality-only equals method for use everywhere else and get that effic
+	 * bonus real smooth even in std Collections stuff, while still using arbitrarily
+	 * complex concepts of equality when decided what constitutes a match to canonical
+	 * objects. On the other hand, we end up really doing terrifying stuff with the
+	 * guts of maps to make it work internally.
+	 */
+	private final Comparator<$T> $comp;
 	
 	/**
 	 * If something {@link Object#equals(Object)} to <tt>$x</tt> is not yet interned
@@ -114,14 +162,21 @@ public class Intern<$T> {
 	 *         {@link #optIntern(Object)} in future invocations.
 	 */
 	public $T intern($T $x) {
-		$T $v = $map.get($x);
-		if ($v == null) {
-			// in a perfect world, i'd rather have a putIfEmpty function that only traversed the hashmap once,
-			//  but then again since the puts are supposed to be rare i guess it's pretty meh.
-			$map.put($x,$x);
-			return $x;
+		if ($comp == null) {
+			$T $v = $map.get($x);
+			if ($v == null) {
+				$map.put($x,$x);
+				return $x;
+			}
+			return $v;
+		} else {
+			$T $v = $map.get($gw.wrap($x));
+			if ($v == null) {
+				$map.put(new PutWrapper($x),$x);
+				return $x;
+			}
+			return $v;
 		}
-		return $v;
 	}
 	
 	/**
@@ -136,13 +191,38 @@ public class Intern<$T> {
 	 *         {@link #optIntern(Object)} in future invocations.
 	 */
 	public $T optIntern($T $x) {
-		return $map.get($x);
+		if ($comp == null)
+			return $map.get($x);
+		else
+			return $map.get($gw.wrap($x));
 	}
 	
 	// i cannot think of a situation where you could actually reasonably use this without massive peril of driving yourself insane.
 //	public $T unintern($T $x) {
 //		return $map.remove($x);
 //	}
+	
+	private class PutWrapper {
+		public PutWrapper($T $x) { if ($x == null) throw new NullPointerException(); this.$x = $x; }
+		private final $T $x;
+		public int hashCode() { return $x.hashCode(); }
+		@SuppressWarnings("unchecked")	// this is checked properly at runtime (as long as no one makes a subclass that fucks with the invarients of the protected fields).  it's just hard for the compiler to see it because of the generic erasure.
+		public boolean equals(Object $o) {
+			$T $t = ((PutWrapper)$o).$x;
+			return ($comp.compare($x, $t) == 0);
+		}
+	}
+	private final GetWrapper $gw = new GetWrapper();	// i do NOT want to have to gc one of these for every getting operation.
+	private class GetWrapper {
+		public GetWrapper wrap($T $x) { if ($x == null) throw new NullPointerException(); this.$x = $x; return this; }	// not thread safe.  neither is the hashmap.
+		private $T $x;
+		public int hashCode() { return $x.hashCode(); }
+		@SuppressWarnings("unchecked")	// this is checked properly at runtime (as long as no one makes a subclass that fucks with the invarients of the protected fields).  it's just hard for the compiler to see it because of the generic erasure.
+		public boolean equals(Object $o) {
+			$T $t = ((PutWrapper)$o).$x;
+			return ($comp.compare($x, $t) == 0);
+		}
+	}
 	
 	public static class Strings extends Intern<String> {
 		/**

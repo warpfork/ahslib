@@ -21,8 +21,8 @@ public class InternTest extends TestCase {
 		return Arr.asList(
 				new TestNormalEquals(),
 				new TestString(),
-				new TestStringLiteral()//,
-				//new TestAlternativeEquals()
+				new TestStringLiteral(),
+				new TestAlternativeEquals()
 		);
 	}
 	
@@ -57,21 +57,7 @@ public class InternTest extends TestCase {
 		}
 		public int hashCode() {
 			return 31 + ((this.$a == null) ? 0 : this.$a.hashCode());
-		}
-		/**
-		 * Note: this comparator imposes orderings that are inconsistent with equals.
-		 * Note: this comparator does not maintain monotonicity or other sanity to its ordering and is only valid for equality.
-		 */
-		public static class Comparator implements java.util.Comparator<T> {
-			public int compare(T $o1, T $o2) {
-				if ($o1 == $o2) return 0;
-				if ($o2 == null) return -1;
-				if ($o1.$a == null && $o2.$a != null) return -1;
-				if (!$o1.$a.equals($o2.$a)) return -1;
-				if ($o1.$b == null && $o2.$b != null) return -1;
-				if (!$o1.$b.equals($o2.$b)) return -1;
-				return 0;
-			}
+			// if your hash includes $b, you fuck yourself.
 		}
 	}
 	
@@ -86,7 +72,12 @@ public class InternTest extends TestCase {
 			assertSame($canon2, $intern.intern($canon2));
 			assertSame($canon1, $intern.intern($canon1));	// repeated canonicalization should of course have no effect.
 
+			assertEquals($canon1, $alt1);
+			assertNotSame($canon1, $alt1);
 			assertSame($canon1, $intern.intern($alt1));
+
+			assertEquals($canon2, $alt2);
+			assertNotSame($canon2, $alt2);
 			assertSame($canon2, $intern.intern($alt2));
 			
 			return null;
@@ -117,6 +108,7 @@ public class InternTest extends TestCase {
 			assertNotSame($canon2, $alt2);
 			$canon2 = $canon2.intern();
 			assertSame($canon2, $intern.intern($alt2));
+			assertSame($canon2, $intern.optIntern($alt2));
 			
 			
 			
@@ -137,10 +129,73 @@ public class InternTest extends TestCase {
 		}
 	}
 	
+	private static class T2 {
+		public T2() {
+			this.$a = new Object();
+			this.$b = new Object();
+		}
+		public static T2 copyPartial(T2 $t) {
+			T2 $v = new T2();
+			$v.$a = $t.$a;
+			return $v;
+		}
+		public static T2 copyTotal(T2 $t) {
+			T2 $v = new T2();
+			$v.$a = $t.$a;
+			$v.$b = $t.$b;
+			return $v;
+		}
+		private Object $a;
+		private Object $b;
+
+		public boolean equals(Object obj) {
+			return (this == obj);
+		}
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((this.$a == null) ? 0 : this.$a.hashCode());
+			result = prime * result + ((this.$b == null) ? 0 : this.$b.hashCode());
+			return result;
+			// note that we're hashing on... well, it looks like more than what equals is doing.
+			//  but watch, it works out fine as long as you only every use interned objects in your hashmaps ever again.
+		}
+		
+		/**
+		 * Note: this comparator imposes orderings that are inconsistent with equals.
+		 * Note: this comparator does not maintain monotonicity or other sanity to its ordering and is only valid for equality.
+		 */
+		public static class Comparator implements java.util.Comparator<T2> {
+			public static final Comparator instance = new Comparator(); 
+			public int compare(T2 $o1, T2 $o2) {
+				if ($o1 == $o2) return 0;
+				if ($o2 == null) return -1;
+				if ($o1.$a == null && $o2.$a != null) return -1;
+				if (!$o1.$a.equals($o2.$a)) return -1;
+				if ($o1.$b == null && $o2.$b != null) return -1;
+				if (!$o1.$b.equals($o2.$b)) return -1;
+				return 0;
+			}
+		}
+	}
+	
 	private class TestAlternativeEquals extends TestCase.Unit {
-		private Intern<T> $intern = new Intern<T>();
+		private Intern<T2> $intern = new Intern<T2>(T2.Comparator.instance);
+		private T2 $canon1 = new T2();
+		private T2 $canon2 = new T2();
+		private T2 $alt1 = T2.copyPartial($canon1);
+		private T2 $alt2 = T2.copyTotal($canon2);
 		public Object call() {
-			//TODO:AHS:
+			assertSame($canon1, $intern.intern($canon1));
+			assertSame($canon2, $intern.intern($canon2));
+			
+			assertNotSame($canon1, $alt1);
+			assertNotSame($canon1, $intern.intern($alt1));
+			
+			assertNotSame($canon2, $alt2);
+			assertSame($canon2, $intern.intern($alt2));
+			assertSame($canon2, $intern.optIntern($alt2));
+			
 			return null;
 		}
 	}
