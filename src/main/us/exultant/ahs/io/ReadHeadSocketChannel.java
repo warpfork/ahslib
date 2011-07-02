@@ -6,14 +6,18 @@ import java.net.*;
 import java.nio.channels.*;
 
 /**
+ * <p>
  * Creates a server socket for accepting new socket connections, makes it nonblocking, and
  * decorates the whole thing as a {@link ReadHead}.
+ * </p>
  * 
+ * <p>
  * The new {@link SocketChannel} returned when reading from this ReadHead are already
  * configured to be nonblocking themselves (but of course have not yet been registered
  * with any {@link PumperSelector}, since they aren't yet wrapped in any of the other
  * abstractions typical of the AHS library that would make a relationship with a
  * PumperSelector appropriate).
+ * </p>
  * 
  * @author hash
  * 
