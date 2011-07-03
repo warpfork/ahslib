@@ -68,46 +68,6 @@ import java.util.*;
 public interface ReadHead<$T> {
 	/**
 	 * <p>
-	 * Grants access to the Pump which powers the channel underlying this ReadHead.
-	 * Some implementations may not require a Pump (in-program pipes are typically in
-	 * this pattern, since their data is effectively pumped in by the thread doing the
-	 * write to the pipe), in which case they must return null.
-	 * </p>
-	 * 
-	 * <p>
-	 * Calling <code>getPump().run(1)</code> followed by <code>read()</code> should
-	 * effectively make any ReadHead that requires pumping act exactly as if it was
-	 * backed by a blocking stream being pumped by the current thread.
-	 * </p>
-	 * 
-	 * @return the Pump instance associated with this ReadHead, or null if this
-	 *         implementation does not require pumping.
-	 */
-	public Pump getPump();
-	
-	/**
-	 * <p>
-	 * In the case of exceptions that occur in the course of a Pump's operations, the
-	 * Pump sends those exceptions to the handler specified by this method (or may
-	 * discard them silently if no handler has been set). Exceptions caught by the
-	 * Pump that are not IOExceptions are still pushed through this interface by
-	 * listing them as the cause of a new IOException that is then rethrown.
-	 * Exceptions not caught by the Pump can still bubble out of the Pump without
-	 * being pushed through this interface, but no exception should do both.
-	 * </p>
-	 * 
-	 * <p>
-	 * The handler's <code>hear(*)</code> method is invoked by the pumping thread, and
-	 * will be executed before the Pump takes any other actions such as attempting to
-	 * continue reading.
-	 * </p>
-	 * 
-	 * @param $eh
-	 */
-	public void setExceptionHandler(ExceptionHandler<IOException> $eh);
-	
-	/**
-	 * <p>
 	 * Sets a Listener for critical events in the life cycle of the ReadHead. The
 	 * Listener must be invoked by the implementer every time a new chunk of data
 	 * becomes available. Implementations may also choose to use it to signal other

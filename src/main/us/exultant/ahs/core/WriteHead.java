@@ -22,7 +22,7 @@ import java.util.*;
  * should use a Pipe to create a buffer between the real, blocking WriteHead, and a much
  * softer WriteHead that returns as soon as it has committed its chunk to the buffer.
  * Exceptions from the "real" WriteHead can then be handed to the ExceptionHandler in the
- * Pipe's ReadHead. TODO:AHS: make a class that does this generally and conveniently.
+ * Pipe's ReadHead.
  * </p>
  * 
  * <p>

@@ -60,7 +60,7 @@ public class TranslatorStack<$FROM, $TO> implements Translator<$FROM, $TO> {
 	}
 	private List<Translator<?,?>> $dat;
 	
-	@SuppressWarnings("unchecked")	// runtime safety invariants are enforced by factory methods.
+	@SuppressWarnings("unchecked")	// though runtime safety is unenforceable here because of generic type erasure, reasonable compilers enforce invariants at the factory methods.
 	public $TO translate($FROM $x) throws TranslationException {
 		Object $v = $x;
 		for (Translator<?,?> $t : $dat) {
@@ -68,19 +68,5 @@ public class TranslatorStack<$FROM, $TO> implements Translator<$FROM, $TO> {
 			if ($v == null) break;
 		}
 		return ($TO)$v;
-	}
-	
-	/**
-	 * DO NOT USE.
-	 * 
-	 * I honestly wish I didn't have to have this method. It's intended for the really
-	 * nasty case in WriteHeadAdapter where sometimes I need to be able to see the
-	 * bottom guy on the stack to do a little extra configuration on him so he can get
-	 * his base channel. Really, really icky. If I can find a way to refactor this out
-	 * someday, I'd love to.
-	 */
-	@Deprecated
-	public List<Translator<?,?>> expose() {
-		return Collections.unmodifiableList($dat);
 	}
 }

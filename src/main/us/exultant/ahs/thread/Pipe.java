@@ -2,7 +2,6 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -146,22 +145,6 @@ public class Pipe<$T> implements Flow<$T> {
 	 */
 	public final class Source implements ReadHead<$T> {
 		private Source() {} // this should be a singleton per instance of the enclosing class
-		
-		/**
-		 * @return null (as per the contract in {@link ReadHead#getPump()} for
-		 *         scenarios when the writing thread is effectively the pump).
-		 */
-		public Pump getPump() {
-			return null;
-		}
-		
-		/**
-		 * This method has no effect. Pipes are not capable of generating
-		 * IOException.
-		 */
-		public void setExceptionHandler(ExceptionHandler<IOException> $eh) {
-			/* do nothing. */
-		}
 		
 		/**
 		 * Sets the Listener that will be triggered for every completed write

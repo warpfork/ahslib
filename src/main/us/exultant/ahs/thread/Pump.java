@@ -1,4 +1,4 @@
-package us.exultant.ahs.core;
+package us.exultant.ahs.thread;
 
 /**
  * This is the noun, not the verb.

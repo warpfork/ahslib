@@ -1,7 +1,5 @@
 package us.exultant.ahs.thread;
 
-import us.exultant.ahs.core.*;
-
 /**
  * <p>
  * Basic adapter for the <code>Pumper</code> interface for either running a pumpable task
