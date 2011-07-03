@@ -18,7 +18,8 @@ import java.nio.channels.*;
  * Two distinct implementations of this are provided as nested classes; one does a
  * significantly better job of maintaining its promise to be nonblocking (
  * {@link Nonblocking}) but at the cost of greater complexity for the client code, while
- * the other is simpler to use but may sometimes block ({@link Blocking}).
+ * the other is simpler to use but may sometimes block ({@link Blocking}). In either case,
+ * it is presumed that the base channel has already been set to a nonblocking mode.
  * </p>
  * 
  * @author hash
