@@ -10,7 +10,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
  * </p>
  * 
  * <p>
- * The ability to wrap a byte array of key material direction gives the ability to build
+ * The ability to wrap a byte array of key material directly gives the ability to build
  * crypto engines that use pointer equality on the byte array to rapidly detect if the
  * same key material was used in a previous round of the cipher, which means we don't have
  * waste time discarding the old key schedule and generating a new one that's exactly the

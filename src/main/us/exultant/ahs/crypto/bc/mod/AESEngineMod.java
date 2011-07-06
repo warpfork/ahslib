@@ -28,6 +28,7 @@ import org.bouncycastle.crypto.params.*;
  * @author hash
  */
 public class AESEngineMod extends AESFastEngine {
+	// note incredibly lazy initialization here it?  we even check these before setting them!  it's fine, though: the worst that can happen if either one of these is unset or wrong is an unnecessary init of the cipher... and that's exactly what should be done if either of these are unset.
 	private byte[]	$lastKey;
 	private boolean	$lastEdMode;	// and can you believe they don't even bother to have a function for asking if it's in encrypt mode or not?!  jesus.
 					
@@ -42,5 +43,7 @@ public class AESEngineMod extends AESFastEngine {
 			return;
 		}
 		super.init($forEncryption, $params);
+		$lastEdMode = $forEncryption;
+		$lastKey = ((KeyParameter)$params).getKey();	// again, the assumption that AESFastEngine is going to have throw up already if this isn't a KeyParameter.
 	}
 }
