@@ -15,16 +15,7 @@ public class BcUtil {
 	 * @throws InvalidCipherTextException if padding is expected and not found.
 	 */
 	static byte[] invokeCipher(BufferedBlockCipher $cipher, byte[] $bletch) throws DataLengthException, IllegalStateException, InvalidCipherTextException {
-	        // crunch the numbers
-		int $size = $cipher.getOutputSize($bletch.length);
-		byte[] $park = new byte[$size];
-		int $olen = $cipher.processBytes($bletch, 0, $bletch.length, $park, 0);		// we're quite confident there's no DataLengthException from here, but there is a possibility on the next line.
-		$olen += $cipher.doFinal($park, $olen);						// there's no super easy way to tell in this context whether or not input must be block aligned.
-		
-		if ($olen < $size)	// $cipher.getOutputSize(*) lied to us!  now we have to make a new smaller array so we aren't returning evil nulls :(
-			Arr.copyFromBeginning($park, $olen);
-		
-		return $park;
+	        return invokeCipher($cipher, $bletch.length, $bletch);
 	}
 
 	/**
@@ -36,11 +27,14 @@ public class BcUtil {
 	 * @throws InvalidCipherTextException if padding is expected and not found.
 	 */
 	static byte[] invokeCipher(BufferedBlockCipher $cipher, byte[]... $bletchley) throws DataLengthException, IllegalStateException, InvalidCipherTextException {
-		// this code is VERY similar to invokeCipher with a single byte array instead of a bunch of them.  however, they are written separately to avoid wasting time cat'ing all of $bletchley together, since loading it into the cipher object involves an array copy of its own.
+		// this code is and invokeCipher with a single byte array instead of a bunch of them are written separately to avoid wasting time cat'ing all of $bletchley together, since loading it into the cipher object involves an array copy of its own.
 		int $size = 0;
 		for (byte[] $bletch : $bletchley)
 			$size += $bletch.length;
-		
+		return invokeCipher($cipher, $size, $bletchley);
+	}
+	
+	private static byte[] invokeCipher(BufferedBlockCipher $cipher, int $size, byte[]... $bletchley) throws DataLengthException, IllegalStateException, InvalidCipherTextException {
 		$size = $cipher.getOutputSize($size);
 		byte[] $park = new byte[$size];
 		int $olen = 0;
