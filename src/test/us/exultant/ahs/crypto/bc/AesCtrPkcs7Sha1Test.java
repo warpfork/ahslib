@@ -7,16 +7,16 @@ import us.exultant.ahs.crypto.*;
 import java.nio.*;
 import java.util.*;
 
-public class BcAesShaSysTest extends TestCase {
+public class AesCtrPkcs7Sha1Test extends TestCase {
 	public static void main(String... $args) {
-		new BcAesShaSysTest().run();
+		new AesCtrPkcs7Sha1Test().run();
 	}
 	
-	public BcAesShaSysTest() {
+	public AesCtrPkcs7Sha1Test() {
 		super(new Logger(Logger.LEVEL_DEBUG), true);
 	}
 	
-	public BcAesShaSysTest(Logger $log, boolean $enableConfirmation) {
+	public AesCtrPkcs7Sha1Test(Logger $log, boolean $enableConfirmation) {
 		super($log, $enableConfirmation);
 	}
 	
