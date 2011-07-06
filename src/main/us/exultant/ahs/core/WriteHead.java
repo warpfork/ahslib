@@ -38,7 +38,7 @@ import java.util.*;
 public interface WriteHead<$T> {
 	public void write($T $chunk) throws IOException;
 	
-	public void writeAll(Collection<? extends $T>  $chunks) throws IOException;
+	public void writeAll(Collection<? extends $T> $chunks) throws IOException;
 	
 	/**
 	 * This function allows for systems which contain some sort of limit on their
