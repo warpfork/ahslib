@@ -55,7 +55,7 @@ public class BcUtil {
 	}
 	
 	/**
-	 * Derives symmetric keys by hashing a given key along with a predicable nonce to
+	 * Derives symmetric keys by hashing a given key along with a predictable nonce to
 	 * produce more keys of the same length. The derived keys are random unless the
 	 * base key and the nonce are known.
 	 * 
