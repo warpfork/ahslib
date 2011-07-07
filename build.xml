@@ -39,7 +39,8 @@
 			compile-test,
 			compile-test-junit,
 			compile-thread,
-			compile-io"
+			compile-io,
+			compile-scratch"
 		description="compile the source">
 	</target>
 	<target name="dist"
@@ -54,7 +55,8 @@
 			dist-test-junit,
 			dist-thread,
 			dist-io,
-			dist-complete"
+			dist-complete,
+			dist-scratch"
 		description="pack jars">
 	</target>
 	<target name="test"
@@ -168,13 +170,24 @@
 	
 	<target name="compile-io" depends="compile-thread">
 		<ahsjavac
-			module="main/io"
-			classes="us/exultant/ahs/io/**"
-			depends="build/main/core : build/main/thread"
-		/>
+			 module="main/io"
+			 classes="us/exultant/ahs/io/**"
+			 depends="build/main/core : build/main/thread"
+			 />
 	</target>
 	<target name="dist-io" depends="compile-io">
 		<jar jarfile="dist/ahslib-io.jar" basedir="build/main/io"/>
+	</target>
+	
+	<target name="compile-scratch" depends="compile-core, compile-codec, compile-codec-ebon, compile-codec-pre">
+		<ahsjavac
+			 module="main/scratch"
+			 classes="us/exultant/ahs/scratch/**"
+			 depends="build/main/core : build/main/codec : build/main/codec-ebon : build/main/codec-pre : lib/plugin.jar"
+			 />
+	</target>
+	<target name="dist-scratch" depends="compile-scratch">
+		<jar jarfile="dist/ahslib-scratch.jar" basedir="build/main/scratch"/>
 	</target>
 	
 	<target name="dist-complete" depends="

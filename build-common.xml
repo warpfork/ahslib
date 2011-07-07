@@ -12,6 +12,7 @@
 				destdir="build/@{module}"
 				sourcepath=""
 				includes="@{classes}"
+				excludes="**/krap/**"
 				classpath="@{depends}"
 				debug="on"
 				deprecation="on"
