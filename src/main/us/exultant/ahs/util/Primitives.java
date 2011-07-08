@@ -1,6 +1,7 @@
 package us.exultant.ahs.util;
 
 import java.nio.*;
+import java.util.*;
 
 public class Primitives {
 	/**
@@ -47,6 +48,13 @@ public class Primitives {
 	public static final String[]		EMPTY_STRING		= new String[0];
 	public static final ByteBuffer		EMPTY_BYTEBUFFER	= ByteBuffer.wrap(EMPTY_BYTE);
 	public static final ByteVector		EMPTY_BYTEVECTOR	= new ByteVector(EMPTY_BYTE);
+	//public static final List<Object>	EMPTY_LIST		= Collections.EMPTY_LIST; 
+	public static final List<Object>	LIST_NULL;
+	static {
+		List<Object> tmp_LIST_NULL = new ArrayList<Object>(1);
+		tmp_LIST_NULL.add(null);
+		LIST_NULL = Collections.unmodifiableList(tmp_LIST_NULL);
+	}
 	// consider the potential for replacing this with a SyncFreeProvider and some kind of map?  would be nice to remove references like these from core and yet maintain the non-need of repetition in client code.
 	
 	

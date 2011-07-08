@@ -7,7 +7,7 @@ import java.util.*;
  * <p>
  * Many data-storage classes implement some form of serialization or encoding in their own
  * methods. This class and its contained interfaces allow classes such as these as well as
- * other heterogenous classes which may not provide their own internal encoding to all be
+ * other heterogeneous classes which may not provide their own internal encoding to all be
  * wrapped smoothly into one entry point for encoding and decoding into a single generic
  * format.
  * </p>
@@ -17,7 +17,7 @@ import java.util.*;
  * decoding rather than simply having classes always be self-encoding and decoding. It
  * allows multiple encoders to be chosen from for a single class, for example, depending
  * on context. It might allow one encoder class to perform the encoding operation for
- * several similar data classes, and thus allow optomizations reducing code size as well
+ * several similar data classes, and thus allow optimizations reducing code size as well
  * as preparing often used variables (and making life easier for HotSpot). Overall, it's
  * just a better example of MVC practice -- a codec should be a C for any of your M.
  * </p>
@@ -26,9 +26,9 @@ import java.util.*;
  * 
  * @param <$CODE>
  *                The type of object used to represent the encoded version of the data. A
- *                typical example might be ahs.codec.json.JsonObject or
- *                ahs.codec.ebon.EbonObject.
- */
+ *                typical example might be {@link us.exultant.ahs.codec.json.JsonObject}
+ *                or {@link us.exultant.ahs.codec.ebon.EbonObject}.
+ */	// if you try to change those @link annotations above to use import statements, compiling will break because of the module boundaries.
 public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder);
 	

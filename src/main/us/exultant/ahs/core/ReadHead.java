@@ -1,5 +1,6 @@
 package us.exultant.ahs.core;
 
+import us.exultant.ahs.util.*;
 import java.io.*;
 import java.util.*;
 
@@ -257,4 +258,21 @@ public interface ReadHead<$T> {
 	 *                 stream throws an IOException.
 	 */
 	public void close() throws IOException;
+	
+	
+	//
+	// If you ever think you need something like the following, it's a bad idea and you should think again.
+	// For example, look at what just happened to the contract of read().
+	//
+//	public static class Noop implements ReadHead<Object> {
+//		public void setListener(Listener<ReadHead<Object>> $el) {}
+//		public Object read()		{	return null;		}
+//		public Object readNow()		{	return null;		}
+//		public boolean hasNext()	{	return isClosed();	}
+//		public List<Object> readAll()	{	return Primitives.LIST_NULL;	}
+//		public List<Object> readAllNow(){	return Primitives.LIST_NULL;	}
+//		public boolean isClosed() {		return $closed;		}
+//		public void close() throws IOException {$closed = true;		}
+//		private volatile boolean $closed = false;
+//	}
 }
