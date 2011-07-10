@@ -235,13 +235,17 @@ public abstract class TestCase implements Runnable {
 		return assertEquals(null, $expected, $actual);
 	}
 	public boolean assertEquals(String $label, Object $expected, Object $actual) {
-		if (!$expected.equals($actual)) {
+		if (!assertEqualsHelper($expected, $actual)) {
 			$failures++;
 			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}
 		if ($confirm) $log.debug(this.getClass(), messagePass($label, $expected, $actual));
 		return true;
+	}
+	private boolean assertEqualsHelper(Object $expected, Object $actual) {
+		if ($expected == null) return ($actual == null);
+		return $expected.equals($actual);
 	}
 	public boolean assertInstanceOf(Class<?> $klass, Object $obj) {
 		return assertInstanceOf(null, $klass, $obj);
