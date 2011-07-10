@@ -20,6 +20,11 @@ import java.util.concurrent.*;
  * disregard this entirely.
  * </p>
  * 
+ * <p>
+ * This Pipe will not accept nulls, and its WriteHead will throw a NullPointerException in
+ * response to any attempt to write nulls.
+ * </p>
+ * 
  * @author hash
  * 
  */
@@ -238,6 +243,8 @@ public class Pipe<$T> implements Flow<$T> {
 		 * 
 		 * @throws IllegalStateException
 		 *                 if this Pipe is closed.
+		 * @throws NullPointerException
+		 *                 if the chunk is null
 		 */
 		public void write($T $chunk) throws IllegalStateException {
 			synchronized ($queue) {
@@ -269,6 +276,11 @@ public class Pipe<$T> implements Flow<$T> {
 		 * this method, but every element causes a release of permit and
 		 * notification to the pipe's listener.
 		 * </p>
+		 * 
+		 * @throws IllegalStateException
+		 *                 if this Pipe is closed.
+		 * @throws NullPointerException
+		 *                 if any chunk in the collection is null
 		 */
 		public void writeAll(Collection<? extends $T> $chunks) {
 			// at first i thought i could implement this with addAll on the queue and a single big release... not actually so.  addAll on the queue can throw exceptions but still have made partial progress.
