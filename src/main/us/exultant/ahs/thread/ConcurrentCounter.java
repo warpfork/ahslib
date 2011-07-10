@@ -60,14 +60,19 @@ public abstract class ConcurrentCounter<$T> implements Listener<$T> {
 	 * this method returns, the count of the given object will have been incremented.
 	 */
 	public void hear($T $f) {
-		$map.get($f).incrementAndGet();
+		AtomicInteger $i = $map.get($f);
+		if ($i != null) $i.incrementAndGet();
 	}
 	
 	/**
 	 * This can be called from any thread, since the reading of a single value is an
 	 * inherently atomic operation.
+	 * 
+	 * @return the number of times {@link #hear(Object)} has been called for this
+	 *         argument, or -1 if the argument is not in this counter.
 	 */
 	public int getCount($T $f) {
-		return $map.get($f).get();
+		AtomicInteger $i = $map.get($f);
+		return ($i == null) ? -1 : $i.get();
 	}
 }
