@@ -1,6 +1,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.util.*;
+import java.util.*;
 
 /**
  * Handy convenience methods for doing dead-simple stuff with threads. In this case, mind,
@@ -20,7 +21,8 @@ public abstract class ThreadUtil {
 	 * @param $count
 	 * @throws MajorBug
 	 *                 if you're a dolt and ignore any of the statements about the
-	 *                 need for public nullary constructors and so forth.
+	 *                 need for public nullary constructors and so forth, or if
+	 *                 non-static nested classes get in the way.
 	 */
 	public static void doAll(Class<? extends Runnable> $type, int $count) {
 		Runnable[] $tasks = new Runnable[$count];
@@ -34,14 +36,45 @@ public abstract class ThreadUtil {
 	}
 	
 	/**
+	 * Attempts to instantiate a number of several runnable types (via the public
+	 * nullary constructors found by reflection), then wraps these in threads, starts
+	 * all the threads concurrently, then waits for the threads to complete before
+	 * returning.
+	 * 
+	 * @param $types
+	 * @param $count
+	 *                how many of each type to instantiate (so the total number of
+	 *                threads will become <tt>$count * $types.length</tt>).
+	 * @throws MajorBug
+	 *                 if you're a dolt and ignore any of the statements about the
+	 *                 need for public nullary constructors and so forth, or if
+	 *                 non-static nested classes get in the way.
+	 */
+	public static void doAll(List<Class<? extends Runnable>> $types, int $count) {
+		$count = $count*$types.size();
+		Runnable[] $tasks = new Runnable[$count];
+		try {
+			for (int $i = 0; $i < $count;)
+				for (int $j = 0; $j < $types.size(); $j++, $i++)
+					$tasks[$i] = $types.get($j).newInstance();
+		} catch (Throwable $e) {
+			throw new MajorBug($e);
+		}
+		doAll($tasks);
+	}
+	
+	/**
 	 * Starts all the threads concurrently and then waits for them to complete before
 	 * returning.
 	 * 
 	 * @param $threads
+	 * @return the time taken in ms
 	 */
-	public static void doAll(Thread... $threads) {
+	public static long doAll(Thread... $threads) {
+		long $start = X.time();
 		startAll($threads);
 		joinAll($threads);
+		return (X.time() - $start);
 	}
 	
 	/**
@@ -49,9 +82,10 @@ public abstract class ThreadUtil {
 	 * then waits for them to complete before returning.
 	 * 
 	 * @param $tasks
+	 * @return the time taken in ms
 	 */
-	public static void doAll(Runnable... $tasks) {
-		doAll(wrapAll($tasks));
+	public static long doAll(Runnable... $tasks) {
+		return doAll(wrapAll($tasks));
 	}
 	
 	/**
