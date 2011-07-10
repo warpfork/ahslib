@@ -315,4 +315,8 @@ public class Pipe<$T> implements Flow<$T> {
 			SRC.close();
 		}
 	}
+
+	public void close() {
+		SRC.close();
+	}
 }
