@@ -27,14 +27,21 @@ import java.util.concurrent.atomic.*;
  * 
  */
 public abstract class ConcurrentCounter<$T> implements Listener<$T> {
-	public static class EnumBased<$E extends Enum<$E>> extends ConcurrentCounter<$E> {
+	public static <$T> ConcurrentCounter<$T> make(Collection<? extends $T> $elements) {
+		return new Flexible<$T>($elements);
+	}
+	public static <$T extends Enum<$T>> ConcurrentCounter<$T> make(Class<$T> $enumType) {
+		return new EnumBased<$T>($enumType);
+	}
+	
+	private static class EnumBased<$E extends Enum<$E>> extends ConcurrentCounter<$E> {
 		public EnumBased(Class<$E> $enumType) {
 			super(new EnumMap<$E, AtomicInteger>($enumType));
 			for ($E $e : $enumType.getEnumConstants())
 				$map.put($e, new AtomicInteger());	
 		}
 	}
-	public static class Flexible<$E extends Enum<$E>> extends ConcurrentCounter<$E> {
+	private static class Flexible<$E> extends ConcurrentCounter<$E> {
 		public Flexible(Collection<? extends $E> $elements) {
 			super(new HashMap<$E, AtomicInteger>());
 			for ($E $e : $elements)
