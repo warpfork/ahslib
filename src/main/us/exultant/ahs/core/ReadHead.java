@@ -1,6 +1,5 @@
 package us.exultant.ahs.core;
 
-import us.exultant.ahs.util.*;
 import java.io.*;
 import java.util.*;
 
@@ -96,12 +95,10 @@ public interface ReadHead<$T> {
 	 * </p>
 	 * 
 	 * <p>
-	 * Future versions of this library may deprecate this method in favor of a
-	 * selector scheme provided by this package, and thereafter remove the method from
-	 * the public namespace entirely; it's also possible that the definition will be
-	 * weakened to allow the implementer to only invoke the listener when a new chunk
-	 * becomes available in order to reduce noise, and users are thus advised to use
-	 * readAllNow instead of just readNow in response to hearing an update.
+	 * It's possible that this definition will be weakened to allow the implementer to
+	 * only invoke the listener when a multiple new chunks become available at one
+	 * time in order to reduce noise, and users are thus advised to use readAllNow
+	 * instead of just readNow in response to hearing an update.
 	 * </p>
 	 * 
 	 * @param $el
@@ -116,8 +113,8 @@ public interface ReadHead<$T> {
 	 * <p>
 	 * If multiple threads block on this concurrently, the choice of whether or not to
 	 * provide a guarantee of fairness is left up to the implementer. Regardless,
-	 * basic synchronicity must be maintained -- there will be no double-reads, null
-	 * pointer exceptions, concurrent modification exceptions, or etc.
+	 * basic synchronicity must be maintained &mdash; there will be no double-reads,
+	 * null pointer exceptions, concurrent modification exceptions, or etc.
 	 * </p>
 	 * 
 	 * @return next chunk of input, or null if there is no data available and the
@@ -167,8 +164,8 @@ public interface ReadHead<$T> {
 	 * ensure you've already stopped reading that might take place in any other
 	 * threads.
 	 * <li>This behavior is meant to help ensure all data has been retrieved by the
-	 * time a reading thread exits -- call it in every thread and between all of them
-	 * they'll get everything.
+	 * time a reading thread exits &mdash; call it in every thread and between all of
+	 * them they'll get everything.
 	 * <li>In some implementations (namely those based on semaphore permits), it's
 	 * difficult to stop other readers internally without linking the locking of reads
 	 * and writes, which is highly undesirable since it implies greater complexity and
