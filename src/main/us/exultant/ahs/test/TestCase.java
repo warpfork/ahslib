@@ -86,11 +86,23 @@ public abstract class TestCase implements Runnable {
 	
 	public abstract List<Unit> getUnits();
 	
+	
+
 	/**
+	 * <p>
 	 * Each Unit in a TestCase contains a coherent set of assertions (or just one
 	 * assertion) preceeded by code to set up the test. The class name of an instance
 	 * of Unit is used when logging the successful passing of a Unit and so use of
 	 * anonymous subclasses of Unit is not advised.
+	 * </p>
+	 * 
+	 * <p>
+	 * Any object returned by the {@link #call()} method is ignored by TestCase, so
+	 * it's typically appropriate to act as if Unit actually implemented
+	 * <tt>Callable&lt;{@link Void}&gt;</tt>. (The return type of Object is allowed in
+	 * case the client cares to compose their units in odd ways, but doing so is not
+	 * recommended.)
+	 * </p>
 	 */
 	public abstract class Unit implements Callable<Object> {
 		/**
@@ -103,7 +115,7 @@ public abstract class TestCase implements Runnable {
 		 */
 		public <$T extends Throwable> Class<$T> expectExceptionType() { return null; }
 		// this method often seems to cause warnings about unchecked conversion in subclasses even when the return type is obviously legitimate, but i'm unsure of why.
-
+		
 		public void breakIfFailed() throws AssertionFailed {
 			if ($failures > 0) throw new AssertionFailed("breaking: "+$failures+" failures.");
 		}
