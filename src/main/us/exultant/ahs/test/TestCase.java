@@ -33,7 +33,10 @@ public abstract class TestCase implements Runnable {
 				
 				$log.info(this, "TEST UNIT "+$unit.getName()+" STARTING...");
 				$unit.call();
-				$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
+				if ($failures == 0)
+					$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
+				else
+					$log.info(this, "TEST UNIT "+$unit.getName()+" FAILED (WITH "+$failures+" FAILURES)!\n");
 			} catch (AssertionFatal $e) {
 				$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
 				abort();
