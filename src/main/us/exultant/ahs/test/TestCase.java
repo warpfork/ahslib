@@ -101,7 +101,7 @@ public abstract class TestCase implements Runnable {
 		 * instanceof that type, or the Unit fails and all further Units in the
 		 * entire Case are aborted.
 		 */
-		public <$T extends Exception> Class<$T> expectExceptionType() { return null; }
+		public <$T extends Throwable> Class<$T> expectExceptionType() { return null; }
 		// this method often seems to cause warnings about unchecked conversion in subclasses even when the return type is obviously legitimate, but i'm unsure of why.
 
 		public void breakIfFailed() throws AssertionFailed {
@@ -112,7 +112,7 @@ public abstract class TestCase implements Runnable {
 		}
 		
 		public final String getName() {
-			String[] $arrg = getClass().getCanonicalName().split("\\Q.\\E");
+			String[] $arrg = Primitives.PATTERN_DOT.split(getClass().getCanonicalName());
 			return $arrg[$arrg.length-1];
 		}
 	}

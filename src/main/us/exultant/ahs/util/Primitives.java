@@ -2,6 +2,7 @@ package us.exultant.ahs.util;
 
 import java.nio.*;
 import java.util.*;
+import java.util.regex.*;
 
 public class Primitives {
 	/**
@@ -56,6 +57,9 @@ public class Primitives {
 		LIST_NULL = Collections.unmodifiableList(tmp_LIST_NULL);
 	}
 	// consider the potential for replacing this with a SyncFreeProvider and some kind of map?  would be nice to remove references like these from core and yet maintain the non-need of repetition in client code.
+	
+	
+	public static final Pattern		PATTERN_DOT		= Pattern.compile(".", Pattern.LITERAL);
 	
 	
 	

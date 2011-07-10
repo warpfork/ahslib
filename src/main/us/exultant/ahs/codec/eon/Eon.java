@@ -2,6 +2,7 @@ package us.exultant.ahs.codec.eon;
 
 import us.exultant.ahs.codec.*;
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 import java.nio.*;
 import java.util.*;
 
@@ -77,7 +78,7 @@ public final class Eon {
 	public static final String MAGICWORD_HINT = "!";
 	
 	public static String getKlass(Class<?> $c) {
-		String[] $arrg = $c.getCanonicalName().split("\\Q.\\E");
+		String[] $arrg = Primitives.PATTERN_DOT.split($c.getCanonicalName());
 		return $arrg[$arrg.length-1];
 	}
 	public static String getKlass(Object $x) {
