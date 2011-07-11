@@ -22,30 +22,24 @@ import java.io.*;
  * @param <$FROM>
  * @param <$TO>
  */
-public class Teamster<$FROM, $TO> {
+public class Teamster<$FROM, $TO> extends Toaster<$FROM, $TO> {
 	public Teamster(ReadHead<$FROM> $src, Translator<$FROM, $TO> $trans, WriteHead<$TO> $sink) {
+		super($trans);
 		this.$src = $src;
-		this.$trans = $trans;
 		this.$sink = $sink;
-		this.$pump = new PumpT();
 	}
 	
 	private final ReadHead<$FROM>		$src;
-	private final Translator<$FROM,$TO>	$trans;
 	private final WriteHead<$TO>		$sink;
-	private final Pump			$pump;
-	private ExceptionHandler<IOException>	$eh;
-	
-	/**
-	 * <p>
-	 * Grants access to the Pump which powers the Teamster's execution of reads,
-	 * translations, and writes.
-	 * </p>
-	 * 
-	 * @return the Pump instance associated with this Teamster.
-	 */
-	public Pump getPump() {
-		return $pump;
+
+	public boolean isDone() {
+		return $src.isClosed() && !$src.hasNext();
+	}
+	public $FROM intake() {
+		return $src.readNow();
+	}
+	public void output($TO $x) {
+		$sink.write($x);
 	}
 	
 	/**
@@ -82,37 +76,5 @@ public class Teamster<$FROM, $TO> {
 	 */
 	public void setExceptionHandler(ExceptionHandler<IOException> $eh) {
 		this.$eh = $eh;
-	}
-	
-	
-	
-	private class PumpT implements Pump {
-		public boolean isDone() {
-			return $src.isClosed() && !$src.hasNext();
-		}
-		
-		public synchronized void run(final int $times) {
-			for (int $i = 0; $i < $times; $i++) {
-				if (isDone()) break;
-
-				$FROM $a = $src.readNow();
-				if ($a == null) break;
-				
-				$TO $b;
-				try {
-					$b = $trans.translate($a);
-					
-					if ($b == null) break;
-					
-					$sink.write($b);
-				} catch (IOException $e) {
-					// this error handling is the SAME for both errors in the translator and errors from writing the the sink.
-					//  (we typically kinda expect the sink to be a pipe pretty much 100% of the time anyway though, in which case there's no exceptions possible from it.)
-					ExceptionHandler<IOException> $dated_eh = $eh;
-					if ($dated_eh != null) $dated_eh.hear($e);
-					break;
-				}
-			}
-		}
 	}
 }
