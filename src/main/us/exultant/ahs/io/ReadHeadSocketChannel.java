@@ -67,7 +67,12 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 		return $ssc;
 	}
 	
-	public Pump getPump() {
+	/**
+	 * It should not prove necessary to use this method, since a ReadHeadSocketChannel
+	 * is among the classes which it is appropriate to power via the indirection of a
+	 * PumperSelector and not by any other means.
+	 */
+	Pump getPump() {
 		return $pump;
 	}
 	
