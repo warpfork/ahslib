@@ -19,6 +19,7 @@ public class PipeTest extends TestCase {
 		$tests.add(new TestBasicClose_WriteAfter());
 		$tests.add(new TestBasicClose_ReadAfter());
 		$tests.add(new TestConcurrent_ReadWriteBlocking());
+		$tests.add(new TestConcurrent_Close());
 		return $tests;
 	}
 	private static final TestData TD = TestData.getFreshTestData();
@@ -160,6 +161,49 @@ public class PipeTest extends TestCase {
 			public void run() {
 				for (int $i = 0; $i < n; $i++)
 					$counter.hear($pipe.SRC.read());
+			}
+		}
+	}
+
+	private class TestConcurrent_Close extends TestCase.Unit {
+		Pipe<String> $pipe = new Pipe<String>();
+		ConcurrentCounter<String> $counter = ConcurrentCounter.make(Arr.asList(TD.s1));
+		final int n = 10000;
+		final int n2 = 100;
+		
+		public Object call() {
+			Runnable[] $tasks = new Runnable[4];
+			$tasks[0] = new Writer(TD.s1);	// puts 2n+n2
+			$tasks[1] = new Reader();	// consumes up to n
+			$tasks[2] = new Reader();	// consumes up to n
+			$tasks[3] = new FinalReader();	// consumes some arbitrary amount based on thread scheduling, minimum n2.
+			ThreadUtil.doAll($tasks);
+			assertEquals(2*n+n2, $counter.getCount(TD.s1));
+			return null;
+		}
+		
+
+		private class Writer implements Runnable {
+			public Writer(String $str) { this.$str = $str; }
+			private String $str;
+			public void run() {
+				for (int $i = 0; $i < (2*n)+n2; $i++)
+					$pipe.SINK.write($str);
+				$pipe.close();
+			}
+		}
+		private class Reader implements Runnable {
+			public Reader() {}
+			public void run() {
+				for (int $i = 0; $i < n; $i++)
+					$counter.hear($pipe.SRC.read());
+			}
+		}
+		private class FinalReader implements Runnable {
+			public FinalReader() {}
+			public void run() {
+				for (String $s : $pipe.SRC.readAll())
+					$counter.hear($s);
 			}
 		}
 	}
