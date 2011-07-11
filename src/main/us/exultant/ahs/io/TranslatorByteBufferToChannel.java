@@ -26,6 +26,12 @@ import java.nio.channels.*;
  * 
  */
 public abstract class TranslatorByteBufferToChannel implements Translator<ByteBuffer,TranslatorByteBufferToChannel.Completor> {
+	protected TranslatorByteBufferToChannel(WritableByteChannel $base) {
+		this.$base = $base;
+	}	
+	
+	final WritableByteChannel	$base;
+	
 	/**
 	 * <p>
 	 * This implementation of translating writes to channels is nonblocking. It
@@ -46,10 +52,8 @@ public abstract class TranslatorByteBufferToChannel implements Translator<ByteBu
 	 */
 	public static class Nonblocking extends TranslatorByteBufferToChannel {
 		public Nonblocking(WritableByteChannel $base) {
-			this.$base = $base;
+			super($base);
 		}
-		
-		private final WritableByteChannel	$base;
 		
 		public Completor translate(ByteBuffer $blob) throws TranslationException {
 			return new Completor($base, $blob);
@@ -81,10 +85,9 @@ public abstract class TranslatorByteBufferToChannel implements Translator<ByteBu
 	 */
 	public static class Blocking extends TranslatorByteBufferToChannel {
 		public Blocking(WritableByteChannel $base) {
-			this.$base = $base;
+			super($base);
 		}
 		
-		private final WritableByteChannel	$base;
 		private final ByteBuffer		$preint	= ByteBuffer.allocate(4);
 		private static final Completor		$straw = new Completor();
 		
