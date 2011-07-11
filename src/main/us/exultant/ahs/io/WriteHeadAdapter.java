@@ -18,11 +18,11 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 		this.$eh = $eh;
 	}
 	
-	public void write($T $chunk) throws IOException {
+	public void write($T $chunk) {
 		$pipe.SINK.write($chunk);
 	}
 	
-	public void writeAll(Collection<? extends $T> $chunks) throws IOException {
+	public void writeAll(Collection<? extends $T> $chunks) {
 		$pipe.SINK.writeAll($chunks);
 	}
 	

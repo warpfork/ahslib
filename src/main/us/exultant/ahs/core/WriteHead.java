@@ -36,9 +36,9 @@ import java.util.*;
  * @author hash
  */
 public interface WriteHead<$T> {
-	public void write($T $chunk) throws IOException;
+	public void write($T $chunk);
 	
-	public void writeAll(Collection<? extends $T> $chunks) throws IOException;
+	public void writeAll(Collection<? extends $T> $chunks);
 	
 	/**
 	 * This function allows for systems which contain some sort of limit on their
