@@ -151,9 +151,11 @@ public interface ReadHead<$T> {
 	 * <p>
 	 * Blocks until the stream is closed, then returns its entire contents at once
 	 * (minus any entries that have already been read, even if those other reads take
-	 * place <i>after</i> the invocation of <code>readAll()</code>). If multiple
-	 * threads invoke this, then one of them will receive a normal result, and the
-	 * rest will receive empty arrays (as will subsequent invocations).
+	 * place <i>after</i> the invocation of <code>readAll()</code>, and including even
+	 * entries that may have been written to the stream after this invocation of
+	 * <code>readAll()</code>). If multiple threads invoke this, then one of them will
+	 * receive a normal result, and the rest will receive empty arrays (as will
+	 * subsequent invocations).
 	 * </p>
 	 * 
 	 * <p>
