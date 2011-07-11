@@ -4,6 +4,7 @@ import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 
 /**
  * <p>
@@ -38,6 +39,7 @@ public class Pipe<$T> implements Flow<$T> {
 		$gate = new InterruptableSemaphore(0, true); // fair.
 		SRC = new Source();
 		SINK = new Sink();
+		$lock = new ReentrantLock();
 	}
 	
 	/**
@@ -46,10 +48,10 @@ public class Pipe<$T> implements Flow<$T> {
 	 * </p>
 	 * 
 	 * <p>
-	 * Note that it would be perfectly possible to use just the ReadHead and WriteHead
-	 * interfaces internally as well... but this lets clients avoid having to always
-	 * wrap the write calls in a no-op try-catch block that actually happens to be
-	 * unreachable.
+	 * (Note that it would be perfectly possible to use just the ReadHead and
+	 * WriteHead interfaces internally as well... but this lets clients avoid ever
+	 * having to wrap calls in a no-op try-catch block that actually happens to be
+	 * unreachable.)
 	 * </p>
 	 */
 	public final Source			SRC;
@@ -60,32 +62,29 @@ public class Pipe<$T> implements Flow<$T> {
 	 * </p>
 	 * 
 	 * <p>
-	 * Note that it would be perfectly possible to use just the ReadHead and WriteHead
-	 * interfaces internally as well... but this lets clients avoid having to always
-	 * wrap the write calls in a no-op try-catch block that actually happens to be
-	 * unreachable.
+	 * (Note that it would be perfectly possible to use just the ReadHead and
+	 * WriteHead interfaces internally as well... but this lets clients avoid ever
+	 * having to wrap calls in a no-op try-catch block that actually happens to be
+	 * unreachable.)
 	 * </p>
 	 */
 	public final Sink			SINK;
 	
 	/**
-	 * <p>
 	 * This Listener is triggered for every completed write operation and for close
 	 * operations.
-	 * </p>
 	 */
 	private volatile Listener<ReadHead<$T>>	$el;
 	
 	/**
-	 * <p>
 	 * This is the data-containing buffer itself.
-	 * </p>
-	 * 
-	 * <p>
-	 * Synchronizing on this is the write lock.
-	 * </p>
 	 */
 	private final ConcurrentLinkedQueue<$T>	$queue;
+	
+	/**
+	 * The write lock.
+	 */
+	public final Lock			$lock;
 	
 	/**
 	 * <p>
@@ -194,12 +193,15 @@ public class Pipe<$T> implements Flow<$T> {
 		 * {@inheritDoc}
 		 */
 		public List<$T> readAllNow() {
-			synchronized ($queue) {
+			$lock.lock();
+			try {
 				int $p = $gate.drainPermits();
 				List<$T> $v = new ArrayList<$T>($p);
 				for (int $i = 0; $i < $p; $i++)
 					$v.add($queue.poll());
 				return $v;
+			} finally {
+				$lock.unlock();
 			}
 		}
 		
@@ -213,8 +215,11 @@ public class Pipe<$T> implements Flow<$T> {
 		 * return null following this call.
 		 */
 		public void close() {
-			synchronized ($queue) {
+			$lock.lock();
+			try {
 				$closed[0] = true; // set our state to closed
+			} finally {
+				$lock.unlock();
 			}
 			$gate.interrupt(); // interrupt any currently blocking reads
 			X.notifyAll($closed); // trigger the return of any final readAll calls
@@ -247,14 +252,17 @@ public class Pipe<$T> implements Flow<$T> {
 		 *                 if the chunk is null
 		 */
 		public void write($T $chunk) throws IllegalStateException {
-			synchronized ($queue) {
+			$lock.lock();
+			try {
 				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
 				$queue.add($chunk);
 				$gate.release();
 				
-				Listener<ReadHead<$T>> $el_dated = Pipe.this.$el;
+				Listener<ReadHead<$T>> $el_dated = $el;
 				if ($el_dated != null) $el_dated.hear(SRC);
-				//XXX:AHS:EFFIC:THREAD: I don't think we have to do this notification from within the write-lock, do we?
+				//XXX:AHS:EFFIC:THREAD: I don't think we have to do this notification from within the write-lock, do we?  (i guess we do in a batch situation whether we want to or not, though.)
+			} finally {
+				$lock.unlock();
 			}
 		}
 		
@@ -284,10 +292,12 @@ public class Pipe<$T> implements Flow<$T> {
 		 */
 		public void writeAll(Collection<? extends $T> $chunks) {
 			// at first i thought i could implement this with addAll on the queue and a single big release... not actually so.  addAll on the queue can throw exceptions but still have made partial progress.
-			// so while this is guaranteed to add all elements of the collection in their original order without interference by other threads, reading threads may actually be able to read the first elements from the collection before the last ones have been entered.
-			synchronized ($queue) {
+			$lock.lock();
+			try {
 				for ($T $chunk : $chunks)
 					write($chunk);
+			} finally {
+				$lock.unlock();
 			}
 		}
 		
@@ -318,5 +328,14 @@ public class Pipe<$T> implements Flow<$T> {
 
 	public void close() {
 		SRC.close();
+	}
+	
+	/** Do not use this method unless you know what you're doing.  It should never be needed under normal circumstances. */
+	void lockWrite() {
+		$lock.lock();
+	}
+	/** Do not use this method unless you know what you're doing.  It should never be needed under normal circumstances. */
+	void unlockWrite() {
+		$lock.unlock();
 	}
 }
