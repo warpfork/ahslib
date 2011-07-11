@@ -28,7 +28,7 @@ import java.util.*;
  * 
  */
 // worth reading before dealing with nio: http://rox-xmlrpc.sourceforge.net/niotut/
-public class PumperSelector implements Pumper {
+public class PumperSelector {
 	/**
 	 * <p>
 	 * Constructs a new PumperSelector with an open {@link Selector} backing it. The
@@ -37,6 +37,7 @@ public class PumperSelector implements Pumper {
 	 * </p>
 	 */
 	public PumperSelector() {
+		$pump = new PumpT();
 		Selector $bees = null;
 		try {
 			$bees = Selector.open();
@@ -52,6 +53,7 @@ public class PumperSelector implements Pumper {
 		});
 	}
 	
+	private final Pump		$pump;
 	private final Selector		$selector;
 	private final Pipe<Event>	$pipe;
 	
@@ -87,71 +89,81 @@ public class PumperSelector implements Pumper {
 	 * </p>
 	 */
 	public synchronized void start() {
-		Thread $t = new Thread(this, "SelectorPumper");
+		Thread $t = new Thread(new Pump.RunnableWrapper(getPump()), "SelectorPumper");
 		$t.setDaemon(true);
 		$t.start();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * <p>
-	 * The method cycles through two phases. In the first phase blocks on the
-	 * selector, then runs the Pump associated with any channel that reports an event.
-	 * The Pump is run within the selection thread and told to get as much data as it
-	 * can -- it is expected that the Pump will return immediately when it runs out of
-	 * available data so that the selection thread continues to operate in an
-	 * nonblocking fashion overall. In the second phase, the internal event buffer
-	 * used to synchronize registration and deregistration requests from other threads
-	 * is checked, and any buffered events are processed.
-	 * </p>
-	 */
-	public void run() {
-		while (true) {
-			// if you get a notification of new registration event right here,
-			//  whether on the first look or the nth, you're still fine:
-			//  the selector remembers that it's been wakeup'd since it was last in this following part of the loop,
-			//   so that call will still return immediately, and everything is kosher.
-			
-			// poke the selector for events
-			try {
-				$selector.select();	// blocks until channel events or wakeups triggered by the event pipe's listener.
-			} catch (IOException $e) {
-				X.cry($e);
-			}
-			{ // Get list of selection keys with pending events
-				Iterator<SelectionKey> $itr = $selector.selectedKeys().iterator();
+	public Pump getPump() {
+		return $pump;
+	}
+	
+	public class PumpT implements Pump {
+		public boolean isDone() {
+			return !$selector.isOpen();
+		}
+		
+		/**
+		 * {@inheritDoc}
+		 * 
+		 * <p>
+		 * The method cycles through two phases. In the first phase blocks on the
+		 * selector, then runs the Pump associated with any channel that reports an event.
+		 * The Pump is run within the selection thread and told to get as much data as it
+		 * can -- it is expected that the Pump will return immediately when it runs out of
+		 * available data so that the selection thread continues to operate in an
+		 * nonblocking fashion overall. In the second phase, the internal event buffer
+		 * used to synchronize registration and deregistration requests from other threads
+		 * is checked, and any buffered events are processed.
+		 * </p>
+		 */
+		public void run(final int $times) {
+			for (int $i = 0; $i < $times; $i++) {
+				// if you get a notification of new registration event right here,
+				//  whether on the first look or the nth, you're still fine:
+				//  the selector remembers that it's been wakeup'd since it was last in this following part of the loop,
+				//   so that call will still return immediately, and everything is kosher.
 				
-				// Process each key
-				while ($itr.hasNext()) {
-					SelectionKey $k = $itr.next();
-					$itr.remove();
-					
-					if (!$k.isValid()) continue;
-					
-					((Pump) $k.attachment()).run(Integer.MAX_VALUE); // the pump is told to get as much as it can, but with the expectation that it will return much sooner (namely, when the channel runs out of immediately available data).
+				// poke the selector for events
+				try {
+					$selector.select();	// blocks until channel events or wakeups triggered by the event pipe's listener.
+				} catch (IOException $e) {
+					X.cry($e);
 				}
-			}
-			
-			// check for new registration or deregistration events.
-			//  (note that it is critical to do this before the first select operation, since otherwise anyone who does all their registrations before running this method would have their registrations block until the first event (which would never happen)!)
-			List<Event> $evts = $pipe.SRC.readAllNow();
-			for (Event $evt : $evts) {
-				if ($evt instanceof Event_Reg) {
-					try {
-						if ($evt.channel() instanceof ServerSocketChannel) $evt.channel().register($selector, SelectionKey.OP_ACCEPT, $evt.pump());
-						else $evt.channel().register($selector, SelectionKey.OP_READ, $evt.pump());
-					} catch (ClosedChannelException $e) {
-						X.cry($e); //XXX:AHS: i'm not sure if this is okay... what if the remote connection closes the connection between the register call and when the event comes out of the pipe here?  i honestly don't know what kind of a response that would properly deserve here, though.  ignore it and wait for someone else to ask about that channel again and notice the foo?
-					}
-				} else if ($evt instanceof Event_Dereg) {
-					if ($evt.channel() == null) for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
+				{ // Get list of selection keys with pending events
+					Iterator<SelectionKey> $itr = $selector.selectedKeys().iterator();
+					
+					// Process each key
+					while ($itr.hasNext()) {
 						SelectionKey $k = $itr.next();
-						if ($evt.$pump == $k.attachment()) $k.cancel();
+						$itr.remove();
+						
+						if (!$k.isValid()) continue;
+						
+						((Pump) $k.attachment()).run(Integer.MAX_VALUE); // the pump is told to get as much as it can, but with the expectation that it will return much sooner (namely, when the channel runs out of immediately available data).
 					}
-					else for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
-						SelectionKey $k = $itr.next();
-						if ($evt.$thing == $k.channel()) $k.cancel();
+				}
+				
+				// check for new registration or deregistration events.
+				//  (note that it is critical to do this before the first select operation, since otherwise anyone who does all their registrations before running this method would have their registrations block until the first event (which would never happen)!)
+				List<Event> $evts = $pipe.SRC.readAllNow();
+				for (Event $evt : $evts) {
+					if ($evt instanceof Event_Reg) {
+						try {
+							if ($evt.channel() instanceof ServerSocketChannel) $evt.channel().register($selector, SelectionKey.OP_ACCEPT, $evt.pump());
+							else $evt.channel().register($selector, SelectionKey.OP_READ, $evt.pump());
+						} catch (ClosedChannelException $e) {
+							X.cry($e); //XXX:AHS: i'm not sure if this is okay... what if the remote connection closes the connection between the register call and when the event comes out of the pipe here?  i honestly don't know what kind of a response that would properly deserve here, though.  ignore it and wait for someone else to ask about that channel again and notice the foo?
+						}
+					} else if ($evt instanceof Event_Dereg) {
+						if ($evt.channel() == null) for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
+							SelectionKey $k = $itr.next();
+							if ($evt.$pump == $k.attachment()) $k.cancel();
+						}
+						else for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
+							SelectionKey $k = $itr.next();
+							if ($evt.$thing == $k.channel()) $k.cancel();
+						}
 					}
 				}
 			}
