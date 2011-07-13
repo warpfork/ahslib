@@ -84,7 +84,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	 */
 	public void close() throws IOException {
 		$ssc.close();
-		$ps.deregister($pump);
+		$ps.cancel($ssc);
 	}
 	
 	
