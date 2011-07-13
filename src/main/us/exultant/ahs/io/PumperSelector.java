@@ -140,85 +140,188 @@ public class PumperSelector {
 						
 						if (!$k.isValid()) continue;
 						
-						((Pump) $k.attachment()).run(Integer.MAX_VALUE); // the pump is told to get as much as it can, but with the expectation that it will return much sooner (namely, when the channel runs out of immediately available data).
+						int $ops = $k.readyOps();
+						Attache $a = (Attache) $k.attachment();
+						// the pumps are told to get as much as it can, but with the expectation that it will return much sooner (namely, when the channel runs out of immediately available data).
+						if ((($ops & SelectionKey.OP_READ) != 0) && $a.$reader != null)
+							$a.$reader.run(Integer.MAX_VALUE);
+						if ((($ops & SelectionKey.OP_WRITE) != 0) && $a.$writer != null)
+							$a.$writer.run(Integer.MAX_VALUE);
+						if ((($ops & SelectionKey.OP_ACCEPT) != 0) && $a.$accepter != null)
+							$a.$accepter.run(Integer.MAX_VALUE);
 					}
 				}
 				
 				// check for new registration or deregistration events.
-				//  (note that it is critical to do this before the first select operation, since otherwise anyone who does all their registrations before running this method would have their registrations block until the first event (which would never happen)!)
 				List<Event> $evts = $pipe.SRC.readAllNow();
 				for (Event $evt : $evts) {
 					if ($evt instanceof Event_Reg) {
 						try {
-							if ($evt.channel() instanceof ServerSocketChannel) $evt.channel().register($selector, SelectionKey.OP_ACCEPT, $evt.pump());
-							else $evt.channel().register($selector, SelectionKey.OP_READ, $evt.pump());
+							SelectionKey $k = $evt.$chan.keyFor($selector);
+							Attache $a;
+							int $old_ops;
+							if ($k == null) {
+								$a = new Attache();
+								$old_ops = 0;
+							} else {
+								$a = (Attache)$k.attachment();
+								$old_ops = $k.interestOps();
+							}
+							$a.apply($evt);
+							$evt.$chan.register($selector, Primitives.addMask($old_ops,$evt.$ops), $a);
 						} catch (ClosedChannelException $e) {
-							X.cry($e); //XXX:AHS: i'm not sure if this is okay... what if the remote connection closes the connection between the register call and when the event comes out of the pipe here?  i honestly don't know what kind of a response that would properly deserve here, though.  ignore it and wait for someone else to ask about that channel again and notice the foo?
+							$e.printStackTrace();
+							// don't know what kind of a response this could properly deserve here, though.  ignore it and wait for someone else to ask about that channel again and notice the foo?
 						}
 					} else if ($evt instanceof Event_Dereg) {
-						if ($evt.channel() == null) for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
-							SelectionKey $k = $itr.next();
-							if ($evt.$pump == $k.attachment()) $k.cancel();
-						}
-						else for (Iterator<SelectionKey> $itr = $selector.keys().iterator(); $itr.hasNext();) {
-							SelectionKey $k = $itr.next();
-							if ($evt.$thing == $k.channel()) $k.cancel();
-						}
+						SelectionKey $k = getKey($evt);
+						Attache $a = (Attache)$k.attachment();
+						int $old_ops = $k.interestOps();
+						$k.interestOps(Primitives.removeMask($old_ops,$evt.$ops));
+					} else if ($evt instanceof Event_Cancel) {
+						SelectionKey $k = getKey($evt);
+						if ($k != null) $k.cancel();
 					}
 				}
 			}
 		}
 	}
 	
-	public void register(SelectableChannel $ch, Pump $p) {
-		if ($p == null) throw new NullPointerException("pump cannot be null");
-		$pipe.SINK.write(new Event_Reg($ch, $p));
+	private SelectionKey getKey(Event $evt) {
+		if ($evt.$chan != null) return $evt.$chan.keyFor($selector);
+		for (SelectionKey $k : $selector.keys()) {
+			Attache $a = (Attache)$k.attachment();
+			if ($a == null) continue;
+			if ($a.contains($pump)) return $k;
+		}
+		return null;
 	}
 	
+	private class Attache {
+		public Pump $reader;
+		public Pump $writer;
+		public Pump $accepter;
+		
+		public void apply(Event $evt) {
+			switch ($evt.$ops) {
+				case SelectionKey.OP_READ:
+					$reader = $evt.$pump; break;
+				case SelectionKey.OP_WRITE:
+					$writer = $evt.$pump; break;
+				case SelectionKey.OP_ACCEPT:
+					$accepter = $evt.$pump; break;
+				default:
+					throw new MajorBug("op type not supported");
+			}
+		}
+		
+		public boolean contains(Pump $p) {
+			return ($reader == $p) || ($writer == $p) || ($accepter == $p);
+		}
+	}
+	
+	/**
+	 * Registers the given pump to be triggered by the selecting thread when this
+	 * channel is flagged as having readable data.
+	 * 
+	 * @param $ch a readable channel
+	 * @param $p a pump to run when the channel has data
+	 */
+	public void registerRead(SelectableChannel $ch, Pump $p) {
+		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_READ));
+	}
+	
+	/**
+	 * Registers the given pump to be triggered by the selecting thread when this
+	 * channel is flagged as ready to accept data writes.
+	 * 
+	 * @param $ch a writable channel
+	 * @param $p a pump to run when the channel can accept data
+	 */
+	public void registerWrite(SelectableChannel $ch, Pump $p) {
+		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_WRITE));
+	}
+	
+	/**
+	 * Registers the given pump to be triggered by the selecting thread when this
+	 * ServerSocketChannel is flagged as having new connections ready to accept.
+	 * 
+	 * @param $ch a ServerSocketChannel channel
+	 * @param $p a pump to run when connections are ready to be accepted
+	 */
 	public void register(ServerSocketChannel $ch, Pump $p) {
-		if ($p == null) throw new NullPointerException("pump cannot be null");
-		$pipe.SINK.write(new Event_Reg($ch, $p));
+		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
 	}
 	
-	public void deregister(SelectableChannel $ch) {
-		$pipe.SINK.write(new Event_Dereg($ch));
+	public void deregisterRead(SelectableChannel $ch) {
+		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_READ));
 	}
 	
-	public void deregister(Pump $p) {
-		$pipe.SINK.write(new Event_Dereg($p));
+	public void deregisterWrite(SelectableChannel $ch) {
+		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_WRITE));
+	}
+	
+	/**
+	 * Using this form of the command is slower and will behave ambiguously if the
+	 * same pump object is attached to several channels. Consider using
+	 * {@link #deregisterRead(SelectableChannel)} instead.
+	 */
+	public void deregisterRead(Pump $p) {
+		$pipe.SINK.write(new Event_Dereg($p, SelectionKey.OP_READ));
+	}
+	
+	/**
+	 * Using this form of the command is slower and will behave ambiguously if the
+	 * same pump object is attached to several channels. Consider using
+	 * {@link #deregisterWrite(SelectableChannel)} instead.
+	 */
+	public void deregisterWrite(Pump $p) {
+		$pipe.SINK.write(new Event_Dereg($p, SelectionKey.OP_WRITE));
+	}
+	
+	public void deregister(ServerSocketChannel $ch) {
+		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
+	}
+	
+	public void cancel(SelectableChannel $ch) {
+		$pipe.SINK.write(new Event_Cancel($ch));
 	}
 	
 	private static abstract class Event {
-		protected Event(SelectableChannel $thing, Pump $pump) {
-			this.$thing = $thing;
+		protected Event(SelectableChannel $thing, Pump $pump, int $ops) {
+			this.$chan = $thing;
 			this.$pump = $pump;
+			this.$ops = $ops;
 		}
 		
-		private SelectableChannel	$thing;
-		private Pump			$pump;
-		
-		public SelectableChannel channel() {
-			return $thing;
-		};
-		
-		public Pump pump() {
-			return $pump;
-		};
+		public final SelectableChannel	$chan;
+		public final Pump		$pump;
+		public final int		$ops;
 	}
 	
 	private static class Event_Reg extends Event {
-		private Event_Reg(SelectableChannel $ch, Pump $p) {
-			super($ch, $p);
+		private Event_Reg(SelectableChannel $ch, Pump $p, int $ops) {
+			super($ch, $p, $ops);
+			if ($p == null) throw new NullPointerException("pump cannot be null");
 		}
 	}
 	
 	private static class Event_Dereg extends Event {
-		private Event_Dereg(Pump $p) {
-			super(null, $p);
+		private Event_Dereg(Pump $p, int $ops) {
+			super(null, $p, $ops);
 		}
 		
-		private Event_Dereg(SelectableChannel $ch) {
-			super($ch, null);
+		private Event_Dereg(SelectableChannel $ch, int $ops) {
+			super($ch, null, $ops);
+		}
+	}
+	
+	private static class Event_Cancel extends Event {
+		private Event_Cancel(SelectableChannel $ch) {
+			super($ch, null, 0);
+		}
+		private Event_Cancel(Pump $p) {
+			super(null, $p, 0);
 		}
 	}
 }
