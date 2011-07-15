@@ -210,9 +210,14 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		/**
-		 * Closes the pipe. All blocked reads immediately return null following
-		 * this call, and all subsequent reads (blocking or nonblocking) will
-		 * return null following this call.
+		 * Closes the pipe. No more data will be allowed to be written to this
+		 * Pipe's WriteHead. Any blocked {@link Pipe.Source#readAll()} will return
+		 * whatever data they can, and other blocked {@link Pipe.Source#read()}
+		 * will immediately return null following this call even if they cannot
+		 * get data (these two processes still happen in fair order). All
+		 * subsequent reads (blocking or nonblocking) will either return data
+		 * immediately as long as any is still buffered in the pipe, and then
+		 * forevermore immediately return null once all buffered data is depleted.
 		 */
 		public void close() {
 			$lock.lock();
@@ -317,9 +322,14 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		/**
-		 * Closes the pipe. All blocked reads immediately return null following
-		 * this call, and all subsequent reads (blocking or nonblocking) will
-		 * return null following this call.
+		 * Closes the pipe. No more data will be allowed to be written to this
+		 * Pipe's WriteHead. Any blocked {@link Pipe.Source#readAll()} will return
+		 * whatever data they can, and other blocked {@link Pipe.Source#read()}
+		 * will immediately return null following this call even if they cannot
+		 * get data (these two processes still happen in fair order). All
+		 * subsequent reads (blocking or nonblocking) will either return data
+		 * immediately as long as any is still buffered in the pipe, and then
+		 * forevermore immediately return null once all buffered data is depleted.
 		 */
 		public void close() {
 			SRC.close();
