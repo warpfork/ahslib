@@ -141,6 +141,7 @@ public class PumperSelector {
 						if (!$k.isValid()) continue;
 						
 						int $ops = $k.readyOps();
+						///X.saye("ops"+$ops+"; keys"+$selector.keys().size());
 						Attache $a = (Attache) $k.attachment();
 						// the pumps are told to get as much as it can, but with the expectation that it will return much sooner (namely, when the channel runs out of immediately available data).
 						if ((($ops & SelectionKey.OP_READ) != 0) && $a.$reader != null)
@@ -156,6 +157,7 @@ public class PumperSelector {
 				List<Event> $evts = $pipe.SRC.readAllNow();
 				for (Event $evt : $evts) {
 					if ($evt instanceof Event_Reg) {
+						///X.saye($evt+" "+$evt.$ops);
 						try {
 							SelectionKey $k = $evt.$chan.keyFor($selector);
 							Attache $a;
@@ -168,6 +170,7 @@ public class PumperSelector {
 								$old_ops = $k.interestOps();
 							}
 							$a.apply($evt);
+							///X.saye($evt+" "+$a.$reader+" "+$a.$writer);
 							$evt.$chan.register($selector, Primitives.addMask($old_ops,$evt.$ops), $a);
 						} catch (ClosedChannelException $e) {
 							$e.printStackTrace();
