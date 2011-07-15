@@ -53,7 +53,7 @@ public abstract class TranslatorChannelToByteBuffer implements Translator<Readab
 		private ByteBuffer		$mess;
 		
 		public ByteBuffer translate(ReadableByteChannel $base) throws TranslationException {
-			if ($messlen <= 0) {
+			if ($messlen < 0) {
 				// try to read enough info to figure out what length of message we expect
 				try {
 					$base.read($preint);
@@ -67,6 +67,9 @@ public abstract class TranslatorChannelToByteBuffer implements Translator<Readab
 				$preint.rewind();
 				if ($messlen < 1) throw new TranslationException("malformed babble -- message length header not positive");
 				$mess = ByteBuffer.allocate($messlen);
+			} else if ($messlen == 0) {
+				// i don't know who sends empty chunks, but okay...
+				$messlen = -1;
 			}
 			// if procedure gets here, we either had messlen state from the last round or we have it now.
 			
@@ -80,7 +83,6 @@ public abstract class TranslatorChannelToByteBuffer implements Translator<Readab
 			if ($mess.remaining() > 0) return null; // we just don't have as much information as this chunk should contain yet.  keep waiting for more data.
 			
 			$messlen = -1;
-			$preint.rewind();
 			$mess.rewind();
 			return $mess;
 		}
