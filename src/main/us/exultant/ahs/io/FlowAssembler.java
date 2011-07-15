@@ -8,19 +8,18 @@ import java.nio.*;
 import java.nio.channels.*;
 
 public class FlowAssembler {
-	public Flow<ByteBuffer> wrap(SocketChannel $chan, PumperSelector $ps) {
+	public static Flow<ByteBuffer> wrap(SocketChannel $chan, PumperSelector $ps) {
 		return new Flow.Basic<ByteBuffer>(
 				makeNonblockingChannelReader($chan, $ps),
 				makeNonblockingChannelWriter($chan, $ps)
 		);
 	}
 	
-	public WriteHead<ByteBuffer> makeNonblockingChannelWriter(SocketChannel $chan, PumperSelector $ps) {
+	public static  WriteHead<ByteBuffer> makeNonblockingChannelWriter(SocketChannel $chan, PumperSelector $ps) {
 		Fuu $fuu = new Fuu(new TranslatorByteBufferToChannel.Nonblocking($chan), $ps);
-		$ps.registerWrite($chan, $fuu);	//XXX:AHS:EFFIC this may not be strictly necessary; check this later.
 		return $fuu;
 	}
-	private class Fuu extends WriteHeadAdapter<ByteBuffer> implements Pump {
+	private static class Fuu extends WriteHeadAdapter<ByteBuffer> implements Pump {
 		/**
 		 * @param $tran must have been constructed over a SelectableChannel or we'll throw ClassCastException later on. 
 		 */
@@ -55,7 +54,6 @@ public class FlowAssembler {
 					}
 					if ($last.isComplete()) {
 						$last = null;	// and if we've got $times left, loop and start a new one.
-						
 						synchronized ($trans.$base) {
 							// we want to have the selector stop poking us if we haven't got any more data to work on, so:
 							//  as long the pipe's listener's interest-reg enqueue happens-after the disinterest-reg here, it's fine.
@@ -109,12 +107,12 @@ public class FlowAssembler {
 		}
 	}
 	
-	public ReadHead<ByteBuffer> makeNonblockingChannelReader(SocketChannel $chan, PumperSelector $ps) {
+	public static ReadHead<ByteBuffer> makeNonblockingChannelReader(SocketChannel $chan, PumperSelector $ps) {
 		Quu $fuu = new Quu($chan, new TranslatorChannelToByteBuffer.Nonblocking(), $ps);
 		$ps.registerRead($chan, $fuu);
 		return $fuu;
 	}
-	private class Quu extends ReadHeadAdapter<ByteBuffer> implements Pump {
+	private static class Quu extends ReadHeadAdapter<ByteBuffer> implements Pump {
 		/**
 		 * @param $base
 		 *                must also be a SelectableChannel or we'll throw
