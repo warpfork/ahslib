@@ -144,6 +144,7 @@ public abstract class TranslatorByteBufferToChannel implements Translator<ByteBu
 		private Completor(WritableByteChannel $chan, ByteBuffer $blob) {
 			this.$chan = $chan;
 			this.$blob = $blob;
+			$blob.rewind();
 			this.$preint = ByteBuffer.allocate(4);
 			$preint.putInt($blob.remaining());
 			$preint.rewind();
