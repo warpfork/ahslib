@@ -1,6 +1,7 @@
 package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 import us.exultant.ahs.io.TranslatorByteBufferToChannel.Completor;
 import us.exultant.ahs.thread.*;
 import java.io.*;
@@ -8,14 +9,47 @@ import java.nio.*;
 import java.nio.channels.*;
 
 public class FlowAssembler {
+	/**
+	 * Produces a {@link Flow} that pairs a {@link ReadHead} and a {@link WriteHead}
+	 * that will communicate over the given channel using Babble frames in a
+	 * nonblocking fashion powered by the given selector.
+	 * 
+	 * @param $chan
+	 *                The channel to wrap with ReadHead and WriteHead. If this channel
+	 *                is not already set to nonblocking mode, it will be set.
+	 * @param $ps
+	 *                The selector to register the channel with.
+	 * @return a new {@link Flow} ready for use, or null if the channel was already
+	 *         closed.
+	 */
 	public static Flow<ByteBuffer> wrap(SocketChannel $chan, PumperSelector $ps) {
+		try {
+			$chan.configureBlocking(false);
+		} catch (ClosedChannelException $e) {
+			return null;
+		} catch (IOException $e) {
+			X.cry($e);	/* If someone ever explains to me why this would happen, then I'll write logic to handle it properly. */
+		}
 		return new Flow.Basic<ByteBuffer>(
 				makeNonblockingChannelReader($chan, $ps),
 				makeNonblockingChannelWriter($chan, $ps)
 		);
 	}
 	
-	public static  WriteHead<ByteBuffer> makeNonblockingChannelWriter(SocketChannel $chan, PumperSelector $ps) {
+	
+
+
+	/**
+	 * Associates a socket channel with a selector to perform nonblocking write using
+	 * the standard "Babble" protocol (i.e., simple frames of binary data preceeded by
+	 * a 32-bit signed int).
+	 * 
+	 * @param $chan
+	 * @param $ps
+	 * @return a WriteHead which pushes a frame of binary babble to the wire for every
+	 *         ByteBuffer.
+	 */
+	public static WriteHead<ByteBuffer> makeNonblockingChannelWriter(SocketChannel $chan, PumperSelector $ps) {
 		Fuu $fuu = new Fuu(new TranslatorByteBufferToChannel.Nonblocking($chan), $ps);
 		return $fuu;
 	}
@@ -107,6 +141,15 @@ public class FlowAssembler {
 		}
 	}
 	
+	/**
+	 * Associates a socket channel with a selector to perform nonblocking reads using
+	 * the standard "Babble" protocol (i.e., simple frames of binary data preceeded by
+	 * a 32-bit signed int).
+	 * 
+	 * @param $chan
+	 * @param $ps
+	 * @return a ReadHead which yields a ByteBuffer for every frame of binary babble.
+	 */
 	public static ReadHead<ByteBuffer> makeNonblockingChannelReader(SocketChannel $chan, PumperSelector $ps) {
 		Quu $fuu = new Quu($chan, new TranslatorChannelToByteBuffer.Nonblocking(), $ps);
 		$ps.registerRead($chan, $fuu);

@@ -35,13 +35,11 @@ public class NonblockingChannelTranslatorTest extends TestCase {
 			
 			$sc0c = SocketChannel.open();
 			$sc0c.connect($rhsc.getServerSocketChannel().getLocalAddress());
-			$sc0c.configureBlocking(false);
 			
 			$sc0s = $rhsc.read();
 			
 			$sc1c = SocketChannel.open();
 			$sc1c.connect($rhsc.getServerSocketChannel().getLocalAddress());
-			$sc1c.configureBlocking(false);
 			
 			$sc1s = $rhsc.read();
 			
