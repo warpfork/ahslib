@@ -22,24 +22,55 @@ import java.io.*;
  * @param <$FROM>
  * @param <$TO>
  */
-public class Teamster<$FROM, $TO> extends Toaster<$FROM, $TO> {
-	public Teamster(ReadHead<$FROM> $src, Translator<$FROM, $TO> $trans, WriteHead<$TO> $sink) {
-		super($trans);
+public class Teamster<$FROM, $TO> implements WorkTarget {
+	public Teamster(ReadHead<$FROM> $src, Translator<$FROM, $TO> $trans, WriteHead<$TO> $sink, int $priority) {
+		this.$trans = $trans;
 		this.$src = $src;
 		this.$sink = $sink;
+		this.$prio = $priority;
+	}
+	public Teamster(ReadHead<$FROM> $src, Translator<$FROM, $TO> $trans, WriteHead<$TO> $sink) {
+		this($src, $trans, $sink, 0);
 	}
 	
 	private final ReadHead<$FROM>		$src;
 	private final WriteHead<$TO>		$sink;
-
+	private final Translator<$FROM,$TO>	$trans;
+	private ExceptionHandler<IOException>	$eh;
+	private final int			$prio;
+	
 	public boolean isDone() {
 		return $src.isClosed() && !$src.hasNext();
 	}
-	public $FROM intake() {
-		return $src.readNow();
+	
+	public boolean isReady() {
+		return $src.hasNext();
 	}
-	public void output($TO $x) {
-		$sink.write($x);
+	
+	/** Priority in Teamster is a constant specified when the Teamster was constructed. */
+	public int getPriority() {
+		return $prio;
+	}
+	
+	public synchronized void run() {
+		if (isDone()) return;
+		
+		$FROM $a = $src.readNow();
+		if ($a == null) return;
+		
+		$TO $b;
+		try {
+			$b = $trans.translate($a);
+			
+			if ($b == null) return;
+			
+			$sink.write($b);
+		} catch (IOException $e) {
+			// this error handling is the SAME for both errors in the translator and errors from writing the the sink.
+			ExceptionHandler<IOException> $dated_eh = $eh;
+			if ($dated_eh != null) $dated_eh.hear($e);
+			return;
+		}
 	}
 	
 	/**
