@@ -1,7 +1,6 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
-import java.io.*;
 
 /**
  * <p>
@@ -36,7 +35,7 @@ public class Teamster<$FROM, $TO> implements WorkTarget {
 	private final ReadHead<$FROM>		$src;
 	private final WriteHead<$TO>		$sink;
 	private final Translator<$FROM,$TO>	$trans;
-	private ExceptionHandler<IOException>	$eh;
+	private ExceptionHandler<TranslationException>	$eh;
 	private final int			$prio;
 	
 	public boolean isDone() {
@@ -53,46 +52,49 @@ public class Teamster<$FROM, $TO> implements WorkTarget {
 	}
 	
 	public synchronized void run() {
-		if (isDone()) return;
-		
-		$FROM $a = $src.readNow();
-		if ($a == null) return;
-		
-		$TO $b;
 		try {
-			$b = $trans.translate($a);
+			if (isDone()) return;
 			
-			if ($b == null) return;
-			
-			$sink.write($b);
-		} catch (IOException $e) {
-			// this error handling is the SAME for both errors in the translator and errors from writing the the sink.
-			ExceptionHandler<IOException> $dated_eh = $eh;
-			if ($dated_eh != null) $dated_eh.hear($e);
+			$FROM $a = $src.readNow();
+			if ($a == null) return;
+		
+			try {
+				$TO $b = $trans.translate($a);
+				
+				if ($b == null) return;
+				
+				$sink.write($b);
+			} catch (TranslationException $e) {
+				// this error handling is the SAME for both errors in the translator and errors from writing the the sink.
+				ExceptionHandler<TranslationException> $dated_eh = $eh;
+				if ($dated_eh != null) $dated_eh.hear($e);
+				return;
+			}
+		} catch (Throwable $e) {
+			ExceptionHandler<TranslationException> $dated_eh = $eh;
+			if ($dated_eh != null) $dated_eh.hear(new TranslationException("unexpected error in teamster",$e));
 			return;
 		}
 	}
 	
 	/**
 	 * <p>
-	 * In the case of exceptions that occur in the course of a Teamster's operation of
-	 * its {@link Translator}, those exceptions are sent to the handler specified by
-	 * this method (or otherwise they may be discarded silently if no handler has been
-	 * set).
+	 * In the case of {@link TranslationException} that occur in the course of a
+	 * Teamster's operation of its {@link Translator}, those exceptions are sent to
+	 * the handler specified by this method (or otherwise they may be discarded
+	 * silently if no handler has been set).
 	 * </p>
 	 * 
 	 * <p>
-	 * Exceptions caught by the Teamster that are not IOException are still pushed
-	 * through this interface by listing them as the cause of a new IOException that
-	 * is then rethrown. Exceptions not caught by the Pump can still bubble out of the
-	 * Pump without being pushed through this interface, but no exception should do
-	 * both.
+	 * Exceptions caught by the Teamster that are not TranslationException are still
+	 * pushed through this interface by listing them as the cause of a new
+	 * TranslationException that is then rethrown.
 	 * </p>
 	 * 
 	 * <p>
 	 * The handler's <code>hear(*)</code> method is invoked by the pumping thread, and
 	 * will be executed before the Pump takes any other actions such as attempting to
-	 * continue reading.
+	 * continue running the Translator or returning from the run method.
 	 * </p>
 	 * 
 	 * <p>
@@ -105,7 +107,7 @@ public class Teamster<$FROM, $TO> implements WorkTarget {
 	 * 
 	 * @param $eh
 	 */
-	public void setExceptionHandler(ExceptionHandler<IOException> $eh) {
+	public void setExceptionHandler(ExceptionHandler<TranslationException> $eh) {
 		this.$eh = $eh;
 	}
 }
