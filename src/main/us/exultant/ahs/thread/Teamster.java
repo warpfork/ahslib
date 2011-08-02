@@ -32,11 +32,11 @@ public class Teamster<$FROM, $TO> implements WorkTarget {
 		this($src, $trans, $sink, 0);
 	}
 	
-	private final ReadHead<$FROM>		$src;
-	private final WriteHead<$TO>		$sink;
-	private final Translator<$FROM,$TO>	$trans;
+	private final ReadHead<$FROM>			$src;
+	private final WriteHead<$TO>			$sink;
+	private final Translator<$FROM,$TO>		$trans;
 	private ExceptionHandler<TranslationException>	$eh;
-	private final int			$prio;
+	private final int				$prio;
 	
 	public boolean isDone() {
 		return $src.isClosed() && !$src.hasNext();

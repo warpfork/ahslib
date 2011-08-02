@@ -1,5 +1,7 @@
 package us.exultant.ahs.thread;
 
+import java.util.*;
+
 public interface WorkTarget {
 	/**
 	 * <p>
@@ -131,4 +133,34 @@ public interface WorkTarget {
 	 *         currently be considered if it has work ready.
 	 */
 	public int getPriority();
+	
+	
+
+	/**
+	 * <p>
+	 * Compares two WorkTarget based on their priority alone. This is useful for
+	 * priority queues.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note: this comparator imposes orderings that are inconsistent with equals.
+	 * </p>
+	 * 
+	 * <p>
+	 * Implementation note: this comparator is implemented as simple integer math
+	 * without overflow checking, so if it is applied to datasets which contain
+	 * priority values that can have a difference larger than
+	 * {@link Integer#MAX_VALUE} results are unpleasant. Basically, keep your priority
+	 * values between a billion and negative one billion and you'll be fine.
+	 * </p>
+	 * 
+	 * @author hash
+	 * 
+	 */
+	public static class PriorityComparator implements Comparator<WorkTarget> {
+		public int compare(WorkTarget $o1, WorkTarget $o2) {
+			// we could of course just compare Math.max(prio,2^31)... but i'm intending to use this in the tight bit of a synchronization block that the whole vm pivots around.  so, we're going with the 99% solution here because it runs faster.
+			return $o1.getPriority() - $o2.getPriority();
+		}
+	}
 }
