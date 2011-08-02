@@ -163,4 +163,49 @@ public interface WorkTarget {
 			return $o1.getPriority() - $o2.getPriority();
 		}
 	}
+	
+
+
+	/**
+	 * <p>
+	 * Bridges the gap between {@link Runnable} and WorkTarget.
+	 * </p>
+	 * 
+	 * <p>
+	 * Implementation note: all of the methods of this class are synchronized, which
+	 * means if you ask if this WorkTarget is ready while it's being run, you might
+	 * well be waiting a while for an answer. This design choice was made on the
+	 * presumption that there's no rational reason to be asking those state questions
+	 * whilst the task is in progress.
+	 * </p>
+	 * 
+	 * @author hash
+	 */
+	public static class RunnableWrapper implements WorkTarget {
+		public RunnableWrapper(Runnable $wrap) { this($wrap,0,true); }
+		public RunnableWrapper(Runnable $wrap, boolean $once) { this($wrap,0,$once); }
+		public RunnableWrapper(Runnable $wrap, int $prio) { this($wrap,$prio,true); }
+		public RunnableWrapper(Runnable $wrap, int $prio, boolean $once) {
+			this.$once = $once;
+			this.$prio = $prio;
+			this.$wrap = $wrap;
+		}
+		private final boolean	$once;
+		private final int	$prio;
+		private Runnable	$wrap;	// flip this to null when it's a one-time task and we've done it.
+		
+		public synchronized void run() {
+			try {
+				$wrap.run();
+			} finally {
+				if ($once) $wrap = null;
+			}
+		}
+		
+		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
+		public synchronized boolean isReady() { return !isDone(); }
+		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
+		public synchronized boolean isDone() { return ($wrap == null); }
+		public int getPriority() { return $prio; }
+	}
 }
