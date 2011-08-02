@@ -2,7 +2,7 @@ package us.exultant.ahs.thread;
 
 import java.util.*;
 
-public interface WorkTarget {
+public interface WorkTarget extends Runnable {
 	/**
 	 * <p>
 	 * Defines whether or not this WorkTarget currently has enough data available to
@@ -181,7 +181,7 @@ public interface WorkTarget {
 	 * 
 	 * @author hash
 	 */
-	public static class RunnableWrapper implements WorkTarget {
+	public static final class RunnableWrapper implements WorkTarget {
 		public RunnableWrapper(Runnable $wrap) { this($wrap,0,true); }
 		public RunnableWrapper(Runnable $wrap, boolean $once) { this($wrap,0,$once); }
 		public RunnableWrapper(Runnable $wrap, int $prio) { this($wrap,$prio,true); }
