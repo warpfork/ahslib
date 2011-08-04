@@ -401,9 +401,31 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 	//
 	////////////////////////////////////////////////////////////////
 	/**
-	 * Specialized delay queue. To mesh with TPE declarations, this class must be
-	 * declared as a BlockingQueue<Runnable> even though it can only hold
-	 * RunnableScheduledFutures.
+	 * The most difficult case is a high-priority but delayed task.
+	 * 
+	 * - We can't have the return of a task from this queue blocking on that guy, so
+	 * even if he's the highest priority he can't be the head.
+	 * 
+	 * - We can't sort on time first because then the priorities turn to crap.
+	 * 
+	 * So, don't have delayed tasks enter this queue until they're ready (and then
+	 * they have to soar to the top immediately).
+	 * 
+	 * Problem is then in taking notice of clock tasks that are now ready. We'll have
+	 * to poll them every time a thread asks for something from this queue... so,
+	 * essentially, clock tasks they require their own separately sorted storage.
+	 * 
+	 * (On checking the readiness of clock tasks: we'll only ever need to check the
+	 * top, so having them do their own time call is fine for effic. We can have any
+	 * non-zero time sort to the top of this queue. When we check clock tasks, we have
+	 * to keep pulling from the top and pushing it into this until we can't anymore,
+	 * because this one is still needed to sort the clock tasks by relative priority
+	 * amongst themselves (making what I said just a moment ago about time calls
+	 * potentially a slight lie). The clock task heap need only be sorted by time. I
+	 * can have positive index ints point into this guy and negs into the clock; min
+	 * and max be special values for running and nonclock-waiting. In fact, overall I
+	 * think it might turn out to be the same queue impl but with different
+	 * comparators and a signnum.)
 	 */
 	static class DelayedWorkQueue extends AbstractQueue<Runnable> implements BlockingQueue<Runnable> {
 		
@@ -647,7 +669,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 			lock.lock();
 			try {
 				RunnableScheduledFuture first = queue[0];
-				if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0) return null;
+				if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0) return null;	//FIXME:AHS:THREAD:DOUG: this should be looking at readiness (and the delay thing should be determining readiness for clock-based tasks).
 				else return finishPoll(first);
 			} finally {
 				lock.unlock();
@@ -663,7 +685,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 					if (first == null) available.await();
 					else {
 						long delay = first.getDelay(TimeUnit.NANOSECONDS);
-						if (delay <= 0) return finishPoll(first);
+						if (delay <= 0) return finishPoll(first);	//FIXME:AHS:THREAD:DOUG: this should be looking at readiness (and the delay thing should be determining readiness for clock-based tasks).
 						else if (leader != null) available.await();
 						else {
 							Thread thisThread = Thread.currentThread();
