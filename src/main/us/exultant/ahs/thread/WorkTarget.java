@@ -181,6 +181,7 @@ public interface WorkTarget extends Runnable {
 	 * 
 	 * @author hash
 	 */
+	//TODO:AHS:THREAD: you do realize you gave this no way to remove itself from scheduling if it's recurrent, don't you?
 	public static final class RunnableWrapper implements WorkTarget {
 		public RunnableWrapper(Runnable $wrap) { this($wrap,0,true); }
 		public RunnableWrapper(Runnable $wrap, boolean $once) { this($wrap,0,$once); }
@@ -192,7 +193,7 @@ public interface WorkTarget extends Runnable {
 		}
 		private final boolean	$once;
 		private final int	$prio;
-		private Runnable	$wrap;	// flip this to null when it's a one-time task and we've done it.
+		private Runnable	$wrap;	// flip this to null when it's done.
 		
 		public synchronized void run() {
 			try {
