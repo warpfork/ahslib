@@ -14,39 +14,47 @@ public class WorkSchedulerUnprioritized implements WorkScheduler {
 	private final Map<Object,WorkTarget>		$fuck;
 	private final ScheduledThreadPoolExecutor	$seshat;
 	
-	public void schedule(WorkTarget $wt) {
-		if ($wt.isDone()) return;
+	public Future<?> schedule(WorkTarget $wt) {
+		if ($wt.isDone()) return null;
 		synchronized ($seshat) {
 			$waiting.add($wt);
-			update($wt);
+			return  doUpdate($wt);
 		}
 	}
 	
-	public void schedule(WorkTarget $wt, long $delay, TimeUnit $unit) {
-		if ($wt.isDone()) return;
-		$seshat.schedule($wt, $delay, $unit);
+	public Future<?> schedule(WorkTarget $wt, long $delay, TimeUnit $unit) {
+		if ($wt.isDone()) return null;
+		return $seshat.schedule($wt, $delay, $unit);
 	}
 	
-	public void scheduleAtFixedRate(WorkTarget $wt, long $initialDelay, long $delay, TimeUnit $unit) {
-		if ($wt.isDone()) return;
-		$seshat.scheduleAtFixedRate($wt, $initialDelay, $delay, $unit);
+	public Future<?> scheduleAtFixedRate(WorkTarget $wt, long $initialDelay, long $delay, TimeUnit $unit) {
+		if ($wt.isDone()) return null;
+		return $seshat.scheduleAtFixedRate($wt, $initialDelay, $delay, $unit);
 	}
 	
-	public void scheduleWithFixedDelay(WorkTarget $wt, long $initialDelay, long $delay, TimeUnit $unit) {
-		if ($wt.isDone()) return;
-		$seshat.scheduleWithFixedDelay($wt, $initialDelay, $delay, $unit);
+	public Future<?> scheduleWithFixedDelay(WorkTarget $wt, long $initialDelay, long $delay, TimeUnit $unit) {
+		if ($wt.isDone()) return null;
+		return $seshat.scheduleWithFixedDelay($wt, $initialDelay, $delay, $unit);
 	}
 	
 	public void update(WorkTarget $wt) {
+		doUpdate($wt);
+	}
+	
+	private Future<?> doUpdate(WorkTarget $wt) {
 		synchronized ($seshat) {
 			// if the WorkTarget isn't ready, we don't care.
 			//	even if we'd previously put it in the priority queue but it's not ready now, we leave it there because that datastructure isn't great at arbitrary removes, and we're fine waiting for it to bubble out and be dismissed eventually.
-			if (!$wt.isReady()) return;
+			if (!$wt.isReady()) return null;
 			
-			if ($waiting.remove($wt)) $fuck.put($seshat.submit($wt),$wt);
+			if ($waiting.remove($wt)) {
+				Future<?> $fu = $seshat.submit($wt);
+				$fuck.put($fu,$wt);
+				return $fu;
+			}
+			return null;
 		}
 	}
-	
 	
 	
 	private class Seshat extends ScheduledThreadPoolExecutor {
