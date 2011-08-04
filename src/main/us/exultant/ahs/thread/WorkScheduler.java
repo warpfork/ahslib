@@ -1,10 +1,18 @@
 package us.exultant.ahs.thread;
 
+import java.util.concurrent.*;
+
 /**
  *
  */
-public interface WorkScheduler {	
-	public void submit(WorkTarget $wt);	//TODO:AHS:THREAD: also add all the ones for delayed or scheduled.
+public interface WorkScheduler {
+	public void schedule(WorkTarget $wt);
+	
+	public void schedule(WorkTarget $wt, long $delay, TimeUnit $unit);
+	
+	public void scheduleAtFixedRate(WorkTarget $wt, long $initialDelay, long $delay, TimeUnit $unit);
+	
+	public void scheduleWithFixedDelay(WorkTarget $wt, long $initialDelay, long $delay, TimeUnit $unit);
 	
 	public void update(WorkTarget $wt);
 	
