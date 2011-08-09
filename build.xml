@@ -232,9 +232,10 @@
 			use="true"
 			windowtitle="AHS Library">
 					
-			<packageset dir="./src/" defaultexcludes="yes">
+			<packageset dir="./src/main/" defaultexcludes="yes">
 				<include name="**"/>
 				<exclude name="**todo**"/>
+				<exclude name="**krap**"/>
 			</packageset>
 			<group title="Core"				packages="us.exultant.ahs.core*,us.exultant.ahs.util*"/>
 			<group title="Codec Core"			packages="us.exultant.ahs.codec*"/>
