@@ -209,4 +209,6 @@ public interface WorkTarget extends Runnable {
 		public synchronized boolean isDone() { return ($wrap == null); }
 		public int getPriority() { return $prio; }
 	}
+	
+	//TODO:AHS:THREAD: a readymade WorkTarget implementation which oneshots itself in response to one or more Future becoming done.  this will tend to be what gets used whenever you might otherwise have wished for a continuation/park (and where other libraries are resorting to serious weaving).
 }

@@ -94,35 +94,6 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 	
 	
 	/**
-	 * Returns the trigger time of a delayed action.
-	 */
-	private long triggerTime(long delay, TimeUnit unit) {
-		return triggerTime(unit.toNanos((delay < 0) ? 0 : delay));
-	}
-	
-	/**
-	 * Returns the trigger time of a delayed action.
-	 */
-	long triggerTime(long delay) {
-		return now() + ((delay < (Long.MAX_VALUE >> 1)) ? delay : overflowFree(delay));
-	}
-	
-	/**
-	 * Constrains the values of all delays in the queue to be within Long.MAX_VALUE of
-	 * each other, to avoid overflow in compareTo. This may occur if a task is
-	 * eligible to be dequeued, but has not yet been, while some other task is added
-	 * with a delay of Long.MAX_VALUE.
-	 */
-	private long overflowFree(long delay) {
-		Delayed head = (Delayed) super.getQueue().peek();
-		if (head != null) {
-			long headDelay = head.getDelay(TimeUnit.NANOSECONDS);
-			if (headDelay < 0 && (delay - headDelay < 0)) delay = Long.MAX_VALUE + headDelay;
-		}
-		return delay;
-	}
-	
-	/**
 	 * @throws RejectedExecutionException
 	 *                 {@inheritDoc}
 	 * @throws NullPointerException
@@ -130,7 +101,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 	 */
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
 		if (command == null || unit == null) throw new NullPointerException();
-		ScheduledFutureTask<Void> sft = new ScheduledFutureTask<Void>(command, null, triggerTime(delay, unit));
+		WaveGuide<Void> sft = new WaveGuide<Void>(command, null, triggerTime(delay, unit));
 		delayedExecute(sft);
 		return sft;
 	}
@@ -143,7 +114,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 	 */
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
 		if (callable == null || unit == null) throw new NullPointerException();
-		ScheduledFutureTask<V> sft = new ScheduledFutureTask<V>(callable, triggerTime(delay, unit));
+		WaveGuide<V> sft = new WaveGuide<V>(callable, triggerTime(delay, unit));
 		delayedExecute(sft);
 		return sft;
 	}
@@ -159,7 +130,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
 		if (command == null || unit == null) throw new NullPointerException();
 		if (period <= 0) throw new IllegalArgumentException();
-		ScheduledFutureTask<Void> sft = new ScheduledFutureTask<Void>(command, null, triggerTime(initialDelay, unit), unit.toNanos(period));
+		WaveGuide<Void> sft = new WaveGuide<Void>(command, null, triggerTime(initialDelay, unit), unit.toNanos(period));
 		delayedExecute(sft);
 		return sft;
 	}
@@ -175,7 +146,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
 		if (command == null || unit == null) throw new NullPointerException();
 		if (delay <= 0) throw new IllegalArgumentException();
-		ScheduledFutureTask<Void> sft = new ScheduledFutureTask<Void>(command, null, triggerTime(initialDelay, unit), unit.toNanos(-delay));
+		WaveGuide<Void> sft = new WaveGuide<Void>(command, null, triggerTime(initialDelay, unit), unit.toNanos(-delay));
 		delayedExecute(sft);
 		return sft;
 	}
@@ -268,12 +239,41 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 	 * @param task
 	 *                the task
 	 */
-	void reExecutePeriodic(RunnableScheduledFuture<?> task) {
+	private void reExecutePeriodic(RunnableScheduledFuture<?> task) {
 		if (!isShutdown()) {
 			super.getQueue().add(task);
 			if (isShutdown() && remove(task)) task.cancel(false);
 			else prestartCoreThread();
 		}
+	}
+	
+	/**
+	 * Returns the trigger time of a delayed action.
+	 */
+	private long triggerTime(long delay, TimeUnit unit) {
+		return triggerTime(unit.toNanos((delay < 0) ? 0 : delay));
+	}
+	
+	/**
+	 * Returns the trigger time of a delayed action.
+	 */
+	private long triggerTime(long delay) {
+		return now() + ((delay < (Long.MAX_VALUE >> 1)) ? delay : overflowFree(delay));
+	}
+	
+	/**
+	 * Constrains the values of all delays in the queue to be within Long.MAX_VALUE of
+	 * each other, to avoid overflow in compareTo. This may occur if a task is
+	 * eligible to be dequeued, but has not yet been, while some other task is added
+	 * with a delay of Long.MAX_VALUE.
+	 */
+	private long overflowFree(long delay) {
+		Delayed head = (Delayed) super.getQueue().peek();
+		if (head != null) {
+			long headDelay = head.getDelay(TimeUnit.NANOSECONDS);
+			if (headDelay < 0 && (delay - headDelay < 0)) delay = Long.MAX_VALUE + headDelay;
+		}
+		return delay;
 	}
 	
 	
@@ -285,7 +285,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 	//	THE TASK WRAPPER FOR ORDERING
 	//
 	////////////////////////////////////////////////////////////////
-	private class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableScheduledFuture<V> {
+	private class WaveGuide<V> extends FutureTask<V> implements RunnableScheduledFuture<V> {
 		
 		/** Sequence number to break ties FIFO */
 		private final long		sequenceNumber;
@@ -308,7 +308,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 		/**
 		 * Creates a one-shot action with given nanoTime-based trigger time.
 		 */
-		ScheduledFutureTask(Runnable r, V result, long ns) {
+		WaveGuide(Runnable r, V result, long ns) {
 			super(r, result);
 			this.time = ns;
 			this.period = 0;
@@ -318,7 +318,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 		/**
 		 * Creates a periodic action with given nano time and period.
 		 */
-		ScheduledFutureTask(Runnable r, V result, long ns, long period) {
+		WaveGuide(Runnable r, V result, long ns, long period) {
 			super(r, result);
 			this.time = ns;
 			this.period = period;
@@ -328,7 +328,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 		/**
 		 * Creates a one-shot action with given nanoTime-based trigger.
 		 */
-		ScheduledFutureTask(Callable<V> callable, long ns) {
+		WaveGuide(Callable<V> callable, long ns) {
 			super(callable);
 			this.time = ns;
 			this.period = 0;
@@ -342,8 +342,8 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 		public int compareTo(Delayed other) {
 			if (other == this) // compare zero ONLY if same object
 			return 0;
-			if (other instanceof ScheduledFutureTask) {
-				ScheduledFutureTask<?> x = (ScheduledFutureTask<?>) other;
+			if (other instanceof WaveGuide) {
+				WaveGuide<?> x = (WaveGuide<?>) other;
 				long diff = time - x.time;
 				if (diff < 0) return -1;
 				else if (diff > 0) return 1;
@@ -383,8 +383,9 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 		 */
 		public void run() {
 			if (isShutdown()) cancel(false);
-			else if (!isPeriodic()) ScheduledFutureTask.super.run();
-			else if (ScheduledFutureTask.super.runAndReset()) {
+			else if (!isPeriodic()) WaveGuide.super.run();
+			//TODO:AHS:THREAD:DOUG: this is more or less where one would put a recurrent work target back in the waiting pool
+			else if (WaveGuide.super.runAndReset()) {
 				setNextRunTime();
 				reExecutePeriodic(this);
 			}
@@ -483,7 +484,7 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 		 * Set f's heapIndex if it is a ScheduledFutureTask.
 		 */
 		private void setIndex(RunnableScheduledFuture f, int idx) {
-			if (f instanceof ScheduledFutureTask) ((ScheduledFutureTask) f).heapIndex = idx;	//FIXME:AHS:THREAD:DOUG: heap index touching here shall be updated
+			if (f instanceof WaveGuide) ((WaveGuide) f).heapIndex = idx;	//FIXME:AHS:THREAD:DOUG: heap index touching here shall be updated
 		}
 		
 		/**
@@ -539,8 +540,8 @@ public class WorkSchedulerFlexiblePriority extends ThreadPoolExecutor {
 		 */
 		private int indexOf(Object x) {
 			if (x != null) {
-				if (x instanceof ScheduledFutureTask) {
-					int i = ((ScheduledFutureTask) x).heapIndex;	//FIXME:AHS:THREAD:DOUG: heap index touching here shall be updated
+				if (x instanceof WaveGuide) {
+					int i = ((WaveGuide) x).heapIndex;	//FIXME:AHS:THREAD:DOUG: heap index touching here shall be updated
 					// Sanity check; x could conceivably be a ScheduledFutureTask from some other pool.
 					//XXX:AHS:THREAD:DOUG: there are so many more reasonable ways i can see us limiting the origin pool of this stuff
 					if (i >= 0 && i < size && queue[i] == x) return i;
