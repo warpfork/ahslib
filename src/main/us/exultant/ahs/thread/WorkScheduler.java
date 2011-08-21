@@ -6,15 +6,15 @@ import java.util.concurrent.*;
  *
  */
 public interface WorkScheduler {
-	public Future<?> schedule(WorkTarget $wt);
+	public <$V> Future<$V> schedule(WorkTarget<$V> $wt);
 	
-	public Future<?> schedule(WorkTarget $wt, long $delay, TimeUnit $unit);
+	public <$V> Future<$V> schedule(WorkTarget<$V> $wt, long $delay, TimeUnit $unit);
 	
-	public Future<?> scheduleAtFixedRate(WorkTarget $wt, long $initialDelay, long $delay, TimeUnit $unit);
+	public <$V> Future<$V> scheduleAtFixedRate(WorkTarget<$V> $wt, long $initialDelay, long $delay, TimeUnit $unit);
 	
-	public Future<?> scheduleWithFixedDelay(WorkTarget $wt, long $initialDelay, long $delay, TimeUnit $unit);
+	public <$V> Future<$V> scheduleWithFixedDelay(WorkTarget<$V> $wt, long $initialDelay, long $delay, TimeUnit $unit);
 	
-	public void update(WorkTarget $wt);
+	public <$V> void update(WorkTarget<$V> $wt);
 	
 	
 	

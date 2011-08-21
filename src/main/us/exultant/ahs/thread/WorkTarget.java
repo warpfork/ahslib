@@ -19,13 +19,14 @@ import java.util.concurrent.*;
  * </p>
  * 
  * @author hash
+ * @param <$V>
  * 
  */
 //TODO:AHS:THREAD:PLAN: ...is this the class that should have the concept of cancellability?  No...?  Future should, clearly.  But do these need to remember when they're cancelled so they can be... "done"?  What do I want "done" to mean in this grey area?  It will be best for confusion avoidance to stick with something similar to what DL's libs do, but I'm not sure I share their concept of completability to begin with.
 //		Future has this single result concept built into it.  I tend to assume it would make sense for WorkTarget to be done iff Future admits to having an answer.
 //			Oh.  So, I'm starting to see why DL made (what I perceive as) the mistake of putting a runnable and a future together in a single class.  They pretty much have to be one-to-one if you're going to have doneness behave.
 //			Okay!  So, any time that a future returns normally is when the task considers itself finished.  The only other way for a future to return should be when the task is cancelled externally... and in that case, it DOES make sense for the task to not consider itself done, even though the scheduler is kicking it out.  Does it make sense for that guy to also be able to be rescheduled?  That's awkward, unfortunately -- if it was cancelled before starting, it's certainly fine; if it was cancelled after starting, i don't think it's a reasonable thing.
-public interface WorkTarget extends Runnable {
+public interface WorkTarget<$V> extends Callable<$V> {
 	/**
 	 * <p>
 	 * Defines whether or not this WorkTarget currently has enough data available to
@@ -95,7 +96,7 @@ public interface WorkTarget extends Runnable {
 	//	 *                complete before returning from this call.
 	// the whole scheme of batching things makes it impossible for this to implement Runnable, which is... well, it makes things ishy when i compose my WorkScheduler of ThreadPoolExecutor.
 	//  and really, if you have a WorkTarget doing atoms so small that it is a serious efficiency concern to process more than one atom at a time under a single lock... well, do it.  the scheduler doesn't actually really want to know about that (it did in mcon, but not everything is mcon).
-	public void run();
+	public $V call() throws Exception;
 	
 	/**
 	 * <p>
@@ -180,8 +181,8 @@ public interface WorkTarget extends Runnable {
 	 * @author hash
 	 * 
 	 */
-	public static class PriorityComparator implements Comparator<WorkTarget> {
-		public int compare(WorkTarget $o1, WorkTarget $o2) {
+	public static class PriorityComparator implements Comparator<WorkTarget<?>> {
+		public int compare(WorkTarget<?> $o1, WorkTarget<?> $o2) {
 			// we could of course just compare Math.max(prio,2^31)... but i'm intending to use this in the tight bit of a synchronization block that the whole vm pivots around.  so, we're going with the 99% solution here because it runs faster.
 			return $o1.getPriority() - $o2.getPriority();
 		}
@@ -204,8 +205,7 @@ public interface WorkTarget extends Runnable {
 	 * 
 	 * @author hash
 	 */
-	//TODO:AHS:THREAD: you do realize you gave this no way to remove itself from scheduling if it's recurrent, don't you?
-	public static final class RunnableWrapper implements WorkTarget {
+	public static final class RunnableWrapper implements WorkTarget<Void> {
 		public RunnableWrapper(Runnable $wrap) { this($wrap,0,true); }
 		public RunnableWrapper(Runnable $wrap, boolean $once) { this($wrap,0,$once); }
 		public RunnableWrapper(Runnable $wrap, int $prio) { this($wrap,$prio,true); }
@@ -218,12 +218,13 @@ public interface WorkTarget extends Runnable {
 		private final int	$prio;
 		private Runnable	$wrap;	// flip this to null when it's done.
 		
-		public synchronized void run() {
+		public synchronized Void call() {
 			try {
 				$wrap.run();
 			} finally {
 				if ($once) $wrap = null;
 			}
+			return null;
 		}
 		
 		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
