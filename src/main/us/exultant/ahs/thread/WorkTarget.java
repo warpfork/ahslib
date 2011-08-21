@@ -1,7 +1,30 @@
 package us.exultant.ahs.thread;
 
 import java.util.*;
+import java.util.concurrent.*;
 
+/**
+ * <p>
+ * A WorkTarget is similar to {@link Runnable} and/or {@link Callable}, but combines the
+ * concept of runnability with properties essential for intelligent scheduling of work.
+ * Implementations of the WorkTarget interface which define their readiness for scheduling
+ * based on availability of messages from a {@link us.exultant.ahs.core.ReadHead} form the
+ * essence of the Actor model of concurrent programming.
+ * </p>
+ * 
+ * <p>
+ * One WorkTarget instance must be created for every thread that you wish to be able to
+ * perform that type of task concurrently, and it never makes sense to submit the same
+ * WorkTarget into more than one WorkScheduler.
+ * </p>
+ * 
+ * @author hash
+ * 
+ */
+//TODO:AHS:THREAD:PLAN: ...is this the class that should have the concept of cancellability?  No...?  Future should, clearly.  But do these need to remember when they're cancelled so they can be... "done"?  What do I want "done" to mean in this grey area?  It will be best for confusion avoidance to stick with something similar to what DL's libs do, but I'm not sure I share their concept of completability to begin with.
+//		Future has this single result concept built into it.  I tend to assume it would make sense for WorkTarget to be done iff Future admits to having an answer.
+//			Oh.  So, I'm starting to see why DL made (what I perceive as) the mistake of putting a runnable and a future together in a single class.  They pretty much have to be one-to-one if you're going to have doneness behave.
+//			Okay!  So, any time that a future returns normally is when the task considers itself finished.  The only other way for a future to return should be when the task is cancelled... and in that case, it DOES make sense for the task to not consider itself done, even though the scheduler is kicking it out.  Does it make sense for that guy to also be able to be rescheduled?  Um... probably?  Bit foggy there yet.
 public interface WorkTarget extends Runnable {
 	/**
 	 * <p>
