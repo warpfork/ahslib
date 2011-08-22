@@ -18,7 +18,7 @@ public class WorkSchedulerUnprioritized implements WorkScheduler {
 		if ($wt.isDone()) return null;
 		synchronized ($seshat) {
 			$waiting.add($wt);
-			return doUpdate($wt);
+			return doUpdate($wt);	//FIXME:AHS:THREAD: okay, everything about this is wrong.  the future this gets will return after the very first run, not after all of them, because there's a fresh future made for every time a guy gets rescheduled.  and that's not the contract we're going for with WorkTarget, not at all.
 		}
 	}
 	
@@ -29,12 +29,16 @@ public class WorkSchedulerUnprioritized implements WorkScheduler {
 	
 	public <$V> Future<$V> scheduleAtFixedRate(WorkTarget<$V> $wt, long $initialDelay, long $delay, TimeUnit $unit) {
 		if ($wt.isDone()) return null;
-		return $seshat.scheduleAtFixedRate(new FutureTask<$V>($wt), $initialDelay, $delay, $unit);
+		FutureTask<$V> $fu = new FutureTask<$V>($wt);
+		$seshat.scheduleAtFixedRate($fu, $initialDelay, $delay, $unit);
+		return $fu;
 	}
 	
 	public <$V> Future<$V> scheduleWithFixedDelay(WorkTarget<$V> $wt, long $initialDelay, long $delay, TimeUnit $unit) {
 		if ($wt.isDone()) return null;
-		return $seshat.scheduleWithFixedDelay(new FutureTask<$V>($wt), $initialDelay, $delay, $unit);
+		FutureTask<$V> $fu = new FutureTask<$V>($wt);
+		$seshat.scheduleWithFixedDelay($fu, $initialDelay, $delay, $unit);
+		return $fu;
 	}
 	
 	public <$V> void update(WorkTarget<$V> $wt) {
@@ -47,7 +51,7 @@ public class WorkSchedulerUnprioritized implements WorkScheduler {
 		synchronized ($seshat) {
 			// if the WorkTarget<$V> isn't ready, we don't care.
 			//	even if we'd previously put it in the priority queue but it's not ready now, we leave it there because that datastructure isn't great at arbitrary removes, and we're fine waiting for it to bubble out and be dismissed eventually.
-			if (!$wt.isReady()) return null;
+			if (!$wt.isReady()) return null;	//FIXME:AHS:THREAD: this will cause serious sadness if it happens on the first invocation and someone else is depending on getting a future to watch.
 			
 			if ($waiting.remove($wt)) {
 				Future<$V> $fu = $seshat.submit($wt);
