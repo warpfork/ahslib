@@ -39,7 +39,7 @@ public interface WorkScheduler {
 	
 	
 	
-	static enum WTState {
+	static enum WFState {
 		/**
 		 * the scheduler has put a thread onto the job and it has stack frames in
 		 * the execution of the work.
@@ -47,18 +47,18 @@ public interface WorkScheduler {
 		RUNNING,
 		/**
 		 * the work is wedged in some sort of queue immediating leading up to
-		 * running (for example, in the executor since it's already been lifted
-		 * out of the priority queue, or a clock-based task instead of an event
-		 * triggered task); in this state, the readiness has already been checked
+		 * running; in this state, the readiness has already been checked
 		 * and the order in which execution begins reletive to other work targets
 		 * has been essentially finalized (i.e. priority or readiness changes are
 		 * no longer noticed).
 		 */
 		SCHEDULED,
 		/**
-		 * the work is in the priority queue and can be pulled into the scheduled
-		 * queue any time a running job relinquishes its power.
-		 */
+		 * the work is ready, but the relevant
+		 * {@link WorkScheduler#update(WorkTarget)} invocation has not been made
+		 * in order to shift the WorkTarget from the waiting pile into the
+		 * scheduled heap.
+		 */	// i'm highly unsure this is necessary, since it would otherwise simply equate to WAITING && isReady().  
 		READY,
 		/**
 		 * the work has not identified itself as having things to do immediately,
@@ -71,30 +71,4 @@ public interface WorkScheduler {
 		 */
 		PARKED,
 	}
-	
-	
-	
-	
-	
-	//TODO:AHS:THREAD: i'm really not sure what i'm going to do about defaults for this stuff. 
-//	/**
-//	 * <p>
-//	 * Gets a "default" WorkScheduler that is a singleton to the VM.
-//	 * </p>
-//	 * 
-//	 * <p>
-//	 * This method is performs lazy instantiation, is thread-safe, and the returned
-//	 * WorkScheduler is already started with its own complement of worker threads when
-//	 * returned.
-//	 * </p>
-//	 * 
-//	 * @return the single default WorkScheduler for this VM.
-//	 */
-//	public static WorkScheduler getDefault() {
-//		return SingletonHolder.INSTANCE;
-//	}
-//
-//	private static class SingletonHolder {
-//		public static final WorkScheduler INSTANCE = new WorkScheduler();
-//	}
 }
