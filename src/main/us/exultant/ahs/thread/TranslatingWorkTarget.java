@@ -9,6 +9,20 @@ import us.exultant.ahs.core.*;
  * </p>
  * 
  * <p>
+ * The typical way of setting up a TranslatingWorkTarget involves setting a
+ * {@link Listener} on the <tt>$src</tt> {@link ReadHead} that calls
+ * {@link WorkScheduler#update(WorkFuture)} on the scheduler this WorkTarget is registered
+ * with.
+ * For example:
+ * <pre>
+ * WorkTarget&lt;Void&gt; $work = new TranslatingWorkTarget&lt;A,B&gt;($src, $trans, $sink);
+ * WorkFuture&lt;Void&gt; $future = WorkManager.getScheduler().scheduler($work);
+ * $src.setListener(new Listener&lt;ReadHead&lt;A&gt;&gt;() { WorkManager.getScheduler().update($future); }
+ * // the scheduler will now notice every time the translator gets fresh work
+ * </pre>
+ * </p>
+ * 
+ * <p>
  * An example application of this class would be in moving data from the {@link ReadHead}
  * of an incoming network connection into the {@link WriteHead} from a Pipe that buffers
  * incoming messages ready for the application logic to read, while using a
@@ -51,7 +65,7 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Void> {
 		return $prio;
 	}
 	
-	public synchronized Void call() {
+	public Void call() {
 		if (isDone()) return null;
 		
 		$FROM $a = $src.readNow();
