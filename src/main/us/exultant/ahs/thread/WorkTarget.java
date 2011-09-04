@@ -22,10 +22,6 @@ import java.util.concurrent.*;
  * @param <$V>
  * 
  */
-//TODO:AHS:THREAD:PLAN: ...is this the class that should have the concept of cancellability?  No...?  Future should, clearly.  But do these need to remember when they're cancelled so they can be... "done"?  What do I want "done" to mean in this grey area?  It will be best for confusion avoidance to stick with something similar to what DL's libs do, but I'm not sure I share their concept of completability to begin with.
-//		Future has this single result concept built into it.  I tend to assume it would make sense for WorkTarget to be done iff Future admits to having an answer.
-//			Oh.  So, I'm starting to see why DL made (what I perceive as) the mistake of putting a runnable and a future together in a single class.  They pretty much have to be one-to-one if you're going to have doneness behave.
-//			Okay!  So, any time that a future returns normally is when the task considers itself finished.  The only other way for a future to return should be when the task is cancelled externally... and in that case, it DOES make sense for the task to not consider itself done, even though the scheduler is kicking it out.  Does it make sense for that guy to also be able to be rescheduled?  That's awkward, unfortunately -- if it was cancelled before starting, it's certainly fine; if it was cancelled after starting, i don't think it's a reasonable thing.
 public interface WorkTarget<$V> extends Callable<$V> {
 	/**
 	 * <p>
@@ -64,38 +60,42 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	/**
 	 * <p>
 	 * Causes the current thread to be consumed in the running of the
-	 * <code>WorkTarget</code>, as per {@link Runnable#run()} method.
+	 * <code>WorkTarget</code>, similarly to the {@link Runnable#run()} method.
 	 * </p>
 	 * 
 	 * <p>
-	 * In order for a complete system of scheduled WorkTargets to work smoothly and
-	 * with high efficiency, all actions taken by this method should as much as
-	 * possible make full utilitization of the available processor resources and
-	 * should not resorting to waiting or use blocking operations. (In a practical
-	 * sence, this interface cannot impose a strict limit on the actual time that will
-	 * be consumed by this call; if for example the <code>WorkTarget</code> is
-	 * assigned to some sort of blocking I/O channel, the call may wait indefinitely
-	 * in the same fashion as the underlying channel. However, this sort of behavior
-	 * should be avoided at all costs since {@link WorkScheduler} assigns threads
-	 * based on the assumption that this sort of idiocy will not be performed.)
+	 * This method can be called at any time, and any number of times, and need not be
+	 * reentrant &mdash it is the responsibility of the caller to make sure that calls
+	 * to this method are properly synchronized.
+	 * </p>
+	 * 
+	 * <p>
+	 * Each invocation of this method may return a value or throw an exception after
+	 * performing its work, and this result may be different with every invocation.
+	 * </p>
+	 * 
+	 * <p>
+	 * Calling this method after {@link #isDone()} returns true may have undefined
+	 * results (i.e., may return any value, or null, or throw an exception), but it
+	 * must return immediately. (When submitted to a {@link WorkScheduler}, the
+	 * {@link WorkFuture#get()} method of the returned {@link WorkFuture} can be used
+	 * to consistently access the final result of the work.)
+	 * </p>
+	 * 
+	 * <p>
+	 * It is typically expected that this method will be called by a thread from a
+	 * pool kept within a {@link WorkScheduler}. As such, all actions taken by this
+	 * method should not resort to waiting nor use blocking operations in order for a
+	 * complete system of scheduled WorkTargets to work smoothly and with high
+	 * efficiency. (In a practical sense, this interface cannot impose a strict limit
+	 * on the actual time that will be consumed by this call; if for example the
+	 * <code>WorkTarget</code> is assigned to some sort of blocking I/O channel, the
+	 * call may wait indefinitely in the same fashion as the underlying channel.
+	 * However, this sort of behavior should be avoided at all costs since
+	 * {@link WorkScheduler} assigns threads based on the assumption that this sort of
+	 * idiocy will not be performed.)
 	 * </p>
 	 */
-	//	 * <p>
-	//	 * This interface provides the the argument for specifying number of times to be
-	//	 * run as a kindness to both WorkAtom implementations which will be able to be
-	//	 * more efficient when allocating some resources or buffers in blocks and reusing
-	//	 * them across cycles, and also as a kindness to WorkScheduler implementations
-	//	 * which may be responsible for running multiple WorkAtom instances wanting to
-	//	 * have some vague control over how its attention is batched. However, if the
-	//	 * WorkAtom implementer is truly lazy, there's nothing that requires them to heed
-	//	 * the <code>$times</code> argument at all.
-	//	 * </p>
-	//	 * 
-	//	 * @param $times
-	//	 *                the number of internal cycles the <code>WorkAtom</code> should
-	//	 *                complete before returning from this call.
-	// the whole scheme of batching things makes it impossible for this to implement Runnable, which is... well, it makes things ishy when i compose my WorkScheduler of ThreadPoolExecutor.
-	//  and really, if you have a WorkTarget doing atoms so small that it is a serious efficiency concern to process more than one atom at a time under a single lock... well, do it.  the scheduler doesn't actually really want to know about that (it did in mcon, but not everything is mcon).
 	public $V call() throws Exception;
 	
 	/**
@@ -126,17 +126,17 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * work for powering by the scheduler's threads, but the priority at any point in
 	 * time is at most a best-effort basis and not a guarantee of order due to the
 	 * concurrent nature of the scheduling and furthermore because a WorkScheduler
-	 * implmentation may balance concerns other than priority (such as tasks scheduled
-	 * based on wall-clock time).
+	 * implementation may balance concerns other than priority (such as tasks
+	 * scheduled based on wall-clock time).
 	 * </p>
 	 * 
 	 * <p>
 	 * This priority may change over time (this could be useful for example in a
 	 * program which has several work buffers and always wishes to service the fullest
-	 * one, or similiar the least recently served one); WorkScheduler who obey the
+	 * one, or similar the least recently served one); WorkScheduler who obey the
 	 * priority hint will do their best to respond to this in a timely manner every
-	 * time they are told to {@link WorkScheduler#update(WorkTarget)} their
-	 * relationship with this WorkTarget.
+	 * time they are told to update their relationship with this WorkTarget via an
+	 * invocation of the {@link WorkScheduler#update(WorkFuture)} method.
 	 * </p>
 	 * 
 	 * <p>
@@ -144,7 +144,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * which is composed of three types of task: nonblocking reads, some application
 	 * logic, and nonblocking writes of the result. By simply giving writes the
 	 * highest priority, application logic a medium priority, and reads the lowest
-	 * priority, the entire application becomes optomized to keep all of its pipes
+	 * priority, the entire application becomes optimized to keep all of its pipes
 	 * between these task as small as possible, and furthermore if the reads happen to
 	 * be based on some system including a sliding window (namely, TCP), the TCP
 	 * buffer naturally fills in the OS kernel layer and causes the TCP window to
