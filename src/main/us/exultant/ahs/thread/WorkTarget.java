@@ -214,12 +214,21 @@ public interface WorkTarget<$V> extends Callable<$V> {
 			this.$prio = $prio;
 			this.$wrap = $wrap;
 		}
-		private final boolean	$once;
-		private final int	$prio;
-		private Runnable	$wrap;	// flip this to null when it's done.
 		
-		public synchronized Void call() {
+		private final boolean		$once;
+		private final int		$prio;
+		private volatile Runnable	$wrap;	// flip this to null when it's done.
+		
+		public Void call() {
 			try {
+				if ($wrap == null) throw new IllegalStateException("This task can only be run once, and is already done!");
+				// yes, it's possible for $wrap to become null betweent the above check and the below call
+				//   and yes, that'll throw a NullPointerException.
+				// That's acceptable within the contract of WorkTarget!
+				//   1. We're returning immediately without doing work since we're done (with an unchecked exception, but nonetheless.)
+				//   2. We're allowed to return either null or throw an exception; either is legit.
+				//   3. The NullPointerException only even comes up if more than one thread calls this method at the same time.
+				//        We aren't sync'd against that -- which is fine because the contract says that's not our responsibility.
 				$wrap.run();
 			} finally {
 				if ($once) $wrap = null;
@@ -228,9 +237,9 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		}
 		
 		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public synchronized boolean isReady() { return !isDone(); }
+		public boolean isReady() { return !isDone(); }
 		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public synchronized boolean isDone() { return ($wrap == null); }
+		public boolean isDone() { return ($wrap == null); }
 		public int getPriority() { return $prio; }
 	}
 	
