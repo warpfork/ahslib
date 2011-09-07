@@ -52,27 +52,27 @@ import java.util.concurrent.*;
  * @author hash
  * 
  */
-public final class WorkScheduleParams {
+public final class ScheduleParams {
 	/** This is a singleton that represents any schedule that is {@code unclocked}. */
-	public static final WorkScheduleParams	NOW	= new WorkScheduleParams(0, 0); // i can't decide whether to call this just "NOW" or "UNCLOCKED".  "ALWAYS" also seems borderline valid (which is what bothers me about "NOW" -- it doesn't capture the essense of recurrability).
+	public static final ScheduleParams	NOW	= new ScheduleParams(0, 0); // i can't decide whether to call this just "NOW" or "UNCLOCKED".  "ALWAYS" also seems borderline valid (which is what bothers me about "NOW" -- it doesn't capture the essense of recurrability).
 											
-	public static WorkScheduleParams makeNow() {
+	public static ScheduleParams makeNow() {
 		return NOW;
 	}
 	
-	public static WorkScheduleParams makeDelayed(long $ns) {
-		return new WorkScheduleParams($ns, 0);
+	public static ScheduleParams makeDelayed(long $ns) {
+		return new ScheduleParams($ns, 0);
 	}
 	
-	public static WorkScheduleParams makeFixedRate(long $ns, long $period) {
-		return new WorkScheduleParams($ns, $period);
+	public static ScheduleParams makeFixedRate(long $ns, long $period) {
+		return new ScheduleParams($ns, $period);
 	}
 	
-	public static WorkScheduleParams makeFixedDelay(long $ns, long $period) {
-		return new WorkScheduleParams($ns, -$period);
+	public static ScheduleParams makeFixedDelay(long $ns, long $period) {
+		return new ScheduleParams($ns, -$period);
 	}
 	
-	private WorkScheduleParams(long $ns, long $period) {
+	private ScheduleParams(long $ns, long $period) {
 		this.$time = $ns;
 		this.$period = $period;
 	}
