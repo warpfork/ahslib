@@ -129,4 +129,14 @@ class WorkFuture<$V> implements Future<$V> {
 		//TODO
 		return null;
 	}
+	
+	
+
+	public long getDelay() {
+		return ($time - System.nanoTime());
+	}
+	
+	public int compareTo(Delayed $o) {
+		throw new UnsupportedOperationException("Use a Comparator.");
+	}
 }

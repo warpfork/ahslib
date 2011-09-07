@@ -36,12 +36,11 @@ import java.util.concurrent.*;
  * until the {@link WorkTarget#isDone()} method returns true, or the WorkTarget throws an
  * exception, or the correlated WorkFuture is cancelled. (This is similar to the
  * description of
- * {@link ScheduledThreadPoolExecutor#scheduleWithFixedDelay(Runnable,long,long,TimeUnit)}
- * .)
+ * {@link ScheduledExecutorService#scheduleWithFixedDelay(Runnable,long,long,TimeUnit)}.)
  * <li>Fixed-delay tasks are the same as fixed-rate tasks, but when they are set to a new
  * delay after execution it is related only to their original scheduling time, and is not
  * impacted by how much time was spent in execution. (This is similar to
- * {@link ScheduledThreadPoolExecutor#scheduleAtFixedRate(Runnable,long,long,TimeUnit)}.)
+ * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable,long,long,TimeUnit)}.)
  * </ul>
  * </p>
  * 
@@ -115,6 +114,18 @@ public final class WorkScheduleParams {
 	 */
 	public boolean isFixedRate() {
 		return $period > 0;
+	}
+	
+	/**
+	 * Returns the amount of time in nanoseconds before this action should become schedulable (or
+	 * negative if it already is).
+	 * 
+	 * @param $unit
+	 * @return the amount of time before this action should become schedulable.
+	 */
+	public long getDelay() {
+		//if (isUnclocked()) return 0;	// i heard that getting synchronized nanotime can actually be a surprisingly heavy cost for jvms from a talk a jvm engineer for azul systems gave at a google conference.  either way, i like this being something consistent for unclocked tasks instead of being some arbitrary massively negative number.	// but then this is stupid.  there's no place i can imagine calling this without already having branched in the calling function on isClocked.
+		return ($time - System.nanoTime());
 	}
 	
 	
