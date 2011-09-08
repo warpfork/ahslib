@@ -120,7 +120,6 @@ public final class ScheduleParams {
 	 * Returns the amount of time in nanoseconds before this action should become schedulable (or
 	 * negative if it already is).
 	 * 
-	 * @param $unit
 	 * @return the amount of time before this action should become schedulable.
 	 */
 	public long getDelay() {
