@@ -1,5 +1,6 @@
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.core.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -20,7 +21,10 @@ import java.util.concurrent.*;
  * 
  * @author hash
  * @param <$V>
- * 
+ *                The type returned by {@link #call()}. (This can often be {@link Void} in
+ *                the case of WorkTarget that are designed to be called repeatedly, since
+ *                they tend to ferry data in and out via {@link ReadHead} and
+ *                {@link WriteHead} instead of simply returning one piece of data.)
  */
 public interface WorkTarget<$V> extends Callable<$V> {
 	/**
@@ -159,7 +163,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	public int getPriority();
 	
 	
-
+	
 	/**
 	 * <p>
 	 * Compares two WorkTarget based on their priority alone. This is useful for
