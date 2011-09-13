@@ -46,4 +46,16 @@ public interface Terminal {
 	
 	
 	public void clear();
+	
+	public int getWidth();
+	
+	public int getHeight();
+	
+	
+	
+	public static enum Event {
+		INPUT,
+		RESIZE,
+		CURSOR,
+	}
 }
