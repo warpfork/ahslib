@@ -1,12 +1,28 @@
 package us.exultant.grid.terminal;
 
 import java.io.*;
+import java.lang.reflect.*;
 
 public class StandardTerminal implements Terminal {
 	public StandardTerminal() {
 		$console = System.console();
 		$cursor = new StdCursor();
 		$palette = new StdPalette();
+		setEchoMode(false);
+		clear();
+		
+		// Add a shutdown hook to restore console's echo state when we exit.
+		Runtime.getRuntime().addShutdownHook(new Thread() { public void run() { setEchoMode(true); } });
+	}
+	/** deal with the crappitude of taking control of echos.  I'm not sure i expect this to work on jvm's other than sun's, since it relies on reflecting to a private method. */
+	protected void setEchoMode(boolean $on) {
+		try {
+			Method $mecho = Console.class.getDeclaredMethod("echo", boolean.class);
+			$mecho.setAccessible(true);
+			$mecho.invoke(null, $on);
+		} catch (Exception $e) {
+			throw new Error("Cannot set the echo mode of the Console -- is this a Sun JVM?", $e);
+		}
 	}
 	
 	private final Console	$console;
