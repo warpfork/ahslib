@@ -4,7 +4,7 @@ public interface Terminal {
 	
 	public Cursor cursor();
 	
-	public static interface Cursor {
+	public static interface Cursor {	// i'd like to be able to have component-like boxes that can confine the cursor... but we're talking about a system that regularly screws up the distinction between input and output channels, and so i'm deeply afraid we really might not be able to do that.
 		/** Places the cursor at an arbitrary horizontal and vertical position.  The values are 1-based and counted in user-space (i.e. increasing {@code $y} is moving down). */
 		public void place(int $x, int $y);
 		
@@ -36,7 +36,11 @@ public interface Terminal {
 	}
 	
 	public static enum Color {
-		BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
+		BLACK(0), RED(1), GREEN(2), YELLOW(3), BLUE(4), MAGENTA(5), CYAN(6), WHITE(7);
+		
+		Color(int $c) { this.$c = $c; }
+		private final int $c;
+		public int code() { return $c; }	// this happens to be pretty much the same as calling ordinal, but I like my semantics solid.
 	}
 	
 	
