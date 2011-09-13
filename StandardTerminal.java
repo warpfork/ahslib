@@ -4,7 +4,13 @@ import java.io.*;
 import java.lang.reflect.*;
 
 public class StandardTerminal implements Terminal {
-	public StandardTerminal() {
+	public static StandardTerminal get() {
+		return SingletonHolder.INSTANCE;
+	}
+	private static class SingletonHolder {
+		public static final StandardTerminal INSTANCE = new StandardTerminal();
+	}
+	private StandardTerminal() {
 		$console = System.console();
 		$cursor = new StdCursor();
 		$palette = new StdPalette();
