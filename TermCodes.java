@@ -35,8 +35,7 @@ public class TermCodes {
 	public static final String	REND_COLOR_BG_WHITE		= CSI+"47m";
 	public static final String	REND_COLOR_BG_DEFAULT		= CSI+"49m";
 
-	public static final String	REND_BLINK_SLOW			= CSI+"5m";
-	public static final String	REND_BLINK_FAST			= CSI+"6m";
+	public static final String	REND_BLINK_ON			= CSI+"5m";
 	public static final String	REND_BLINK_OFF			= CSI+"25m";
 	public static final String	REND_UNDERLINE_ON		= CSI+"4m";
 	public static final String	REND_UNDERLINE_OFF		= CSI+"24m";
