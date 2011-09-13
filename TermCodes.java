@@ -1,6 +1,7 @@
 package us.exultant.grid.terminal;
 
 public class TermCodes {
+	/** Control Sequence Initiator */
 	public static final String	CSI			= "\033[";
 	
 	public static final String	REND_COLOR_FG_BLACK		= CSI+"30m";
@@ -43,5 +44,5 @@ public class TermCodes {
 	
 	public static final String	REND_RESET			= CSI+"m";	// or "0m".  but brevity ftw
 	
-	public static final String	WHAT_WHAT		= CSI+"";
+	public static final String	CLEAR_SCREEN		= CSI+"2J";
 }
