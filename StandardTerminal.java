@@ -2,6 +2,7 @@ package us.exultant.grid.terminal;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.util.*;
 
 public class StandardTerminal implements Terminal {
 	public static StandardTerminal get() {
@@ -114,10 +115,18 @@ public class StandardTerminal implements Terminal {
 
 
 	public int getWidth() {
-		return 80; //TODO
+		try {
+			return new Scanner(Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "tput cols" }).getInputStream()).nextInt();
+		} catch (IOException $e) {
+			return -1;
+		}
 	}
 
 	public int getHeight() {
-		return 25; //TODO
+		try {
+			return new Scanner(Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "tput rows" }).getInputStream()).nextInt();
+		} catch (IOException $e) {
+			return -1;
+		}
 	}
 }
