@@ -15,11 +15,21 @@ public class StandardTerminal implements Terminal {
 		$console = System.console();
 		$cursor = new StdCursor();
 		$palette = new StdPalette();
-		setEchoMode(false);
-		clear();
 		
+		setEchoMode(false);
 		// Add a shutdown hook to restore console's echo state when we exit.
 		Runtime.getRuntime().addShutdownHook(new Thread() { public void run() { setEchoMode(true); } });
+		
+		try {
+			//$restoreStty = IOForge.readString(Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "stty -g" }).getInputStream());
+			Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "stty raw iutf8 icrnl opost isig </dev/tty" }).waitFor();
+		} catch (InterruptedException $e) {
+			throw new Error("failed to set console to raw mode", $e);
+		} catch (IOException $e) {
+			throw new Error("failed to set console to raw mode", $e);
+		}
+		
+		clear();
 	}
 	/** deal with the crappitude of taking control of echos.  I'm not sure i expect this to work on jvm's other than sun's, since it relies on reflecting to a private method. */
 	protected void setEchoMode(boolean $on) {
@@ -75,10 +85,12 @@ public class StandardTerminal implements Terminal {
 		}
 		
 		public void lineNext(int $n) {
+			// xterm supports this, but konsole doesn't.  i suppose i could check for compliance at startup and emulate it with asking current location and then doing a place, but... i really intend to avoid that sort of thing as strongly as possible.
 			$console.printf(TermCodes.CSI+$n+"E");
 		}
 		
 		public void linePrev(int $n) {
+			// xterm supports this, but konsole doesn't.  i suppose i could check for compliance at startup and emulate it with asking current location and then doing a place, but... i really intend to avoid that sort of thing as strongly as possible.
 			$console.printf(TermCodes.CSI+$n+"F");
 		}
 	}
@@ -116,7 +128,7 @@ public class StandardTerminal implements Terminal {
 
 	public int getWidth() {
 		try {
-			return new Scanner(Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "tput cols" }).getInputStream()).nextInt();
+			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput cols" }).getInputStream()).nextInt();
 		} catch (IOException $e) {
 			return -1;
 		}
@@ -124,7 +136,7 @@ public class StandardTerminal implements Terminal {
 
 	public int getHeight() {
 		try {
-			return new Scanner(Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "tput rows" }).getInputStream()).nextInt();
+			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput lines" }).getInputStream()).nextInt();
 		} catch (IOException $e) {
 			return -1;
 		}
