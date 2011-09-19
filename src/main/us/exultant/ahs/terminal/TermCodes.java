@@ -1,4 +1,4 @@
-package us.exultant.grid.terminal;
+package us.exultant.ahs.terminal;
 
 public class TermCodes {
 	/** Control Sequence Initiator */

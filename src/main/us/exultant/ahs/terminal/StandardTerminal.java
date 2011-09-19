@@ -1,4 +1,4 @@
-package us.exultant.grid.terminal;
+package us.exultant.ahs.terminal;
 
 import java.io.*;
 import java.lang.reflect.*;

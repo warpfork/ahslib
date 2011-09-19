@@ -1,4 +1,4 @@
-package us.exultant.grid.terminal;
+package us.exultant.ahs.terminal;
 
 public interface Terminal {
 	
