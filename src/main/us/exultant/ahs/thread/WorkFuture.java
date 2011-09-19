@@ -15,17 +15,77 @@ import java.util.concurrent.*;
  * 
  * @param <$V>
  */
-class WorkFuture<$V> implements Future<$V> {
-	public WorkFuture(WorkTarget<$V> $wt) {
+// You might expect this to have a lot in common with FutureTask.
+// You'd be surprised.
+// FutureTask is actually built to work under a wider range of conditions than WorkFuture, and so WorkFuture is able to cut a lot of expensive corners.
+// WorkFuture is intending for use exclusively within a WorkScheduler that already does a great deal of concurrency control,
+//  and as such, it's allowed to assume that it will only have one actively mutating thread at any time.
+// The contracts of WorkFuture.State are also significantly more relaxed than the state transitions of FutureTask:
+//  state is allowed to flip in a wildly unsynchronized fashion *except* for the transitions that are idempotent (one-way).
+class WorkFuture<$V> implements Future<$V> {	// ... shit, there's really not a lot of FutureTask that i have a real complaint about using here; i just need to extend it.  wreaks my state enum, but... honestly i'm not super obsessed about it.
+	public WorkFuture(WorkTarget<$V> $wt, ScheduleParams $schedp) {
 		this.$work = $wt;
+		this.$schedp = $schedp;
 	}
 	
-	public final WorkTarget<$V>	$work;
+	/** The underlying callable */
+        public final WorkTarget<$V>	$work;
+	
+        /** The present state of the task */
+	volatile State			$state;
+	
+	private final ScheduleParams	$schedp;
+	
+	/** The result to return from get() */
+	private $V			$result;
+	/** The exception to throw from get() */
+	private Throwable		$exception;
 	
 	/** Index into delay queue, to support faster updates. */
 	int				$heapIndex;
 	
-	private State			$state;
+	public ScheduleParams getScheduleParams() {
+		return $schedp;
+	}
+	
+	public State getState() {
+		return $state;
+	}
+	
+	public boolean cancel(boolean $mayInterruptIfRunning) {
+		//TODO
+		return false;
+	}
+	
+	public boolean isCancelled() {
+		return getState() == State.CANCELLED;
+	}
+	
+	public boolean isDone() {
+		switch (getState()) {
+			case FINISHED: return true;
+			case CANCELLED: return true;
+			default: return false;
+		}
+	}
+	
+	public $V get() throws InterruptedException, ExecutionException {
+		//TODO
+		return null;
+	}
+	
+	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, ExecutionException, TimeoutException {
+		//TODO
+		return null;
+	}
+	
+	
+	
+	void postExecute() {
+		
+	}
+	
+	
 	
 	public static enum State {
 		/**
@@ -45,7 +105,7 @@ class WorkFuture<$V> implements Future<$V> {
 		SCHEDULED,
 		/**
 		 * the work is ready, but the relevant
-		 * {@link WorkScheduler#update(WorkTarget)} invocation has not been made
+		 * {@link WorkScheduler#update(WorkFuture)} invocation has not been made
 		 * in order to shift the WorkTarget from the waiting pile into the
 		 * scheduled heap.
 		 */	// i'm highly unsure this is necessary, since it would otherwise simply equate to WAITING && isReady().  
@@ -60,7 +120,7 @@ class WorkFuture<$V> implements Future<$V> {
 		 * at absolutely any time and with no synchronization whatsoever. This
 		 * state enum refers only to what the {@link WorkScheduler} has most
 		 * recently noticed (typically during invocation of the
-		 * {@link WorkScheduler#update(WorkTarget)} method).
+		 * {@link WorkScheduler#update(WorkFuture)} method).
 		 */
 		WAITING,
 		/**
@@ -92,51 +152,8 @@ class WorkFuture<$V> implements Future<$V> {
 		 * previously been {@link #RUNNING}, but will now no longer be scheduled
 		 * for future activitions. Since the cancellation was the result of an
 		 * external operation rather than of the WorkTarget's own volition, the
-		 * WorkTarget's {@link WorkTarget#isDone()} method may still return false, even though it 
+		 * WorkTarget's {@link WorkTarget#isDone()} method may still return false.
 		 */
 		CANCELLED
-	}
-	
-	public State getState() {
-		return $state;
-	}
-	
-	
-	
-	
-	
-	public boolean cancel(boolean $mayInterruptIfRunning) {
-		//TODO
-		return false;
-	}
-	
-	public boolean isCancelled() {
-		//TODO
-		return false;
-	}
-	
-	public boolean isDone() {
-		//TODO
-		return false;
-	}
-	
-	public $V get() throws InterruptedException, ExecutionException {
-		//TODO
-		return null;
-	}
-	
-	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, ExecutionException, TimeoutException {
-		//TODO
-		return null;
-	}
-	
-	
-
-	public long getDelay() {
-		return ($time - System.nanoTime());
-	}
-	
-	public int compareTo(Delayed $o) {
-		throw new UnsupportedOperationException("Use a Comparator.");
 	}
 }
