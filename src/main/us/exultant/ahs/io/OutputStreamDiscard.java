@@ -3,7 +3,15 @@ package us.exultant.ahs.io;
 import java.io.*;
 
 /**
- * Ever wanted an effective /dev/null in portable java? Here ya go.
+ * <p>
+ * Ever wanted an effective <tt>/dev/null</tt> in portable java? Here ya go.
+ * </p>
+ * 
+ * <p>
+ * See also {@link IOForge#silentOutputStream} for a singleton instance of this &mdash
+ * there's very little point in ever creating more than one instance of this class, seeing
+ * as how it really truly does nothing at all.
+ * </p>
  * 
  * @author hash
  * 

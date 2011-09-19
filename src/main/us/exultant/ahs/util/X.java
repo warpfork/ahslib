@@ -9,12 +9,7 @@ import java.io.*;
  *
  */
 public class X {
-	// this now belongs in the IO module somewhere
-	//	public static final PrintStream silent = new PrintStream(new OutputStreamDiscard());
 	public static final Runtime runtime = Runtime.getRuntime();
-	
-	//@SuppressWarnings("unchecked")
-	//public static final Map EMPTY_MAP = Collections.unmodifiableMap(new HashMap(0));
 	
 	
 	
