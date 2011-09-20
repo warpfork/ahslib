@@ -1,5 +1,6 @@
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -18,41 +19,81 @@ import java.util.concurrent.*;
 // You might expect this to have a lot in common with FutureTask.
 // You'd be surprised.
 // FutureTask is actually built to work under a wider range of conditions than WorkFuture, and so WorkFuture is able to cut a lot of expensive corners.
-// WorkFuture is intending for use exclusively within a WorkScheduler that already does a great deal of concurrency control,
+// WorkFuture is intending for mutation exclusively within a WorkScheduler that already does a great deal of concurrency control,
 //  and as such, it's allowed to assume that it will only have one actively mutating thread at any time.
 // The contracts of WorkFuture.State are also significantly more relaxed than the state transitions of FutureTask:
 //  state is allowed to flip in a wildly unsynchronized fashion *except* for the transitions that are idempotent (one-way).
-class WorkFuture<$V> implements Future<$V> {	// ... shit, there's really not a lot of FutureTask that i have a real complaint about using here; i just need to extend it.  wreaks my state enum, but... honestly i'm not super obsessed about it.
+class WorkFuture<$V> implements Future<$V> {
 	public WorkFuture(WorkTarget<$V> $wt, ScheduleParams $schedp) {
 		this.$work = $wt;
 		this.$schedp = $schedp;
 	}
 	
+	
+	
 	/** The underlying callable */
-        public final WorkTarget<$V>	$work;
+        final WorkTarget<$V>		$work;
 	
         /** The present state of the task */
-	volatile State			$state;
+	volatile State			$state		= null;
 	
+	/** The parameters with which the work target was scheduled. */
 	private final ScheduleParams	$schedp;
 	
-	/** The result to return from get() */
-	private $V			$result;
-	/** The exception to throw from get() */
-	private Throwable		$exception;
+	/** Set to true when someone calls the cancel method.  Never again becomes false.  If there's currently a thread from the scheduler working on this, it must eventually notice this and deal with it; if there is no thread running this, the cancelling thread may act immediately. */
+	volatile boolean		$cancelPlz	= false;
+	/** The result to return from get().    Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
+	private $V			$result		= null;
+	/** The exception to throw from get().  Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
+	private Throwable		$exception	= null;
 	
 	/** Index into delay queue, to support faster updates. */
-	int				$heapIndex;
+	int				$heapIndex	= 0;
 	
-	public ScheduleParams getScheduleParams() {
-		return $schedp;
+	volatile Thread			$runner;
+	
+	
+	public WorkTarget<$V> getWorkTarget() {
+		return $work;
 	}
 	
 	public State getState() {
 		return $state;
 	}
 	
+	public ScheduleParams getScheduleParams() {
+		return $schedp;
+	}
+	
+	void run() {
+		if ($state != State.FINISHED && $cancelPlz) {
+			$state = State.CANCELLED;
+			return;
+		}
+		
+		if (getState() != State.SCHEDULED) throw new MajorBug();
+		
+		$runner = Thread.currentThread();
+
+		//TODO
+	}
+	
 	public boolean cancel(boolean $mayInterruptIfRunning) {
+		// the core concept here that still lets us get away with zero synchronization is that you can request cancellation whenever you want (and that request has its own idempotency *separate* from the future's state), but no one has to pay attention to your request and update the future's state until the scheduler puts a thread on this guy again.
+		
+		$cancelPlz = true;
+		// from now on, no thread in the scheduler may start running this task.
+			// FIXME erm, unless they just checked cancelplz, then yielded to us right above this line.
+
+		// bit rude to cancel something already finished, neh?
+		if (getState() == State.FINISHED) return;
+		
+		// if nobody from the scheduler is looking, we can set it to cancelled in this thread, instead of waiting for the scheduler to get around to it (notice this doesn't necessarily make anything gc'able, though).
+		if ($runner == null)
+			$state = State.CANCELLED;	//FIRE:finish
+		
+		// WHAT IF the scheduler's shifting this guy between heaps?  we can't back out from a cancelled state.
+		
 		//TODO
 		return false;
 	}
@@ -71,11 +112,13 @@ class WorkFuture<$V> implements Future<$V> {	// ... shit, there's really not a l
 	
 	public $V get() throws InterruptedException, ExecutionException {
 		//TODO
+		// dunno who you're planning to sync on here.
 		return null;
 	}
 	
 	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, ExecutionException, TimeoutException {
 		//TODO
+		// dunno who you're planning to sync on here.
 		return null;
 	}
 	
@@ -104,17 +147,10 @@ class WorkFuture<$V> implements Future<$V> {	// ... shit, there's really not a l
 		 */
 		SCHEDULED,
 		/**
-		 * the work is ready, but the relevant
-		 * {@link WorkScheduler#update(WorkFuture)} invocation has not been made
-		 * in order to shift the WorkTarget from the waiting pile into the
-		 * scheduled heap.
-		 */	// i'm highly unsure this is necessary, since it would otherwise simply equate to WAITING && isReady().  
-		READY,
-		/**
 		 * the work has not identified itself as having things to do immediately,
 		 * so it will not be scheduled.
 		 * 
-		 * Note! This is <b>independant</b> of whether or not
+		 * Note! This is <b>independent</b> of whether or not
 		 * {@link WorkTarget#isReady()} returns true at any given time! The
 		 * contract of the {@link WorkTarget#isReady()} method allows it to toggle
 		 * at absolutely any time and with no synchronization whatsoever. This
@@ -150,7 +186,7 @@ class WorkFuture<$V> implements Future<$V> {	// ... shit, there's really not a l
 		 * The work was cancelled via the {@link WorkFuture#cancel(boolean)}
 		 * method before it could become {@link #FINISHED}. The work may have
 		 * previously been {@link #RUNNING}, but will now no longer be scheduled
-		 * for future activitions. Since the cancellation was the result of an
+		 * for future activations. Since the cancellation was the result of an
 		 * external operation rather than of the WorkTarget's own volition, the
 		 * WorkTarget's {@link WorkTarget#isDone()} method may still return false.
 		 */
