@@ -1,7 +1,7 @@
 package us.exultant.ahs.thread;
 
-import us.exultant.ahs.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 
 /**
  * Produced internally by some WorkScheduler implementations for bookkeeping and return to
@@ -16,26 +16,18 @@ import java.util.concurrent.*;
  * 
  * @param <$V>
  */
-// You might expect this to have a lot in common with FutureTask.
-// You'd be surprised.
-// FutureTask is actually built to work under a wider range of conditions than WorkFuture, and so WorkFuture is able to cut a lot of expensive corners.
-// WorkFuture is intending for mutation exclusively within a WorkScheduler that already does a great deal of concurrency control,
-//  and as such, it's allowed to assume that it will only have one actively mutating thread at any time.
-// The contracts of WorkFuture.State are also significantly more relaxed than the state transitions of FutureTask:
-//  state is allowed to flip in a wildly unsynchronized fashion *except* for the transitions that are idempotent (one-way).
 class WorkFuture<$V> implements Future<$V> {
 	public WorkFuture(WorkTarget<$V> $wt, ScheduleParams $schedp) {
 		this.$work = $wt;
 		this.$schedp = $schedp;
+		this.$sync = new Sync();
 	}
 	
 	
+	final Sync			$sync;
 	
 	/** The underlying callable */
         final WorkTarget<$V>		$work;
-	
-        /** The present state of the task */
-	volatile State			$state		= null;
 	
 	/** The parameters with which the work target was scheduled. */
 	private final ScheduleParams	$schedp;
@@ -50,7 +42,9 @@ class WorkFuture<$V> implements Future<$V> {
 	/** Index into delay queue, to support faster updates. */
 	int				$heapIndex	= 0;
 	
+	/** When nulled after set/cancel, this indicates that the results are accessible. */
 	volatile Thread			$runner;
+	
 	
 	
 	public WorkTarget<$V> getWorkTarget() {
@@ -58,44 +52,15 @@ class WorkFuture<$V> implements Future<$V> {
 	}
 	
 	public State getState() {
-		return $state;
+		return $sync.getWFState();
 	}
 	
 	public ScheduleParams getScheduleParams() {
 		return $schedp;
 	}
 	
-	void run() {
-		if ($state != State.FINISHED && $cancelPlz) {
-			$state = State.CANCELLED;
-			return;
-		}
-		
-		if (getState() != State.SCHEDULED) throw new MajorBug();
-		
-		$runner = Thread.currentThread();
-
-		//TODO
-	}
-	
 	public boolean cancel(boolean $mayInterruptIfRunning) {
-		// the core concept here that still lets us get away with zero synchronization is that you can request cancellation whenever you want (and that request has its own idempotency *separate* from the future's state), but no one has to pay attention to your request and update the future's state until the scheduler puts a thread on this guy again.
-		
-		$cancelPlz = true;
-		// from now on, no thread in the scheduler may start running this task.
-			// FIXME erm, unless they just checked cancelplz, then yielded to us right above this line.
-
-		// bit rude to cancel something already finished, neh?
-		if (getState() == State.FINISHED) return;
-		
-		// if nobody from the scheduler is looking, we can set it to cancelled in this thread, instead of waiting for the scheduler to get around to it (notice this doesn't necessarily make anything gc'able, though).
-		if ($runner == null)
-			$state = State.CANCELLED;	//FIRE:finish
-		
-		// WHAT IF the scheduler's shifting this guy between heaps?  we can't back out from a cancelled state.
-		
-		//TODO
-		return false;
+		return $sync.innerCancel($mayInterruptIfRunning);
 	}
 	
 	public boolean isCancelled() {
@@ -111,21 +76,11 @@ class WorkFuture<$V> implements Future<$V> {
 	}
 	
 	public $V get() throws InterruptedException, ExecutionException {
-		//TODO
-		// dunno who you're planning to sync on here.
-		return null;
+		return $sync.innerGet();
 	}
 	
 	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, ExecutionException, TimeoutException {
-		//TODO
-		// dunno who you're planning to sync on here.
-		return null;
-	}
-	
-	
-	
-	void postExecute() {
-		
+		return $sync.innerGet($unit.toNanos($timeout));
 	}
 	
 	
@@ -191,5 +146,135 @@ class WorkFuture<$V> implements Future<$V> {
 		 * WorkTarget's {@link WorkTarget#isDone()} method may still return false.
 		 */
 		CANCELLED
+	}
+	
+	
+	
+	/** Uses AQS sync state to represent run status. */
+	private final class Sync extends AbstractQueuedSynchronizer {
+		Sync() {}
+		
+		State getWFState() {
+			return State.values()[getState()];
+		}
+		
+		/** Implements AQS base acquire to succeed if finished or cancelled */
+		protected int tryAcquireShared(int $ignore) {
+			return innerIsDone() ? 1 : -1;
+		}
+		
+		/** Implements AQS base release to always signal after setting final done status by nulling runner thread. */
+		protected boolean tryReleaseShared(int $ignore) {
+			$runner = null;
+			return true;
+		}
+		
+		boolean innerIsCancelled() {
+			return getState() == State.CANCELLED.ordinal();
+		}
+		
+		boolean innerIsDone() {
+			int $s = getState();
+			return ($s == State.CANCELLED.ordinal() || $s == State.FINISHED.ordinal()) && $runner == null;
+		}
+		
+		$V innerGet() throws InterruptedException, ExecutionException {
+			acquireSharedInterruptibly(0);
+			return innerGetHelper();
+		}
+		
+		$V innerGet(long $nanosTimeout) throws InterruptedException, ExecutionException, TimeoutException {
+			if (!tryAcquireSharedNanos(0, $nanosTimeout)) throw new TimeoutException();
+			return innerGetHelper();
+		}
+		
+		private final $V innerGetHelper() throws ExecutionException {
+			if (getState() == State.CANCELLED.ordinal()) throw new CancellationException();
+			if ($exception != null) throw new ExecutionException($exception);
+			return $result;
+		}
+		
+		void innerSet($V v) {
+			for (;;) {
+				int s = getState();
+				if (s == State.FINISHED.ordinal()) return;
+				if (s == State.CANCELLED.ordinal()) {
+					// aggressively release to set runner to null, in case we are racing with a cancel request that will try to interrupt runner
+					releaseShared(0);
+					return;
+				}
+				if (compareAndSetState(s, State.FINISHED.ordinal())) {
+					$result = v;
+					releaseShared(0);
+					//TODO:AHS:THREAD: call the hearDone() hook right here
+					return;
+				}
+			}
+		}
+		
+		void innerSetException(Throwable t) {
+			for (;;) {
+				int s = getState();
+				if (s == State.FINISHED.ordinal()) return;
+				if (s == State.CANCELLED.ordinal()) {
+					// aggressively release to set runner to null, in case we are racing with a cancel request that will try to interrupt runner
+					releaseShared(0);
+					return;
+				}
+				if (compareAndSetState(s, State.FINISHED.ordinal())) {
+					$exception = t;
+					releaseShared(0);
+					//TODO:AHS:THREAD: call the hearDone() hook right here
+					return;
+				}
+			}
+		}
+		
+		boolean innerCancel(boolean mayInterruptIfRunning) {
+			for (;;) {
+				int s = getState();
+				if (s == State.FINISHED.ordinal()) return false;
+				if (s == State.CANCELLED.ordinal()) return false;
+				if (compareAndSetState(s, State.CANCELLED.ordinal())) break;
+			}
+			if (mayInterruptIfRunning) {
+				Thread r = $runner;
+				if (r != null) r.interrupt();
+			}
+			releaseShared(0);
+			//TODO:AHS:THREAD: call the hearDone() hook right here
+			return true;
+		}
+		
+		void innerRun() {
+			if (!compareAndSetState(State.SCHEDULED.ordinal(), State.RUNNING.ordinal())) return;
+			
+			$runner = Thread.currentThread();
+			if (getState() == State.RUNNING.ordinal()) { // recheck after setting thread
+				$V result;
+				try {
+					result = $work.call();
+				} catch (Throwable ex) {
+					innerSetException(ex);
+					return;
+				}
+				innerSet(result);
+			} else {
+				releaseShared(0); // cancel
+			}
+		}
+		
+		boolean innerRunAndReset() {
+			if (!compareAndSetState(State.SCHEDULED.ordinal(), State.RUNNING.ordinal())) return false;
+			try {
+				$runner = Thread.currentThread();
+				if (getState() == State.RUNNING.ordinal()) $work.call(); // don't set result
+				$runner = null;
+				return compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());	// note the waiting state set here.  this is a divergence from DL's library; the workscheduler must do something about this later.
+			} catch (Throwable ex) {
+				innerSetException(ex);
+				return false;
+			}
+		}
 	}
 }
