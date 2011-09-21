@@ -127,15 +127,20 @@ public final class ScheduleParams {
 		return ($time - System.nanoTime());
 	}
 	
+	/**
+	 * @return the time (in nanoTime units) when this task is no longer delayed.
+	 */
+	public long getNextRunTime() {
+		return $time;
+	}
 	
 	
+
 	/**
 	 * Sets the next time to run for a periodic task. {@link WorkScheduler}
-	 * implementations call this after they finish running a periodic task &mdash it
-	 * is public so that it can be accessed by WorkScheduler implementations not in
-	 * the AHS library package, but it should not generally be used by client code.
+	 * implementations call this after they finish running a periodic task.
 	 */
-	public void setNextRunTime() {
+	void setNextRunTime() {
 		if ($time == 0) return; // this is immutable, silly.	// we could also just let this go, or we could have a subclass that stubs the method.  really it makes no difference -- putting this check in trades one JNE instruction in x86 assembly for sanity, whoopdeedoo.
 		if ($period > 0) $time += $period;
 		else $time = System.nanoTime() + -$period;
