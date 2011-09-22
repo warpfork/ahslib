@@ -71,8 +71,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			for (int $i = 0; $i < 8; $i++) $wt[$i] = new Work();
 			for (int $i = 0; $i < 8; $i++) $f[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
 			
-			X.chill(300);
-			for (int $i = 0; $i < 8; $i++) X.sayet($f[$i].getState()+"");
+			//X.chill(300);
+			//for (int $i = 0; $i < 8; $i++) X.sayet($f[$i].getState()+"");
 			
 			try {
 				for (int $i = 0; $i < 8; $i++) $f[$i].get();
@@ -86,7 +86,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private class Work implements WorkTarget<Void> {
 			public int x = 1000;
 			public synchronized Void call() {
-				X.sayet(x+"");
 				x--;
 				return null;
 			}

@@ -1,5 +1,6 @@
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -257,9 +258,9 @@ class WorkFuture<$V> implements Future<$V> {
 					tryFinish(true);
 					return false;
 				}
-				boolean $cancelled = !compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
+				boolean $waiting = compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
 				if ($work.isDone()) tryFinish(true);
-				return $cancelled;
+				return $waiting;
 			} else {
 				releaseShared(0); // there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).)
 				return false;
