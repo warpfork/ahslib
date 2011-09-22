@@ -1,5 +1,6 @@
 package us.exultant.ahs.log;
 
+import us.exultant.ahs.util.*;
 import java.io.*;
 
 /**
@@ -332,13 +333,11 @@ public class Logger {
 		public void log(int $level, String $category, String $message, Throwable $e) {
 			StringBuilder $sb = new StringBuilder(256);
 			long $time = System.currentTimeMillis() - start;
-			long $minutes = $time / (1000 * 60);
-			long $seconds = $time / (1000) % 60;
-			if ($minutes <= 9) $sb.append('0');
-			$sb.append($minutes);
-			$sb.append(':');
-			if ($seconds <= 9) $sb.append('0');
-			$sb.append($seconds);
+			long $seconds = $time / 1000;
+			long $milliseconds = $time - $seconds * 1000;
+			$sb.append(Strings.padLeftToWidth($seconds+"", "0", 3));
+			$sb.append('.');
+			$sb.append(Strings.padRightToWidth($milliseconds+"", "0", 3));
 			
 			switch ($level) {
 				case LEVEL_ERROR:
