@@ -265,9 +265,16 @@ class WorkFuture<$V> implements Future<$V> {
 					// Since we can only fail to make the transition to FINISHED ourselves if someone else has already put the task in either FINISHED or CANCELLED state, no matter what the scheduler must respond and drop the task.
 					return false;
 				} else {
-					// return false if we got a concurrent cancel.
-					return !compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
-					//FIXME:AHS:THREAD: shitfuck: what if isDone flips true after the branch above, then the dying update is requested and process, that results in a failed tryFinish because we're still running, and THEN this fucker happens?  this task will be stuck waiting forever!
+					boolean $cancelled = !compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());	// return false if we got a concurrent cancel.
+					//what if 
+					//  - isDone flips true after the branch above,
+					//  - then the dying update is requested and processed,
+					//  - that results in a failed tryFinish because we're still running,
+					//  - and THEN this cas happens?
+					// this task would be stuck waiting forever!
+					// so, we have to check one more time after we transition to WAITING.
+					if ($work.isDone()) tryFinish(true);
+					return $cancelled;
 				}
 			} else {
 				releaseShared(0); // there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).)
@@ -279,18 +286,18 @@ class WorkFuture<$V> implements Future<$V> {
 			// these come as a standard check whenever a shift returns false, or whenever an update call (from any thread!) noticed isDone was true.  (whenever a scheduler completes a run of a task and notices doneness is ever so slightly separate because it transitions directly from RUNNING to FINISHED.)
 			// because this method is package-protected, we're going to assume that you've checked isDone before calling this, and that it was true.  (Sure, most people's isDone method is pretty cheap, but we're going to shoot for savings/contention-avoidance here anyway.)
 			// WE MUST BLOCK CONCURRENT FINISHES IF WE'RE RUNNING.  because that's insane.  we have to set the answer of our current run.  and things often become "done" as data sources when they give us their last thing, but that clearly doesn't mean we're finished yet and shouldn't report the results of that last data piece.
-
+			
 			for (;;) {
 				int $s = getState();
-				// i'd love to phrase the following as a switch, but i can't seem to get that to work without hitting "case expressions must be constant expressions" bitchery.
-				if (!$iAmTheRunner && $s == State.RUNNING.ordinal())
-					return false;		// the working thread will deal with noticing doneness again when it's completed its cycle.
 				if ($s == State.FINISHED.ordinal())
 					return false;		// we're already done, obviously there's nothing to do here.  (we notice this in particular since we don't want to double-sent the done notification to listeners, nor invoke ridiculous releases).
 				if ($s == State.CANCELLED.ordinal()) {
 					releaseShared(0);	// aggressively release to set runner to null, in case we are racing with a cancel request that will try to interrupt runner
 					return false;		// we're letting the cancel go though (though trying to dodge any interrupts the cancellation might have requested).
 				}
+				if ($s == State.RUNNING.ordinal())
+					if ($iAmTheRunner);	// it's kay, we can continue to the finishing since this is our job.
+					else return false;	// the working thread will deal with noticing doneness again when it's completed its cycle.
 				// $s is either SCHEDULED or WAITING
 				if (compareAndSetState($s, State.FINISHED.ordinal())) {
 					releaseShared(0);

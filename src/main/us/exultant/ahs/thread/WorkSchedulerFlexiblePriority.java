@@ -1,5 +1,6 @@
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -39,16 +40,31 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	private void worker_cycle() throws InterruptedException {
 		$lock.lockInterruptibly();
-		try {
+		try { retry: for (;;) {		// we repeat this loop until we get someone who actually makes it into the 'power' call. 
 			WorkFuture<?> $wf = worker_acquireWork();	// this may block.
-			if ($wf.$sync.scheduler_power()) {
-				// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
-				//TODO:AHS:THREAD
-			} else {
-				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
-				/* no-op */
+			switch ($wf.getState()) {
+				case FINISHED: continue retry;	// and drop it
+				case CANCELLED: continue retry;	// and drop it
+				case SCHEDULED:
+					if ($wf.$sync.scheduler_power()) {
+						// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
+						if ($wf.$sync.scheduler_shift()) {
+							$scheduled.add($wf);
+						} else {
+							if ($wf.getScheduleParams().isUnclocked())
+								$unready.add($wf);
+							else
+								$delayed.add($wf);
+						}
+					} else {
+						// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
+						/* no-op */
+					}
+					return;
+				default:
+					throw new MajorBug();
 			}
-		} finally {
+		}} finally {
 			$lock.unlock();
 		}
 	}
