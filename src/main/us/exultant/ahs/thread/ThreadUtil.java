@@ -103,6 +103,22 @@ public abstract class ThreadUtil {
 	}
 	
 	/**
+	 * Produces a number of threads, each wrapped the given Runnable.
+	 * 
+	 * @param $task
+	 * @param $number
+	 *                how many threads to produce
+	 * @return an array of new (unstarted) Thread of the same magnitude as the given
+	 *         Runnable array.
+	 */
+	public static Thread[] wrapAll(Runnable $task, int $number) {
+		Thread[] $threads = new Thread[$number];
+		for (int $i = 0; $i < $number; $i++)
+			$threads[$i] = new Thread($task);
+		return $threads;
+	}
+	
+	/**
 	 * Starts all the given threads concurrently.
 	 * 
 	 * @param $threads

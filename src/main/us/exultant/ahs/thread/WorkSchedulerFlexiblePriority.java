@@ -6,6 +6,20 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
 public class WorkSchedulerFlexiblePriority implements WorkScheduler {
+	public WorkSchedulerFlexiblePriority(int $threadCount) {
+		Thread[] $threads = ThreadUtil.wrapAll(new Runnable() {
+			public void run() {
+				for (;;) {
+					try {
+						worker_cycle();
+					} catch (InterruptedException $e) { $e.printStackTrace(); }
+				}
+			}
+		}, $threadCount);
+		
+		ThreadUtil.startAll($threads);
+	}
+	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
 		WorkFuture<$V> $wf = new WorkFuture<$V>($work, $when);
 		if ($wf.$sync.scheduler_shift())
