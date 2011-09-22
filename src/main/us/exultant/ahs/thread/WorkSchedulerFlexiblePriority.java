@@ -101,8 +101,11 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 */	// actually, not sure about that lock.  it doesn't cause problems if we keep it listed as scheduled even if its not in that heap for a moment, i think.  and either of the following transitions would be followed by our relinquishment anyway, i think.  though if we hit FINISHED, CANCELLED, or make it directly into WAITING, then we'll have to sink right back into this, so we might as well not leave ourselves open to contention.
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
 		try { for (;;) {
+			// offer to shift any unclocked tasks that have had updates requested
+			worker_pollUpdates();
+			
 			// shift any clock-based tasks that need no further delay into the scheduled heap.  note the time until the next of those clocked tasks will be delay-free.
-			long $delay = worker_pollDelayed();		
+			long $delay = worker_pollDelayed();	
 			
 			// get work now, if we have any.
 			WorkFuture<?> $first = $scheduled.peek();
@@ -121,6 +124,25 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			}
 		}} finally {
 			if ($leader == null && $scheduled.peek() != null) $available.signal();
+		}
+	}
+	
+	private void worker_pollUpdates() {
+		final Iterator<WorkFuture<?>> $itr = $updatereq.iterator();
+		while ($itr.hasNext()) {
+			WorkFuture<?> $key = $itr.next(); $itr.remove();
+			if ($key.$sync.scheduler_shift()) {
+				$unready.remove($key);
+				$scheduled.add($key);
+			} else {
+				switch ($key.getState()) {
+					case FINISHED:
+					case CANCELLED:
+						$unready.remove($key);
+					default: // still just waiting, leave it there
+						continue;
+				}
+			}
 		}
 	}
 	
