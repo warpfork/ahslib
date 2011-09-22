@@ -253,6 +253,8 @@ class WorkFuture<$V> implements Future<$V> {
 					$result = $work.call();
 				} catch (Throwable $t) {
 					$exception = new ExecutionException($t);
+					tryFinish(true);
+					return false;
 				}
 				if ($work.isDone()) {
 					tryFinish(true);
