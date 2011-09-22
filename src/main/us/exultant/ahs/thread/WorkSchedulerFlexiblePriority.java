@@ -18,8 +18,11 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
-		return;		//TODO:AHS:THREAD
-		// NOTE this includes noticing isDone and transitioning directly to FINISHED!  and NOW.  (which wf.sync is also going to have to explicitly allow.  from several entry points, actually -- this is the same doneness and finish check when coming from an external update as from the end of any run.)
+		// check doneness; try to transition immediate to FINISHED if is done.
+		if ($fut.$work.isDone()) $fut.$sync.tryFinish(false);
+		
+		// just push this into the set of requested updates.
+		$updatereq.add($fut);
 	}
 	
 	
@@ -38,7 +41,13 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		$lock.lockInterruptibly();
 		try {
 			WorkFuture<?> $wf = worker_acquireWork();	// this may block.
-			//TODO:AHS:THREAD
+			if ($wf.$sync.scheduler_power()) {
+				// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
+				//TODO:AHS:THREAD
+			} else {
+				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
+				/* no-op */
+			}
 		} finally {
 			$lock.unlock();
 		}
