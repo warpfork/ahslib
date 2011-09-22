@@ -19,7 +19,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestRunOnce());
 		$tests.add(new TestWtAlwaysReady());
-		$tests.add(new TestNbWt());
+		$tests.add(new TestNonblockingLeaderFollower());
+		$tests.add(new TestScheduleFixedRate());
 		return $tests;
 	}
 	
@@ -104,7 +105,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	/** Test two work targets, once of which must always follow the other (in other words, one is always ready, but the other changes readiness based on the progress of the first). */
-	private class TestNbWt extends TestCase.Unit {
+	private class TestNonblockingLeaderFollower extends TestCase.Unit {
 		protected WorkScheduler $ws = makeScheduler();
 		final int HIGH = 10000;
 		final int LOW = 100;
@@ -171,21 +172,54 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	
-	/** Same as {@link TestNbWt}, but with many more WorkTargets than threads. */
-	private class TestNbWtMany extends TestNbWt {
+	/** One task with a fixed delay is scheduled to run 10 times, and is checked by another thread (at fixed delay, awkwardly, but the resolution is low enough that it's kay). */
+	private class TestScheduleFixedRate extends TestCase.Unit {
+		protected WorkScheduler $ws = makeScheduler();
+
 		public Object call() {
-			// ...some super.call() crap, but i really need a futurepipe to do this sensibly.
+			Work $wt = new Work();
+			WorkFuture<Integer> $wf = $ws.schedule($wt, ScheduleParams.makeFixedDelay(300, 100));
+			
+			X.chill(310);
+			assertEquals(9, $wt.x);
+			for (int $i = 8; $i >= 0; $i--) {
+				X.chill(100);
+				assertEquals($i, $wt.x);
+			}
+			
+			try {
+				assertEquals(0, $wf.get().intValue());
+			}
+			catch (InterruptedException $e) { throw new AssertionFailed($e); }
+			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			
 			return null;
+		}
+		private class Work implements WorkTarget<Integer> {
+			public int x = 10;
+			public synchronized Integer call() {
+				X.sayet("derp "+x);
+				x--;
+				return x;
+			}
+			public synchronized boolean isReady() {
+				return !isDone();
+			}
+			public synchronized boolean isDone() {
+				return (x <= 0);
+			}
+			public int getPriority() {
+				return 0;
+			}
 		}
 	}
 	
 	
 	
-	/**  */
-	private class TestScheduleFixedRate extends TestCase.Unit {
+	/** Same as {@link TestNonblockingLeaderFollower}, but with many more WorkTargets than threads. */
+	private class TestNbWtMany extends TestNonblockingLeaderFollower {
 		public Object call() {
-			breakIfFailed();
-			//TODO:AHS:THREAD
+			// ...some super.call() crap, but i really need a futurepipe to do this sensibly.
 			return null;
 		}
 	}
