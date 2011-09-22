@@ -40,7 +40,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		
 		public Object call() {
 			Work $w = new Work();
-			Future<?> $f = $ws.schedule(new WorkTarget.RunnableWrapper($w, 0, true));
+			Future<?> $f = $ws.schedule(new WorkTarget.RunnableWrapper($w, 0, true), ScheduleParams.NOW);
 			
 			try {
 				$f.get();
@@ -67,9 +67,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 		
 		public Object call() {
 			Work[] $wt = new Work[8];
-			Future<?>[] $f = new Future<?>[8];
+			WorkFuture<?>[] $f = new WorkFuture<?>[8];
 			for (int $i = 0; $i < 8; $i++) $wt[$i] = new Work();
-			for (int $i = 0; $i < 8; $i++) $f[$i] = $ws.schedule($wt[$i]);
+			for (int $i = 0; $i < 8; $i++) $f[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
+			
+			X.chill(300);
+			for (int $i = 0; $i < 8; $i++) X.sayet($f[$i].getState()+"");
 			
 			try {
 				for (int $i = 0; $i < 8; $i++) $f[$i].get();
@@ -83,6 +86,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private class Work implements WorkTarget<Void> {
 			public int x = 1000;
 			public synchronized Void call() {
+				X.sayet(x+"");
 				x--;
 				return null;
 			}
@@ -103,32 +107,44 @@ public abstract class WorkSchedulerTest extends TestCase {
 	/** Test two work targets, once of which must always follow the other (in other words, one is always ready, but the other changes readiness based on the progress of the first). */
 	private class TestNbWt extends TestCase.Unit {
 		protected WorkScheduler $ws = makeScheduler();
+		final int HIGH = 10000;
+		final int LOW = 100;
 		
 		public Object call() {
 			WorkLeader $w1 = new WorkLeader();
 			WorkFollower $w2 = new WorkFollower();
-			$w1.$follower = $w2;
 			$w2.$leader = $w1;
-			$ws.schedule($w2);
-			$ws.schedule($w1);
-			X.chill(200);
-			assertEquals(100, $w2.x);
-			assertEquals(100, $w1.x);
+			WorkFuture<Void> $f2 = $ws.schedule($w2, ScheduleParams.NOW);
+			$w1.$followerFuture = $f2;
+			WorkFuture<Void> $f1 = $ws.schedule($w1, ScheduleParams.NOW);
+			
+			try {
+				$f1.get();
+			}
+			catch (InterruptedException $e) { throw new AssertionFailed($e); }
+			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			
+			assertTrue($w1.isDone());
+			assertFalse($w1.isReady());
+			assertFalse($w2.isDone());
+			assertFalse($w2.isReady());
+			assertEquals(LOW, $w2.x);
+			assertEquals(LOW, $w1.x);
 			return null;
 		}
 		private class WorkLeader implements WorkTarget<Void> {
-			public volatile WorkFollower $follower;
-			public volatile int x = 1000;
+			public volatile WorkFuture<?> $followerFuture;
+			public volatile int x = HIGH;
 			public synchronized Void call() {
 				x--;
-				$ws.update($follower);
+				$ws.update($followerFuture);
 				return null;
 			}
 			public synchronized boolean isReady() {
 				return !isDone();
 			}
 			public synchronized boolean isDone() {
-				return (x <= 100);
+				return (x <= LOW);
 			}
 			public int getPriority() {
 				return 0;
@@ -136,7 +152,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		private class WorkFollower implements WorkTarget<Void> {
 			public volatile WorkLeader $leader;
-			public volatile int x = 1000;
+			public volatile int x = HIGH;
 			public synchronized Void call() {
 				if (!isReady()) blow("");	// not normal semantics for ready, obviously, but true for this test, since it should only be possible to flip to unready by running and one should never be scheduled for multiple runs without a check of readiness having already occurred between each run.
 				x--;
