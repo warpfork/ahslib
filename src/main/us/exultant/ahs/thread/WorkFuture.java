@@ -1,6 +1,5 @@
 package us.exultant.ahs.thread;
 
-import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -252,7 +251,7 @@ class WorkFuture<$V> implements Future<$V> {
 			if (getState() == State.RUNNING.ordinal()) { // recheck after setting thread
 				try {
 					$result = $work.call();
-					// the saved result here can be a little weird for any task that's not one-shot.  we can't reliably differentiate between the a run that made us done, or being already done when the run started, because we can't lock that... so we can't reliably ensure that what's returned by the last run before finishing isn't already something that's allowed to be insane according to the contract of WorkTarget.
+					// the saved result here can be a little weird for any task that's not one-shot.  we can't reliably differentiate between the run that made us done, or being already done when the run started, because we can't lock that... so we can't reliably ensure that what's returned by the last run before finishing isn't already something that's allowed to be insane according to the contract of WorkTarget.
 				} catch (Throwable $t) {
 					$exception = new ExecutionException($t);
 					tryFinish(true);
@@ -260,6 +259,7 @@ class WorkFuture<$V> implements Future<$V> {
 				}
 				boolean $waiting = compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
 				if ($work.isDone()) tryFinish(true);
+				if ($waiting) $schedp.setNextRunTime();
 				return $waiting;
 			} else {
 				releaseShared(0); // there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).)
