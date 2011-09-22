@@ -256,26 +256,9 @@ class WorkFuture<$V> implements Future<$V> {
 					tryFinish(true);
 					return false;
 				}
-				if ($work.isDone()) {
-					tryFinish(true);
-					// This return code feels a little weird, but here's the logic:
-					//   return false if this thread completed the transition to FINISHED, because the scheduler needs to drop it;
-					//   return false if there was a concurrent transition to CANCELLED, because the scheduler needs to drop it;
-					//   ... and that's it.
-					// Since we can only fail to make the transition to FINISHED ourselves if someone else has already put the task in either FINISHED or CANCELLED state, no matter what the scheduler must respond and drop the task.
-					return false;
-				} else {
-					boolean $cancelled = !compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());	// return false if we got a concurrent cancel.
-					//what if 
-					//  - isDone flips true after the branch above,
-					//  - then the dying update is requested and processed,
-					//  - that results in a failed tryFinish because we're still running,
-					//  - and THEN this cas happens?
-					// this task would be stuck waiting forever!
-					// so, we have to check one more time after we transition to WAITING.
-					if ($work.isDone()) tryFinish(true);
-					return $cancelled;
-				}
+				boolean $cancelled = !compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
+				if ($work.isDone()) tryFinish(true);
+				return $cancelled;
 			} else {
 				releaseShared(0); // there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).)
 				return false;
