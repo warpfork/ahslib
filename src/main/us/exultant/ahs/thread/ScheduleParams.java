@@ -60,17 +60,51 @@ public final class ScheduleParams {
 		return NOW;
 	}
 	
-	public static ScheduleParams makeDelayed(long $ns) {
-		return new ScheduleParams($ns, 0);
+	public static ScheduleParams makeDelayed(long $delayMs) {
+		return makeDelayed($delayMs, TimeUnit.MILLISECONDS);
 	}
 	
-	public static ScheduleParams makeFixedRate(long $ns, long $period) {
-		return new ScheduleParams($ns, $period);
+	public static ScheduleParams makeFixedRate(long $initialDelayMs, long $periodMs) {
+		return makeFixedRate($initialDelayMs, $periodMs, TimeUnit.MILLISECONDS);
 	}
 	
-	public static ScheduleParams makeFixedDelay(long $ns, long $period) {
-		return new ScheduleParams($ns, -$period);
+	public static ScheduleParams makeFixedDelay(long $initialDelayMs, long $periodMs) {
+		return makeFixedRate($initialDelayMs, $periodMs, TimeUnit.MILLISECONDS);
 	}
+	
+	public static ScheduleParams makeDelayed(long $delay, TimeUnit $unit) {
+		return makeDelayed($delay, $unit, false);
+	}
+	
+	public static ScheduleParams makeFixedRate(long $initialDelay, long $period, TimeUnit $unit) {
+		return makeFixedRate($initialDelay, $period, $unit, false);
+	}
+	
+	public static ScheduleParams makeFixedDelay(long $initialDelay, long $period, TimeUnit $unit) {
+		return makeFixedDelay($initialDelay, $period, $unit, false);
+	}
+	
+	public static ScheduleParams makeDelayed(long $startTime, TimeUnit $unit, boolean $startTimeIsAbsolute) {
+		return new ScheduleParams(
+				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
+				0
+		);
+	}
+	
+	public static ScheduleParams makeFixedRate(long $startTime, long $period, TimeUnit $unit, boolean $startTimeIsAbsolute) {
+		return new ScheduleParams(
+				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
+				$unit.toNanos($period)
+		);
+	}
+	
+	public static ScheduleParams makeFixedDelay(long $startTime, long $period, TimeUnit $unit, boolean $startTimeIsAbsolute) {
+		return new ScheduleParams(
+				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
+				-$unit.toNanos($period)
+		);
+	}
+		
 	
 	private ScheduleParams(long $ns, long $period) {
 		this.$time = $ns;
