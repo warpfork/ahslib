@@ -45,7 +45,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private final PriorityHeap		$delayed	= new PriorityHeap(WorkFuture.DelayComparator.INSTANCE);
 	private final PriorityHeap		$scheduled	= new PriorityHeap(WorkFuture.PriorityComparator.INSTANCE);
 	private final Set<WorkFuture<?>>	$unready	= new HashSet<WorkFuture<?>>();
-	private final Set<WorkFuture<?>>	$updatereq	= new ConcurrentSkipListSet<WorkFuture<?>>();	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
+	private final Set<WorkFuture<?>>	$updatereq	= Collections.newSetFromMap(new ConcurrentHashMap<WorkFuture<?>,Boolean>());	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
 	
 	private final ReentrantLock		$lock		= new ReentrantLock();
 	private Thread				$leader		= null;
