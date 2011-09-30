@@ -1,5 +1,6 @@
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.core.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -25,27 +26,28 @@ class WorkFuture<$V> implements Future<$V> {
 	}
 	
 	
-	final Sync			$sync;
+	final Sync					$sync;
 	
 	/** The underlying callable */
-        final WorkTarget<$V>		$work;
+        final WorkTarget<$V>				$work;
 	
 	/** The parameters with which the work target was scheduled. */
-	private final ScheduleParams	$schedp;
+	private final ScheduleParams			$schedp;
 	
 	/** Set to true when someone calls the cancel method.  Never again becomes false.  If there's currently a thread from the scheduler working on this, it must eventually notice this and deal with it; if there is no thread running this, the cancelling thread may act immediately. */
-	volatile boolean		$cancelPlz	= false;
+	volatile boolean				$cancelPlz	= false;
 	/** The result to return from get(). Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
-	private $V			$result		= null;
+	private $V					$result		= null;
 	/** The (already wrapped) exception to throw from get(). Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
-	private ExecutionException	$exception	= null;
+	private ExecutionException			$exception	= null;
 	
 	/** Index into delay queue, to support faster updates. */
-	int				$heapIndex	= 0;
+	int						$heapIndex	= 0;
 	
 	/** When nulled after set/cancel, this indicates that the results are accessible. */
-	volatile Thread			$runner;
+	volatile Thread					$runner;
 	
+	private volatile Listener<WorkFuture<$V>>	$completionListener;	//FIXME:AHS:THREAD: um, we need to be able to set this before the task starts or it's not very useful.  Oh.  Or we set it, then check for concurrent completion, then signal it.  And forbid setting more than once?
 	
 	
 	WorkTarget<$V> getWorkTarget() {	// this can't be public because giving out a WorkFuture to untrusted code isn't supposed to give that code the ability to call call() on the WT.
@@ -171,6 +173,7 @@ class WorkFuture<$V> implements Future<$V> {
 		/** Implements AQS base release to always signal after setting final done status by nulling runner thread. */
 		protected boolean tryReleaseShared(int $ignore) {
 			$runner = null;
+			// we don't call the completion listener here because this can be hit more than once; the thread nulling just works because it's essentially idempotent in this context 
 			return true;
 		}
 		
@@ -182,13 +185,13 @@ class WorkFuture<$V> implements Future<$V> {
 			if (!tryAcquireSharedNanos(0, $nanosTimeout)) throw new TimeoutException();
 		}
 		
-		$V get() throws ExecutionException, CancellationException {	// this could also be implementing in the outer class, but it's ever so slightly more efficient to use the int state here instead of go through the array lookup.  probably.  i dunno, maybe that even gets optimized out by a good enough jvm.
+		$V get() throws ExecutionException, CancellationException {	// this could also be implemented in the outer class, but it's ever so slightly more efficient to use the int state here instead of go through the array lookup.  probably.  i dunno, maybe that even gets optimized out by a good enough jvm.
 			if (getState() == State.CANCELLED.ordinal()) throw new CancellationException();		// TODO:AHS:THREAD: consider what you want from your contract here.  perhaps we should still return the last result?  but then that complicates concurrency significantly, since that would mean we can only set the result field if we've locked out cancels.  We could do it; use a higher-order bit of the state of the AQS perhaps, without actually changing the State we report to the rest of the program.  Iono.
 			if ($exception != null) throw $exception;
 			return $result;
 		}
 		
-		protected void hearDone() {}	//TODO:AHS:THREAD: implement this later to punt off to a Listener
+		protected void hearDone() {}    //TODO:AHS:THREAD: implement this later to punt off to a Listener
 		
 		
 		
@@ -221,7 +224,7 @@ class WorkFuture<$V> implements Future<$V> {
 		 * @return true if the scheduler must now remove the WF from the waiting
 		 *         pool (or delayed heap) and push it into the scheduled heap.
 		 */
-		//FIXME:AHS:THREAD: we have to notice doneness eventually even if no update was called and isReady is now returning false because it's done!  it's a bit troublesome since we'll never bubble to the top of the scheduled heap.
+		//FIXME:AHS:THREAD: we have to notice doneness eventually even if no update was called and isReady is now returning false because it's done!  it's a bit troublesome since we'll never bubble to the top of the scheduled heap.  though really, the most straightforward fix isn't at all wrong: just run low-priority low-frequency fixed-rate task that calls update on all of the stuff in the waiting pool.  only question with that is who decides exactly what priority and how rate that should be, since it's clearly one of those things we're really only want one of per vm.
 		boolean scheduler_shift() {
 			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState(State.WAITING.ordinal(), State.SCHEDULED.ordinal());
 			// the CAS will occur if:
