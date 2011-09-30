@@ -15,7 +15,7 @@ import java.util.*;
 public class Arr {
 	@SuppressWarnings("unchecked")
 	public static <T> T[] newInstance(Class<T> $class, int $size) {
-		return (T[]) new Object[$size];
+		return (T[]) Array.newInstance($class, $size);	// would you believe this actually delegates all the way down to a native method just to jump the typesafety hoops?  sheesh.
 	}
 	
 	public static <T> T[] array(T... $xs) {
