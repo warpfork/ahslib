@@ -122,13 +122,14 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			try {
 				$f1.get();
+				$f2.get();
 			}
 			catch (InterruptedException $e) { throw new AssertionFailed($e); }
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
 			assertTrue($w1.isDone());
 			assertFalse($w1.isReady());
-			assertFalse($w2.isDone());
+			assertTrue($w2.isDone());
 			assertFalse($w2.isReady());
 			assertEquals(LOW, $w2.x);
 			assertEquals(LOW, $w1.x);
@@ -164,7 +165,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				return (x > $leader.x);
 			}
 			public synchronized boolean isDone() {
-				return (x <= 0);
+				return (x <= LOW);
 			}
 			public int getPriority() {
 				return 0;
