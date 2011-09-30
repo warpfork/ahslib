@@ -8,7 +8,7 @@ public class WorkSchedulerFlexiblePriorityTest extends WorkSchedulerTest {
 	}
 	
 	public WorkSchedulerFlexiblePriorityTest() {
-		super(new Logger(Logger.LEVEL_DEBUG), true);
+		super();
 	}
 	
 	public WorkSchedulerFlexiblePriorityTest(Logger $log, boolean $enableConfirmation) {
