@@ -1,8 +1,8 @@
 package us.exultant.ahs.util;
 
-import java.util.*;
-import java.lang.reflect.Array;
+import java.lang.reflect.*;
 import java.nio.*;
+import java.util.*;
 
 /**
  * Similar to java.util.Arrays, but with some added functionality. Helps maintain sanity
@@ -13,7 +13,12 @@ import java.nio.*;
  * 
  */
 public class Arr {
-	public <T> T[] array(T... $xs) {
+	@SuppressWarnings("unchecked")
+	public static <T> T[] newInstance(Class<T> $class, int $size) {
+		return (T[]) new Object[$size];
+	}
+	
+	public static <T> T[] array(T... $xs) {
 		return $xs;
 	}
 	
