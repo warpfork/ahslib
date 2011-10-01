@@ -260,8 +260,11 @@ class WorkFuture<$V> implements Future<$V> {
 					tryFinish(true);
 					return false;
 				}
-				boolean $waiting = compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
-				if ($work.isDone()) tryFinish(true);
+				boolean $waiting = compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());	// this has to be done before checking the work's doneness, because otherwise we could check doneness, get false... while another thread sends a doneness update and trys to finish us but is rejected because we're running... and then we, already having checked doneness, begin our CAS to WAITING.  that'd be a fail.
+				if ($work.isDone()) {
+					tryFinish(true);
+					return false;	// even if tryFinish failed and returned false, since we're the running thread, that still means the task is finished (just that we weren't the ones to make it happen).
+				}
 				if ($waiting) $schedp.setNextRunTime();
 				return $waiting;
 			} else {
