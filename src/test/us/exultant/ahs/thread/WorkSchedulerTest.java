@@ -39,7 +39,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** One runnable wrapped to be a one-shot WorkTarget. */
 	private class TestRunOnce extends TestCase.Unit {
-		protected WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler();
 		
 		public Object call() {
 			Work $w = new Work();
@@ -66,7 +66,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** Eight work targets, all always ready until they're done. */
 	private class TestWtAlwaysReady extends TestCase.Unit {
-		protected WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler();
 		
 		public Object call() {
 			Work[] $wt = new Work[8];
@@ -108,7 +108,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** Test two work targets, once of which must always follow the other (in other words, one is always ready, but the other changes readiness based on the progress of the first). */
 	private class TestNonblockingLeaderFollower extends TestCase.Unit {
-		protected WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler();
 		final int HIGH = 10000;
 		final int LOW = 100;
 		
@@ -177,7 +177,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/**  */
 	private class TestScheduleSingleDelayMany extends TestCase.Unit {
-		protected WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler();
 		public final int WTC = 8;
 		
 		public Object call() {
@@ -194,6 +194,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			try {
 				for (int $i = 1; $i < WTC; $i++) {
 					$wf[$i-1].get();
+					$log.trace("task with "+$i+"00ms delay finished");
 					assertFalse($wf[$i].isDone());
 				}
 			}
@@ -203,7 +204,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 			return null;
 		}
 		private class Work implements Runnable {
-			public void run() {}	// the run-once functionality is just provided by the RunnableWrapper clas.
+			public void run() {	// the run-once functionality is just provided by the RunnableWrapper class.
+				$log.trace("task running");
+			}
 		}
 	}
 	
@@ -211,7 +214,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** One task with a fixed delay is scheduled to run 10 times, and is checked by another thread (at fixed delay, awkwardly, but the resolution is low enough that it's kay). */
 	private class TestScheduleFixedRate extends TestCase.Unit {
-		protected WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler();
 		
 		public Object call() {
 			Work $wt = new Work();
@@ -260,7 +263,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	 * This also tests (if indirectly) consistent results from WorkTarget that receive concurrent finishes (but I'd recommend running it numerous times if you want to feel confident of that).
 	 */
 	private class TestNonblockingManyWorkSingleSource extends TestCase.Unit {
-		protected WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler();
 		public final int HIGH = 10000;
 		public final int WTC = 32;
 		
