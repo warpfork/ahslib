@@ -5,6 +5,7 @@ import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
@@ -287,6 +288,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				boolean $wonOnce = false;
 				for (int $i = 0; $i < WTC; $i++) {
 					int $ans = $wf[$i].get();
+					$log.debug("final result of work target "+$i+": "+$ans);
 					if ($ans == HIGH)
 						if ($wonOnce)
 							throw new AssertionFailed("More than one WorkTarget finished with the high value.");
@@ -300,9 +302,10 @@ public abstract class WorkSchedulerTest extends TestCase {
 			return null;
 		}
 		private class Work implements WorkTarget<Integer> {
+			private final int $name = $namer.getAndIncrement(); 
 			public synchronized Integer call() {
 				Integer $move = $pipe.SRC.readNow();
-				$log.trace("pulled "+$move);
+				$log.trace("WT"+$name+" pulled "+$move);
 				return $move;
 			}
 			public synchronized boolean isReady() {
@@ -324,6 +327,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$log.trace("feed closed");
 		}
 	}
+	private static final AtomicInteger $namer = new AtomicInteger();
 	
 	
 	
