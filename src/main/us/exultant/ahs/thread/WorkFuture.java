@@ -270,6 +270,7 @@ class WorkFuture<$V> implements Future<$V> {
 						//    while another thread sends a doneness update and trys to finish us but is rejected because we're running...
 						//    and then we, already having checked doneness, begin our CAS to WAITING.
 						//  that'd be a fail.
+						/// actually, maybe you could get rid of this by checking for update requests for this guy after transitioning to waiting (and making sure external finish checkers are leaving those if their finish is blocked by a running state).
 					if ($work.isDone()) {
 						tryFinish(true, $potentialResult, null);	// this 'true' is a little batshit, ain't it?  i mean, no one else can be running, since we haven't returned yet, and the scheduler logic can't put this back into any of its heaps until this function returns, so this can't "break" per se... but it also became facetious to specify it at all, since we already transitioned out of RUNNING.
 						return false;	// even if tryFinish failed and returned false, since we're the running thread, that still means the task is finished (just that we weren't the ones to make it happen).
