@@ -6,13 +6,19 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
 /**
+ * <p>
  * Produced internally by some WorkScheduler implementations for bookkeeping and return to
  * the function that scheduled a task.
+ * </p>
  * 
+ * <p>
  * Note that there is (currently) no hardcoded rule that a WorkTarget instance may only be
  * submitted once to a single WorkScheduler and thus have exactly one paired WorkFuture
  * object... but it's the only case the system is designed for, so sane results are not
- * guaranteed if one does otherwise.
+ * guaranteed if one does otherwise. (This is also stated in the documentation of
+ * WorkScheduler that talks about the relationship between WorkScheduler, WorkTarget, and
+ * WorkFuture.)
+ * </p>
  * 
  * @author hash
  * 
@@ -212,14 +218,18 @@ class WorkFuture<$V> implements Future<$V> {
 		}
 		
 		/**
+		 * <p>
 		 * Checks the state of this WorkFuture. Changes only occur if the
 		 * WorkFuture is currently WAITING and should become SCHEDULED. If the
 		 * task is clock-based, only delay is checked; otherwise, only
 		 * $work.isReady() is checked.
+		 * </p>
 		 * 
+		 * <p>
 		 * If this method returns false, it may merely because the task isn't
 		 * ready or is delayed, but it may also be because the task is FINISHED or
 		 * CANCELLED, which is something the caller is advised to check.
+		 * </p>
 		 * 
 		 * @return true if the scheduler must now remove the WF from the waiting
 		 *         pool (or delayed heap) and push it into the scheduled heap.
@@ -230,9 +240,9 @@ class WorkFuture<$V> implements Future<$V> {
 			// the CAS will occur if:
 			//   - the task if delay-free (if clocked) or ready (if unclocked).
 			//        if this is not the case, obviously we won't be switching out of waiting state.
-			// the CAS will fail and reture false if:
-			//   - we're FINISHED (if this happened at the end of the task's last run, this task should have stayed in the scheduler to get to this call again.  but it could have happened concurrently as a result of a thread outside the scheduler calling an update on a task that become done concurrently (close of a data source for example).)
-			//   - we've been CANCELLED concurrently 
+			// the CAS will fail and return false if:
+			//   - we're FINISHED (if this happened at the end of the task's last run, this task shouldn't have stayed in the scheduler to get to this call again.  but it could have happened concurrently as a result of a thread outside the scheduler calling an update on a task that become done concurrently (close of a data source for example).)
+			//   - we've been CANCELLED concurrently
 			return false;
 		}
 		

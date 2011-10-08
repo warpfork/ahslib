@@ -8,10 +8,16 @@ import java.util.concurrent.*;
  * A WorkScheduler is a thread pooling and work organizing mechanism.
  * </p>
  * 
+ * <p>
+ * Every running JVM should aim to have exactly one WorkScheduler. A default singleton is
+ * available from {@link WorkManager#getDefaultScheduler()}; use this whenever possible.
+ * </p>
+ * 
+ * <div style="border:1px solid; margin:1em; padding:1em;">
  * <h3>Relationship between WorkScheduler, WorkTarget, and the Future</h3>
  * 
  * <p>
- * {@link WorkTarget} represents runnable login that performs some work when given a
+ * {@link WorkTarget} represents runnable logic that performs some work when given a
  * thread. A {@link WorkScheduler} provides threads to all of the WorkTargets that it
  * manages in the best order it knows how &mdash corraling tasks with clock-based
  * schedules and tasks of various priorities, all of which may or may not be ready to
@@ -36,6 +42,7 @@ import java.util.concurrent.*;
  * creating a {@link Factory} for the WorkTarget and using the
  * {@link WorkManager#scheduleOnePerCore(Factory,WorkScheduler)} helper method.)
  * </p>
+ * </div>
  */
 public interface WorkScheduler {
 	/**
