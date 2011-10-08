@@ -35,7 +35,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
 		// check doneness; try to transition immediate to FINISHED if is done.
-		if ($fut.$work.isDone()) $fut.$sync.tryFinish(false);
+		if ($fut.$work.isDone()) $fut.$sync.tryFinish(false, null, null);
 		
 		// just push this into the set of requested updates.
 		$updatereq.add($fut);
@@ -58,8 +58,11 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private void worker_cycle() throws InterruptedException {
 		WorkFuture<?> $chosen;
 		for (;;) {	// we repeat this loop... well, forever, really.
+			
+			// lock until we can pull someone out who's state is scheduled.
+			//    delegate our attention to processing update requests and waiting for delay expirations as necessary.
 			$lock.lockInterruptibly();
-			try { retry: for (;;) {		// we repeat this loop until we get someone who actually makes it into the 'power' call.
+			try { retry: for (;;) {
 				WorkFuture<?> $wf = worker_acquireWork();	// this may block.
 				switch ($wf.getState()) {
 					case FINISHED: continue retry;	// and drop it
@@ -74,8 +77,12 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				$lock.unlock();
 			}
 			
-			if ($chosen.$sync.scheduler_power()) {
-				// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
+			// run the work we pulled out.
+			//    note that we could check doneness right before this, but what would be the point?  another thread can make us done at any given quanta of time here.
+			boolean $requiresMoar = $chosen.$sync.scheduler_power();
+			
+			// requeue the work for future attention if necessary
+			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
 				if ($chosen.$sync.scheduler_shift()) {
 					$scheduled.add($chosen);
 				} else {

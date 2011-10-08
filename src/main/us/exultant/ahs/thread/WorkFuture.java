@@ -140,7 +140,7 @@ class WorkFuture<$V> implements Future<$V> {
 		 * exception thrown from the {@link WorkTarget#call()} method will also
 		 * result in this Future becoming FINISHED, but the
 		 * {@link WorkTarget#isDone()} method may still return false.
-		 */
+		 */// Actually, when I say "immediately", I mean that relatively.  the sync call in get() might still actually block for a tiny bit -- but we're talking about a handful of machine operations while the work thread finishes setting the return value after admitting completion and before releasing the locks for the last time.
 		FINISHED,
 		/**
 		 * The work was cancelled via the {@link WorkFuture#cancel(boolean)}
@@ -253,30 +253,46 @@ class WorkFuture<$V> implements Future<$V> {
 			$runner = Thread.currentThread();
 			if (getState() == State.RUNNING.ordinal()) { // recheck after setting thread
 				try {
-					$result = $work.call();
+					$V $potentialResult = $work.call();
 					// the saved result here can be a little weird for any task that's not one-shot.  we can't reliably differentiate between the run that made us done, or being already done when the run started, because we can't lock that... so we can't reliably ensure that what's returned by the last run before finishing isn't already something that's allowed to be insane according to the contract of WorkTarget.
+					//   (I thought about having a null return from a work target causing this class to not overwrite whatever the last result was...
+					///     Okay, follow that again.
+					///     Putting the burden of repeatedly returning the same result after doneness onto the WorkTarget class means it has to store that crap, and makes every single WorkTarget include boilerplate -- not much, perhaps, but my entire goal at all times is zero boilerplate.
+					///     Putting the burden of repeatedly returning the same result after doneness onto the WorkTarget class also means it's redundant with the storage already in WorkFuture, which is just code smell.
+					///     The only thing that makes me feel seriously dodgy about it is what if someone legitimately wants to finish with a null return?  They're restricted to never returning anything else. 
+					////      Oh wait.  Null returns can cause a doneness check?  but no.  that lets the null return of a WorkTarget have wickedly nondeterministic results.
+					///       Anyway, can I actually think of any place where something wants to return a final null but also have returned other things in the meanwhile?  No.  I mean, those people can probably even throw an exception as their alt channel if they want, since we are talking about the final time here.
+					///    And going back to basics, I really don't think anyone should ever have a sane reason to give a flying fuck about the return of a WorkFuture for a WorkTarget that repeats.  That whole result thing is really only ever intended to be used in one-shots.  Anyone else is pretty much 200% guaranteed to do better with a pipe for output.
+					
+					boolean $waiting = compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
+						// this shift to waiting has to be done before checking the work's doneness, because otherwise
+						//    we could check doneness, get false... 
+						//    while another thread sends a doneness update and trys to finish us but is rejected because we're running...
+						//    and then we, already having checked doneness, begin our CAS to WAITING.
+						//  that'd be a fail.
+					if ($work.isDone()) {
+						tryFinish(true, $potentialResult, null);	// this 'true' is a little batshit, ain't it?  i mean, no one else can be running, since we haven't returned yet, and the scheduler logic can't put this back into any of its heaps until this function returns, so this can't "break" per se... but it also became facetious to specify it at all, since we already transitioned out of RUNNING.
+						return false;	// even if tryFinish failed and returned false, since we're the running thread, that still means the task is finished (just that we weren't the ones to make it happen).
+					}
+					if ($waiting) $schedp.setNextRunTime();
+					return $waiting;	// false if the cas to waiting failed (which would be due to a concurrent cancel)
 				} catch (Throwable $t) {
 					$exception = new ExecutionException($t);
-					tryFinish(true);
+					tryFinish(true, null, $exception);
 					return false;
 				}
-				boolean $waiting = compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());	// this has to be done before checking the work's doneness, because otherwise we could check doneness, get false... while another thread sends a doneness update and trys to finish us but is rejected because we're running... and then we, already having checked doneness, begin our CAS to WAITING.  that'd be a fail.
-				if ($work.isDone()) {
-					tryFinish(true);
-					return false;	// even if tryFinish failed and returned false, since we're the running thread, that still means the task is finished (just that we weren't the ones to make it happen).
-				}
-				if ($waiting) $schedp.setNextRunTime();
-				return $waiting;
 			} else {
 				releaseShared(0); // there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).)
 				return false;
 			}
 		}
 		
-		boolean tryFinish(final boolean $iAmTheRunner) {
-			// these come as a standard check whenever a shift returns false, or whenever an update call (from any thread!) noticed isDone was true.  (whenever a scheduler completes a run of a task and notices doneness is ever so slightly separate because it transitions directly from RUNNING to FINISHED.)
+		boolean tryFinish(final boolean $iAmTheRunner, $V $finish, ExecutionException $fail) {
+			// these come as a standard check whenever a shift returns false, or whenever an update call (from any thread!) noticed isDone was true.
 			// because this method is package-protected, we're going to assume that you've checked isDone before calling this, and that it was true.  (Sure, most people's isDone method is pretty cheap, but we're going to shoot for savings/contention-avoidance here anyway.)
-			// WE MUST BLOCK CONCURRENT FINISHES IF WE'RE RUNNING.  because that's insane.  we have to set the answer of our current run.  and things often become "done" as data sources when they give us their last thing, but that clearly doesn't mean we're finished yet and shouldn't report the results of that last data piece.
+			// CONCURRENT FINISHES ARE BLOCKED IF WE'RE RUNNING.
+			//   because that's INSANE.  we have to set the answer of our current run.  and things often become "done" as data sources when they give us their last thing, but that clearly doesn't mean we're finished yet and shouldn't report the results of that last data piece.
+			//   (this is different than concurrently cancelled, mind; that's totally allowed.)
 			
 			for (;;) {
 				int $s = getState();
@@ -291,6 +307,10 @@ class WorkFuture<$V> implements Future<$V> {
 					else return false;	// the working thread will deal with noticing doneness again when it's completed its cycle.
 				// $s is either SCHEDULED or WAITING
 				if (compareAndSetState($s, State.FINISHED.ordinal())) {
+					// do the final set
+					if ($fail != null) $exception = $fail;
+					else $result = $finish;
+					// do the final release and notify completion
 					releaseShared(0);
 					hearDone();
 					return true;
