@@ -71,7 +71,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 						$chosen = $wf;
 						break retry;
 					default:
-						throw new MajorBug();
+						throw new MajorBug("work acquisition turned up a target that had been placed in the scheduled heap, but was neither in a scheduled state nor had undergone any of the valid concurrent transitions.");
 				}
 			}} finally {
 				$lock.unlock();
@@ -83,6 +83,15 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			
 			// requeue the work for future attention if necessary
 			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
+				
+				// okay, NOW we check it for doneness again -- it's no longer RUNNING, but someone may have called an update on it that would have noticed doneness but was ignored because of the RUNNING.
+				if ($chosen.$work.isDone()) {
+					$chosen.$sync.tryFinish(false, null, null);
+					// it's actually possible for another thread to do the finish before the above line gets to it (since obviously the scheduler_power method released this guy back to WAITING state)
+					//  and that's fine.  regardless of whether or not our finish call above is the one to do it, this task is done and can be dropped.
+					continue;
+				}
+				
 				if ($chosen.$sync.scheduler_shift()) {
 					$scheduled.add($chosen);
 				} else {

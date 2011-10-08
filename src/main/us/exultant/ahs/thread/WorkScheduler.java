@@ -77,7 +77,10 @@ public interface WorkScheduler {
 	
 	/**
 	 * Call this method to have the WorkScheduler check the WorkTarget associated with
-	 * the given Future for readiness to be scheduled.
+	 * the given Future for readiness to be scheduled. If the WorkTarget is done and
+	 * not currently being run, it may be immediately transitioned to a finished state
+	 * (completion notification hooks will be called from this thread before this
+	 * method returns).
 	 * 
 	 * @param <$V>
 	 * @param $fut
