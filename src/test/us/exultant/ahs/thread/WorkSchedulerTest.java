@@ -317,7 +317,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		protected void feedPipe() {
 			$log.trace("feed started");
-			for (int $i = 0; $i < HIGH; $i++)
+			for (int $i = 1; $i <= HIGH; $i++)
 				$pipe.SINK.write($i);
 			$log.trace("feed complete");
 			$pipe.SINK.close();
