@@ -274,13 +274,15 @@ public abstract class WorkSchedulerTest extends TestCase {
 		
 		public Object call() {
 			feedPipe();
-			
+
+			$log.trace("creating work targets");
 			for (int $i = 0; $i < WTC; $i++)
 				$wt[$i] = new Work();
+			$log.trace("scheduling work targets");
 			for (int $i = 0; $i < WTC; $i++)
 				$wf[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
 			
-
+			$log.trace("waiting for work future completion");
 			try {
 				boolean $wonOnce = false;
 				for (int $i = 0; $i < WTC; $i++) {
@@ -299,22 +301,27 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		private class Work implements WorkTarget<Integer> {
 			public synchronized Integer call() {
-				return $pipe.SRC.readNow();
+				Integer $move = $pipe.SRC.readNow();
+				$log.trace("pulled "+$move);
+				return $move;
 			}
 			public synchronized boolean isReady() {
 				return !isDone();
 			}
 			public synchronized boolean isDone() {
-				return $pipe.SRC.hasNext();
+				return !$pipe.SRC.hasNext();
 			}
 			public int getPriority() {
 				return 0;
 			}
 		}
 		protected void feedPipe() {
+			$log.trace("feed started");
 			for (int $i = 0; $i < HIGH; $i++)
 				$pipe.SINK.write($i);
+			$log.trace("feed complete");
 			$pipe.SINK.close();
+			$log.trace("feed closed");
 		}
 	}
 	
