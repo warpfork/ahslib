@@ -1,7 +1,6 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -276,8 +275,6 @@ class WorkFuture<$V> implements Future<$V> {
 					////      Oh wait.  Null returns can cause a doneness check?  but no.  that lets the null return of a WorkTarget have wickedly nondeterministic results.
 					///       Anyway, can I actually think of any place where something wants to return a final null but also have returned other things in the meanwhile?  No.  I mean, those people can probably even throw an exception as their alt channel if they want, since we are talking about the final time here.
 					///    And going back to basics, I really don't think anyone should ever have a sane reason to give a flying fuck about the return of a WorkFuture for a WorkTarget that repeats.  That whole result thing is really only ever intended to be used in one-shots.  Anyone else is pretty much 200% guaranteed to do better with a pipe for output.
-					
-					X.sayet("prevResult:"+$result+";\tpotential:"+$potentialResult);
 					
 					if ($work.isDone()) {
 						tryFinish(true, $potentialResult, null);

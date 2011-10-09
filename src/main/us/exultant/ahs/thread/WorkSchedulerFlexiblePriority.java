@@ -1,6 +1,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.log.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -52,7 +53,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private Thread				$leader		= null;
 	private final Condition			$available	= $lock.newCondition();
 	
-//	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
+	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
 	
 	
 	private void worker_cycle() throws InterruptedException {
@@ -125,11 +126,11 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 */	// actually, not sure about that lock.  it doesn't cause problems if we keep it listed as scheduled even if its not in that heap for a moment, i think.  and either of the following transitions would be followed by our relinquishment anyway, i think.  though if we hit FINISHED, CANCELLED, or make it directly into WAITING, then we'll have to sink right back into this, so we might as well not leave ourselves open to contention.
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
 		try { for (;;) {
-//			$log.trace("  ************  ");
-//			$log.trace("      delayed.size\t"+$delayed.$size);
-//			$log.trace("    scheduled.size\t"+$scheduled.$size);
-//			$log.trace("      unready.size\t"+$unready.size());
-//			$log.trace("    updatereq.size\t"+$updatereq.size());
+			$log.trace("  ************  ");
+			$log.trace("      delayed.size\t"+$delayed.$size);
+			$log.trace("    scheduled.size\t"+$scheduled.$size);
+			$log.trace("      unready.size\t"+$unready.size());
+			$log.trace("    updatereq.size\t"+$updatereq.size());
 			
 			// offer to shift any unclocked tasks that have had updates requested
 			worker_pollUpdates();
@@ -137,13 +138,13 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			// shift any clock-based tasks that need no further delay into the scheduled heap.  note the time until the next of those clocked tasks will be delay-free.
 			long $delay = worker_pollDelayed();
 			
-//			$log.trace("  **POSTSHIFT* ");
-//			$log.trace("             DELAY\t"+TimeUnit.NANOSECONDS.toMillis($delay));
-//			$log.trace("      delayed.size\t"+$delayed.$size);
-//			$log.trace("    scheduled.size\t"+$scheduled.$size);
-//			$log.trace("      unready.size\t"+$unready.size());
-//			$log.trace("    updatereq.size\t"+$updatereq.size());
-//			$log.trace("  ************  ");
+			$log.trace("  **POSTSHIFT* ");
+			$log.trace("             DELAY\t"+TimeUnit.NANOSECONDS.toMillis($delay));
+			$log.trace("      delayed.size\t"+$delayed.$size);
+			$log.trace("    scheduled.size\t"+$scheduled.$size);
+			$log.trace("      unready.size\t"+$unready.size());
+			$log.trace("    updatereq.size\t"+$updatereq.size());
+			$log.trace("  ************  ");
 			
 			// get work now, if we have any.
 			WorkFuture<?> $first = $scheduled.peek();

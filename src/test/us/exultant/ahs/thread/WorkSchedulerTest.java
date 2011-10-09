@@ -5,7 +5,6 @@ import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
@@ -18,11 +17,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
-		$tests.add(new TestRunOnce());
-		$tests.add(new TestWtAlwaysReady());
-		$tests.add(new TestNonblockingLeaderFollower());
-		$tests.add(new TestScheduleSingleDelayMany());
-		$tests.add(new TestScheduleFixedRate());
+//		$tests.add(new TestRunOnce());
+//		$tests.add(new TestWtAlwaysReady());
+//		$tests.add(new TestNonblockingLeaderFollower());
+//		$tests.add(new TestScheduleSingleDelayMany());
+//		$tests.add(new TestScheduleFixedRate());
 		$tests.add(new TestNonblockingManyWorkSingleSource());
 		return $tests;
 	}
@@ -265,7 +264,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	 */
 	private class TestNonblockingManyWorkSingleSource extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler();
-		public final int HIGH = 10000;
+		public final int HIGH = 1000;
 		public final int WTC = 32;
 		
 		private final Pipe<Integer> $pipe = new Pipe<Integer>();
@@ -287,25 +286,26 @@ public abstract class WorkSchedulerTest extends TestCase {
 			try {
 				boolean $wonOnce = false;
 				for (int $i = 0; $i < WTC; $i++) {
-					int $ans = $wf[$i].get();
-					$log.debug("final result of work target "+$i+": "+$ans);
-					if ($ans == HIGH)
-						if ($wonOnce)
-							throw new AssertionFailed("More than one WorkTarget finished with the high value.");
-						else $wonOnce = true;
+					Integer $ans = $wf[$i].get();
+					$log.debug("final result of work target "+$i+" ("+$wt[$i]+"): "+$ans);
+					if ($ans != null && $ans == HIGH) {
+						assertFalse("More than one WorkTarget finished with the high value.", $wonOnce);
+						$wonOnce = true;
+					}
 				}
-				if (!$wonOnce) throw new AssertionFailed("No WorkTarget finished with the high value.");
+				assertTrue("Exactly one WorkTarget finished with the high value.", $wonOnce);
 			}
 			catch (InterruptedException $e) { throw new AssertionFailed($e); }
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
+			System.exit(0);
+			
 			return null;
 		}
-		private class Work implements WorkTarget<Integer> {
-			private final int $name = $namer.getAndIncrement(); 
+		private class Work implements WorkTarget<Integer> { 
 			public synchronized Integer call() {
 				Integer $move = $pipe.SRC.readNow();
-				$log.trace("WT"+$name+" pulled "+$move);
+				$log.trace(this+" pulled "+$move);
 				return $move;
 			}
 			public synchronized boolean isReady() {
@@ -327,7 +327,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$log.trace("feed closed");
 		}
 	}
-	private static final AtomicInteger $namer = new AtomicInteger();
 	
 	
 	
