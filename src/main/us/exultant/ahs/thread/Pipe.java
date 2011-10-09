@@ -34,7 +34,7 @@ public class Pipe<$T> implements Flow<$T> {
 	 * Constructs a new, open, active, empty, usable Pipe.
 	 */
 	public Pipe() {
-		$closed = new boolean[] { false };
+		$closed = false;
 		$queue = new ConcurrentLinkedQueue<$T>();
 		$gate = new InterruptableSemaphore(0, true); // fair.
 		SRC = new Source();
@@ -109,12 +109,13 @@ public class Pipe<$T> implements Flow<$T> {
 	private final InterruptableSemaphore	$gate;
 	
 	/**
-	 * This array is of length one. Its only value describes whether or not this Pipe
-	 * is closed to new writes; {@link #$gate} is interrupted immediately after this
-	 * value is set to true when closing a Pipe. (An array is used here instead of a
-	 * boolean primitive directly in order to provide a monitor for synchronization.)
+	 * This value describes whether or not this Pipe is closed to new writes;
+	 * {@link #$gate} is interrupted immediately after this value is set to true when
+	 * closing a Pipe.
 	 */
-	private final boolean[]			$closed;
+	private volatile boolean		$closed;
+	
+	private final Object			$closeMonitor = new Object();
 	
 	/**
 	 * @return {@link #SRC}.
@@ -206,7 +207,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $closed[0];
+			return $closed;
 		}
 		
 		/**
@@ -222,12 +223,12 @@ public class Pipe<$T> implements Flow<$T> {
 		public void close() {
 			$lock.lock();
 			try {
-				$closed[0] = true; // set our state to closed
+				$closed = true; // set our state to closed
 			} finally {
 				$lock.unlock();
 			}
 			$gate.interrupt(); // interrupt any currently blocking reads
-			X.notifyAll($closed); // trigger the return of any final readAll calls
+			X.notifyAll($closeMonitor); // trigger the return of any final readAll calls
 			
 			// give our listener a chance to notice our closure.
 			Listener<ReadHead<$T>> $dated_el = $el;
@@ -235,9 +236,9 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		private void waitForClose() {
-			synchronized ($closed) {
+			synchronized ($closeMonitor) {
 				while (!isClosed())
-					X.wait($closed);
+					X.wait($closeMonitor);
 			}
 		}
 	}
@@ -318,7 +319,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $closed[0];
+			return $closed;
 		}
 		
 		/**
