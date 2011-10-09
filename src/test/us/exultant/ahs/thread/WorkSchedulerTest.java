@@ -264,7 +264,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	 */
 	private class TestNonblockingManyWorkSingleSource extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler();
-		public final int HIGH = 1000;
+		public final int HIGH = 1000000;
 		public final int WTC = 32;
 		
 		private final Pipe<Integer> $pipe = new Pipe<Integer>();
@@ -277,7 +277,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 
 			$log.trace("creating work targets");
 			for (int $i = 0; $i < WTC; $i++)
-				$wt[$i] = new Work();
+				$wt[$i] = new Work($i);
 			$log.trace("scheduling work targets");
 			for (int $i = 0; $i < WTC; $i++)
 				$wf[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
@@ -287,7 +287,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				boolean $wonOnce = false;
 				for (int $i = 0; $i < WTC; $i++) {
 					Integer $ans = $wf[$i].get();
-					$log.debug("final result of work target "+$i+" ("+$wt[$i]+"): "+$ans);
+					$log.debug("final result of work target "+$i+": "+$ans);
 					if ($ans != null && $ans == HIGH) {
 						assertFalse("More than one WorkTarget finished with the high value.", $wonOnce);
 						$wonOnce = true;
@@ -302,10 +302,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			return null;
 		}
-		private class Work implements WorkTarget<Integer> { 
+		private class Work implements WorkTarget<Integer> {
+			public Work(int $name) { this.$name = $name; }
+			private final int $name;
 			public synchronized Integer call() {
 				Integer $move = $pipe.SRC.readNow();
-				$log.trace(this+" pulled "+$move);
+				$log.trace("WT"+$name+" pulled "+$move);
 				return $move;
 			}
 			public synchronized boolean isReady() {

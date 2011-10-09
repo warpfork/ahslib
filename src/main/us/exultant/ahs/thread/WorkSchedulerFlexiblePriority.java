@@ -1,7 +1,6 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.log.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -36,7 +35,10 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
 		// check doneness; try to transition immediate to FINISHED if is done.
-		if ($fut.$work.isDone()) $fut.$sync.tryFinish(false, null, null);	//FIXME:AHS:THREAD: this should be allowed to fail completely if the work is currently running.
+		if ($fut.$work.isDone()) {
+			boolean $causedFinish = $fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
+//			$log.trace($fut+" is done; caused finish = "+$causedFinish);
+		}
 		
 		// just push this into the set of requested updates.
 		$updatereq.add($fut);
@@ -53,7 +55,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private Thread				$leader		= null;
 	private final Condition			$available	= $lock.newCondition();
 	
-	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
+//	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
 	
 	
 	private void worker_cycle() throws InterruptedException {
@@ -80,26 +82,35 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			
 			// run the work we pulled out.
 			//    note that we could check doneness right before this, but what would be the point?  another thread can make us done at any given quanta of time here.
+//			$log.trace("selected "+$chosen+" as work");
 			boolean $requiresMoar = $chosen.$sync.scheduler_power();
 			
 			// requeue the work for future attention if necessary
 			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
+//				$log.trace($chosen+" requests moar");
+//				$log.trace("unready: "+$unready.toString());
 				
-				// okay, NOW we check it for doneness again -- it's no longer RUNNING, but someone may have called an update on it that would have noticed doneness but was ignored because of the RUNNING.
-				if ($chosen.$work.isDone()) {
-					$chosen.$sync.tryFinish(false, null, null);
-					// it's actually possible for another thread to do the finish before the above line gets to it (since obviously the scheduler_power method released this guy back to WAITING state)
-					//  and that's fine.  regardless of whether or not our finish call above is the one to do it, this task is done and can be dropped.
-					continue;
-				}
-				
-				if ($chosen.$sync.scheduler_shift()) {
-					$scheduled.add($chosen);
-				} else {
-					if ($chosen.getScheduleParams().isUnclocked())
-						$unready.add($chosen);
-					else
-						$delayed.add($chosen);
+				$lock.lockInterruptibly();
+				try {
+					if ($chosen.$sync.scheduler_shift()) {
+						$scheduled.add($chosen);
+					} else {
+						// okay, NOW we check it for doneness again (for two reasons):
+						//   - it's no longer RUNNING, but someone may have called an update on it that would have noticed doneness but was ignored because of the RUNNING.
+						//   - we've just checked readiness (within that shift call), and if we checked doneness before that, we could get something stuck pretty firmly in the unready pile.
+						if ($chosen.$work.isDone()) {
+							$chosen.$sync.tryFinish(false, null, null);
+							// it's actually possible for another thread to do the finish before the above line gets to it (since obviously the scheduler_power method released this guy back to WAITING state)
+							//  and that's fine.  regardless of whether or not our finish call above is the one to do it, this task is done and can be dropped.
+							continue;
+						}
+						if ($chosen.getScheduleParams().isUnclocked())
+							$unready.add($chosen);
+						else
+							$delayed.add($chosen);
+					}
+				} finally {
+					$lock.unlock();
 				}
 			} else {
 				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
@@ -126,11 +137,11 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 */	// actually, not sure about that lock.  it doesn't cause problems if we keep it listed as scheduled even if its not in that heap for a moment, i think.  and either of the following transitions would be followed by our relinquishment anyway, i think.  though if we hit FINISHED, CANCELLED, or make it directly into WAITING, then we'll have to sink right back into this, so we might as well not leave ourselves open to contention.
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
 		try { for (;;) {
-			$log.trace("  ************  ");
-			$log.trace("      delayed.size\t"+$delayed.$size);
-			$log.trace("    scheduled.size\t"+$scheduled.$size);
-			$log.trace("      unready.size\t"+$unready.size());
-			$log.trace("    updatereq.size\t"+$updatereq.size());
+//			$log.trace("  ************  ");
+//			$log.trace("      delayed.size\t"+$delayed.$size);
+//			$log.trace("    scheduled.size\t"+$scheduled.$size);
+//			$log.trace("      unready.size\t"+$unready.size());
+//			$log.trace("    updatereq.size\t"+$updatereq.size());
 			
 			// offer to shift any unclocked tasks that have had updates requested
 			worker_pollUpdates();
@@ -138,13 +149,13 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			// shift any clock-based tasks that need no further delay into the scheduled heap.  note the time until the next of those clocked tasks will be delay-free.
 			long $delay = worker_pollDelayed();
 			
-			$log.trace("  **POSTSHIFT* ");
-			$log.trace("             DELAY\t"+TimeUnit.NANOSECONDS.toMillis($delay));
-			$log.trace("      delayed.size\t"+$delayed.$size);
-			$log.trace("    scheduled.size\t"+$scheduled.$size);
-			$log.trace("      unready.size\t"+$unready.size());
-			$log.trace("    updatereq.size\t"+$updatereq.size());
-			$log.trace("  ************  ");
+//			$log.trace("  **POSTSHIFT* ");
+//			$log.trace("             DELAY\t"+TimeUnit.NANOSECONDS.toMillis($delay));
+//			$log.trace("      delayed.size\t"+$delayed.$size);
+//			$log.trace("    scheduled.size\t"+$scheduled.$size);
+//			$log.trace("      unready.size\t"+$unready.size());
+//			$log.trace("    updatereq.size\t"+$updatereq.size());
+//			$log.trace("  ************  ");
 			
 			// get work now, if we have any.
 			WorkFuture<?> $first = $scheduled.peek();
