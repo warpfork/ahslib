@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
-		super(new Logger(Logger.LEVEL_TRACE), true);
+		super(new Logger(Logger.LEVEL_DEBUG), true);
 	}
 	
 	public WorkSchedulerTest(Logger $log, boolean $enableConfirmation) {
@@ -194,7 +194,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			try {
 				for (int $i = 1; $i < WTC; $i++) {
 					$wf[$i-1].get();
-					$log.trace("task with "+$i+"00ms delay finished");
+					$log.trace(this, "task with "+$i+"00ms delay finished");
 					assertFalse($wf[$i].isDone());
 				}
 			}
@@ -205,7 +205,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		private class Work implements Runnable {
 			public void run() {	// the run-once functionality is just provided by the RunnableWrapper class.
-				$log.trace("task running");
+				$log.trace(this, "task running");
 			}
 		}
 	}
@@ -239,7 +239,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			public int x = 10;
 			public synchronized Integer call() {
 				x--;
-				$log.trace("reached count "+x);
+				$log.trace(this, "reached count "+x);
 				return x;
 			}
 			public synchronized boolean isReady() {
@@ -260,11 +260,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 	 * 
 	 * This is a very major test, since it deals with WorkTarget who have to notice their doneness and finish concurrently instead of at the completion of a normal run (probably).
 	 * 
-	 * This also tests (if indirectly) consistent results from WorkTarget that receive concurrent finishes (but I'd recommend running it numerous times if you want to feel confident of that).
+	 * This also tests (if indirectly) consistent results from WorkTarget that receive concurrent finishes (but I'd recommend running it numerous times if you want to feel confident of that.  And by numerous times, I mean many thousands of times.).
 	 */
 	private class TestNonblockingManyWorkSingleSource extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler();
-		public final int HIGH = 1000000;
+		public final int HIGH = 1000;
 		public final int WTC = 32;
 		
 		private final Pipe<Integer> $pipe = new Pipe<Integer>();
@@ -275,19 +275,19 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public Object call() {
 			feedPipe();
 
-			$log.trace("creating work targets");
+			$log.trace(this, "creating work targets");
 			for (int $i = 0; $i < WTC; $i++)
 				$wt[$i] = new Work($i);
-			$log.trace("scheduling work targets");
+			$log.trace(this, "scheduling work targets");
 			for (int $i = 0; $i < WTC; $i++)
 				$wf[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
 			
-			$log.trace("waiting for work future completion");
+			$log.trace(this, "waiting for work future completion");
 			try {
 				boolean $wonOnce = false;
 				for (int $i = 0; $i < WTC; $i++) {
 					Integer $ans = $wf[$i].get();
-					$log.debug("final result of work target "+$i+": "+$ans);
+					$log.debug(this, "final result of work target "+$i+": "+$ans);
 					if ($ans != null && $ans == HIGH) {
 						assertFalse("More than one WorkTarget finished with the high value.", $wonOnce);
 						$wonOnce = true;
@@ -307,7 +307,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			private final int $name;
 			public synchronized Integer call() {
 				Integer $move = $pipe.SRC.readNow();
-				$log.trace("WT"+$name+" pulled "+$move);
+				$log.trace(this, "WT"+$name+" pulled "+$move);
 				return $move;
 			}
 			public synchronized boolean isReady() {
@@ -321,12 +321,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 		protected void feedPipe() {
-			$log.trace("feed started");
+			$log.trace(this, "feed started");
 			for (int $i = 1; $i <= HIGH; $i++)
 				$pipe.SINK.write($i);
-			$log.trace("feed complete");
+			$log.trace(this, "feed complete");
 			$pipe.SINK.close();
-			$log.trace("feed closed");
+			$log.trace(this, "feed closed");
 		}
 	}
 	

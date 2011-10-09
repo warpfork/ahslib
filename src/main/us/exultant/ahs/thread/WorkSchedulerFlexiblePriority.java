@@ -1,6 +1,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.log.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -55,7 +56,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private Thread				$leader		= null;
 	private final Condition			$available	= $lock.newCondition();
 	
-//	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
+	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
 	
 	
 	private void worker_cycle() throws InterruptedException {
@@ -84,10 +85,10 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			//    note that we could check doneness right before this, but what would be the point?  another thread can make us done at any given quanta of time here.
 //			$log.trace("selected "+$chosen+" as work");
 			boolean $requiresMoar = $chosen.$sync.scheduler_power();
+			$log.trace($chosen+" requires moar? "+$requiresMoar);
 			
 			// requeue the work for future attention if necessary
 			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
-//				$log.trace($chosen+" requests moar");
 //				$log.trace("unready: "+$unready.toString());
 				
 				$lock.lockInterruptibly();
@@ -104,6 +105,9 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 							//  and that's fine.  regardless of whether or not our finish call above is the one to do it, this task is done and can be dropped.
 							continue;
 						}
+						// now, right here, it's possible for a task to become done after we checked doneness and found undone.
+						//  this will cause us to momentarily put the task in the unready pile.
+						//   and that's not wrong, because we make absolutely sure that if a doneness request came in at any point while we were powering the task or doing this post-power sorting, it stays in the updatereq pile until we can deal with it properly.
 						if ($chosen.getScheduleParams().isUnclocked())
 							$unready.add($chosen);
 						else
@@ -153,7 +157,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 //			$log.trace("             DELAY\t"+TimeUnit.NANOSECONDS.toMillis($delay));
 //			$log.trace("      delayed.size\t"+$delayed.$size);
 //			$log.trace("    scheduled.size\t"+$scheduled.$size);
-//			$log.trace("      unready.size\t"+$unready.size());
+			$log.trace("      unready.size\t"+$unready.size());
 //			$log.trace("    updatereq.size\t"+$updatereq.size());
 //			$log.trace("  ************  ");
 			
@@ -185,6 +189,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				$unready.remove($key);
 				$scheduled.add($key);
 			} else {
+				if ($key.$work.isDone())	// you must to check this again after a shift says no.  i don't feel like explaining why.
+					$key.$sync.tryFinish(false, null, null);
 				switch ($key.getState()) {
 					case FINISHED:
 					case CANCELLED:
