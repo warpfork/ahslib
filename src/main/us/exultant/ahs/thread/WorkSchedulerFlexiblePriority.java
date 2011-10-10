@@ -103,6 +103,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 						}
 						// bit of a dodgy spot here: tasks are allowed to become done without notification (i.e. a readhead that was closed long ago but only emptied now due to a concurrent read; a task based on eating from that thing becomes done, but doesn't notice it at all).  And they're allowed to do that at any time after they're in the unready pool, too.  :/
 						//    There are two ways of dealing with something like that: having every read from a RH check for doneness, and everyone subscribe to the RH so we could notify for them (which is an INSANE degree of complication to add to the API, and completely useless for a lot of other applications of pipes)... Or, do periodic cleanup.
+						// oh, and also someone can do a concurrent cancel before that scheduler_shift attempt, which will bring us here and also leave us with an awkward cancelled task stuck in our unready heap (which isn't as bad as a done-but-not-finished task, since no one can get stuck waiting on it, but is still a garbage problem).
 						if ($chosen.getScheduleParams().isUnclocked()) {
 							$unready.add($chosen);
 						} else
