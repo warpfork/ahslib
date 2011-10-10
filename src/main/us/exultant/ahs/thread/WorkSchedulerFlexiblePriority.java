@@ -19,6 +19,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}, $threadCount);
 		
 		ThreadUtil.startAll($threads);
+		
+		schedule(new RelentlessGC(), ScheduleParams.makeFixedDelay(2));
 	}
 	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
@@ -311,6 +313,30 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			if ($newCapacity < 0) // overflow
 			$newCapacity = Integer.MAX_VALUE;
 			$queue = Arrays.copyOf($queue, $newCapacity);
+		}
+	}
+	
+	private class RelentlessGC implements WorkTarget<Void> {
+		public Void call() throws Exception {
+			$lock.lockInterruptibly();
+			try {
+				$updatereq.addAll($unready);
+			} finally {
+				$lock.unlock();
+			}
+			return null;
+		}
+
+		public boolean isDone() {
+			return false;
+		}
+		
+		public boolean isReady() {
+			return true;
+		}
+
+		public int getPriority() {
+			return -1000;
 		}
 	}
 }
