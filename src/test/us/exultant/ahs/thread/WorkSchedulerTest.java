@@ -6,6 +6,13 @@ import us.exultant.ahs.test.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * A useful statement is this:
+ * <tt>i=0; while true; do i=$(math $i + 1); echo $i; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; tail -n 1 lol; echo; done</tt>
+ * 
+ * @author hash
+ * 
+ */
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
 		super(new Logger(Logger.LEVEL_DEBUG), true);

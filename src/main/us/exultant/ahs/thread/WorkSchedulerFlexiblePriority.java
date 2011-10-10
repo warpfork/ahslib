@@ -37,8 +37,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	public <$V> void update(WorkFuture<$V> $fut) {
 		// check doneness; try to transition immediate to FINISHED if is done.
 		if ($fut.$work.isDone()) {
-			boolean $causedFinish = $fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
-//			$log.trace($fut+" is done; caused finish = "+$causedFinish);
+			$fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
+			$log.trace(this, "FINAL UPDATE REQUESTED for "+$fut);
 		}
 		
 		// just push this into the set of requested updates.
@@ -61,7 +61,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	private void worker_cycle() throws InterruptedException {
 		WorkFuture<?> $chosen;
-		for (;;) {	// we repeat this loop... well, forever, really.
+		doWork: for (;;) {	// we repeat this loop... well, forever, really.
 			
 			// lock until we can pull someone out who's state is scheduled.
 			//    delegate our attention to processing update requests and waiting for delay expirations as necessary.
@@ -69,8 +69,12 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			try { retry: for (;;) {
 				WorkFuture<?> $wf = worker_acquireWork();	// this may block.
 				switch ($wf.getState()) {
-					case FINISHED: continue retry;	// and drop it
-					case CANCELLED: continue retry;	// and drop it
+					case FINISHED:
+						hearTaskDrop($wf);
+						continue retry;
+					case CANCELLED:
+						hearTaskDrop($wf);
+						continue retry;
 					case SCHEDULED:
 						$chosen = $wf;
 						break retry;
@@ -82,35 +86,26 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			}
 			
 			// run the work we pulled out.
-			//    note that we could check doneness right before this, but what would be the point?  another thread can make us done at any given quanta of time here.
-//			$log.trace("selected "+$chosen+" as work");
 			boolean $requiresMoar = $chosen.$sync.scheduler_power();
-			$log.trace($chosen+" requires moar? "+$requiresMoar);
 			
 			// requeue the work for future attention if necessary
-			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
-//				$log.trace("unready: "+$unready.toString());
-				
+			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.				
 				$lock.lockInterruptibly();
 				try {
 					if ($chosen.$sync.scheduler_shift()) {
 						$scheduled.add($chosen);
 					} else {
-						// okay, NOW we check it for doneness again (for two reasons):
-						//   - it's no longer RUNNING, but someone may have called an update on it that would have noticed doneness but was ignored because of the RUNNING.
-						//   - we've just checked readiness (within that shift call), and if we checked doneness before that, we could get something stuck pretty firmly in the unready pile.
 						if ($chosen.$work.isDone()) {
-							$chosen.$sync.tryFinish(false, null, null);
-							// it's actually possible for another thread to do the finish before the above line gets to it (since obviously the scheduler_power method released this guy back to WAITING state)
-							//  and that's fine.  regardless of whether or not our finish call above is the one to do it, this task is done and can be dropped.
-							continue;
+							boolean $causedFinish = $chosen.$sync.tryFinish(false, null, null);
+							$log.trace(this, "isDone "+$chosen+" noticed in worker_cycle() after powering it; we caused finish "+$causedFinish);
+							hearTaskDrop($chosen);
+							continue doWork;
 						}
-						// now, right here, it's possible for a task to become done after we checked doneness and found undone.
-						//  this will cause us to momentarily put the task in the unready pile.
-						//   and that's not wrong, because we make absolutely sure that if a doneness request came in at any point while we were powering the task or doing this post-power sorting, it stays in the updatereq pile until we can deal with it properly.
-						if ($chosen.getScheduleParams().isUnclocked())
+						// bit of a dodgy spot here: tasks are allowed to become done without notification (i.e. a readhead that was closed long ago but only emptied now due to a concurrent read; a task based on eating from that thing becomes done, but doesn't notice it at all).  And they're allowed to do that at any time after they're in the unready pool, too.  :/
+						//    There are two ways of dealing with something like that: having every read from a RH check for doneness, and everyone subscribe to the RH so we could notify for them (which is an INSANE degree of complication to add to the API, and completely useless for a lot of other applications of pipes)... Or, do periodic cleanup.
+						if ($chosen.getScheduleParams().isUnclocked()) {
 							$unready.add($chosen);
-						else
+						} else
 							$delayed.add($chosen);
 					}
 				} finally {
@@ -118,7 +113,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				}
 			} else {
 				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
-				/* no-op */
+				hearTaskDrop($chosen);
 			}
 		}
 	}
@@ -138,28 +133,14 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * The lock much be acquired during this entire function, in order to make
 	 * possible the correctly atomic shifts to RUNNING or WAITING that may be carried
 	 * out immediately following this function.
-	 */	// actually, not sure about that lock.  it doesn't cause problems if we keep it listed as scheduled even if its not in that heap for a moment, i think.  and either of the following transitions would be followed by our relinquishment anyway, i think.  though if we hit FINISHED, CANCELLED, or make it directly into WAITING, then we'll have to sink right back into this, so we might as well not leave ourselves open to contention.
+	 */
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
 		try { for (;;) {
-//			$log.trace("  ************  ");
-//			$log.trace("      delayed.size\t"+$delayed.$size);
-//			$log.trace("    scheduled.size\t"+$scheduled.$size);
-//			$log.trace("      unready.size\t"+$unready.size());
-//			$log.trace("    updatereq.size\t"+$updatereq.size());
-			
 			// offer to shift any unclocked tasks that have had updates requested
 			worker_pollUpdates();
 			
 			// shift any clock-based tasks that need no further delay into the scheduled heap.  note the time until the next of those clocked tasks will be delay-free.
 			long $delay = worker_pollDelayed();
-			
-//			$log.trace("  **POSTSHIFT* ");
-//			$log.trace("             DELAY\t"+TimeUnit.NANOSECONDS.toMillis($delay));
-//			$log.trace("      delayed.size\t"+$delayed.$size);
-//			$log.trace("    scheduled.size\t"+$scheduled.$size);
-			$log.trace("      unready.size\t"+$unready.size());
-//			$log.trace("    updatereq.size\t"+$updatereq.size());
-//			$log.trace("  ************  ");
 			
 			// get work now, if we have any.
 			WorkFuture<?> $first = $scheduled.peek();
@@ -181,20 +162,30 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}
 	}
 	
+	/**
+	 * Drains the {@link #$updatereq} set and tries to shift those work targets from
+	 * the {@link #$unready} heap and into the {@link #$scheduled} heap. This must be
+	 * called only while holding the lock.
+	 */
 	private void worker_pollUpdates() {
 		final Iterator<WorkFuture<?>> $itr = $updatereq.iterator();
 		while ($itr.hasNext()) {
-			WorkFuture<?> $key = $itr.next(); $itr.remove();
-			if ($key.$sync.scheduler_shift()) {
-				$unready.remove($key);
-				$scheduled.add($key);
+			WorkFuture<?> $wf = $itr.next();
+			if ($wf.$sync.scheduler_shift()) {
+				$itr.remove();
+				if ($unready.remove($wf))
+					$scheduled.add($wf);
 			} else {
-				if ($key.$work.isDone())	// you must to check this again after a shift says no.  i don't feel like explaining why.
-					$key.$sync.tryFinish(false, null, null);
-				switch ($key.getState()) {
+				if ($wf.$work.isDone())	{
+					boolean $causedFinish = $wf.$sync.tryFinish(false, null, null);
+					$log.trace(this, "isDone "+$wf+" noticed in worker_pollUpdates(); we caused finish "+$causedFinish);
+				}
+				switch ($wf.getState()) {
 					case FINISHED:
 					case CANCELLED:
-						$unready.remove($key);
+						$itr.remove();
+						$unready.remove($wf);
+						hearTaskDrop($wf);
 					default: // still just waiting, leave it there
 						continue;
 				}
@@ -220,13 +211,14 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			$key = $delayed.peek();
 			if ($key == null) return Long.MAX_VALUE;	// the caller should just wait indefinitely for notification of new tasks entering the system, because we're empty.
 			if (!$key.$sync.scheduler_shift()) return $key.getScheduleParams().getDelay();
-//			X.saye("pushing a delayed task to scheduled");
 			$delayed.poll();	// get it outta there
 			$scheduled.add($key);	
 		}
 	}
 	
-	
+	protected void hearTaskDrop(WorkFuture<?> $wf) {
+		X.sayet(X.toString(new Exception()));
+	}
 	
 	
 	
