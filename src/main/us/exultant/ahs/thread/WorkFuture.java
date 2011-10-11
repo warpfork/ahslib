@@ -1,6 +1,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -92,6 +93,10 @@ class WorkFuture<$V> implements Future<$V> {
 	
 	public boolean cancel(boolean $mayInterruptIfRunning) {
 		return $sync.cancel($mayInterruptIfRunning);
+	}
+	
+	public String toString() {
+		return super.toString()+"[work:"+$work+"]";
 	}
 	
 	
@@ -236,6 +241,7 @@ class WorkFuture<$V> implements Future<$V> {
 		 */
 		//FIXME:AHS:THREAD: we have to notice doneness eventually even if no update was called and isReady is now returning false because it's done!  it's a bit troublesome since we'll never bubble to the top of the scheduled heap.  though really, the most straightforward fix isn't at all wrong: just run low-priority low-frequency fixed-rate task that calls update on all of the stuff in the waiting pool.  only question with that is who decides exactly what priority and how rate that should be, since it's clearly one of those things we're really only want one of per vm.
 		boolean scheduler_shift() {
+//			if ($work.getClass() == WorkSchedulerTest.TestNonblockingLeaderFollower.WorkFollower.class) X.sayet("wat "+getState()+"\n"+X.toString(new Throwable()));
 			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState(State.WAITING.ordinal(), State.SCHEDULED.ordinal());
 			// the CAS will occur if:
 			//   - the task if delay-free (if clocked) or ready (if unclocked).

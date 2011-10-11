@@ -183,7 +183,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		while ($itr.hasNext()) {
 			WorkFuture<?> $wf = $itr.next(); $itr.remove();
 			if ($wf.$sync.scheduler_shift()) {
-				if ($unready.remove($wf))
+				//if ($unready.remove($wf))	//FIXME this appears to be poo.  which is odd, since things shouldn't really not be in there when this happens... that would imply we dropped the ball somewhere already and that remembrance of this task is purely from... uh, updates.  which isn't even remembrance.
 					$scheduled.add($wf);
 			} else {
 				if ($wf.$work.isDone())	{
@@ -226,7 +226,22 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	protected void hearTaskDrop(WorkFuture<?> $wf) {
-//		X.sayet(X.toString(new Exception()));
+		X.sayet($wf + "\n" + X.toString(new Exception()));
+	}
+	
+	protected void echoSecrets() {
+		$lock.lock();
+		try {
+			X.sayet("\n" +
+				"\t  $delayed: " + $delayed.$size    + "\n" +
+				"\t$scheduled: " + $scheduled.$size  + "\n" +
+				"\t  $unready: " + $unready.size()   + "\n" +
+				"\t$updatereq: " + $updatereq.size() + "\n" +
+				""
+			);
+		} finally {
+			$lock.unlock();
+		}
 	}
 	
 	
@@ -345,6 +360,10 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 
 		public int getPriority() {
 			return -1000;
+		}
+		
+		public String toString() {
+			return "WorkSchedulerFlexiblePriority-RelentlessGC";
 		}
 	}
 }

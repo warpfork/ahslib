@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  */
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
-		super(new Logger(Logger.LEVEL_DEBUG), true);
+		super(new Logger(Logger.LEVEL_TRACE), true);
 	}
 	
 	public WorkSchedulerTest(Logger $log, boolean $enableConfirmation) {
@@ -24,11 +24,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
-//		$tests.add(new TestRunOnce());
-//		$tests.add(new TestWtAlwaysReady());
-//		$tests.add(new TestNonblockingLeaderFollower());
-//		$tests.add(new TestScheduleSingleDelayMany());
-//		$tests.add(new TestScheduleFixedRate());
+		$tests.add(new TestRunOnce());
+		$tests.add(new TestWtAlwaysReady());
+		$tests.add(new TestNonblockingLeaderFollower());
+		$tests.add(new TestScheduleSingleDelayMany());
+		$tests.add(new TestScheduleFixedRate());
 		$tests.add(new TestNonblockingManyWorkSingleSource());
 		return $tests;
 	}
@@ -114,7 +114,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	/** Test two work targets, once of which must always follow the other (in other words, one is always ready, but the other changes readiness based on the progress of the first). */
-	private class TestNonblockingLeaderFollower extends TestCase.Unit {
+	public class TestNonblockingLeaderFollower extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler();
 		final int HIGH = 10000;
 		final int LOW = 100;
@@ -159,8 +159,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 			public int getPriority() {
 				return 0;
 			}
+			public String toString() {
+				return "TestNonblockingLeaderFollower-WorkLeader";
+			}
 		}
-		private class WorkFollower implements WorkTarget<Void> {
+		public class WorkFollower implements WorkTarget<Void> {
 			public volatile WorkLeader $leader;
 			public volatile int x = HIGH;
 			public synchronized Void call() {
@@ -176,6 +179,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 			public int getPriority() {
 				return 0;
+			}
+			public String toString() {
+				return "TestNonblockingLeaderFollower-WorkFollower";
 			}
 		}
 	}
@@ -325,6 +331,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 			public int getPriority() {
 				return 0;
+			}
+			public String toString() {
+				return us.exultant.ahs.codec.eon.Eon.getKlass(this)+":[WT:"+$name+";];";
 			}
 		}
 		protected void feedPipe() {
