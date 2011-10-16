@@ -12,22 +12,11 @@ public class StandardTerminal implements Terminal {
 		public static final StandardTerminal INSTANCE = new StandardTerminal();
 	}
 	private StandardTerminal() {
+		Stty.getAngry();
+		
 		$console = System.console();
 		$cursor = new StdCursor();
 		$palette = new StdPalette();
-		
-		setEchoMode(false);
-		// Add a shutdown hook to restore console's echo state when we exit.
-		Runtime.getRuntime().addShutdownHook(new Thread() { public void run() { setEchoMode(true); } });
-		
-		try {
-			//$restoreStty = IOForge.readString(Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "stty -g" }).getInputStream());
-			Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "stty raw iutf8 icrnl opost isig </dev/tty" }).waitFor();
-		} catch (InterruptedException $e) {
-			throw new Error("failed to set console to raw mode", $e);
-		} catch (IOException $e) {
-			throw new Error("failed to set console to raw mode", $e);
-		}
 		
 		clear();
 	}
@@ -62,7 +51,21 @@ public class StandardTerminal implements Terminal {
 	}
 	
 	
-
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public class StdCursor implements Cursor {
 		public void place(int $x, int $y) {
 			$console.printf(TermCodes.CSI+$y+";"+$x+"f");
