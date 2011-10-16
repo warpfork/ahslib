@@ -91,7 +91,7 @@ public class StandardTerminal implements Terminal {
 		try {
 			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput cols" }).getInputStream()).nextInt();
 		} catch (IOException $e) {
-			return -1;
+			return 80;
 		}
 	}
 
@@ -99,7 +99,7 @@ public class StandardTerminal implements Terminal {
 		try {
 			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput lines" }).getInputStream()).nextInt();
 		} catch (IOException $e) {
-			return -1;
+			return 24;
 		}
 	}
 }
