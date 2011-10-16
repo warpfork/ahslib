@@ -15,14 +15,14 @@ public class Test {
 		// print top line, listing the background colors
 		T.print(Strings.padLeftToWidth(""," ",13));
 		for (Color $bg : Color.values()) {
-			T.setPalette(new Palette(Color.CLEAR, $bg));
+			T.setPalette(new Palette(Color.CLEAR, $bg, true, true));
 			T.print(Strings.padRightToWidth("  bg: "+$bg+" ",14));
 		}
 		
 		T.cursor().lineNext(1);
 		for (Color $fg : Color.values()) {
 			// print front of line, listing the forground color
-			T.setPalette(new Palette($fg, Color.CLEAR));
+			T.setPalette(new Palette($fg, Color.CLEAR, true, null));
 			T.print(Strings.padLeftToWidth(" fg: "+$fg+" ",13));
 			
 			// print the table body
