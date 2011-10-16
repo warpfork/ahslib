@@ -58,9 +58,63 @@ public class Test {
 			while (true) {
 				if ($r.ready()) {
 					$r.read($cbuf);
-					T.print("\r");
-					T.cursor().shiftRight(2);
-					T.print(new String($cbuf));
+					switch ($cbuf[0]) {
+						// a bunch of these are just too weird for us to ever think about echoing
+						case 0x00:	// NUL
+						case 0x01:	// SOH
+						case 0x02:	// STX
+						case 0x03:	// ETX
+						case 0x04:	// EOT
+						case 0x05:	// ENQ
+						case 0x06:	// ACK
+						case 0x07:	// BEL
+						case 0x08:	// BS
+						case 0x09:	// HT
+						case 0x0B:	// VT
+						case 0x0C:	// FF
+						case 0x0E:	// SO
+						case 0x0F:	// SI
+						case 0x10:	// DLE
+						case 0x11:	// DC1
+						case 0x12:	// DC2
+						case 0x13:	// DC3
+						case 0x14:	// DC4
+						case 0x15:	// NAK
+						case 0x16:	// SYN
+						case 0x17:	// ETB
+						case 0x18:	// CAN
+						case 0x19:	// EM
+						case 0x1A:	// SUB
+						case 0x1C:	// FS
+						case 0x1D:	// GS
+						case 0x1E:	// RS
+						case 0x1F:	// US
+						
+						// these we might usually just echo, but will certainly have to watch carefully:
+						case 0x1B:	// ESC
+							while (true) {
+								if (!$r.ready()) continue;
+								switch ($r.read()) {
+									case 'A':
+										T.cursor().shiftUp(1);
+								}
+								break;
+							}
+						case 0x0D:	// CR
+						case 0x0A:	// LF
+							T.print("*");
+							break;
+						case 0x7F:	// DEL
+						case 0x20:	// SPACE
+						default:
+							T.print("\r");
+							T.cursor().shiftRight(2);
+							T.print(new String($cbuf));
+						// in general, we'd do well to know what printing a character is going to do to our position on the screen, and as long as we have that we'd be fine.  a little easier said than done, though -- i think i'm going to ignore it for the forseeable future, and as long as i design the text boxes in the terminal.gui subpackage correctly, i should be able to implement it transparently later without breaking anything legacy.
+					}
+					// hectic bits:
+					//   - you can get more than one char of input at a time if someone copy-pastes in, and that seems to cause trouble.
+					//   - erm, LOTS of stuff starts with an escape code.  like arrow keys.  which show up funny if you don't do the single-char reporting switch quite right, but cause exit with what i've written right now.
 				}
 			}
 		} catch (IOException $e) {
