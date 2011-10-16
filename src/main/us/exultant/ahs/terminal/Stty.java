@@ -1,16 +1,24 @@
 package us.exultant.ahs.terminal;
 
+import us.exultant.ahs.util.*;
 import us.exultant.ahs.io.*;
 import java.io.*;
 
 class Stty {
 	public static void getAngry() {
+		if (System.console() == null) throw new MajorBug("this program is not attached to a console, but is trying to set console modes");
+		
 		// save the console settings from before we start mucking things up
 		final String $restoreStty = stty("-g");
 		
 		// Add a shutdown hook to restore console's state when we exit.
-		Runtime.getRuntime().addShutdownHook(new Thread() { public void run() { stty($restoreStty); } });
-		
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				stty($restoreStty);
+				System.console().printf(TermCodes.CSI+"f"+TermCodes.REND_RESET+TermCodes.CLEAR_SCREEN);
+			}
+		});
+
 		// muck things up
 		stty(
 				"-icanon min 1" +	// set the console to be character-buffered instead of line-buffered

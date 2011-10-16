@@ -1,7 +1,6 @@
 package us.exultant.ahs.terminal;
 
 import java.io.*;
-import java.lang.reflect.*;
 import java.util.*;
 
 public class StandardTerminal implements Terminal {
@@ -15,60 +14,35 @@ public class StandardTerminal implements Terminal {
 		Stty.getAngry();
 		
 		$console = System.console();
-		$cursor = new StdCursor();
-		$palette = new StdPalette();
+		$cursor = new OurCursor();
 		
 		clear();
-	}
-	/** deal with the crappitude of taking control of echos.  I'm not sure i expect this to work on jvm's other than sun's, since it relies on reflecting to a private method. */
-	protected void setEchoMode(boolean $on) {
-		try {
-			Method $mecho = Console.class.getDeclaredMethod("echo", boolean.class);
-			$mecho.setAccessible(true);
-			$mecho.invoke(null, $on);
-		} catch (Exception $e) {
-			throw new Error("Cannot set the echo mode of the Console -- is this a Sun JVM?", $e);
-		}
 	}
 	
 	private final Console	$console;
 	private final Cursor	$cursor;
-	private final Palette	$palette;
+	private Palette		$palette;
 	
-	public Cursor cursor() {
-		return $cursor;
+	public void print(String $s) {
+		$console.printf($s);
 	}
 	
-	public Palette palette() {
+	public Palette getPalette() {
 		return $palette;
 	}
 	
-	public void clear() {
-		$console.printf(
-				TermCodes.CLEAR_SCREEN+	// duh
-				TermCodes.CSI+"f"	// also reset cursor to 1,1 (some terminals do this with just the clear screen code, so we shoot for consistency here) (we don't use the normal function for cursor positioning because we can skip some characters by taking advantage of the "1;1" default args).
-		);
+	public Palette setPalette(Palette $p) {
+		Palette $v = $palette;
+		$palette = $p;
+		$console.printf($p.code());
+		return $v;
 	}
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	public class StdCursor implements Cursor {
+	private class OurCursor implements Cursor {
 		public void place(int $x, int $y) {
-			$console.printf(TermCodes.CSI+$y+";"+$x+"f");
+			$console.printf(TermCodes.CSI+(($y<1)?"":$y)+";"+(($x<1)?"":$x)+"f");
 		}
 		
 		public void shiftUp(int $n) {
@@ -88,47 +62,31 @@ public class StandardTerminal implements Terminal {
 		}
 		
 		public void lineNext(int $n) {
+			shiftDown($n);
+			$console.printf("\r");
 			// xterm supports this, but konsole doesn't.  i suppose i could check for compliance at startup and emulate it with asking current location and then doing a place, but... i really intend to avoid that sort of thing as strongly as possible.
-			$console.printf(TermCodes.CSI+$n+"E");
+			//$console.printf(TermCodes.CSI+$n+"E");
 		}
 		
 		public void linePrev(int $n) {
+			shiftUp($n);
+			$console.printf("\r");
 			// xterm supports this, but konsole doesn't.  i suppose i could check for compliance at startup and emulate it with asking current location and then doing a place, but... i really intend to avoid that sort of thing as strongly as possible.
-			$console.printf(TermCodes.CSI+$n+"F");
+			//$console.printf(TermCodes.CSI+$n+"F");
 		}
 	}
 	
-	
-	
-	public class StdPalette implements Palette {
-		public void bold(boolean $n) {
-			//TODO
-			
-		}
-		
-		public void blink(boolean $n) {
-			//TODO
-			
-		}
-		
-		public void underline(boolean $n) {
-			//TODO
-			
-		}
-		
-		public void background(Color $c) {
-			//TODO
-			
-		}
-		
-		public void foreground(Color $c) {
-			//TODO
-			
-		}
+	public Cursor cursor() {
+		return $cursor;
 	}
-
-
-
+	
+	public void clear() {
+		$console.printf(
+				TermCodes.CLEAR_SCREEN+	// duh
+				TermCodes.CSI+"f"	// also reset cursor to 1,1 (some terminals do this with just the clear screen code, so we shoot for consistency here) (we don't use the normal function for cursor positioning because we can skip some characters by taking advantage of the "1;1" default args).
+		);
+	}
+	
 	public int getWidth() {
 		try {
 			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput cols" }).getInputStream()).nextInt();

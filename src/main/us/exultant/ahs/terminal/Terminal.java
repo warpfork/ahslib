@@ -1,8 +1,24 @@
 package us.exultant.ahs.terminal;
 
 public interface Terminal {
+	public void print(String $s);
+	
+	public Palette getPalette();
+	
+	public Palette setPalette(Palette $p);
 	
 	public Cursor cursor();
+	
+	/** Clears the drawable area and resets the cursor to the home position at the top left of the screen. */
+	public void clear();
+	
+	/** Returns the width of the drawable area as best as can be determined.  This is a best-effort method -- the return may be -1 if we have no clue, and may not update instantly after the terminal size is externally modified. */
+	public int getWidth();
+	
+	/** Returns the height of the drawable area as best as can be determined.  This is a best-effort method -- the return may be -1 if we have no clue, and may not update instantly after the terminal size is externally modified. */
+	public int getHeight();
+	
+	
 	
 	public static interface Cursor {	// i'd like to be able to have component-like boxes that can confine the cursor... but we're talking about a system that regularly screws up the distinction between input and output channels, and so i'm deeply afraid we really might not be able to do that.
 		/** Places the cursor at an arbitrary horizontal and vertical position.  The values are 1-based and counted in user-space (i.e. increasing {@code $y} is moving down). */
@@ -25,31 +41,21 @@ public interface Terminal {
 	
 	
 	
-	public Palette palette();
-	
-	public static interface Palette {
-		public void bold(boolean $n);
-		public void blink(boolean $n);
-		public void underline(boolean $n);
-		public void background(Color $c);
-		public void foreground(Color $c);
-	}
-	
 	public static enum Color {
-		BLACK(0), RED(1), GREEN(2), YELLOW(3), BLUE(4), MAGENTA(5), CYAN(6), WHITE(7);
+		CLEAR	(9),
+		BLACK	(0),
+		RED	(1),
+		GREEN	(2),
+		YELLOW	(3),
+		BLUE	(4),
+		PURPLE	(5),
+		CYAN	(6),
+		WHITE	(7);
 		
 		Color(int $c) { this.$c = $c; }
 		private final int $c;
-		public int code() { return $c; }	// this happens to be pretty much the same as calling ordinal, but I like my semantics solid.
+		public int code() { return $c; }
 	}
-	
-	
-	
-	public void clear();
-	
-	public int getWidth();
-	
-	public int getHeight();
 	
 	
 	
