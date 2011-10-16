@@ -8,7 +8,7 @@ public class Palette {
 	 * @param $fg
 	 */
 	public Palette(Color $fg) {
-		this($fg, null);
+		this($fg, Color.CLEAR);
 	}
 	
 	/**
@@ -74,7 +74,7 @@ public class Palette {
 		return
 		(($fg == null) ? "" : CSI+"3"+$fg.code()+"m") +
 		(($bg == null) ? "" : CSI+"4"+$bg.code()+"m") +
-		//(($bold == null) ? "" : ($bold) ? CSI+"1;m" : "") +
+		(($bold == null) ? "" : ($bold) ? CSI+"1m" : CSI+"22m") +
 		(($underline == null) ? "" : ($underline) ? REND_UNDERLINE_ON : REND_UNDERLINE_OFF);
 	}
 	
