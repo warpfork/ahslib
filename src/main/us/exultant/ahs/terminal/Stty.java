@@ -10,19 +10,21 @@ class Stty {
 		
 		// save the console settings from before we start mucking things up
 		final String $restoreStty = stty("-g");
+		System.err.println("restore:"+$restoreStty);
 		
 		// Add a shutdown hook to restore console's state when we exit.
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				stty($restoreStty);
+				stty("echo");	// for some reason the restore string doesn't seem to do this (?@!??!)
 				System.console().printf(TermCodes.CSI+"f"+TermCodes.REND_RESET+TermCodes.CLEAR_SCREEN);
 			}
 		});
 
 		// muck things up
 		stty(
-				"-icanon min 1" +	// set the console to be character-buffered instead of line-buffered
-				"-echo"			// disable character echoing
+				"-icanon min 1 " +	// set the console to be character-buffered instead of line-buffered
+				"-echo "		// disable character echoing
 		);	// raw iutf8 icrnl opost isig
 	}
 	
