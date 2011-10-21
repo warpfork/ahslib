@@ -1,5 +1,6 @@
 package us.exultant.ahs.terminal;
 
+import us.exultant.ahs.util.*;
 import java.io.*;
 import java.util.*;
 
@@ -15,6 +16,7 @@ public class StandardTerminal implements Terminal {
 		
 		$console = System.console();
 		$cursor = new OurCursor();
+		cacheDimensions();
 		
 		clear();
 	}
@@ -88,18 +90,35 @@ public class StandardTerminal implements Terminal {
 	}
 	
 	public int getWidth() {
-		try {
-			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput cols" }).getInputStream()).nextInt();
-		} catch (IOException $e) {
-			return 80;
-		}
+		return $dimensions.width;
 	}
-
 	public int getHeight() {
-		try {
-			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput lines" }).getInputStream()).nextInt();
-		} catch (IOException $e) {
-			return 24;
+		return $dimensions.height;
+	}
+	private java.awt.Dimension $dimensions = new java.awt.Dimension(80,24);
+	protected void cacheDimensions() {
+//		try {
+//			$dimensions.width = new Scanner(Runtime.getRuntime().exec(new String[] { "tput cols" }).getInputStream()).nextInt();
+//			$dimensions.height = new Scanner(Runtime.getRuntime().exec(new String[] { "tput lines" }).getInputStream()).nextInt();
+//		} catch (IOException $e) {}
+		
+		// need to be able handle both output formats:
+		// speed 9600 baud; 24 rows; 140 columns;
+		// and:
+		// speed 38400 baud; rows = 49; columns = 111; ypixels = 0; xpixels = 0;
+		String $props = Stty.stty("-a");
+		X.saye($props);
+		for (StringTokenizer $toker = new StringTokenizer($props, ";\n"); $toker.hasMoreTokens();) {
+			String $tok = $toker.nextToken().trim();
+			if ($tok.startsWith("columns")) {
+				$dimensions.width = Integer.parseInt($tok.substring($tok.lastIndexOf(" ")).trim());
+			} else if ($tok.endsWith("columns")) {
+				$dimensions.width = Integer.parseInt($tok.substring(0, $tok.indexOf(" ")).trim());
+			} else if ($tok.startsWith("rows")) {
+				$dimensions.height = Integer.parseInt($tok.substring($tok.lastIndexOf(" ")).trim());
+			} else if ($tok.endsWith("rows")) {
+				$dimensions.height = Integer.parseInt($tok.substring(0, $tok.indexOf(" ")).trim());
+			}
 		}
 	}
 }

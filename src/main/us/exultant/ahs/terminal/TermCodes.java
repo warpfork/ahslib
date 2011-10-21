@@ -1,6 +1,10 @@
 package us.exultant.ahs.terminal;
 
-public class TermCodes {
+/**
+ * Utility class for package members that holds strings representing ansi escape codes for
+ * terminal control.
+ */
+class TermCodes {
 	/** Control Sequence Initiator */
 	public static final String	CSI			= "\033[";
 	

@@ -5,7 +5,7 @@ import us.exultant.ahs.io.*;
 import java.io.*;
 
 class Stty {
-	public static void getAngry() {
+	static void getAngry() {
 		if (System.console() == null) throw new MajorBug("this program is not attached to a console, but is trying to set console modes");
 		
 		// save the console settings from before we start mucking things up
@@ -20,7 +20,7 @@ class Stty {
 				System.console().printf(TermCodes.CSI+"f"+TermCodes.REND_RESET+TermCodes.CLEAR_SCREEN);
 			}
 		});
-
+		
 		// muck things up
 		stty(
 				"-icanon min 1 " +	// set the console to be character-buffered instead of line-buffered
@@ -28,7 +28,7 @@ class Stty {
 		);	// raw iutf8 icrnl opost isig
 	}
 	
-	private static String stty(final String $args) {
+	static String stty(final String $args) {
 		try {
 			Process $proc = Runtime.getRuntime().exec(new String[] { "sh", "-c", "stty " + $args + " < /dev/tty" });
 			$proc.waitFor();
