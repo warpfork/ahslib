@@ -96,7 +96,8 @@ public class StandardTerminal implements Terminal {
 		return $dimensions.height;
 	}
 	private java.awt.Dimension $dimensions = new java.awt.Dimension(80,24);
-	protected void cacheDimensions() {
+	/** We have little option for terminal resize detection except to have a WorkTarget deal with this frequently and emit events as necessary.  (Or write JNI to catch OS signals, which... no). */
+	void cacheDimensions() {
 //		try {
 //			$dimensions.width = new Scanner(Runtime.getRuntime().exec(new String[] { "tput cols" }).getInputStream()).nextInt();
 //			$dimensions.height = new Scanner(Runtime.getRuntime().exec(new String[] { "tput lines" }).getInputStream()).nextInt();
