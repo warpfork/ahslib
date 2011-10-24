@@ -12,7 +12,7 @@ public class StandardTerminal implements Terminal {
 		public static final StandardTerminal INSTANCE = new StandardTerminal();
 	}
 	private StandardTerminal() {
-		Stty.getAngry();
+		Stty.takeControl();
 		
 		$console = System.console();
 		$cursor = new OurCursor();
@@ -108,7 +108,6 @@ public class StandardTerminal implements Terminal {
 		// and:
 		// speed 38400 baud; rows = 49; columns = 111; ypixels = 0; xpixels = 0;
 		String $props = Stty.stty("-a");
-		X.saye($props);
 		for (StringTokenizer $toker = new StringTokenizer($props, ";\n"); $toker.hasMoreTokens();) {
 			String $tok = $toker.nextToken().trim();
 			if ($tok.startsWith("columns")) {
