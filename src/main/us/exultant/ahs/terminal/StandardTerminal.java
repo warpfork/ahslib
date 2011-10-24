@@ -1,6 +1,5 @@
 package us.exultant.ahs.terminal;
 
-import us.exultant.ahs.util.*;
 import java.io.*;
 import java.util.*;
 
@@ -44,7 +43,7 @@ public class StandardTerminal implements Terminal {
 	
 	private class OurCursor implements Cursor {
 		public void place(int $x, int $y) {
-			$console.printf(TermCodes.CSI+(($y<1)?"":$y)+";"+(($x<1)?"":$x)+"f");
+			$console.printf(TermCodes.CSI+(($y<0)?"":++$y)+";"+(($x<0)?"":++$x)+"f");
 		}
 		
 		public void shiftUp(int $n) {

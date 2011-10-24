@@ -21,7 +21,7 @@ public interface Terminal {
 	
 	
 	public static interface Cursor {	// i'd like to be able to have component-like boxes that can confine the cursor... but we're talking about a system that regularly screws up the distinction between input and output channels, and so i'm deeply afraid we really might not be able to do that.
-		/** Places the cursor at an arbitrary horizontal and vertical position.  The values are 1-based and counted in user-space (i.e. increasing {@code $y} is moving down). */
+		/** Places the cursor at an arbitrary horizontal and vertical position.  The values are 0-based and counted in user-space (i.e. increasing {@code $y} is moving down). */
 		public void place(int $x, int $y);
 		
 		/** Moves the cursor {@code $n} cells up from its current location. If the cursor is already at the edge of the screen, calling this method has no effect. */
