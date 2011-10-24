@@ -70,12 +70,40 @@ public class Palette {
 	
 	
 	
-	String code() {
+	public String code() {	// i only want this to be visible to child packages :(
 		return
 		(($fg == null) ? "" : CSI+"3"+$fg.code()+"m") +
 		(($bg == null) ? "" : CSI+"4"+$bg.code()+"m") +
 		(($bold == null) ? "" : ($bold) ? CSI+"1m" : CSI+"22m") +
 		(($underline == null) ? "" : ($underline) ? REND_UNDERLINE_ON : REND_UNDERLINE_OFF);
+	}
+	
+	//XXX:AHS:TERM: public String code(Palette $delta) {}
+	
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((this.$bg == null) ? 0 : this.$bg.hashCode());
+		result = prime * result + ((this.$bold == null) ? 0 : this.$bold.hashCode());
+		result = prime * result + ((this.$fg == null) ? 0 : this.$fg.hashCode());
+		result = prime * result + ((this.$underline == null) ? 0 : this.$underline.hashCode());
+		return result;
+	}
+	
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		Palette other = (Palette) obj;
+		if (this.$bg != other.$bg) return false;
+		if (this.$bold == null) {
+			if (other.$bold != null) return false;
+		} else if (!this.$bold.equals(other.$bold)) return false;
+		if (this.$fg != other.$fg) return false;
+		if (this.$underline == null) {
+			if (other.$underline != null) return false;
+		} else if (!this.$underline.equals(other.$underline)) return false;
+		return true;
 	}
 	
 	//XXX:AHS:TERMINAL: would be nice to have something that can diff from an assumed palette to keep the number of characters we have to pump out to a minimum.  (on the other hand that can't be cached statically quite as handily.  well, maybe.)
