@@ -3,24 +3,37 @@ package us.exultant.ahs.terminal.exe;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.terminal.*;
 import us.exultant.ahs.terminal.Terminal.Color;
+import us.exultant.ahs.terminal.gui.*;
 import java.io.*;
 
 public class Test {
 	private static final Terminal T = StandardTerminal.get();
 	public static void main(String... args) {
+		try {
+			main();
+		} catch (Throwable $t) {
+			Stty.releaseControl();
+			$t.printStackTrace();
+		}
+	}
+	
+	public static void main() {
 		final int $w = T.getWidth();
 		final int $h = T.getHeight();
-		
-		
+		final Window $window = new Window($w,$h);
+		final Palette $p_clear = new Palette(Color.CLEAR);
+		final Palette $p_error = new Palette(Color.WHITE, Color.RED, true, true);
 		
 		// make a giant freakin' box
-		T.print(BoxChars.NSDN+Strings.repeat(BoxChars.NSNS, $w-2)+BoxChars.NNDS);
-		T.cursor().lineNext(1);
-		for (int $i = 2; $i < $h-1; $i++) {
-			T.print(BoxChars.DNDN+Strings.repeat(' ', $w-2)+BoxChars.DNDN);
-			T.cursor().lineNext(1);
+		$window.print(0, 0, BoxChars.NSDN+Strings.repeat(BoxChars.NSNS, $w-2)+BoxChars.NNDS, $p_clear);
+		for (int $i = 1; $i < $h-1; $i++) {
+			$window.print(0, $i, BoxChars.DNDN+Strings.repeat(' ', $w-2)+BoxChars.DNDN, $p_clear);
 		}
-		T.print(BoxChars.DSNN+Strings.repeat(BoxChars.NSNS, $w-2)+BoxChars.DNNS);
+		$window.print(0, $h-1, BoxChars.DSNN+Strings.repeat(BoxChars.NSNS, $w-2)+BoxChars.DNNS, $p_clear);
+		$window.render(T);
+		
+		
+		
 		T.cursor().place(0, 3);
 		final int $inset = 3;
 		
