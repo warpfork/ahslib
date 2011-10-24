@@ -185,6 +185,7 @@ public class Window {
 		final int $xmax = $region.x + $region.width;
 		for (int $y = $region.y; $y < $ymax; $y++) {
 			$sb.delete(0, $sb.length());		// this is a really dumb way to have to phrase a request to just set the sb's internal count to zero.
+			$term.cursor().place($region.x, $y);
 			final char[] $charsRow = $chars[$y];
 			final Palette[] $palesRow = $pales[$y];
 			for (int $x = $region.x; $x < $xmax; $x++) {
@@ -194,7 +195,6 @@ public class Window {
 				$prevPalette = $palette;
 			}
 			$term.print($sb.toString());
-			$term.cursor().place($region.x, $y);
 		}
 	}
 }
