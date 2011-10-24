@@ -108,9 +108,11 @@ public class Window {
 	 * 
 	 * @throws IllegalArgumentException
 	 *                 if the {@code x} or {@code y} coordinates are negative or
-	 *                 greater than allowed by the active clip.
+	 *                 greater than allowed by the active clip; or if the Palette
+	 *                 argument is null.
 	 */
 	public void print(int $x, int $y, String $str, Palette $pal) {
+		if ($pal == null) throw new IllegalArgumentException("palette not optional");
 		final int $yg = absY($y);
 		int $xg = absX($x);
 		if ($xg == -1 || $yg == -1) throw new IllegalArgumentException("starting location ("+$x+","+$y+") not inside active clip");
@@ -131,9 +133,11 @@ public class Window {
 	 * 
 	 * @throws IllegalArgumentException
 	 *                 if the {@code x} or {@code y} coordinates are negative or
-	 *                 greater than allowed by the active clip.
+	 *                 greater than allowed by the active clip; or if the Palette
+	 *                 argument is null.
 	 */
 	public void printVertical(int $x, int $y, String $str, Palette $pal) {
+		if ($pal == null) throw new IllegalArgumentException("palette not optional");
 		final int $xg = absX($x);
 		int $yg = absY($y);
 		if ($xg == -1 || $yg == -1) throw new IllegalArgumentException("starting location ("+$x+","+$y+") not inside active clip");	
@@ -190,7 +194,7 @@ public class Window {
 				$prevPalette = $palette;
 			}
 			$term.print($sb.toString());
-			$term.cursor().place($y, $region.x);
+			$term.cursor().place($region.x, $y);
 		}
 	}
 }
