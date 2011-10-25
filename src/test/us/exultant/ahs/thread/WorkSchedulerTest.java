@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 
 /**
  * A useful statement is this:
- * <tt>i=0; while true; do i=$(math $i + 1); echo $i; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; tail -n 1 lol; echo; done</tt>
+ * <tt>i=0; while true; do i=$(math $i + 1); echo $i; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; if [ "$?" -ne "0" ]; then break; fi; done</tt>
  * 
  * @author hash
  * 
@@ -59,6 +59,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
 			assertEquals(999, $w.x);
+			
+			breakCaseIfFailed();
 			return null;
 		}
 		private class Work implements Runnable {
@@ -91,6 +93,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
 			for (int $i = 0; $i < 8; $i++) assertEquals(0, $wt[$i].x);
+			
+			breakCaseIfFailed();
 			return null;
 		}
 		private class Work implements WorkTarget<Void> {
@@ -140,6 +144,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertFalse($w2.isReady());
 			assertEquals(LOW, $w2.x);
 			assertEquals(LOW, $w1.x);
+			
+			breakCaseIfFailed();
 			return null;
 		}
 		private class WorkLeader implements WorkTarget<Void> {
@@ -214,6 +220,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			catch (InterruptedException $e) { throw new AssertionFailed($e); }
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
+			breakCaseIfFailed();
 			return null;
 		}
 		private class Work implements Runnable {
@@ -246,6 +253,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			catch (InterruptedException $e) { throw new AssertionFailed($e); }
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
+			breakCaseIfFailed();
 			return null;
 		}
 		private class Work implements WorkTarget<Integer> {
@@ -311,8 +319,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			catch (InterruptedException $e) { throw new AssertionFailed($e); }
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
-			System.exit(0);
-			
+			breakCaseIfFailed();
+			System.exit(0);	// this is actually just to let us die.  but peacefully.  (sorta.)  so we can test again!
 			return null;
 		}
 		private class Work implements WorkTarget<Integer> {

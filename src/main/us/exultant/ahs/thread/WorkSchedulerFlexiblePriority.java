@@ -20,7 +20,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		ThreadUtil.startAll($threads);
 		
-		schedule(new RelentlessGC(), ScheduleParams.makeFixedDelay(2));
+		//schedule(new RelentlessGC(), ScheduleParams.makeFixedDelay(2));	// i want to be better than this.
 	}
 	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
@@ -226,7 +226,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	protected void hearTaskDrop(WorkFuture<?> $wf) {
-		X.sayet($wf + "\n" + X.toString(new Exception()));
+		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
 	}
 	
 	protected void echoSecrets() {
