@@ -13,7 +13,9 @@ import java.util.concurrent.locks.*;
  * how many entries are in the queue as a constant time operation, and also provides a
  * blocking get functionality. This allows easy use as a work distributor, since one can
  * make get calls that will not return null simply because work is not instantaneously
- * available.
+ * available. Additionally, this class provides the ability to notify a {@link Listener}
+ * whenever the pipe has a change in state nonblocking readers might wish to know of (i.e.
+ * when it recieves new information, is closed, or becomes empty).
  * </p>
  * 
  * <p>
@@ -74,6 +76,9 @@ public class Pipe<$T> implements Flow<$T> {
 	 * This Listener is triggered for every completed write operation and for close
 	 * operations.
 	 */
+	// you know, i'm really not sure i need this to be volatile.  i never promised all that much sanity if you're changing this thing while data is flowing.
+	//  and we're pretty much giving it up anyway when we do that crap temp-copy to do the null check.
+	//   well, no, we don't.  the write locks do provide safe ordering around that so you won't get something on listener A and then B and then A again.  i just never documented that before.
 	private volatile Listener<ReadHead<$T>>	$el;
 	
 	/**
@@ -170,6 +175,7 @@ public class Pipe<$T> implements Flow<$T> {
 					return null;
 				}
 				$T $v = $queue.remove();
+				checkForFinale();
 				return $v;
 			}
 		}
@@ -177,6 +183,7 @@ public class Pipe<$T> implements Flow<$T> {
 		public $T readNow() {
 			boolean $one = $gate.tryAcquire();
 			if (!$one) return null;
+			checkForFinale();
 			return $queue.poll();
 		}
 		
@@ -199,6 +206,7 @@ public class Pipe<$T> implements Flow<$T> {
 				List<$T> $v = new ArrayList<$T>($p);
 				for (int $i = 0; $i < $p; $i++)
 					$v.add($queue.poll());
+				checkForFinale();
 				return $v;
 			} finally {
 				$lock.unlock();
@@ -347,5 +355,16 @@ public class Pipe<$T> implements Flow<$T> {
 	/** Do not use this method unless you know what you're doing.  It should never be needed under normal circumstances. */
 	void unlockWrite() {
 		$lock.unlock();
+	}
+	
+	private void checkForFinale() {
+		if (SRC.isClosed() && !SRC.hasNext()) {
+			// give our listener a chance to notice our final drain.
+			Listener<ReadHead<$T>> $dated_el = $el;
+			if ($dated_el != null) $dated_el.hear(SRC);
+			//... i don't think we want every read after closure and emptiness to make an event, in case someone's too stupid to realize that that event means they're supposed to stop reading.
+			// then again, we're all consenting adults here, and i don't believe i can do that without a cas here or vastly more locking than i can abide by.
+			// anyway!  point is that if there are two permits left in a closed pipe and two people acquire before either of them gets to that hasNext, this event's gonna get fired twice.
+		}
 	}
 }

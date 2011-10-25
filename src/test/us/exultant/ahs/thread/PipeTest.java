@@ -207,4 +207,7 @@ public class PipeTest extends TestCase {
 			}
 		}
 	}
+	
+	// if a pipe is fed, closed, and then drained, we should see exactly n+2 events (one for the closure, one for the final drain, and one for each of the (unbatched) writes)... even if there is more than one person trying to get that last read.
+	//  jk, that's all impossible because pipes can't be arsed to check that that final drain event is a once-only.
 }

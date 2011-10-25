@@ -3,10 +3,6 @@ package us.exultant.ahs.core;
 import java.io.*;
 import java.util.*;
 
-// it might be better semantics to ALWAYS have the normal read methods return full chunks,
-//  and then provide a single extra readLast() method that throws exceptions unless called after the head is closed.
-// on the other hand, nobody ever said that a particular subclass can't choose to do that anyway.  there's no need to make it explicit here.
-
 /**
  * <p>
  * Provides a decorator to make file, network, and internal pipe operations all
@@ -48,9 +44,9 @@ import java.util.*;
  * Implementers should avoid throwing OperationNotSupported exceptions from methods
  * relating to nonblocking reads if at all possible even when the underlying stream or
  * channel is provides only blocking services. Such issues can be resolved by reading the
- * blocking stream into a nonblocking buffer using the thread provided by the ReadHead's
- * pump, then providing direct access only to the nonblocking buffer. (The standard
- * library's ConcurrentLinkedQueue class is an ideal helper for such a role.)
+ * blocking stream into a nonblocking buffer using an external thread, then providing
+ * direct access only to the nonblocking buffer. (The Pipe class in the {@code threading}
+ * module of AHSlib is an ideal helper for such a role.)
  * </p>
  * 
  * <p>
@@ -68,16 +64,17 @@ import java.util.*;
 public interface ReadHead<$T> {
 	/**
 	 * <p>
-	 * Sets a Listener for critical events in the life cycle of the ReadHead. The
-	 * Listener must be invoked by the implementer every time a new chunk of data
+	 * Sets a {@link Listener} for critical events in the life cycle of the ReadHead.
+	 * The Listener must be invoked by the implementer every time a new chunk of data
 	 * becomes available. Implementations may also choose to use it to signal other
-	 * critical events such as the closing of the underlying stream. In all
-	 * situations, the Listener is handed a reference to this ReadHead.
+	 * critical events such as the closing of the underlying stream, or the drain of
+	 * the final piece of data from an already-closed stream. In all situations, the
+	 * Listener is handed a reference to this ReadHead.
 	 * </p>
 	 * 
 	 * <p>
 	 * Despite the listener's intended purpose, it is critical to note that even if a
-	 * <code>hasNext()</code> call is the first thing within the Listener's
+	 * {@link #hasNext()} call is the first thing within the Listener's
 	 * <code>hear(ReadHead<$T>)</code> procedure, that call may return false. This may
 	 * situation may arise even if the call to the Listener was intended to signal new
 	 * data availability, since multithreaded access to the ReadHead can result in
@@ -87,18 +84,21 @@ public interface ReadHead<$T> {
 	 * 
 	 * <p>
 	 * The Listener's <code>hear(ReadHead<$T>)</code> method will be invoked from the
-	 * thread currently powering the pump (or in some cases the thread responsible for
-	 * the write that triggered the event), and as such should not be responsible for
-	 * any intensive or time-consuming operations. The recommended usage is to simply
-	 * provide an event listener that marks the ReadHead as (probably) having data
-	 * available in some other "selector"-like scheme.
+	 * thread that caused the state change (often the one powering a connected
+	 * WriteHead), and as such must not be responsible for any intensive or
+	 * time-consuming operations. The recommended usage is to simply provide an event
+	 * listener that marks the ReadHead as (probably) having data available in some
+	 * other "selector"-like scheme.
 	 * </p>
 	 * 
 	 * <p>
-	 * It's possible that this definition will be weakened to allow the implementer to
-	 * only invoke the listener when a multiple new chunks become available at one
-	 * time in order to reduce noise, and users are thus advised to use readAllNow
-	 * instead of just readNow in response to hearing an update.
+	 * Implementers typically call the listener's {@code hear()} method once per
+	 * semantic event &mdash however, this is not required, and if for example
+	 * multiple new chunks become available in a batch, then it is allowed for the
+	 * implementer to only invoke the listener one time after the entire batch is
+	 * loaded in order to reduce noise. Therefore, users of events from ReadHead are
+	 * advised to use readAllNow instead of just readNow in response to hearing an
+	 * update.
 	 * </p>
 	 * 
 	 * @param $el
@@ -118,11 +118,14 @@ public interface ReadHead<$T> {
 	 * </p>
 	 * 
 	 * @return next chunk of input, or null if there is no data available and the
-	 *         underlying stream has reached an <code>EOF</code> state. Some
+	 *         underlying stream has reached an {@code EOF} state. Some
 	 *         implementations may also choose to return null in the case that the
-	 *         underlying stream reaches an EOF state while this call is still
+	 *         underlying stream reaches an {@code EOF} state while this call is still
 	 *         blocking for more input; others may try to return a partial chunk.
 	 */
+	// it might be better semantics to ALWAYS have the normal read methods return full chunks,
+	//  and then provide a single extra readLast() method that throws exceptions unless called after the head is closed.
+	// on the other hand, nobody ever said that a particular subclass can't choose to do that anyway.  there's no need to make it explicit here.
 	public $T read();
 	
 	/**
@@ -130,7 +133,7 @@ public interface ReadHead<$T> {
 	 * 
 	 * @return a chunk of input if possible, or null otherwise; null may indicate
 	 *         either <code>EOF</code> or simply nothing available at the time.
-	 *         <code>isClosed()</code> should be used to determine the difference.
+	 *         {@link #isClosed()}</code> should be used to determine the difference.
 	 */
 	public $T readNow();
 	
@@ -141,9 +144,9 @@ public interface ReadHead<$T> {
 	 * have already pre-empted it.
 	 * 
 	 * @return true if a chunk of input is stream to be read immediately; false
-	 *         otherwise. Similarly to <code>readNow()</code>, a return of false may
+	 *         otherwise. Similarly to {@link #readNow()}, a return of false may
 	 *         indicate either <code>EOF</code> or simply nothing available at the time.
-	 *         <code>isClosed()</code> should be used to determine the difference.
+	 *         {@link #isClosed()} should be used to determine the difference.
 	 */
 	public boolean hasNext();
 	
@@ -153,7 +156,7 @@ public interface ReadHead<$T> {
 	 * (minus any entries that have already been read, even if those other reads take
 	 * place <i>after</i> the invocation of <code>readAll()</code>, and including even
 	 * entries that may have been written to the stream after this invocation of
-	 * <code>readAll()</code>). If multiple threads invoke this, then one of them will
+	 * {@link #readAll()}). If multiple threads invoke this, then one of them will
 	 * receive a normal result, and the rest will receive empty arrays (as will
 	 * subsequent invocations).
 	 * </p>
@@ -191,7 +194,7 @@ public interface ReadHead<$T> {
 	/**
 	 * Immediately returns entire contents of this stream at once (minus, of course,
 	 * any entries that have already been read). Similarly to the blocking
-	 * <code>readAll()</code> method, if multiple threads invoke this after the stream
+	 * {@link #readAll()} method, if multiple threads invoke this after the stream
 	 * is closed then the first will receive a normal result, and other threads and
 	 * subsequent invocations will receive empty arrays.
 	 * 
@@ -209,10 +212,10 @@ public interface ReadHead<$T> {
 	 *         <code>EOF</code> state; false otherwise. If true is ever returned, no
 	 *         subsequent invocations may return false. Upon returning true, data may
 	 *         still exist in buffers waiting to be read; however, it is guaranteed
-	 *         that once both isClosed() and hasNext() return true and false
-	 *         respectively that no further invocations of hasNext() will return true.
-	 *         (In other words, this method signals whether or not this buffer is
-	 *         capable of growing.)
+	 *         that once both {@link #isClosed()} and {@link #hasNext()} return true
+	 *         and false respectively that no further invocations of hasNext() will
+	 *         return true. (In other words, this method signals whether or not this
+	 *         buffer is capable of growing.)
 	 */
 	public boolean isClosed();
 	
@@ -227,12 +230,12 @@ public interface ReadHead<$T> {
 	 * 
 	 * <p>
 	 * Implementers may choose to simply relay the "close" invocation to their
-	 * underlying stream or channel, and then none the less continue to pump that
+	 * underlying stream or channel, and then nonetheless continue to pump that
 	 * underlying mechanism until it begins to throw exceptions. This behavior avoids
 	 * problems that would otherwise arise in some situations where we must avoid
 	 * losing data in the abyss between buffers if the underlying mechanism is willing
 	 * to return already buffered data even if it has been closed, but has the
-	 * unfortunate side effect that invocations of <code>isClosed()</code> are not
+	 * unfortunate side effect that invocations of {@link #isClosed()} are not
 	 * required to return <code>true</code> immediately after <code>close()</code> is
 	 * called.
 	 * </p>
@@ -257,21 +260,4 @@ public interface ReadHead<$T> {
 	 *                 stream throws an IOException.
 	 */
 	public void close() throws IOException;
-	
-	
-	//
-	// If you ever think you need something like the following, it's a bad idea and you should think again.
-	// For example, look at what just happened to the contract of read().
-	//
-//	public static class Noop implements ReadHead<Object> {
-//		public void setListener(Listener<ReadHead<Object>> $el) {}
-//		public Object read()		{	return null;		}
-//		public Object readNow()		{	return null;		}
-//		public boolean hasNext()	{	return isClosed();	}
-//		public List<Object> readAll()	{	return Primitives.LIST_NULL;	}
-//		public List<Object> readAllNow(){	return Primitives.LIST_NULL;	}
-//		public boolean isClosed() {		return $closed;		}
-//		public void close() throws IOException {$closed = true;		}
-//		private volatile boolean $closed = false;
-//	}
 }
