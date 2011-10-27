@@ -331,7 +331,7 @@ public class Logger {
 		private PrintStream $ps;
 		
 		public void log(int $level, String $category, String $message, Throwable $e) {
-			StringBuilder $sb = new StringBuilder(256);
+			StringBuilder $sb = new StringBuilder(256);	// i'd love to allocate this per class instead of per call, but I think i'd have to strengthen the admonishments against multithreaded use of loggers quite a bit if i were to do that.  as it stands now, this is actually reentrant, and that's probably a good thing for the default.
 			long $time = System.currentTimeMillis() - start;
 			long $seconds = $time / 1000;
 			long $milliseconds = $time - $seconds * 1000;
@@ -364,17 +364,16 @@ public class Logger {
 				$sb.append($category);
 				$sb.append("] ");
 			}
-
+			
 			if ($message != null) {
-				$sb.append($message);
+				$sb.append($message).append('\n');
 			}
-
-			$ps.println($sb.toString());
 			
 			if ($e != null) {
-				$e.printStackTrace($ps);
-				$ps.print('\n');
+				$sb.append(X.toString($e));
 			}
+			
+			$ps.print($sb.toString());
 		}
 	}
 	
@@ -395,12 +394,17 @@ public class Logger {
 		private PrintStream $ps;
 		
 		public void log(int $level, String $category, String $message, Throwable $e) {
-			if ($message != null) $ps.println($message);
+			StringBuilder $sb = new StringBuilder(256);
+			
+			if ($message != null) {
+				$sb.append($message).append('\n');
+			}
 			
 			if ($e != null) {
-				$e.printStackTrace($ps);
-				$ps.print('\n');
+				$sb.append(X.toString($e));
 			}
+			
+			$ps.print($sb.toString());
 		}
 	}
 }

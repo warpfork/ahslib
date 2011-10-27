@@ -104,6 +104,11 @@ public class X {
 		public CryException(Throwable $cause) { super($cause); }
 	}
 	
+	/**
+	 * Dumps a Throwable into a String form exactly as per the
+	 * {@link Throwable#printStackTrace()} function. Note that this does end in a line
+	 * break.
+	 */
 	public static String toString(Throwable $t) {
 		ByteArrayOutputStream $baos = new ByteArrayOutputStream();
 		PrintStream $ps = new PrintStream($baos);
