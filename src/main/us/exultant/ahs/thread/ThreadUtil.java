@@ -113,8 +113,10 @@ public abstract class ThreadUtil {
 	 */
 	public static Thread[] wrapAll(Runnable $task, int $number) {
 		Thread[] $threads = new Thread[$number];
-		for (int $i = 0; $i < $number; $i++)
+		for (int $i = 0; $i < $number; $i++) {
 			$threads[$i] = new Thread($task);
+			$threads[$i].setDaemon(true);
+		}
 		return $threads;
 	}
 	
