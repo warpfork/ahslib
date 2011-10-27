@@ -1,7 +1,6 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.log.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -33,7 +32,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			else
 				if ($when.isUnclocked()) {
 					$unready.add($wf);
-					$log.trace(this, "frosh to unready: "+$wf);
+//					$log.trace(this, "frosh to unready: "+$wf);
 				}
 				else
 					$delayed.add($wf);
@@ -47,7 +46,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		// check doneness; try to transition immediate to FINISHED if is done.
 		if ($fut.$work.isDone()) {
 			$fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
-			$log.trace(this, "FINAL UPDATE REQUESTED for "+$fut);
+//			$log.trace(this, "FINAL UPDATE REQUESTED for "+$fut);
 		}
 		
 		// just push this into the set of requested updates.
@@ -65,7 +64,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private Thread				$leader		= null;
 	private final Condition			$available	= $lock.newCondition();
 	
-	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
+//	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
 	
 	
 	private void worker_cycle() throws InterruptedException {
@@ -106,7 +105,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 					} else {
 						if ($chosen.$work.isDone()) {
 							boolean $causedFinish = $chosen.$sync.tryFinish(false, null, null);
-							$log.trace(this, "isDone "+$chosen+" noticed in worker_cycle() after powering it; we caused finish "+$causedFinish);
+//							$log.trace(this, "isDone "+$chosen+" noticed in worker_cycle() after powering it; we caused finish "+$causedFinish);
 							hearTaskDrop($chosen);
 							continue doWork;
 						}
@@ -114,7 +113,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 						//    There are two ways of dealing with something like that: having every read from a RH check for doneness, and everyone subscribe to the RH so we could notify for them (which is an INSANE degree of complication to add to the API, and completely useless for a lot of other applications of pipes)... Or, do periodic cleanup.
 						// oh, and also someone can do a concurrent cancel before that scheduler_shift attempt, which will bring us here and also leave us with an awkward cancelled task stuck in our unready heap (which isn't as bad as a done-but-not-finished task, since no one can get stuck waiting on it, but is still a garbage problem).
 						if ($chosen.getScheduleParams().isUnclocked()) {
-							$log.trace(this, "added to unready: "+$chosen);
+//							$log.trace(this, "added to unready: "+$chosen);
 							$unready.add($chosen);
 						} else
 							$delayed.add($chosen);
@@ -188,7 +187,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			} else {
 				if ($wf.$work.isDone())	{
 					boolean $causedFinish = $wf.$sync.tryFinish(false, null, null);
-					$log.trace(this, "isDone "+$wf+" noticed in worker_pollUpdates(); we caused finish "+$causedFinish);
+//					$log.trace(this, "isDone "+$wf+" noticed in worker_pollUpdates(); we caused finish "+$causedFinish);
 				}
 				switch ($wf.getState()) {
 					case FINISHED:
