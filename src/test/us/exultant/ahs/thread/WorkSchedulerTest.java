@@ -320,7 +320,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
 			breakCaseIfFailed();
-			System.exit(0);	// this is actually just to let us die.  but peacefully.  (sorta.)  so we can test again!
 			return null;
 		}
 		private class Work implements WorkTarget<Integer> {

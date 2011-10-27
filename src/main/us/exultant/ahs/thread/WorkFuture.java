@@ -1,7 +1,6 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;

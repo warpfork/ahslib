@@ -226,7 +226,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	protected void hearTaskDrop(WorkFuture<?> $wf) {
-		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
+//		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
 	}
 	
 	protected void echoSecrets() {

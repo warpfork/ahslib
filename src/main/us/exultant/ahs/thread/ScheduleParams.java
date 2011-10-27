@@ -1,5 +1,6 @@
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -94,22 +95,22 @@ public final class ScheduleParams {
 	
 	public static ScheduleParams makeDelayed(long $startTime, TimeUnit $unit, boolean $startTimeIsAbsolute) {
 		return new ScheduleParams(
-				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
+				($startTimeIsAbsolute ? 0 : System.currentTimeMillis()) + $unit.toMillis($startTime),
 				0
 		);
 	}
 	
 	public static ScheduleParams makeFixedRate(long $startTime, long $period, TimeUnit $unit, boolean $startTimeIsAbsolute) {
 		return new ScheduleParams(
-				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
-				$unit.toNanos($period)
+				($startTimeIsAbsolute ? 0 : System.currentTimeMillis()) + $unit.toMillis($startTime),
+				$unit.toMillis($period)
 		);
 	}
 	
 	public static ScheduleParams makeFixedDelay(long $startTime, long $period, TimeUnit $unit, boolean $startTimeIsAbsolute) {
 		return new ScheduleParams(
-				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
-				-$unit.toNanos($period)
+				($startTimeIsAbsolute ? 0 : System.currentTimeMillis()) + $unit.toMillis($startTime),
+				-$unit.toMillis($period)
 		);
 	}
 		
@@ -166,7 +167,7 @@ public final class ScheduleParams {
 	 */
 	public long getDelay() {
 		//if (isUnclocked()) return 0;	// i heard that getting synchronized nanotime can actually be a surprisingly heavy cost for jvms from a talk a jvm engineer for azul systems gave at a google conference.  either way, i like this being something consistent for unclocked tasks instead of being some arbitrary massively negative number.	// but then this is stupid.  there's no place i can imagine calling this without already having branched in the calling function on isClocked.
-		return ($time - System.nanoTime());
+		return TimeUnit.MILLISECONDS.toNanos($time - System.currentTimeMillis());
 	}
 	
 	/**
@@ -184,8 +185,10 @@ public final class ScheduleParams {
 	 */
 	void setNextRunTime() {
 		if ($time == 0) return; // this is immutable, silly.	// we could also just let this go, or we could have a subclass that stubs the method.  really it makes no difference -- putting this check in trades one JNE instruction in x86 assembly for sanity, whoopdeedoo.
+		long $oldTime = $time;
 		if ($period > 0) $time += $period;
-		else $time = System.nanoTime() + -$period;
+		else $time = System.currentTimeMillis() + -$period;
+		X.saye("old time: "+$oldTime+"; next time: "+$time);
 		// DL's ScheduledThreadPoolExecutor has some fiddly bits here with a triggerTime and overflowFree function... but I don't really see why.  The problems don't show up unless you're scheduling tasks something like 22,900 TERAYEARS in the future, and at that point I think it's frankly clear that you're asking for trouble. 
 	}
 }
