@@ -197,7 +197,7 @@ class WorkFuture<$V> implements Future<$V> {
 		}
 		
 		$V get() throws ExecutionException, CancellationException {	// this could also be implemented in the outer class, but it's ever so slightly more efficient to use the int state here instead of go through the array lookup.  probably.  i dunno, maybe that even gets optimized out by a good enough jvm.
-			if (getState() == State.CANCELLED.ordinal()) throw new CancellationException();		// TODO:AHS:THREAD: consider what you want from your contract here.  perhaps we should still return the last result?  but then that complicates concurrency significantly, since that would mean we can only set the result field if we've locked out cancels.  We could do it; use a higher-order bit of the state of the AQS perhaps, without actually changing the State we report to the rest of the program.  Iono.
+			if (getState() == State.CANCELLED.ordinal()) throw new CancellationException();
 			if ($exception != null) throw $exception;
 			return $result;
 		}
@@ -241,7 +241,6 @@ class WorkFuture<$V> implements Future<$V> {
 		 */
 		//FIXME:AHS:THREAD: we have to notice doneness eventually even if no update was called and isReady is now returning false because it's done!  it's a bit troublesome since we'll never bubble to the top of the scheduled heap.  though really, the most straightforward fix isn't at all wrong: just run low-priority low-frequency fixed-rate task that calls update on all of the stuff in the waiting pool.  only question with that is who decides exactly what priority and how rate that should be, since it's clearly one of those things we're really only want one of per vm.
 		boolean scheduler_shift() {
-//			if ($work.getClass() == WorkSchedulerTest.TestNonblockingLeaderFollower.WorkFollower.class) X.sayet("wat "+getState()+"\n"+X.toString(new Throwable()));
 			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState(State.WAITING.ordinal(), State.SCHEDULED.ordinal());
 			// the CAS will occur if:
 			//   - the task if delay-free (if clocked) or ready (if unclocked).
