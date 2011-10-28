@@ -1,7 +1,6 @@
 package us.exultant.ahs.terminal;
 
 import java.io.*;
-import java.lang.reflect.*;
 import java.util.*;
 
 public class StandardTerminal implements Terminal {
@@ -12,60 +11,39 @@ public class StandardTerminal implements Terminal {
 		public static final StandardTerminal INSTANCE = new StandardTerminal();
 	}
 	private StandardTerminal() {
+		Stty.takeControl();
+		
 		$console = System.console();
-		$cursor = new StdCursor();
-		$palette = new StdPalette();
-		
-		setEchoMode(false);
-		// Add a shutdown hook to restore console's echo state when we exit.
-		Runtime.getRuntime().addShutdownHook(new Thread() { public void run() { setEchoMode(true); } });
-		
-		try {
-			//$restoreStty = IOForge.readString(Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "stty -g" }).getInputStream());
-			Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", "stty raw iutf8 icrnl opost isig </dev/tty" }).waitFor();
-		} catch (InterruptedException $e) {
-			throw new Error("failed to set console to raw mode", $e);
-		} catch (IOException $e) {
-			throw new Error("failed to set console to raw mode", $e);
-		}
+		$cursor = new OurCursor();
+		cacheDimensions();
 		
 		clear();
-	}
-	/** deal with the crappitude of taking control of echos.  I'm not sure i expect this to work on jvm's other than sun's, since it relies on reflecting to a private method. */
-	protected void setEchoMode(boolean $on) {
-		try {
-			Method $mecho = Console.class.getDeclaredMethod("echo", boolean.class);
-			$mecho.setAccessible(true);
-			$mecho.invoke(null, $on);
-		} catch (Exception $e) {
-			throw new Error("Cannot set the echo mode of the Console -- is this a Sun JVM?", $e);
-		}
 	}
 	
 	private final Console	$console;
 	private final Cursor	$cursor;
-	private final Palette	$palette;
+	private Palette		$palette;
 	
-	public Cursor cursor() {
-		return $cursor;
+	public void print(String $s) {
+		$console.printf($s);
 	}
 	
-	public Palette palette() {
+	public Palette getPalette() {
 		return $palette;
 	}
 	
-	public void clear() {
-		$console.printf(
-				TermCodes.CLEAR_SCREEN+	// duh
-				TermCodes.CSI+"f"	// also reset cursor to 1,1 (some terminals do this with just the clear screen code, so we shoot for consistency here) (we don't use the normal function for cursor positioning because we can skip some characters by taking advantage of the "1;1" default args).
-		);
+	public Palette setPalette(Palette $p) {
+		Palette $v = $palette;
+		$palette = $p;
+		$console.printf($p.code());
+		return $v;
 	}
 	
 	
-
-	public class StdCursor implements Cursor {
+	
+	private class OurCursor implements Cursor {
 		public void place(int $x, int $y) {
-			$console.printf(TermCodes.CSI+$y+";"+$x+"f");
+			$console.printf(TermCodes.CSI+(($y<0)?"":++$y)+";"+(($x<0)?"":++$x)+"f");
 		}
 		
 		public void shiftUp(int $n) {
@@ -85,60 +63,61 @@ public class StandardTerminal implements Terminal {
 		}
 		
 		public void lineNext(int $n) {
+			shiftDown($n);
+			$console.printf("\r");
 			// xterm supports this, but konsole doesn't.  i suppose i could check for compliance at startup and emulate it with asking current location and then doing a place, but... i really intend to avoid that sort of thing as strongly as possible.
-			$console.printf(TermCodes.CSI+$n+"E");
+			//$console.printf(TermCodes.CSI+$n+"E");
 		}
 		
 		public void linePrev(int $n) {
+			shiftUp($n);
+			$console.printf("\r");
 			// xterm supports this, but konsole doesn't.  i suppose i could check for compliance at startup and emulate it with asking current location and then doing a place, but... i really intend to avoid that sort of thing as strongly as possible.
-			$console.printf(TermCodes.CSI+$n+"F");
+			//$console.printf(TermCodes.CSI+$n+"F");
 		}
 	}
 	
-	
-	
-	public class StdPalette implements Palette {
-		public void bold(boolean $n) {
-			//TODO
-			
-		}
-		
-		public void blink(boolean $n) {
-			//TODO
-			
-		}
-		
-		public void underline(boolean $n) {
-			//TODO
-			
-		}
-		
-		public void background(Color $c) {
-			//TODO
-			
-		}
-		
-		public void foreground(Color $c) {
-			//TODO
-			
-		}
+	public Cursor cursor() {
+		return $cursor;
 	}
-
-
-
+	
+	public void clear() {
+		$console.printf(
+				TermCodes.CLEAR_SCREEN+	// duh
+				TermCodes.CSI+"f"	// also reset cursor to 1,1 (some terminals do this with just the clear screen code, so we shoot for consistency here) (we don't use the normal function for cursor positioning because we can skip some characters by taking advantage of the "1;1" default args).
+		);
+	}
+	
 	public int getWidth() {
-		try {
-			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput cols" }).getInputStream()).nextInt();
-		} catch (IOException $e) {
-			return -1;
-		}
+		return $dimensions.width;
 	}
-
 	public int getHeight() {
-		try {
-			return new Scanner(Runtime.getRuntime().exec(new String[] { "tput lines" }).getInputStream()).nextInt();
-		} catch (IOException $e) {
-			return -1;
+		return $dimensions.height;
+	}
+	private java.awt.Dimension $dimensions = new java.awt.Dimension(80,24);
+	/** We have little option for terminal resize detection except to have a WorkTarget deal with this frequently and emit events as necessary.  (Or write JNI to catch OS signals, which... no). */
+	void cacheDimensions() {
+//		try {
+//			$dimensions.width = new Scanner(Runtime.getRuntime().exec(new String[] { "tput cols" }).getInputStream()).nextInt();
+//			$dimensions.height = new Scanner(Runtime.getRuntime().exec(new String[] { "tput lines" }).getInputStream()).nextInt();
+//		} catch (IOException $e) {}
+		
+		// need to be able handle both output formats:
+		// speed 9600 baud; 24 rows; 140 columns;
+		// and:
+		// speed 38400 baud; rows = 49; columns = 111; ypixels = 0; xpixels = 0;
+		String $props = Stty.stty("-a");
+		for (StringTokenizer $toker = new StringTokenizer($props, ";\n"); $toker.hasMoreTokens();) {
+			String $tok = $toker.nextToken().trim();
+			if ($tok.startsWith("columns")) {
+				$dimensions.width = Integer.parseInt($tok.substring($tok.lastIndexOf(" ")).trim());
+			} else if ($tok.endsWith("columns")) {
+				$dimensions.width = Integer.parseInt($tok.substring(0, $tok.indexOf(" ")).trim());
+			} else if ($tok.startsWith("rows")) {
+				$dimensions.height = Integer.parseInt($tok.substring($tok.lastIndexOf(" ")).trim());
+			} else if ($tok.endsWith("rows")) {
+				$dimensions.height = Integer.parseInt($tok.substring(0, $tok.indexOf(" ")).trim());
+			}
 		}
 	}
 }

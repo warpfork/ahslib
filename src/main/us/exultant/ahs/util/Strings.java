@@ -155,12 +155,20 @@ public class Strings {
 	
 //////////////////////////////////////////////////////////////// PADDING FUNCTIONS
 	
+	public static String repeat(char $pad, int $count) {
+		if ($count < 0) throw new IllegalArgumentException("padCount must be >= 0");
+		StringBuffer $buf = new StringBuffer($count);
+		for (int i = 0; i < $count; ++i)
+			$buf.append($pad);
+		return $buf.toString();
+	}
+	
 	/**
 	 * Front-zero buff a number, and return it as a string. (Effectively,
 	 * <code>padLeftToWidth(String.valueOf($n), "0", $desiredWidth)</code>.)
 	 */
 	public static String frontZeroBuff(int $n, int $desiredWidth) {
-		return padLeftToWidth(String.valueOf($n), "0", $desiredWidth);
+		return padLeftToWidth(String.valueOf($n), '0', $desiredWidth);
 	}
 	
 	/**
@@ -171,7 +179,7 @@ public class Strings {
 	 * @return the padded string
 	 */
 	public static String padRight(String $s, int $padCount) {
-		return padRight($s, " ", $padCount);
+		return padRight($s, ' ', $padCount);
 	}
 	
 	/**
@@ -182,7 +190,7 @@ public class Strings {
 	 * @return the padded string
 	 */
 	public static String padLeft(String $s, int $padCount) {
-		return padLeft($s, " ", $padCount);
+		return padLeft($s, ' ', $padCount);
 	}
 	
 	/**
@@ -195,7 +203,7 @@ public class Strings {
 	 */
 	public static String padRight(String $s, String $pad, int $padCount) {
 		if ($padCount < 0) throw new IllegalArgumentException("padCount must be >= 0");
-		StringBuffer $buf = new StringBuffer($s.length()+$padCount);
+		StringBuffer $buf = new StringBuffer($s.length()+$padCount*$pad.length());
 		$buf.append($s);
 		for (int i = 0; i < $padCount; ++i)
 			$buf.append($pad);
@@ -213,11 +221,36 @@ public class Strings {
 	 */
 	public static String padLeft(String $s, String $pad, int $padCount) {
 		if ($padCount < 0) throw new IllegalArgumentException("padCount must be >= 0");
-		StringBuffer $buf = new StringBuffer($s.length()+$padCount);
+		StringBuffer $buf = new StringBuffer($s.length()+$padCount*$pad.length());
 		for (int i = 0; i < $padCount; ++i)
 			$buf.append($pad);
 		$buf.append($s);
 		return $buf.toString();
+	}
+	
+	/**
+	 * Appends $padCount iterations of the "$pad" string to the end of a string "$s".
+	 * 
+	 * @param $s
+	 * @param $pad
+	 * @param $padCount
+	 * @return the padded string
+	 */
+	public static String padRight(String $s, char $pad, int $padCount) {
+		return $s+repeat($pad,$padCount);
+	}
+	
+	/**
+	 * Appends $padCount iterations of the "$pad" string to the beginning of a string
+	 * "$s".
+	 * 
+	 * @param $s
+	 * @param $pad
+	 * @param $padCount
+	 * @return the padded string
+	 */
+	public static String padLeft(String $s, char $pad, int $padCount) {
+		return repeat($pad,$padCount)+$s;
 	}
 	
 	/**
@@ -244,7 +277,7 @@ public class Strings {
 	 * @param $desiredWidth
 	 * @return the padded string
 	 */
-	public static String padRightToWidth(String $s, String $pad, int $desiredWidth) {
+	public static String padRightToWidth(String $s, char $pad, int $desiredWidth) {
 		if ($s.length() < $desiredWidth) return padRight($s, $pad, $desiredWidth - $s.length());
 		return $s;
 	}
@@ -273,7 +306,7 @@ public class Strings {
 	 * @param $desiredWidth
 	 * @return the padded string
 	 */
-	public static String padLeftToWidth(String $s, String $pad, int $desiredWidth) {
+	public static String padLeftToWidth(String $s, char $pad, int $desiredWidth) {
 		if ($s.length() < $desiredWidth) return padLeft($s, $pad, $desiredWidth - $s.length());
 		return $s;
 	}

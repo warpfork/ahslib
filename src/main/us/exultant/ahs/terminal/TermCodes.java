@@ -1,6 +1,10 @@
 package us.exultant.ahs.terminal;
 
-public class TermCodes {
+/**
+ * Utility class for package members that holds strings representing ansi escape codes for
+ * terminal control.
+ */
+class TermCodes {
 	/** Control Sequence Initiator */
 	public static final String	CSI			= "\033[";
 	
@@ -34,7 +38,7 @@ public class TermCodes {
 	public static final String	REND_COLOR_BG_CYAN		= CSI+"46m";
 	public static final String	REND_COLOR_BG_WHITE		= CSI+"47m";
 	public static final String	REND_COLOR_BG_DEFAULT		= CSI+"49m";
-
+	
 	public static final String	REND_BLINK_ON			= CSI+"5m";
 	public static final String	REND_BLINK_OFF			= CSI+"25m";
 	public static final String	REND_UNDERLINE_ON		= CSI+"4m";
