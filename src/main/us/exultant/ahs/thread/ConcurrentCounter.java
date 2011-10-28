@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.*;
  * ConcurrentCounter can be constructed with either a pre-defined collection of elements
  * or an actual {@link Enum}-based type for greater efficiency. (Arbitrarily-timed online
  * additon of new elements is not allowed as this would require significantly greater
- * synchronization overhead on all operations).
+ * synchronization overhead on all operations.)
  * </p>
  * 
  * <p>
@@ -66,7 +66,7 @@ public abstract class ConcurrentCounter<$T> implements Listener<$T> {
 	
 	/**
 	 * This can be called from any thread, and will internally require no
-	 * synchronization on anything but the counter for the given element
+	 * synchronization on anything but the counter for the given element.
 	 * 
 	 * @return the number of times {@link #hear(Object)} has been called for this
 	 *         argument, or -1 if the argument is not in this counter.
