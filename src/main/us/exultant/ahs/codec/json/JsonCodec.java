@@ -1,3 +1,21 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package us.exultant.ahs.codec.json;
 
 import us.exultant.ahs.core.*;
@@ -37,47 +55,3 @@ public class JsonCodec extends EonCodec {
 	public JsonObject simple(Object $class, String $name, byte[] $data) { return (JsonObject)super.simple($class,$name,$data); }
 	public JsonObject simple(String $class, String $name, byte[] $data) { return (JsonObject)super.simple($class,$name,$data); }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-// THIS SHIT IS OLD:
-
-	// example of typical code body found within a class that provides its own codec.
-	// note that often the encode and decode blocks will also involve references the private fields of TheTargetClass.
-	
-	///* BEGIN JSON CODEC BLOCK */
-	//public static final Encoder<JsonObject,IdGlob> ENCODER_JSON;
-	//public static final Decoder<JsonObject,IdGlob> DECODER_JSON;
-	//static { JsonDencoder $t = new JsonDencoder(); ENCODER_JSON = $t; DECODER_JSON = $t; }
-	//public static class JsonDencoder implements Dencoder<JsonObject,IdGlob> {
-	//	public JsonObject encode(Codec<JsonObject> $codec, IdGlob $x) throws TranslationException {
-	//		JsonObject $jo = new JsonObject();
-	//		$jo.putKlass($x);
-	//		$jo.put("p", $codec.encode($x.$pse));
-	//		$jo.put("n", $codec.encode($x.$nth));
-	//		$jo.put("k", Codec_Json.encodeList($codec, $x.$pkr));
-	//		return $jo;
-	//	}
-	//	public IdGlob decode(Codec<JsonObject> $codec, JsonObject $jo) throws TranslationException {
-	//		$jo.assertKlass(IdGlob.class);
-	//		try {
-	//			return new IdGlob(
-	//					$codec.decode($jo.getJsonObject("p"), Pseudonym.class),
-	//					$codec.decode($jo.getJsonObject("n"), Nethernym.class),
-	//					new ArrayList<IbeKeyPrivate>(Codec_Json.decodeList($codec, $jo.getJsonArray("k"), IbeKeyPrivate.class))
-	//			);
-	//		} catch (Exception $e) {
-	//			throw new TranslationException($e);
-	//		}
-	//	}
-	//}
-	///* END JSON CODEC BLOCK */
