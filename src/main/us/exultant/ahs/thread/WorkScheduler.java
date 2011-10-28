@@ -1,3 +1,22 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ *
+ * AHSlib is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License, or
+ * (at the original copyright holder's option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
@@ -8,10 +27,16 @@ import java.util.concurrent.*;
  * A WorkScheduler is a thread pooling and work organizing mechanism.
  * </p>
  * 
+ * <p>
+ * Every running JVM should aim to have exactly one WorkScheduler. A default singleton is
+ * available from {@link WorkManager#getDefaultScheduler()}; use this whenever possible.
+ * </p>
+ * 
+ * <div style="border:1px solid; margin:1em; padding:1em;">
  * <h3>Relationship between WorkScheduler, WorkTarget, and the Future</h3>
  * 
  * <p>
- * {@link WorkTarget} represents runnable login that performs some work when given a
+ * {@link WorkTarget} represents runnable logic that performs some work when given a
  * thread. A {@link WorkScheduler} provides threads to all of the WorkTargets that it
  * manages in the best order it knows how &mdash corraling tasks with clock-based
  * schedules and tasks of various priorities, all of which may or may not be ready to
@@ -36,6 +61,7 @@ import java.util.concurrent.*;
  * creating a {@link Factory} for the WorkTarget and using the
  * {@link WorkManager#scheduleOnePerCore(Factory,WorkScheduler)} helper method.)
  * </p>
+ * </div>
  */
 public interface WorkScheduler {
 	/**
@@ -70,7 +96,10 @@ public interface WorkScheduler {
 	
 	/**
 	 * Call this method to have the WorkScheduler check the WorkTarget associated with
-	 * the given Future for readiness to be scheduled.
+	 * the given Future for readiness to be scheduled. If the WorkTarget is done and
+	 * not currently being run, it may be immediately transitioned to a finished state
+	 * (completion notification hooks will be called from this thread before this
+	 * method returns).
 	 * 
 	 * @param <$V>
 	 * @param $fut

@@ -1,3 +1,22 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ *
+ * AHSlib is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License, or
+ * (at the original copyright holder's option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package us.exultant.ahs.thread;
 
 import java.util.concurrent.*;
@@ -60,17 +79,59 @@ public final class ScheduleParams {
 		return NOW;
 	}
 	
-	public static ScheduleParams makeDelayed(long $ns) {
-		return new ScheduleParams($ns, 0);
+	public static ScheduleParams makeDelayed(long $delayMs) {
+		return makeDelayed($delayMs, TimeUnit.MILLISECONDS);
 	}
 	
-	public static ScheduleParams makeFixedRate(long $ns, long $period) {
-		return new ScheduleParams($ns, $period);
+	public static ScheduleParams makeFixedRate(long $periodMs) {
+		return makeFixedRate(0, $periodMs, TimeUnit.MILLISECONDS);
 	}
 	
-	public static ScheduleParams makeFixedDelay(long $ns, long $period) {
-		return new ScheduleParams($ns, -$period);
+	public static ScheduleParams makeFixedDelay(long $periodMs) {
+		return makeFixedRate(0, $periodMs, TimeUnit.MILLISECONDS);
 	}
+	
+	public static ScheduleParams makeFixedRate(long $initialDelayMs, long $periodMs) {
+		return makeFixedRate($initialDelayMs, $periodMs, TimeUnit.MILLISECONDS);
+	}
+	
+	public static ScheduleParams makeFixedDelay(long $initialDelayMs, long $periodMs) {
+		return makeFixedRate($initialDelayMs, $periodMs, TimeUnit.MILLISECONDS);
+	}
+	
+	public static ScheduleParams makeDelayed(long $delay, TimeUnit $unit) {
+		return makeDelayed($delay, $unit, false);
+	}
+	
+	public static ScheduleParams makeFixedRate(long $initialDelay, long $period, TimeUnit $unit) {
+		return makeFixedRate($initialDelay, $period, $unit, false);
+	}
+	
+	public static ScheduleParams makeFixedDelay(long $initialDelay, long $period, TimeUnit $unit) {
+		return makeFixedDelay($initialDelay, $period, $unit, false);
+	}
+	
+	public static ScheduleParams makeDelayed(long $startTime, TimeUnit $unit, boolean $startTimeIsAbsolute) {
+		return new ScheduleParams(
+				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
+				0
+		);
+	}
+	
+	public static ScheduleParams makeFixedRate(long $startTime, long $period, TimeUnit $unit, boolean $startTimeIsAbsolute) {
+		return new ScheduleParams(
+				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
+				$unit.toNanos($period)
+		);
+	}
+	
+	public static ScheduleParams makeFixedDelay(long $startTime, long $period, TimeUnit $unit, boolean $startTimeIsAbsolute) {
+		return new ScheduleParams(
+				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
+				-$unit.toNanos($period)
+		);
+	}
+		
 	
 	private ScheduleParams(long $ns, long $period) {
 		this.$time = $ns;
@@ -144,6 +205,5 @@ public final class ScheduleParams {
 		if ($time == 0) return; // this is immutable, silly.	// we could also just let this go, or we could have a subclass that stubs the method.  really it makes no difference -- putting this check in trades one JNE instruction in x86 assembly for sanity, whoopdeedoo.
 		if ($period > 0) $time += $period;
 		else $time = System.nanoTime() + -$period;
-		// DL's ScheduledThreadPoolExecutor has some fiddly bits here with a triggerTime and overflowFree function... but I don't really see why.  The problems don't show up unless you're scheduling tasks something like 22,900 TERAYEARS in the future, and at that point I think it's frankly clear that you're asking for trouble. 
 	}
 }

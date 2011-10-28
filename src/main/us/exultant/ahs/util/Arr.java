@@ -1,8 +1,27 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ *
+ * AHSlib is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License, or
+ * (at the original copyright holder's option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package us.exultant.ahs.util;
 
-import java.util.*;
-import java.lang.reflect.Array;
+import java.lang.reflect.*;
 import java.nio.*;
+import java.util.*;
 
 /**
  * Similar to java.util.Arrays, but with some added functionality. Helps maintain sanity
@@ -13,7 +32,12 @@ import java.nio.*;
  * 
  */
 public class Arr {
-	public <T> T[] array(T... $xs) {
+	@SuppressWarnings("unchecked")
+	public static <T> T[] newInstance(Class<T> $class, int $size) {
+		return (T[]) Array.newInstance($class, $size);	// would you believe this actually delegates all the way down to a native method just to jump the typesafety hoops?  sheesh.
+	}
+	
+	public static <T> T[] array(T... $xs) {
 		return $xs;
 	}
 	

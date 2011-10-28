@@ -1,3 +1,22 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ *
+ * AHSlib is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License, or
+ * (at the original copyright holder's option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package us.exultant.ahs.test;
 
 import us.exultant.ahs.log.*;
@@ -16,7 +35,7 @@ import us.exultant.ahs.util.*;
  * Behold, a replacement: this class simply passes errors and exceptions it encounters on
  * to a logger. Exceptions that bubble out of a test stop that test and all subsequent
  * tests; asserts failed do not unless it is explicitly requested that they do so (this
- * allows a series assertions to be used to report on the state of several critical
+ * allows a series of assertions to be used to report on the state of several critical
  * variables at once so that the developer can easily get a more complete picture of the
  * system state before aborting the test).
  * </p>

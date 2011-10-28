@@ -16,7 +16,7 @@
 	AHSlib's primary source repository is held by Git and managed with Redmine &mdash; check it out: <a href='https://rubicon.exultant.us/redmine/projects/ahslib'>https://rubicon.exultant.us/redmine/projects/ahslib</a>
 </p>
 <p>
-	The javadocs are <a href='javadoc'>here</a>.  Introductory and overview docuemntation that's more forgiving to new users is comming soon.
+	The javadocs are <a href='javadoc'>here</a>.  Introductory and overview docuemntation that's more forgiving to new users is coming soon.
 </p>
 <p>
 	This documentation is in the repository itself, so you can both read <i>and</i> contribute to it via git!

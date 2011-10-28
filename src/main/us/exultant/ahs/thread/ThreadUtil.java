@@ -1,3 +1,22 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ *
+ * AHSlib is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License, or
+ * (at the original copyright holder's option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.util.*;
@@ -99,6 +118,24 @@ public abstract class ThreadUtil {
 		Thread[] $threads = new Thread[$tasks.length];
 		for (int $i = 0; $i < $tasks.length; $i++)
 			$threads[$i] = new Thread($tasks[$i]);
+		return $threads;
+	}
+	
+	/**
+	 * Produces a number of threads, each wrapped the given Runnable.
+	 * 
+	 * @param $task
+	 * @param $number
+	 *                how many threads to produce
+	 * @return an array of new (unstarted) Thread of the same magnitude as the given
+	 *         Runnable array.
+	 */
+	public static Thread[] wrapAll(Runnable $task, int $number) {
+		Thread[] $threads = new Thread[$number];
+		for (int $i = 0; $i < $number; $i++) {
+			$threads[$i] = new Thread($task);
+			$threads[$i].setDaemon(true);
+		}
 		return $threads;
 	}
 	

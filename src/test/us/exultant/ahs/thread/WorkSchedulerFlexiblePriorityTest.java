@@ -17,28 +17,28 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package us.exultant.ahs.scratch.applet;
+package us.exultant.ahs.thread;
 
-import java.applet.*;
-import netscape.javascript.*;
+import us.exultant.ahs.log.*;
 
-public class DomContactJso implements DomContact.Exposure {
-	public DomContactJso(Applet $applet) {
-		$jso = JSObject.getWindow($applet);
-		$precommand = new StringBuffer(1024);
+public class WorkSchedulerFlexiblePriorityTest extends WorkSchedulerTest {
+	public static void main(String... $args) {
+		try {
+			new WorkSchedulerFlexiblePriorityTest().run();
+		} catch (Throwable $e) {	// this seems a bit daft, no?  but otherwise my eclipse console is missing some kinds of class cast exception, so... welp.
+			$e.printStackTrace();
+		}
 	}
 	
-	private JSObject	$jso;
-	private StringBuffer	$precommand;
-	
-	public synchronized Object eval(String... $strs) {
-		if ($strs.length == 0) return null;
-		if ($strs.length == 1) return $jso.eval($strs[0]);
-		return $jso.eval(condense($strs));
+	public WorkSchedulerFlexiblePriorityTest() {
+		super();
 	}
-	private synchronized String condense(String... $strs) {
-		$precommand.setLength(0);
-		for (String $s : $strs) $precommand.append($s);
-		return $precommand.toString();
+	
+	public WorkSchedulerFlexiblePriorityTest(Logger $log, boolean $enableConfirmation) {
+		super($log, $enableConfirmation);
+	}
+	
+	protected WorkScheduler makeScheduler() {
+		return new WorkSchedulerFlexiblePriority(4);
 	}
 }

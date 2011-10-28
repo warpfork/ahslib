@@ -1,3 +1,21 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package us.exultant.ahs.codec.eon;
 
 import us.exultant.ahs.core.*;
@@ -21,7 +39,7 @@ import us.exultant.ahs.core.*;
  * 
  * <p>
  * Support is provided for the following data types: string, int, long, double, boolean,
- * byte array &mdash as well as {@link EonObject} and {@link EonArray} recursively.
+ * byte array &mdash; as well as {@link EonObject} and {@link EonArray} recursively.
  * Unsigned types are not allowed by EonArray, since this would violate the
  * least-common-denominator approach and can be highly unpleasant to deal with the
  * implications of in many languages.
@@ -51,8 +69,8 @@ import us.exultant.ahs.core.*;
  * defaults are identical.
  * </p>
  * 
- * @see EonObject for the matching abstraction as applicable for arrays (as opposed to the
- *      maps provided here).
+ * @see EonObject for the matching abstraction as applicable for maps (as opposed to the
+ *      arrays provided here).
  */
 public interface EonArray {
 	/**

@@ -1,3 +1,22 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ *
+ * AHSlib is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License, or
+ * (at the original copyright holder's option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
@@ -70,18 +89,23 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * <p>
 	 * This method can be called at any time, and any number of times, and need not be
 	 * reentrant &mdash it is the responsibility of the caller to make sure that calls
-	 * to this method are properly synchronized.
+	 * to this method are properly synchronized. (If a WorkTarget is scheduled with a
+	 * {@link WorkScheduler}, this is handled automatically.)
 	 * </p>
 	 * 
 	 * <p>
 	 * Each invocation of this method may return a value or throw an exception after
 	 * performing its work, and this result may be different with every invocation.
+	 * Typically this result is most convenient to use for tasks that are only run
+	 * once; for tasks that may be run repeatedly, it is often more convenient to use
+	 * a {@link Pipe.Sink} to gather output and set the generic return type to
+	 * {@link Void}.
 	 * </p>
 	 * 
 	 * <p>
-	 * Calling this method after {@link #isDone()} returns true may have undefined
-	 * results (i.e., may return any value, or null, or throw an exception), but it
-	 * must return immediately. (When submitted to a {@link WorkScheduler}, the
+	 * Calling this method after {@link #isDone()} returns true is allowed to have
+	 * undefined results (i.e., may return any value, or null, or throw an exception),
+	 * but it MUST return immediately. (When submitted to a {@link WorkScheduler}, the
 	 * {@link WorkFuture#get()} method of the returned {@link WorkFuture} can be used
 	 * to consistently access the final result of the work.)
 	 * </p>
@@ -98,6 +122,28 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * However, this sort of behavior should be avoided at all costs since
 	 * {@link WorkScheduler} assigns threads based on the assumption that this sort of
 	 * idiocy will not be performed.)
+	 * </p>
+	 * 
+	 * <h3>Additional return constraints when using a {@link WorkScheduler}</h3>
+	 * <p>
+	 * WorkScheduler implementations and the WorkFuture they link to a WorkTarget make
+	 * it possible to consistently access the "final" result of a WorkTarget that has
+	 * become done. However, they also add a few special rules:
+	 * <ul>
+	 * <li>Exceptions thrown from this {@link #call()} method cause the WorkScheduler
+	 * to stop handling this WorkTarget, and the WorkFuture will always thrown that
+	 * exception (wrapped in an {@link ExecutionException}) from
+	 * {@link WorkFuture#get()}.
+	 * <li>Whenever this {@link #call()} method returns <tt>null</tt>, that return is
+	 * ignored &mdash; if the WorkTarget becomes finished before any other invocations
+	 * of <tt>call()</tt>, then the {@link WorkFuture#get()} method will return the
+	 * most recent non-null return from the <tt>call()</tt> method. (It is still
+	 * possible for {@link WorkFuture#get()} to return <tt>null</tt> if
+	 * <tt>call()</tt> only ever returns null.)
+	 * <li>{@link WorkFuture#get()} will throw a {@link CancellationException} if
+	 * {@link WorkFuture#cancel(boolean)} was called before this WorkTarget became
+	 * done (regardless of anything this <tt>call</tt> method has already returned).
+	 * </ul>
 	 * </p>
 	 */
 	public $V call() throws Exception;

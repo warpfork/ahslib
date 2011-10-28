@@ -1,25 +1,72 @@
+/*
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
+ *
+ * AHSlib is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License, or
+ * (at the original copyright holder's option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
 public class WorkSchedulerFlexiblePriority implements WorkScheduler {
+	public WorkSchedulerFlexiblePriority(int $threadCount) {
+		Thread[] $threads = ThreadUtil.wrapAll(new Runnable() {
+			public void run() {
+				for (;;) {
+					try {
+						worker_cycle();
+					} catch (InterruptedException $e) { $e.printStackTrace(); }
+				}
+			}
+		}, $threadCount);
+		
+		ThreadUtil.startAll($threads);
+		
+		//schedule(new RelentlessGC(), ScheduleParams.makeFixedDelay(2));	// i want to be better than this.
+	}
+	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
 		WorkFuture<$V> $wf = new WorkFuture<$V>($work, $when);
-		if ($wf.$sync.scheduler_shift())
-			$scheduled.add($wf);
-		else
-			if ($when.isUnclocked())
-				$unready.add($wf);
+			//FIXME:AHS:THREAD: this next line won't actually notice if the task that was submitted was already finished (it won't schedule it either, which is good, but not finishing it is still a bug (we wouldn't want someone to wait on the future if it'll never transition to finished, right?)).  (the RelentlessGC will deal with it eventually of course, but it's much better if we notice it immediately -- then we don't even have to lock the scheduler to insert the new task.
+		$lock.lock();
+		try {
+			if ($wf.$sync.scheduler_shift())
+				$scheduled.add($wf);
 			else
-				$delayed.add($wf);
-		return $wf;
+				if ($when.isUnclocked()) {
+					$unready.add($wf);
+//					$log.trace(this, "frosh to unready: "+$wf);
+				}
+				else
+					$delayed.add($wf);
+			return $wf;
+		} finally {
+			$lock.unlock();
+		}
 	}
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
 		// check doneness; try to transition immediate to FINISHED if is done.
-		if ($fut.$work.isDone()) $fut.$sync.tryFinish(false);
+		if ($fut.$work.isDone()) {
+			$fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
+//			$log.trace(this, "FINAL UPDATE REQUESTED for "+$fut);
+		}
 		
 		// just push this into the set of requested updates.
 		$updatereq.add($fut);
@@ -30,26 +77,73 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private final PriorityHeap		$delayed	= new PriorityHeap(WorkFuture.DelayComparator.INSTANCE);
 	private final PriorityHeap		$scheduled	= new PriorityHeap(WorkFuture.PriorityComparator.INSTANCE);
 	private final Set<WorkFuture<?>>	$unready	= new HashSet<WorkFuture<?>>();
-	private final Set<WorkFuture<?>>	$updatereq	= new ConcurrentSkipListSet<WorkFuture<?>>();	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
+	private final Set<WorkFuture<?>>	$updatereq	= Collections.newSetFromMap(new ConcurrentHashMap<WorkFuture<?>,Boolean>());	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
 	
 	private final ReentrantLock		$lock		= new ReentrantLock();
 	private Thread				$leader		= null;
 	private final Condition			$available	= $lock.newCondition();
 	
+//	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
+	
 	
 	private void worker_cycle() throws InterruptedException {
-		$lock.lockInterruptibly();
-		try {
-			WorkFuture<?> $wf = worker_acquireWork();	// this may block.
-			if ($wf.$sync.scheduler_power()) {
-				// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
-				//TODO:AHS:THREAD
+		WorkFuture<?> $chosen;
+		doWork: for (;;) {	// we repeat this loop... well, forever, really.
+			
+			// lock until we can pull someone out who's state is scheduled.
+			//    delegate our attention to processing update requests and waiting for delay expirations as necessary.
+			$lock.lockInterruptibly();
+			try { retry: for (;;) {
+				WorkFuture<?> $wf = worker_acquireWork();	// this may block.
+				switch ($wf.getState()) {
+					case FINISHED:
+						hearTaskDrop($wf);
+						continue retry;
+					case CANCELLED:
+						hearTaskDrop($wf);
+						continue retry;
+					case SCHEDULED:
+						$chosen = $wf;
+						break retry;
+					default:
+						throw new MajorBug("work acquisition turned up a target that had been placed in the scheduled heap, but was neither in a scheduled state nor had undergone any of the valid concurrent transitions.");
+				}
+			}} finally {
+				$lock.unlock();
+			}
+			
+			// run the work we pulled out.
+			boolean $requiresMoar = $chosen.$sync.scheduler_power();
+			
+			// requeue the work for future attention if necessary
+			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.				
+				$lock.lockInterruptibly();
+				try {
+					if ($chosen.$sync.scheduler_shift()) {
+						$scheduled.add($chosen);
+					} else {
+						if ($chosen.$work.isDone()) {
+							boolean $causedFinish = $chosen.$sync.tryFinish(false, null, null);
+//							$log.trace(this, "isDone "+$chosen+" noticed in worker_cycle() after powering it; we caused finish "+$causedFinish);
+							hearTaskDrop($chosen);
+							continue doWork;
+						}
+						// bit of a dodgy spot here: tasks are allowed to become done without notification (i.e. a readhead that was closed long ago but only emptied now due to a concurrent read; a task based on eating from that thing becomes done, but doesn't notice it at all).  And they're allowed to do that at any time after they're in the unready pool, too.  :/
+						//    There are two ways of dealing with something like that: having every read from a RH check for doneness, and everyone subscribe to the RH so we could notify for them (which is an INSANE degree of complication to add to the API, and completely useless for a lot of other applications of pipes)... Or, do periodic cleanup.
+						// oh, and also someone can do a concurrent cancel before that scheduler_shift attempt, which will bring us here and also leave us with an awkward cancelled task stuck in our unready heap (which isn't as bad as a done-but-not-finished task, since no one can get stuck waiting on it, but is still a garbage problem).
+						if ($chosen.getScheduleParams().isUnclocked()) {
+//							$log.trace(this, "added to unready: "+$chosen);
+							$unready.add($chosen);
+						} else
+							$delayed.add($chosen);
+					}
+				} finally {
+					$lock.unlock();
+				}
 			} else {
 				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
-				/* no-op */
+				hearTaskDrop($chosen);
 			}
-		} finally {
-			$lock.unlock();
 		}
 	}
 	
@@ -68,11 +162,14 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * The lock much be acquired during this entire function, in order to make
 	 * possible the correctly atomic shifts to RUNNING or WAITING that may be carried
 	 * out immediately following this function.
-	 */	// actually, not sure about that lock.  it doesn't cause problems if we keep it listed as scheduled even if its not in that heap for a moment, i think.  and either of the following transitions would be followed by our relinquishment anyway, i think.  though if we hit FINISHED, CANCELLED, or make it directly into WAITING, then we'll have to sink right back into this, so we might as well not leave ourselves open to contention.
+	 */
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
 		try { for (;;) {
+			// offer to shift any unclocked tasks that have had updates requested
+			worker_pollUpdates();
+			
 			// shift any clock-based tasks that need no further delay into the scheduled heap.  note the time until the next of those clocked tasks will be delay-free.
-			long $delay = worker_pollDelayed();		
+			long $delay = worker_pollDelayed();
 			
 			// get work now, if we have any.
 			WorkFuture<?> $first = $scheduled.peek();
@@ -95,6 +192,35 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	/**
+	 * Drains the {@link #$updatereq} set and tries to shift those work targets from
+	 * the {@link #$unready} heap and into the {@link #$scheduled} heap. This must be
+	 * called only while holding the lock.
+	 */
+	private void worker_pollUpdates() {
+		final Iterator<WorkFuture<?>> $itr = $updatereq.iterator();
+		while ($itr.hasNext()) {
+			WorkFuture<?> $wf = $itr.next(); $itr.remove();
+			if ($wf.$sync.scheduler_shift()) {
+				//if ($unready.remove($wf))	//FIXME this appears to be poo.  which is odd, since things shouldn't really not be in there when this happens... that would imply we dropped the ball somewhere already and that remembrance of this task is purely from... uh, updates.  which isn't even remembrance.
+					$scheduled.add($wf);
+			} else {
+				if ($wf.$work.isDone())	{
+					boolean $causedFinish = $wf.$sync.tryFinish(false, null, null);
+//					$log.trace(this, "isDone "+$wf+" noticed in worker_pollUpdates(); we caused finish "+$causedFinish);
+				}
+				switch ($wf.getState()) {
+					case FINISHED:
+					case CANCELLED:
+						$unready.remove($wf);
+						hearTaskDrop($wf);
+					default: // still just waiting, leave it there
+						continue;
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Pulls clocked work that requires no further delay off of the delayed heap,
 	 * pushes it into the scheduled heap, and sifts the shifted tasks as necessary by
 	 * priority.
@@ -112,13 +238,29 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			$key = $delayed.peek();
 			if ($key == null) return Long.MAX_VALUE;	// the caller should just wait indefinitely for notification of new tasks entering the system, because we're empty.
 			if (!$key.$sync.scheduler_shift()) return $key.getScheduleParams().getDelay();
-			
 			$delayed.poll();	// get it outta there
 			$scheduled.add($key);	
 		}
 	}
 	
+	protected void hearTaskDrop(WorkFuture<?> $wf) {
+//		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
+	}
 	
+	protected void echoSecrets() {
+		$lock.lock();
+		try {
+			X.sayet("\n" +
+				"\t  $delayed: " + $delayed.$size    + "\n" +
+				"\t$scheduled: " + $scheduled.$size  + "\n" +
+				"\t  $unready: " + $unready.size()   + "\n" +
+				"\t$updatereq: " + $updatereq.size() + "\n" +
+				""
+			);
+		} finally {
+			$lock.unlock();
+		}
+	}
 	
 	
 	
@@ -210,6 +352,36 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			if ($newCapacity < 0) // overflow
 			$newCapacity = Integer.MAX_VALUE;
 			$queue = Arrays.copyOf($queue, $newCapacity);
+		}
+	}
+	
+	private class RelentlessGC implements WorkTarget<Void> {
+		public Void call() throws Exception {
+			$lock.lockInterruptibly();
+			try {
+//				$log.trace(this, "tick.  unready.size="+$unready.size());
+				$updatereq.addAll($unready);
+			} finally {	
+//				$log.trace(this, "tick done.  updatereq.size="+$updatereq.size()+"  unready.size="+$unready.size());
+				$lock.unlock();
+			}
+			return null;
+		}
+
+		public boolean isDone() {
+			return false;
+		}
+		
+		public boolean isReady() {
+			return true;
+		}
+
+		public int getPriority() {
+			return -1000;
+		}
+		
+		public String toString() {
+			return "WorkSchedulerFlexiblePriority-RelentlessGC";
 		}
 	}
 }
