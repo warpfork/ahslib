@@ -22,7 +22,7 @@ import java.util.*;
  * 
  * <p>
  * Support is provided for the following data types: string, int, long, double, boolean,
- * byte array &mdash as well as {@link EonObject} and {@link EonArray} recursively.
+ * byte array &mdash; as well as {@link EonObject} and {@link EonArray} recursively.
  * Unsigned types are not allowed by EonObject, since this would violate the
  * least-common-denominator approach and can be highly unpleasant to deal with the
  * implications of in many languages.
@@ -41,7 +41,7 @@ import java.util.*;
  * </p>
  * 
  * <p>
- * Some specific implementations may enforce greater strictness on keys &mdash for
+ * Some specific implementations may enforce greater strictness on keys &mdash; for
  * example, the subset of strings that are valid keys (some XML schema would certainly do
  * this), or on the length of key (EBON does this at 65536 characters; the author notes
  * with some disapproval that some schemes go so far as to limit this to 255 characters,

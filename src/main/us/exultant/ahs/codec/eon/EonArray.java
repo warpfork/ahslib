@@ -21,7 +21,7 @@ import us.exultant.ahs.core.*;
  * 
  * <p>
  * Support is provided for the following data types: string, int, long, double, boolean,
- * byte array &mdash as well as {@link EonObject} and {@link EonArray} recursively.
+ * byte array &mdash; as well as {@link EonObject} and {@link EonArray} recursively.
  * Unsigned types are not allowed by EonArray, since this would violate the
  * least-common-denominator approach and can be highly unpleasant to deal with the
  * implications of in many languages.
@@ -51,8 +51,8 @@ import us.exultant.ahs.core.*;
  * defaults are identical.
  * </p>
  * 
- * @see EonObject for the matching abstraction as applicable for arrays (as opposed to the
- *      maps provided here).
+ * @see EonObject for the matching abstraction as applicable for maps (as opposed to the
+ *      arrays provided here).
  */
 public interface EonArray {
 	/**
