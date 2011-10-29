@@ -20,17 +20,18 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class WorkManager {
-	public static Future<Void> scheduleOnePerCore(Factory<WorkTarget<?>> $wtf) {
+	public static <$T> Future<Void> scheduleOnePerCore(Factory<WorkTarget<$T>> $wtf) {
 		return scheduleOnePerCore($wtf, getDefaultScheduler());
 	}
-	public static Future<Void> scheduleOnePerCore(final Factory<WorkTarget<?>> $wtf, final WorkScheduler $ws) {
+	public static <$T> Future<Void> scheduleOnePerCore(final Factory<WorkTarget<$T>> $wtf, final WorkScheduler $ws) {
 		final int $n = Runtime.getRuntime().availableProcessors();
-		WorkFuture<?>[] $fa = new WorkFuture<?>[$n]; 
+		List<WorkFuture<$T>> $fa = new ArrayList<WorkFuture<$T>>($n);
 		for (int $i = 0; $i < $n; $i++)
-			$fa[$i] = $ws.schedule($wtf.make(), ScheduleParams.NOW);	// i assume it wouldn't often make sense to schedule the same task at the same time on multiple cores if it's clock-based
+			$fa.add($ws.schedule($wtf.make(), ScheduleParams.NOW));	// i assume it wouldn't often make sense to schedule the same task at the same time on multiple cores if it's clock-based
 		return null;	//FIXME:AHS:THREAD: return an aggregate future
 	}
 	
