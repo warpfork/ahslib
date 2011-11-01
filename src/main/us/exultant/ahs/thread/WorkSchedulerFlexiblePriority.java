@@ -43,18 +43,24 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
 		WorkFuture<$V> $wf = new WorkFuture<$V>($work, $when);
-			//FIXME:AHS:THREAD: this next line won't actually notice if the task that was submitted was already finished (it won't schedule it either, which is good, but not finishing it is still a bug (we wouldn't want someone to wait on the future if it'll never transition to finished, right?)).  (the RelentlessGC will deal with it eventually of course, but it's much better if we notice it immediately -- then we don't even have to lock the scheduler to insert the new task.
 		$lock.lock();
 		try {
-			if ($wf.$sync.scheduler_shift())
+			if ($wf.$sync.scheduler_shift()) {
 				$scheduled.add($wf);
-			else
+			} else {
 				if ($when.isUnclocked()) {
 					$unready.add($wf);
 //					$log.trace(this, "frosh to unready: "+$wf);
-				}
-				else
+				} else {
 					$delayed.add($wf);
+				}
+
+				if ($work.isDone()) {
+					// this check MUST be done AFTER adding the task to a heap, or otherwise it becomes more than slightly dodgy, for all the usual reasons: you could have failed to shift because you just weren't ready, then the done check happens, then you concurrently "finish" from someone else draining your pipe before this scheduler knows to take update requests about you seriously.
+					$wf.$sync.tryFinish(false, null, null);
+					hearTaskDrop($wf);
+				}
+			}
 			return $wf;
 		} finally {
 			$lock.unlock();
@@ -247,16 +253,15 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 //		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
 	}
 	
-	protected void echoSecrets() {
+	public String getStatus() {
 		$lock.lock();
 		try {
-			X.sayet("\n" +
-				"\t  $delayed: " + $delayed.$size    + "\n" +
-				"\t$scheduled: " + $scheduled.$size  + "\n" +
-				"\t  $unready: " + $unready.size()   + "\n" +
-				"\t$updatereq: " + $updatereq.size() + "\n" +
-				""
-			);
+			return 
+			"running: "   + Strings.padLeftToWidth("x", 5)                  + "    " +
+			"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
+			"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
+			"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
+			"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5);
 		} finally {
 			$lock.unlock();
 		}
