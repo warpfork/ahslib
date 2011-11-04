@@ -64,6 +64,8 @@ import java.util.concurrent.*;
  * </div>
  */
 public interface WorkScheduler {
+	public WorkScheduler start();
+	
 	/**
 	 * <p>
 	 * Arranges for a {@link WorkTarget} to be executed at the convenience of this

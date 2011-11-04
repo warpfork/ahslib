@@ -65,7 +65,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** One runnable wrapped to be a one-shot WorkTarget. */
 	private class TestRunOnce extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler().start();
 		
 		public Object call() {
 			Work $w = new Work();
@@ -94,7 +94,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** Eight work targets, all always ready until they're done. */
 	private class TestWtAlwaysReady extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler().start();
 		
 		public Object call() {
 			Work[] $wt = new Work[8];
@@ -138,7 +138,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** Test two work targets, once of which must always follow the other (in other words, one is always ready, but the other changes readiness based on the progress of the first). */
 	public class TestNonblockingLeaderFollower extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler().start();
 		final int HIGH = 10000;
 		final int LOW = 100;
 		
@@ -228,6 +228,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$wf[2] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 17, true), ScheduleParams.makeDelayed(300));
 			$wf[6] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 30, true), ScheduleParams.makeDelayed(700));
 			$wf[7] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -6, true), ScheduleParams.makeDelayed(800));
+			$ws.start();
 			
 			try {
 				for (int $i = 1; $i < WTC; $i++) {
@@ -253,7 +254,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** One task with a fixed delay is scheduled to run 10 times, and is checked by another thread (at fixed delay, awkwardly, but the resolution is low enough that it's kay). */
 	private class TestScheduleFixedRate extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler().start();
 		
 		public Object call() {
 			Work $wt = new Work();
@@ -303,7 +304,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	 * This also tests (if indirectly) consistent results from WorkTarget that receive concurrent finishes (but I'd recommend running it numerous times if you want to feel confident of that.  And by numerous times, I mean many thousands of times.).
 	 */
 	private class TestNonblockingManyWorkSingleSource extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler().start();
 		public final int HIGH = 1000;
 		public final int WTC = 32;
 		

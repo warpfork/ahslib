@@ -380,7 +380,7 @@ public class WorkFuture<$V> implements Future<$V> {
 
 		/** @return positive if the first arg should be run sooner than the second */
 		public int compare(WorkFuture<?> $o1, WorkFuture<?> $o2) {
-			long $diff = $o1.$schedp.getNextRunTime() - $o2.$schedp.getNextRunTime();
+			final long $diff = $o1.$schedp.getNextRunTime() - $o2.$schedp.getNextRunTime();
 			if ($diff > 0) return -1;
 			if ($diff < 0) return 1;
 			return 0;

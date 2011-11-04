@@ -26,6 +26,18 @@ import java.util.concurrent.locks.*;
 
 public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	public WorkSchedulerFlexiblePriority(int $threadCount) {
+		this.$threadCount = $threadCount;
+		
+		//schedule(new RelentlessGC(), ScheduleParams.makeFixedDelay(2));	// i want to be better than this.
+	}
+	
+	private final int $threadCount;
+	private boolean $started;
+	
+	public synchronized WorkScheduler start() {
+		if ($started) return null;
+		$started = true;
+		
 		Thread[] $threads = ThreadUtil.wrapAll(new Runnable() {
 			public void run() {
 				for (;;) {
@@ -38,7 +50,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		ThreadUtil.startAll($threads);
 		
-		//schedule(new RelentlessGC(), ScheduleParams.makeFixedDelay(2));	// i want to be better than this.
+		return this;
 	}
 	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {

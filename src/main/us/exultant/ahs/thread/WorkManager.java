@@ -64,6 +64,6 @@ public class WorkManager {
 	}
 
 	private static class SingletonHolder {
-		public static final WorkScheduler INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()));
+		public static final WorkScheduler INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors())).start();
 	}
 }
