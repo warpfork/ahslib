@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.*;
  */
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
-		super(new Logger(Logger.LEVEL_TRACE), true);
+		super(new Logger(Logger.LEVEL_DEBUG), true);
 	}
 	
 	public WorkSchedulerTest(Logger $log, boolean $enableConfirmation) {
@@ -53,6 +53,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		$tests.add(new TestScheduleSingleDelayMany());
 		$tests.add(new TestScheduleFixedRate());
 		$tests.add(new TestNonblockingManyWorkSingleSource());
+		$tests.add(new TestConcurrentFinish());
 		$tests.add(new TestPrioritizedDuo());
 		return $tests;
 	}
@@ -391,11 +392,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 	 * This also tests (if indirectly) consistent results from WorkTarget that receive concurrent finishes (but I'd recommend running it numerous times if you want to feel confident of that.  And by numerous times, I mean many thousands of times.).
 	 */
 	private class TestNonblockingManyWorkSingleSource extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler(0).start();
+		protected WorkScheduler $ws = makeScheduler(0).start();
 		public final int HIGH = 1000;
 		public final int WTC = 32;
 		
-		private final Pipe<Integer> $pipe = new Pipe<Integer>();
+		protected final Pipe<Integer> $pipe = new Pipe<Integer>();
 		protected final Work[] $wt = new Work[WTC];
 		@SuppressWarnings("unchecked")	// impossible to not suck in java.
 		protected final WorkFuture<Integer>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
@@ -410,6 +411,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			for (int $i = 0; $i < WTC; $i++)
 				$wf[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
 			
+			configurePipe();
+			
 			$log.trace(this, "waiting for work future completion");
 			try {
 				boolean $wonOnce = false;
@@ -417,7 +420,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 					Integer $ans = $wf[$i].get();
 					$log.debug(this, "final result of work target "+$i+": "+$ans);
 					if ($ans != null && $ans == HIGH) {
-						assertFalse("More than one WorkTarget finished with the high value.", $wonOnce);
+						assertFalse("No more than one WorkTarget finished with the high value.", $wonOnce);
 						$wonOnce = true;
 					}
 				}
@@ -441,7 +444,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				return !isDone();
 			}
 			public synchronized boolean isDone() {
-				return !$pipe.SRC.hasNext();
+				return $pipe.SRC.isClosed() && !$pipe.SRC.hasNext();
 			}
 			public int getPriority() {
 				return 0;
@@ -458,26 +461,25 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$pipe.SINK.close();
 			$log.trace(this, "feed closed");
 		}
+		protected void configurePipe() {}
 	}
 	
 	
 	
 	/** Same as {@link TestNonblockingManyWorkSingleSource}, but the input pipe will be closed from the sink thread when the source is already empty (resulting in a (probably) concurrent finish for the WorkTargets). */
 	private class TestConcurrentFinish extends TestNonblockingManyWorkSingleSource {
-		public Object call() {
-			// the earlier test didn't actually need to set the pipe listener because all the writes were done before any reading started, and so all of the work was always ready as long as it wasn't done.  now we're in an entirely different situation.
-//			$pipe.SRC.setListener(new Listener<ReadHead<Integer>>() {
-//				public void hear(ReadHead<Integer> $rh) {
-//					
-//				}
-//			});
-			
-			breakIfFailed();
-			return null;
+		protected void feedPipe() {
+			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() { public void run() { TestConcurrentFinish.super.feedPipe(); } }), ScheduleParams.NOW);	// that was an incredibly satisfying line to write
 		}
 		
-		protected void feedPipe() {
-			
+		protected void configurePipe() {
+			// the earlier test didn't actually need to set the pipe listener because all the writes were done before any reading started, and so all of the work was always ready as long as it wasn't done.  now we're in an entirely different situation.
+			$pipe.SRC.setListener(new Listener<ReadHead<Integer>>() {
+				public void hear(ReadHead<Integer> $rh) {
+					for (WorkFuture<Integer> $x : $wf)
+						$ws.update($x);
+				}
+			});
 		}
 	}
 	
