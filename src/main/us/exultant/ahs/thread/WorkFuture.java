@@ -43,7 +43,7 @@ import java.util.concurrent.locks.*;
  * 
  * @param <$V>
  */
-class WorkFuture<$V> implements Future<$V> {
+public class WorkFuture<$V> implements Future<$V> {
 	public WorkFuture(WorkTarget<$V> $wt, ScheduleParams $schedp) {
 		this.$work = $wt;
 		this.$schedp = $schedp;
