@@ -173,18 +173,23 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	
-	/** Eight work targets, all always ready until they're done. */
+	/** Eight work targets, all always ready until they're done.
+	 *  Also performs completion signaling test. */
 	private class TestWtAlwaysReady extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
 		public Object call() {
+			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			Work[] $wt = new Work[8];
-			WorkFuture<?>[] $f = new WorkFuture<?>[8];
+			@SuppressWarnings("unchecked")	//srsly.
+			WorkFuture<Void>[] $f = (WorkFuture<Void>[])new WorkFuture<?>[8];
 			for (int $i = 0; $i < 8; $i++) $wt[$i] = new Work();
 			for (int $i = 0; $i < 8; $i++) $f[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
-			
-			//X.chill(300);
-			//for (int $i = 0; $i < 8; $i++) X.sayet($f[$i].getState()+"");
+			for (int $i = 0; $i < 8; $i++) $f[$i].addCompletionListener(new Listener<WorkFuture<Void>>() {
+				public void hear(WorkFuture<Void> $lol) {
+					$completionCalls.incrementAndGet();
+				}
+			});
 			
 			try {
 				for (int $i = 0; $i < 8; $i++) $f[$i].get();
@@ -193,6 +198,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
 			for (int $i = 0; $i < 8; $i++) assertEquals(0, $wt[$i].x);
+			assertEquals(8, $completionCalls.intValue());
 			
 			breakCaseIfFailed();
 			return null;
