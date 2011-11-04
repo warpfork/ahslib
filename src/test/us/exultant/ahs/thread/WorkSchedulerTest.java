@@ -49,12 +49,14 @@ public abstract class WorkSchedulerTest extends TestCase {
 		$tests.add(new TestScheduleSingleDelayMany());
 		$tests.add(new TestScheduleFixedRate());
 		$tests.add(new TestNonblockingManyWorkSingleSource());
+		$tests.add(new TestPrioritizedDuo());
 		return $tests;
 	}
 	
 	private static final TestData	TD	= TestData.getFreshTestData();
 	
-	protected abstract WorkScheduler makeScheduler();
+	/** If this is a positive integer, we want that many threads.  A zero means that you can use your default (presumably threads=cores). */
+	protected abstract WorkScheduler makeScheduler(int $threads);
 	
 	/** Helper method &mdash I want a message straight to stdout every time I throw a major exception, because there's a dangerous tendancy for Runnable to eat those if there's a mistake somewhere. */
 	protected void blow(String $msg) {
@@ -65,7 +67,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** One runnable wrapped to be a one-shot WorkTarget. */
 	private class TestRunOnce extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler().start();
+		private WorkScheduler $ws = makeScheduler(0).start();
 		
 		public Object call() {
 			Work $w = new Work();
@@ -94,7 +96,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** Eight work targets, all always ready until they're done. */
 	private class TestWtAlwaysReady extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler().start();
+		private WorkScheduler $ws = makeScheduler(0).start();
 		
 		public Object call() {
 			Work[] $wt = new Work[8];
@@ -138,7 +140,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** Test two work targets, once of which must always follow the other (in other words, one is always ready, but the other changes readiness based on the progress of the first). */
 	public class TestNonblockingLeaderFollower extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler().start();
+		private WorkScheduler $ws = makeScheduler(0).start();
 		final int HIGH = 10000;
 		final int LOW = 100;
 		
@@ -215,7 +217,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/**  */
 	private class TestScheduleSingleDelayMany extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler();
+		private WorkScheduler $ws = makeScheduler(0);
 		public final int WTC = 8;
 		
 		public Object call() {
@@ -254,7 +256,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** One task with a fixed delay is scheduled to run 10 times, and is checked by another thread (at fixed delay, awkwardly, but the resolution is low enough that it's kay). */
 	private class TestScheduleFixedRate extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler().start();
+		private WorkScheduler $ws = makeScheduler(0).start();
 		
 		public Object call() {
 			Work $wt = new Work();
@@ -304,7 +306,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	 * This also tests (if indirectly) consistent results from WorkTarget that receive concurrent finishes (but I'd recommend running it numerous times if you want to feel confident of that.  And by numerous times, I mean many thousands of times.).
 	 */
 	private class TestNonblockingManyWorkSingleSource extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler().start();
+		private WorkScheduler $ws = makeScheduler(0).start();
 		public final int HIGH = 1000;
 		public final int WTC = 32;
 		
@@ -396,12 +398,32 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	
-	/**  */
+	/** Test that when two tasks of different priority are scheduled, the higher priority goes first. */
 	private class TestPrioritizedDuo extends TestCase.Unit {
+		private WorkScheduler $ws = makeScheduler(1).start();
+		
 		public Object call() {
-			breakIfFailed();
+			WorkFuture<Void> $wf_high = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 90000, true), ScheduleParams.NOW);
+			WorkFuture<Void> $wf_low = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 10, true), ScheduleParams.NOW);
+			$ws.start();
+			
+			try {
+				$wf_high.get();
+			}
+			catch (InterruptedException $e) { throw new AssertionFailed($e); }
+			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			X.chill(10);
+			assertFalse($wf_low.isDone());
+			try {
+				$wf_low.get();
+			}
+			catch (InterruptedException $e) { throw new AssertionFailed($e); }
+			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			
 			return null;
 		}
+		
+		private class Work implements Runnable { public void run() { X.chill(100); } }
 	}
 	
 	
