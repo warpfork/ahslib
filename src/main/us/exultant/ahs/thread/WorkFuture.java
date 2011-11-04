@@ -48,6 +48,7 @@ public class WorkFuture<$V> implements Future<$V> {
 		this.$work = $wt;
 		this.$schedp = $schedp;
 		this.$sync = new Sync();
+		this.$completionListeners = new ArrayList<Listener<WorkFuture<$V>>>(1);
 	}
 	
 	
@@ -72,7 +73,8 @@ public class WorkFuture<$V> implements Future<$V> {
 	/** When nulled after set/cancel, this indicates that the results are accessible. */
 	volatile Thread					$runner;
 	
-	private volatile Listener<WorkFuture<$V>>	$completionListener;	//FIXME:AHS:THREAD: um, we need to be able to set this before the task starts or it's not very useful.  Oh.  Or we set it, then check for concurrent completion, then signal it.  And forbid setting more than once?
+	/** A list of Listener to be called as soon as possible after this task becomes done.  This is synchronized on before adding new elements, and before transitioning to done (we're not worried about efficiency because this operation should be quite rare (i.e. never ever ever ever in a loop) and contention not really an issue). */
+	private final List<Listener<WorkFuture<$V>>>	$completionListeners;
 	
 	
 	WorkTarget<$V> getWorkTarget() {	// this can't be public because giving out a WorkFuture to untrusted code isn't supposed to give that code the ability to call call() on the WT.
@@ -111,6 +113,34 @@ public class WorkFuture<$V> implements Future<$V> {
 	
 	public boolean cancel(boolean $mayInterruptIfRunning) {
 		return $sync.cancel($mayInterruptIfRunning);
+	}
+	
+	/**
+	 * <p>
+	 * Adds a listener to this WorkFuture which will be called as soon as possible
+	 * after the task represented by this WorkFuture has become done (regardless if by
+	 * normal completion, a deadly exception, or external cancellation). The listener
+	 * will be called exactly once (presuming of course that the task ever finishes).
+	 * </p>
+	 * 
+	 * <p>
+	 * This method may be called at any time from any thread.
+	 * </p>
+	 * 
+	 * <p>
+	 * The listener should only perform very fast operations; any heavy lifting should
+	 * be performed in another thread which is triggered by this listener. The
+	 * listener may be called by a thread from within a WorkScheduler's pool, or by a
+	 * thread that caused cancellation or concurrent completion (i.e. by work
+	 * draining) of a task, or by the same thread that attempted to add it (in case
+	 * the task was already done).
+	 * </p>
+	 */
+	public void addCompletionListener(Listener<WorkFuture<$V>> $completionListener) {
+		synchronized ($completionListeners) {
+			if (isDone()) $completionListener.hear(this);
+			else $completionListeners.add($completionListener);
+		}
 	}
 	
 	public String toString() {
@@ -220,7 +250,14 @@ public class WorkFuture<$V> implements Future<$V> {
 			return $result;
 		}
 		
-		protected void hearDone() {}    //TODO:AHS:THREAD: implement this later to punt off to a Listener
+		/** Called exactly once.  Called AFTER the CAS to completion has already been completed. */
+		protected void hearDone() {
+			synchronized ($completionListeners) {
+				for (Listener<WorkFuture<$V>> $x : $completionListeners)
+					$x.hear(WorkFuture.this);
+				$completionListeners.clear();	// let that crap be gc'd even if this future is forced to hang around for a while
+			}
+		}
 		
 		
 		
@@ -257,7 +294,7 @@ public class WorkFuture<$V> implements Future<$V> {
 		 * @return true if the scheduler must now remove the WF from the waiting
 		 *         pool (or delayed heap) and push it into the scheduled heap.
 		 */
-		//FIXME:AHS:THREAD: we have to notice doneness eventually even if no update was called and isReady is now returning false because it's done!  it's a bit troublesome since we'll never bubble to the top of the scheduled heap.  though really, the most straightforward fix isn't at all wrong: just run low-priority low-frequency fixed-rate task that calls update on all of the stuff in the waiting pool.  only question with that is who decides exactly what priority and how rate that should be, since it's clearly one of those things we're really only want one of per vm.
+		//FIXME:AHS:THREAD: we have to notice doneness eventually even if no update was called and isReady is now returning false because it's done!  it's a bit troublesome since we'll never bubble to the top of the scheduled heap.  though really, the most straightforward fix isn't at all wrong: just run low-priority low-frequency fixed-rate task that calls update on all of the stuff in the waiting pool.  only question with that is who decides exactly what priority and how rate that should be, since it's clearly one of those things we're really only want one of per vm.		// I don't think this is a problem in a well-designed program anymore, because Pipes now fire their listeners both on closure and if necessary on emptyness-after-closure... so there's never any real excuse to not do a final update correctly.
 		boolean scheduler_shift() {
 			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState(State.WAITING.ordinal(), State.SCHEDULED.ordinal());
 			// the CAS will occur if:
