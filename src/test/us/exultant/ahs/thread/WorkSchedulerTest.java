@@ -19,11 +19,13 @@
 
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 /**
  * A useful statement is this:
@@ -44,6 +46,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestRunOnce());
+		$tests.add(new TestCompletionPreSubscribe());
+		$tests.add(new TestCompletionPostSubscribe());
 		$tests.add(new TestWtAlwaysReady());
 		$tests.add(new TestNonblockingLeaderFollower());
 		$tests.add(new TestScheduleSingleDelayMany());
@@ -90,6 +94,81 @@ public abstract class WorkSchedulerTest extends TestCase {
 				x--;
 			}
 		}
+	}
+	
+	
+	/** Tests for a single firing of a completion listener that's assigned to a one-shot WorkTarget before the scheduler is launched. */
+	private class TestCompletionPreSubscribe extends TestCase.Unit {
+		private WorkScheduler $ws = makeScheduler(0);
+		
+		public Object call() {
+			final AtomicInteger $completionCalls = new AtomicInteger(0);
+			final Work $wt = new Work();
+			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt, 0, true), ScheduleParams.NOW);
+			
+			$wf.addCompletionListener(new Listener<WorkFuture<Void>>() {
+				public void hear(WorkFuture<Void> $lol) {
+					// demand an immediate response
+					$completionCalls.incrementAndGet();
+					try {
+						$wf.get(0, TimeUnit.NANOSECONDS);
+					}
+					catch (InterruptedException $e) { throw new AssertionFailed($e); }
+					catch (ExecutionException $e) { throw new AssertionFailed($e); }
+					catch (TimeoutException $e) { throw new AssertionFailed($e); }
+				}
+			});
+			$ws.start();
+			
+			try {
+				$wf.get();
+			}
+			catch (InterruptedException $e) { throw new AssertionFailed($e); }
+			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			X.chill(15);
+			assertEquals(1, $completionCalls.intValue());
+			
+			breakCaseIfFailed();
+			return null;
+		}
+		private class Work implements Runnable { public void run() {} }
+	}
+	
+	
+	/** Tests for a single firing of a completion listener that's assigned to a one-shot WorkTarget after it's been completed. */
+	private class TestCompletionPostSubscribe extends TestCase.Unit {
+		private WorkScheduler $ws = makeScheduler(0).start();
+		
+		public Object call() {
+			final AtomicInteger $completionCalls = new AtomicInteger(0);
+			final Work $wt = new Work();
+			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt, 0, true), ScheduleParams.NOW);
+
+			try {
+				$wf.get();
+			}
+			catch (InterruptedException $e) { throw new AssertionFailed($e); }
+			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			
+			$wf.addCompletionListener(new Listener<WorkFuture<Void>>() {
+				public void hear(WorkFuture<Void> $lol) {
+					// demand an immediate response
+					$completionCalls.incrementAndGet();
+					try {
+						$wf.get(0, TimeUnit.NANOSECONDS);
+					}
+					catch (InterruptedException $e) { throw new AssertionFailed($e); }
+					catch (ExecutionException $e) { throw new AssertionFailed($e); }
+					catch (TimeoutException $e) { throw new AssertionFailed($e); }
+				}
+			});
+			
+			assertEquals(1, $completionCalls.intValue());
+			
+			breakCaseIfFailed();
+			return null;
+		}
+		private class Work implements Runnable { public void run() {} }
 	}
 	
 	
