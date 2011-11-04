@@ -88,7 +88,7 @@ public final class ScheduleParams {
 	}
 	
 	public static ScheduleParams makeFixedDelay(long $periodMs) {
-		return makeFixedRate(0, $periodMs, TimeUnit.MILLISECONDS);
+		return makeFixedDelay(0, $periodMs, TimeUnit.MILLISECONDS);
 	}
 	
 	public static ScheduleParams makeFixedRate(long $initialDelayMs, long $periodMs) {
@@ -96,11 +96,19 @@ public final class ScheduleParams {
 	}
 	
 	public static ScheduleParams makeFixedDelay(long $initialDelayMs, long $periodMs) {
-		return makeFixedRate($initialDelayMs, $periodMs, TimeUnit.MILLISECONDS);
+		return makeFixedDelay($initialDelayMs, $periodMs, TimeUnit.MILLISECONDS);
 	}
 	
 	public static ScheduleParams makeDelayed(long $delay, TimeUnit $unit) {
 		return makeDelayed($delay, $unit, false);
+	}
+	
+	public static ScheduleParams makeFixedRate(long $period, TimeUnit $unit) {
+		return makeFixedRate(0, $period, $unit, false);
+	}
+	
+	public static ScheduleParams makeFixedDelay(long $period, TimeUnit $unit) {
+		return makeFixedDelay(0, $period, $unit, false);
 	}
 	
 	public static ScheduleParams makeFixedRate(long $initialDelay, long $period, TimeUnit $unit) {
