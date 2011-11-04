@@ -208,7 +208,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			WorkFuture<?> $wf = $itr.next(); $itr.remove();
 			if ($wf.$sync.scheduler_shift()) {
 				//if ($unready.remove($wf))	//FIXME this appears to be poo.  which is odd, since things shouldn't really not be in there when this happens... that would imply we dropped the ball somewhere already and that remembrance of this task is purely from... uh, updates.  which isn't even remembrance.
-					$scheduled.add($wf);
+				$unready.remove($wf);
+				$scheduled.add($wf);
 			} else {
 				if ($wf.$work.isDone())	{
 					boolean $causedFinish = $wf.$sync.tryFinish(false, null, null);
@@ -268,14 +269,22 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	
-	
-	
+
+	/**
+	 * This is a max-heap; nothing too special. We do also store the index of an entry
+	 * in the entry itself, though; this enables us to remove entries or resort that
+	 * entry quickly.
+	 * 
+	 * When we use it for actual task priorities, the highest priority is of course on
+	 * top; when we use it for delays, we use a comparator that sees the nearest times
+	 * as the highest.
+	 */
 	private class PriorityHeap {
 		public PriorityHeap(Comparator<WorkFuture<?>> $comparator) {
 			this.$comparator = $comparator;
 		}
 		
-		private static final int		INITIAL_CAPACITY	= 32;
+		private static final int		INITIAL_CAPACITY	= 64;
 		private WorkFuture<?>[]			$queue			= new WorkFuture<?>[INITIAL_CAPACITY];
 		private int				$size			= 0;
 		private final Comparator<WorkFuture<?>>	$comparator;
@@ -324,7 +333,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			while ($k > 0) {
 				int $parent = ($k - 1) >>> 1;
 				WorkFuture<?> $e = $queue[$parent];
-				if ($comparator.compare($x, $e) >= 0) break;
+				if ($comparator.compare($x, $e) <= 0) break;
 				$queue[$k] = $e;
 				$e.$heapIndex = $k;
 				$k = $parent;
@@ -340,8 +349,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				int $child = ($k << 1) + 1;
 				WorkFuture<?> $c = $queue[$child];
 				int right = $child + 1;
-				if (right < $size && $comparator.compare($c, $queue[right]) > 0) $c = $queue[$child = right];
-				if ($comparator.compare($x, $c) <= 0) break;
+				if (right < $size && $comparator.compare($c, $queue[right]) <= 0) $c = $queue[$child = right];
+				if ($comparator.compare($x, $c) > 0) break;
 				$queue[$k] = $c;
 				$c.$heapIndex = $k;
 				$k = $child;

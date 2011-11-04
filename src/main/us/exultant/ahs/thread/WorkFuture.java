@@ -367,6 +367,7 @@ public class WorkFuture<$V> implements Future<$V> {
 	public static class PriorityComparator implements Comparator<WorkFuture<?>> {
 		public static final PriorityComparator INSTANCE = new PriorityComparator();
 		
+		/** @return positive if the first arg is higher priority than the second */
 		public int compare(WorkFuture<?> $o1, WorkFuture<?> $o2) {
 			return $o1.$work.getPriority() - $o2.$work.getPriority();
 		}
@@ -376,11 +377,12 @@ public class WorkFuture<$V> implements Future<$V> {
 	
 	public static class DelayComparator implements Comparator<WorkFuture<?>> {
 		public static final DelayComparator INSTANCE = new DelayComparator();
-		
+
+		/** @return positive if the first arg should be run sooner than the second */
 		public int compare(WorkFuture<?> $o1, WorkFuture<?> $o2) {
 			long $diff = $o1.$schedp.getNextRunTime() - $o2.$schedp.getNextRunTime();
-			if ($diff < 0) return -1;
-			if ($diff > 0) return 1;
+			if ($diff > 0) return -1;
+			if ($diff < 0) return 1;
 			return 0;
 		}
 	}
