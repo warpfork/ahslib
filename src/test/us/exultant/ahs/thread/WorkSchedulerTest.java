@@ -29,7 +29,9 @@ import java.util.concurrent.atomic.*;
 
 /**
  * A useful statement is this:
- * <tt>i=0; while true; do i=$(math $i + 1); echo $i; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; if [ "$?" -ne "0" ]; then break; fi; done</tt>
+ * <tt>
+ * i=0; while true; do i=$(math $i + 1); echo $i; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; if [ "$?" -ne "0" ]; then break; fi; done
+ * </tt>
  * 
  * @author hash
  * 
