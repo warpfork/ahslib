@@ -103,6 +103,14 @@ public final class ScheduleParams {
 		return makeDelayed($delay, $unit, false);
 	}
 	
+	public static ScheduleParams makeFixedRate(long $period, TimeUnit $unit) {
+		return makeFixedRate(0, $period, $unit, false);
+	}
+	
+	public static ScheduleParams makeFixedDelay(long $period, TimeUnit $unit) {
+		return makeFixedDelay(0, $period, $unit, false);
+	}
+	
 	public static ScheduleParams makeFixedRate(long $initialDelay, long $period, TimeUnit $unit) {
 		return makeFixedRate($initialDelay, $period, $unit, false);
 	}
