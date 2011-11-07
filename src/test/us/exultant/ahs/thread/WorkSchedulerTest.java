@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.*;
  */
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
-		super(new Logger(Logger.LEVEL_DEBUG), true);
+		super(new Logger(Logger.LEVEL_TRACE), true);
 	}
 	
 	public WorkSchedulerTest(Logger $log, boolean $enableConfirmation) {
@@ -76,15 +76,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestRunOnce extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			Work $w = new Work();
 			Future<?> $f = $ws.schedule(new WorkTarget.RunnableWrapper($w, 0, true), ScheduleParams.NOW);
 			
-			try {
-				$f.get();
-			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			$f.get();
 			
 			assertEquals(999, $w.x);
 			
@@ -104,7 +100,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestCompletionPreSubscribe extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0);
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			final Work $wt = new Work();
 			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt, 0, true), ScheduleParams.NOW);
@@ -123,11 +119,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			});
 			$ws.start();
 			
-			try {
-				$wf.get();
-			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			$wf.get();
+			
 			X.chill(15);
 			assertEquals(1, $completionCalls.intValue());
 			
@@ -142,16 +135,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestCompletionPostSubscribe extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			final Work $wt = new Work();
 			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt, 0, true), ScheduleParams.NOW);
-
-			try {
-				$wf.get();
-			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			
+			$wf.get();
 			
 			$wf.addCompletionListener(new Listener<WorkFuture<Void>>() {
 				public void hear(WorkFuture<Void> $lol) {
@@ -181,7 +170,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestWtAlwaysReady extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			Work[] $wt = new Work[8];
 			@SuppressWarnings("unchecked")	//srsly.
@@ -194,11 +183,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				}
 			});
 			
-			try {
-				for (int $i = 0; $i < 8; $i++) $f[$i].get();
-			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			for (int $i = 0; $i < 8; $i++) $f[$i].get();
 			
 			for (int $i = 0; $i < 8; $i++) assertEquals(0, $wt[$i].x);
 			assertEquals(8, $completionCalls.intValue());
@@ -232,7 +217,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		final int HIGH = 10000;
 		final int LOW = 100;
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			WorkLeader $w1 = new WorkLeader();
 			WorkFollower $w2 = new WorkFollower();
 			$w2.$leader = $w1;
@@ -240,12 +225,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$w1.$followerFuture = $f2;
 			WorkFuture<Void> $f1 = $ws.schedule($w1, ScheduleParams.NOW);
 			
-			try {
-				$f1.get();
-				$f2.get();
-			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			$f1.get();
+			$f2.get();
 			
 			assertTrue($w1.isDone());
 			assertFalse($w1.isReady());
@@ -308,7 +289,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private WorkScheduler $ws = makeScheduler(0);
 		public final int WTC = 8;
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			WorkFuture<?>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
 			$wf[3] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 03, true), ScheduleParams.makeDelayed(400));
 			$wf[4] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -9, true), ScheduleParams.makeDelayed(500));
@@ -320,15 +301,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$wf[7] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -6, true), ScheduleParams.makeDelayed(800));
 			$ws.start();
 			
-			try {
-				for (int $i = 1; $i < WTC; $i++) {
-					$wf[$i-1].get();
-					$log.trace(this, "task with "+$i+"00ms delay finished");
-					assertFalse($wf[$i].isDone());
-				}
+			for (int $i = 1; $i < WTC; $i++) {
+				$wf[$i-1].get();
+				$log.trace(this, "task with "+$i+"00ms delay finished");
+				assertFalse($wf[$i].isDone());
 			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
 			
 			breakCaseIfFailed();
 			return null;
@@ -346,7 +323,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestScheduleFixedRate extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			Work $wt = new Work();
 			WorkFuture<Integer> $wf = $ws.schedule($wt, ScheduleParams.makeFixedDelay(300, 100));
 			
@@ -356,12 +333,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				X.chill(100);
 				assertEquals($i, $wt.x);
 			}
-			
-			try {
-				assertEquals(0, $wf.get().intValue());
-			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			assertEquals(0, $wf.get().intValue());
 			
 			breakCaseIfFailed();
 			return null;
@@ -403,7 +375,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		@SuppressWarnings("unchecked")	// impossible to not suck in java.
 		protected final WorkFuture<Integer>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			feedPipe();
 
 			$log.trace(this, "creating work targets");
@@ -416,20 +388,16 @@ public abstract class WorkSchedulerTest extends TestCase {
 			configurePipe();
 			
 			$log.trace(this, "waiting for work future completion");
-			try {
-				boolean $wonOnce = false;
-				for (int $i = 0; $i < WTC; $i++) {
-					Integer $ans = $wf[$i].get();
-					$log.debug(this, "final result of work target "+$i+": "+$ans);
-					if ($ans != null && $ans == HIGH) {
-						assertFalse("No more than one WorkTarget finished with the high value.", $wonOnce);
-						$wonOnce = true;
-					}
+			boolean $wonOnce = false;
+			for (int $i = 0; $i < WTC; $i++) {
+				Integer $ans = $wf[$i].get();
+				$log.debug(this, "final result of work target "+$i+": "+$ans);
+				if ($ans != null && $ans == HIGH) {
+					assertFalse("No more than one WorkTarget finished with the high value.", $wonOnce);
+					$wonOnce = true;
 				}
-				assertTrue("Exactly one WorkTarget finished with the high value.", $wonOnce);
 			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			assertTrue("Exactly one WorkTarget finished with the high value.", $wonOnce);
 			
 			breakCaseIfFailed();
 			return null;
@@ -491,23 +459,15 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestPrioritizedDuo extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(1).start();
 		
-		public Object call() {
+		public Object call() throws InterruptedException, ExecutionException {
 			WorkFuture<Void> $wf_high = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 90000, true), ScheduleParams.NOW);
 			WorkFuture<Void> $wf_low = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 10, true), ScheduleParams.NOW);
 			$ws.start();
 			
-			try {
-				$wf_high.get();
-			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			$wf_high.get();
 			X.chill(10);
 			assertFalse($wf_low.isDone());
-			try {
-				$wf_low.get();
-			}
-			catch (InterruptedException $e) { throw new AssertionFailed($e); }
-			catch (ExecutionException $e) { throw new AssertionFailed($e); }
+			$wf_low.get();
 			
 			return null;
 		}
