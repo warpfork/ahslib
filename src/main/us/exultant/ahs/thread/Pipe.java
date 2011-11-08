@@ -67,26 +67,12 @@ public class Pipe<$T> implements Flow<$T> {
 	 * <p>
 	 * The source from which one reads data from the pipe.
 	 * </p>
-	 * 
-	 * <p>
-	 * (Note that it would be perfectly possible to use just the ReadHead and
-	 * WriteHead interfaces internally as well... but this lets clients avoid ever
-	 * having to wrap calls in a no-op try-catch block that actually happens to be
-	 * unreachable.)
-	 * </p>
 	 */
 	public final Source			SRC;
 	
 	/**
 	 * <p>
 	 * The sink to which one writes data into the pipe.
-	 * </p>
-	 * 
-	 * <p>
-	 * (Note that it would be perfectly possible to use just the ReadHead and
-	 * WriteHead interfaces internally as well... but this lets clients avoid ever
-	 * having to wrap calls in a no-op try-catch block that actually happens to be
-	 * unreachable.)
 	 * </p>
 	 */
 	public final Sink			SINK;

@@ -266,15 +266,33 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 //		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
 	}
 	
-	public String getStatus() {
+	public String getStatus(boolean $allOfIt) {
 		$lock.lock();
 		try {
+			String $moar = null;
+			if ($allOfIt) {
+				StringBuilder $sb = new StringBuilder();
+				$sb.append("\n\tSCHEDULED:");
+				for (int $i = 0; $i < $scheduled.$size; $i++)
+					$sb.append("\n\t\t"+$scheduled.$queue[$i]);
+				$sb.append("\n\tUNREADY:");
+				for (WorkFuture<?> $thing : $unready)
+					$sb.append("\n\t\t"+$thing);
+				$sb.append("\n\tDELAYED:");
+				for (int $i = 0; $i < $delayed.$size; $i++)
+					$sb.append("\n\t\t"+$delayed.$queue[$i]);
+				$sb.append("\n\tUPDATEREQ:");
+				for (WorkFuture<?> $thing : $updatereq)
+					$sb.append("\n\t\t"+$thing);
+				$moar = $sb.toString();
+			}
 			return 
 			"running: "   + Strings.padLeftToWidth("x", 5)                  + "    " +
 			"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
 			"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
 			"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
-			"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5);
+			"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5) +
+			(($allOfIt)?$moar:"");
 		} finally {
 			$lock.unlock();
 		}
