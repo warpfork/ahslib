@@ -182,6 +182,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * out immediately following this function.
 	 */
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
+		assert $lock.isHeldByCurrentThread();
 		try { for (;;) {
 			// offer to shift any unclocked tasks that have had updates requested
 			worker_pollUpdates();
@@ -215,6 +216,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * called only while holding the lock.
 	 */
 	private void worker_pollUpdates() {
+		assert $lock.isHeldByCurrentThread();
 		final Iterator<WorkFuture<?>> $itr = $updatereq.iterator();
 		while ($itr.hasNext()) {
 			WorkFuture<?> $wf = $itr.next(); $itr.remove();
@@ -244,14 +246,15 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * pushes it into the scheduled heap, and sifts the shifted tasks as necessary by
 	 * priority.
 	 * 
-	 * Hold the friggin' lock when calling, of course. Since cause WorkFuture's to
-	 * change their state in here, we must enforce that this aligns with changing the
-	 * heap they're in so the rest of the scheduler doesn't go insane.
+	 * Hold the friggin' lock when calling, of course. Since we cause WorkFuture
+	 * instances to change their state in here, we must enforce that this aligns with
+	 * changing the heap they're in so the rest of the scheduler doesn't go insane.
 	 * 
 	 * @return the delay (in nanosec) until the next known clocked task will be ready
 	 *         (or Long.MAX_VALUE if there are no more clocked tasks present).
 	 */
 	private long worker_pollDelayed() {
+		assert $lock.isHeldByCurrentThread();
 		WorkFuture<?> $key;
 		for (;;) {
 			$key = $delayed.peek();
@@ -325,6 +328,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		/** Returns the first element, replacing the first element with the last and sifting it down. Call only when holding lock. */
 		private WorkFuture<?> poll() {
+			assert $lock.isHeldByCurrentThread();
 			int $s = --$size;
 			WorkFuture<?> f = $queue[0];
 			WorkFuture<?> x = $queue[$s];
@@ -336,6 +340,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 
 		/** Add a new element and immediately sift it to its heap-ordered spot. Call only when holding lock. */
 		public boolean add(WorkFuture<?> $newb) {
+			assert $lock.isHeldByCurrentThread();
 			if ($newb == null) throw new NullPointerException();
 			$lock.lock();
 			try {
@@ -360,6 +365,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		/** Sift element added at bottom up to its heap-ordered spot. Call only when holding lock. */
 		private void siftUp(int $k, WorkFuture<?> $x) {
+			assert $lock.isHeldByCurrentThread();
 			while ($k > 0) {
 				int $parent = ($k - 1) >>> 1;
 				WorkFuture<?> $e = $queue[$parent];
@@ -374,6 +380,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		/** Sift element added at top down to its heap-ordered spot. Call only when holding lock. */
 		private void siftDown(int $k, WorkFuture<?> $x) {
+			assert $lock.isHeldByCurrentThread();
 			int $half = $size >>> 1;
 			while ($k < $half) {
 				int $child = ($k << 1) + 1;
@@ -391,6 +398,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		/** Resize the heap array. Call only when holding lock. */
 		private void grow() {
+			assert $lock.isHeldByCurrentThread();
 			int $oldCapacity = $queue.length;
 			int $newCapacity = $oldCapacity + ($oldCapacity >> 1); // grow 50%
 			if ($newCapacity < 0) // overflow
