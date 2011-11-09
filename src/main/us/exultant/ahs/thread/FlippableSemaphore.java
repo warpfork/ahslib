@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
-public class ClosableSemaphore {
+public class FlippableSemaphore {
 	public final void flip(boolean $flip) {
 		$sync.flip($flip);
 	}	// ... should i support a cas'able variation to this?  otherwise it could be a bit tough to use outside of an idempotent situation
@@ -171,7 +171,7 @@ public class ClosableSemaphore {
 	 * Creates a {@code ClosableSemaphore} with zero permits and nonfair fairness
 	 * setting.
 	 */
-	public ClosableSemaphore() {
+	public FlippableSemaphore() {
 		this(false);
 	}
 	
@@ -183,7 +183,7 @@ public class ClosableSemaphore {
 	 *                {@code true} if this semaphore will guarantee first-in first-out
 	 *                granting of permits under contention, else {@code false}
 	 */
-	public ClosableSemaphore(boolean $fair) {
+	public FlippableSemaphore(boolean $fair) {
 		$sync = $fair ? new FairSync() : new NonfairSync();
 	}
 	
