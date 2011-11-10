@@ -40,6 +40,7 @@ public class ClosableSemaphore extends FlippableSemaphore {
 		super.acquire();
 		//loldongs you can't atomically interrupt a thread... so if you support this you have a chance of ignoring a legit interruption from somewhere else if someone closes this phore.  nothing you can do about it.
 		//CORESTRAT: make tryAcquireShared(int) actually return a positive when we're closed, but without actually draining shit.  then somehow magically get the list of blocked threads -- you see the problem there i assume -- and call LockSupport.unpark with those threads.  And pray.
+		// on the plus side, you'll note that once we're closed we CAN stop new threads from starting to block, so we're safe there.  so maybe this is doable.
 	}
 	
 	public void acquireUninterruptibly() {

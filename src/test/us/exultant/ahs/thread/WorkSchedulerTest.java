@@ -283,6 +283,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 	}
 	
 	
+	// TestCancelWhileRunning
+	
+	// TestFinishWhileRunning	// I mean, come on.  you can make a much more direct test of this than what TestConcurrentFinish is doing, and you can (and should) do it without pipes.
+	
+	
 	
 	/**  */
 	private class TestScheduleSingleDelayMany extends TestCase.Unit {

@@ -66,7 +66,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				} else {
 					$delayed.add($wf);
 				}
-
+				
 				if ($work.isDone()) {
 					// this check MUST be done AFTER adding the task to a heap, or otherwise it becomes more than slightly dodgy, for all the usual reasons: you could have failed to shift because you just weren't ready, then the done check happens, then you concurrently "finish" from someone else draining your pipe before this scheduler knows to take update requests about you seriously.
 					$wf.$sync.tryFinish(false, null, null);
@@ -131,10 +131,10 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			}
 			
 			// run the work we pulled out.
-			boolean $requiresMoar = $chosen.$sync.scheduler_power();
+			boolean $mayRunAgain = $chosen.$sync.scheduler_power();
 			
 			// requeue the work for future attention if necessary
-			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.				
+			if ($mayRunAgain) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
 				$lock.lockInterruptibly();
 				try {
 					if ($chosen.$sync.scheduler_shift()) {
@@ -220,8 +220,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		final Iterator<WorkFuture<?>> $itr = $updatereq.iterator();
 		while ($itr.hasNext()) {
 			WorkFuture<?> $wf = $itr.next(); $itr.remove();
-			if ($wf.$sync.scheduler_shift()) {
-				//if ($unready.remove($wf))	//FIXME this appears to be poo.  which is odd, since things shouldn't really not be in there when this happens... that would imply we dropped the ball somewhere already and that remembrance of this task is purely from... uh, updates.  which isn't even remembrance.
+			if ($wf.$sync.scheduler_shift()) {	//FIXME AHH HAH!  if something is told to finish while its running, the finish fails and ends up as an updatereq............erm, where was i going with that?  to fail, you'd nee the final updatereq to come in and get eaten by another thread BEFORE the working thread does the cas from running to waiting and yet AFTER the working thread checks if that work is still not done.  no such moment exists.  though that does definitely explain why that thing about removing from unready being necessary is a brok.
+				//if ($unready.remove($wf))	// this appears to be poo.  which is odd, since things shouldn't really not be in there when this happens... that would imply we dropped the ball somewhere already and that remembrance of this task is purely from... uh, updates.  which isn't even remembrance.
 				$unready.remove($wf);
 				$scheduled.add($wf);
 			} else {
