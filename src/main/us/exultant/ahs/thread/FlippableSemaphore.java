@@ -156,7 +156,8 @@ public class FlippableSemaphore {
 	static final class FairSync extends Sync {
 		protected int tryAcquireShared(int $acquires) {
 			for (;;) {
-				if (hasQueuedPredecessors()) return -1;
+				//if (hasQueuedPredecessors()) return -1;		// ... this is 1.7 only?!  rage.  the below is functionally equivalent, but is likely to be slower.
+				if (hasQueuedThreads() && getFirstQueuedThread() != Thread.currentThread()) return -1;
 				int $status = getState();
 				int $next = shift($status, -$acquires);
 				if ($next == Integer.MAX_VALUE) return -1;	// not enough permits to acquire that many
