@@ -30,7 +30,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
 public class FlippableSemaphore {
-	public final void flip(boolean $flip) {
+	public void flip(boolean $flip) {
 		$sync.flip($flip);
 	}	// ... should i support a cas'able variation to this?  otherwise it could be a bit tough to use outside of an idempotent situation
 	
@@ -57,7 +57,7 @@ public class FlippableSemaphore {
 	 *                 situation
 	 */
 	private static final int shift(int $status, int $delta) {
-		final int $real = ($status == Integer.MIN_VALUE) ? 0 : Math.abs($status);
+		final int $real = real($status);
 		final int $next = $real + $delta;
 		if ($next < 0)
 			if ($delta < 0)
@@ -68,6 +68,9 @@ public class FlippableSemaphore {
 		return ($status >= 0) ? $real : ($next == 0) ? Integer.MIN_VALUE : -$real;
 	}
 	
+	private static final int real(int $status) {
+		return ($status == Integer.MIN_VALUE) ? 0 : Math.abs($status);
+	}
 	
 	
 	/**
@@ -87,8 +90,12 @@ public class FlippableSemaphore {
 	abstract static class Sync extends AbstractQueuedSynchronizer {
 		//Sync() { setState(0); }
 		
-		final int getPermits() {
+		final int getPermitsRaw() {
 			return getState();
+		}
+		
+		final int getPermits() {
+			return real(getState());
 		}
 		
 		final boolean isFlipped() {
@@ -637,5 +644,12 @@ public class FlippableSemaphore {
 	 */
 	public String toString() {
 		return super.toString() + "[Permits=" + $sync.getPermits() + ";Flipped="+$sync.isFlipped()+"]";
+	}
+	
+	/**
+	 * This is the exact same as asking isFlipped() && !availablePermits() (assuming that when you flip, it's idempotent/permanent), but ever so slightly more efficient. 
+	 */
+	boolean isFlippedAndZero() {
+		return ($sync.getPermitsRaw() == Integer.MIN_VALUE); 
 	}
 }
