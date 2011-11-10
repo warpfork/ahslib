@@ -20,6 +20,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -144,7 +145,7 @@ public class WorkFuture<$V> implements Future<$V> {
 	}
 	
 	public String toString() {
-		return super.toString()+"[work:"+$work+"]";
+		return Reflect.getObjectName(this)+"[work:"+$work+"]";
 	}
 	
 	
