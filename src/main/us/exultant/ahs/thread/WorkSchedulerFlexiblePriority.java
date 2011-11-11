@@ -80,6 +80,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
+		if ($fut.isDone()) return;
+		
 		// check doneness; try to transition immediate to FINISHED if is done.
 		if ($fut.$work.isDone()) {
 			$fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
