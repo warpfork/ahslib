@@ -108,7 +108,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	
 	private void worker_cycle() throws InterruptedException {
-		WorkFuture<?> $chosen;
+		WorkFuture<?> $chosen = null;
 		doWork: for (;;) {	// we repeat this loop... well, forever, really.
 			
 			// lock until we can pull someone out who's state is scheduled.
@@ -130,13 +130,12 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 						throw new MajorBug("work acquisition turned up a target that had been placed in the scheduled heap, but was neither in a scheduled state nor had undergone any of the valid concurrent transitions.");
 				}
 			}} finally {
+				$running.put(Thread.currentThread(), $chosen);
 				$lock.unlock();
 			}
 			
 			// run the work we pulled out.
-			$running.put(Thread.currentThread(), $chosen);
 			boolean $mayRunAgain = $chosen.$sync.scheduler_power();
-			$running.remove(Thread.currentThread());
 			
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
@@ -167,6 +166,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
 				hearTaskDrop($chosen);
 			}
+			$running.remove(Thread.currentThread());
 		}
 	}
 	
