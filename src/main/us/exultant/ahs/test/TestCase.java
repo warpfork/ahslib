@@ -87,21 +87,23 @@ public abstract class TestCase implements Runnable {
 				$numUnitsFailed++;
 				$log.error(this.getClass(), "TEST UNIT "+$unit.getName()+" ABORTED.", $e);
 			} catch (Throwable $e) {
-				$numUnitsFailed++;
 				if ($unit.expectExceptionType() != null) {
 					// some kind of exception was expected.
 					if ($unit.expectExceptionType().isAssignableFrom($e.getClass())) {
 						// and it was this kind that was expected, so this is good.
+						$numUnitsPassed++;
 						assertInstanceOf($unit.expectExceptionType(), $e);	// generates a normal confirmation message
 						$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
 					} else {
 						// and it wasn't this kind.  this represents fatal failure.
+						$numUnitsFailed++;
 						$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
 						aborted();
 						break;
 					}
 				} else {
 					// no exception was expected.  any exception represents fatal failure.
+					$numUnitsFailed++;
 					$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
 					aborted();
 					break;
