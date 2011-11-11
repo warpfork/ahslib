@@ -140,6 +140,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
 				$lock.lockInterruptibly();
+				$running.remove(Thread.currentThread());
 				try {
 					if ($chosen.$sync.scheduler_shift()) {
 						$scheduled.add($chosen);
@@ -165,8 +166,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			} else {
 				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
 				hearTaskDrop($chosen);
+				$running.remove(Thread.currentThread());
 			}
-			$running.remove(Thread.currentThread());
 		}
 	}
 	
