@@ -20,6 +20,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 
 /**
  * <p>
@@ -147,5 +148,9 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Integer> {
 	 */
 	public void setExceptionHandler(ExceptionHandler<TranslationException> $eh) {
 		this.$eh = $eh;
+	}
+	
+	public String toString() {
+		return Reflect.getObjectName(this)+"(acts="+$actsDone+")";
 	}
 }
