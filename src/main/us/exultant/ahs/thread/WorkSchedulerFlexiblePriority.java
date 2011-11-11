@@ -98,6 +98,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private final PriorityHeap		$scheduled	= new PriorityHeap(WorkFuture.PriorityComparator.INSTANCE);
 	private final Set<WorkFuture<?>>	$unready	= new HashSet<WorkFuture<?>>();
 	private final Set<WorkFuture<?>>	$updatereq	= Collections.newSetFromMap(new ConcurrentHashMap<WorkFuture<?>,Boolean>());	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
+	private final Map<Thread,WorkFuture<?>> $running	= new ConcurrentHashMap<Thread,WorkFuture<?>>();	// this is purely for bookkeeping/debugging/statusreporting and serves absolutely zero functional purpose out of that. 
 	
 	private final ReentrantLock		$lock		= new ReentrantLock();
 	private Thread				$leader		= null;
@@ -133,7 +134,9 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			}
 			
 			// run the work we pulled out.
+			$running.put(Thread.currentThread(), $chosen);
 			boolean $mayRunAgain = $chosen.$sync.scheduler_power();
+			$running.remove(Thread.currentThread());
 			
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
@@ -277,22 +280,46 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			String $moar = null;
 			if ($allOfIt) {
 				StringBuilder $sb = new StringBuilder();
-				$sb.append("\n\tSCHEDULED:");
-				for (int $i = 0; $i < $scheduled.$size; $i++)
-					$sb.append("\n\t\t"+$scheduled.$queue[$i]);
-				$sb.append("\n\tUNREADY:");
-				for (WorkFuture<?> $thing : $unready)
-					$sb.append("\n\t\t"+$thing);
-				$sb.append("\n\tDELAYED:");
-				for (int $i = 0; $i < $delayed.$size; $i++)
-					$sb.append("\n\t\t"+$delayed.$queue[$i]);
-				$sb.append("\n\tUPDATEREQ:");
-				for (WorkFuture<?> $thing : $updatereq)
-					$sb.append("\n\t\t"+$thing);
+				
+				$sb.append("\n\t\tRUNNING:");
+				if ($running.size() > 0)
+					for (Map.Entry<Thread,WorkFuture<?>> $thing : $running.entrySet())
+						$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
+				$sb.append("\n\t\tSCHEDULED:");
+				if ($scheduled.$size > 0)
+					for (int $i = 0; $i < $scheduled.$size; $i++)
+						$sb.append("\n\t\t\t"+$scheduled.$queue[$i]);
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
+				$sb.append("\n\t\tUNREADY:");
+				if ($unready.size() > 0)
+					for (WorkFuture<?> $thing : $unready)
+						$sb.append("\n\t\t\t"+$thing);
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
+				$sb.append("\n\t\tDELAYED:");
+				if ($delayed.$size > 0)
+					for (int $i = 0; $i < $delayed.$size; $i++)
+						$sb.append("\n\t\t\t"+$delayed.$queue[$i]);
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
+				$sb.append("\n\t\tUPDATEREQ:");
+				if ($updatereq.size() > 0)
+					for (WorkFuture<?> $thing : $updatereq)
+						$sb.append("\n\t\t\t"+$thing);
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
 				$moar = $sb.toString();
 			}
 			return 
-			"running: "   + Strings.padLeftToWidth("x", 5)                  + "    " +
+			"running: "   + Strings.padLeftToWidth($running.size()+"", 5)   + "    " +
 			"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
 			"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
 			"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
