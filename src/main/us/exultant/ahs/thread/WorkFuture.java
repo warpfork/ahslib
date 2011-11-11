@@ -145,7 +145,7 @@ public class WorkFuture<$V> implements Future<$V> {
 	}
 	
 	public String toString() {
-		return Reflect.getObjectName(this)+"[work:"+$work+"]";
+		return Reflect.getObjectName(this)+"[State="+Strings.padRightToWidth(this.getState()+";",11)+"work="+$work+"]";
 	}
 	
 	
