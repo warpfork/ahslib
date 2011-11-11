@@ -436,14 +436,34 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}
 	}
 	
-	private class RelentlessGC implements WorkTarget<Void> {
+
+
+	/**
+	 * <p>
+	 * When run, dumps the entire set of tasks known to this WorkScheduler as
+	 * "waiting"/"unready" into a queue that requests rechecking and updating of their
+	 * status.
+	 * </p>
+	 * 
+	 * <p>
+	 * This is not not necessarily advised for normal use, since it should typically
+	 * be entirely feasible to construct event flows to insure that all task
+	 * completions and all work availability changes are updated in an event-based
+	 * fashion and without requiring a polling operation such as this (the entire
+	 * exultant thread module and Pipes in particular are designed with the intention
+	 * of supporting such a pure event-based model). While use of this mechanism is
+	 * acceptable as a last-ditch recovery system, it will provide less rapid
+	 * reactions than a pure event-based system, and it also acquires a global lock on
+	 * the entire Scheduler in order to perform its function, and so is clearly not of
+	 * optimal performance.
+	 * </p>
+	 */
+	public class RelentlessGC implements WorkTarget<Void> {
 		public Void call() throws Exception {
 			$lock.lockInterruptibly();
 			try {
-//				$log.trace(this, "tick.  unready.size="+$unready.size());
 				$updatereq.addAll($unready);
-			} finally {	
-//				$log.trace(this, "tick done.  updatereq.size="+$updatereq.size()+"  unready.size="+$unready.size());
+			} finally {
 				$lock.unlock();
 			}
 			return null;
@@ -458,11 +478,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}
 
 		public int getPriority() {
-			return -1000;
-		}
-		
-		public String toString() {
-			return "WorkSchedulerFlexiblePriority-RelentlessGC";
+			return -100000;
 		}
 	}
 }
