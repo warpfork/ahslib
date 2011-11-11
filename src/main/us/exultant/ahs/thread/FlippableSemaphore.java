@@ -65,7 +65,7 @@ public class FlippableSemaphore {
 			else
 				throw new Error("integer overflow");	// if releasing (delta is positive) and we somehow got a negative by increasing a positive?  scream.
 		// if $next == Integer.MAX_VALUE here that could arguably be considered an overflow in context since returning it unmolested is supposed to signal a completely different situation... but eh. 
-		return ($status >= 0) ? $real : ($next == 0) ? Integer.MIN_VALUE : -$real;
+		return ($status >= 0) ? $next : ($next == 0) ? Integer.MIN_VALUE : -$next;
 	}
 	
 	private static final int real(int $status) {
