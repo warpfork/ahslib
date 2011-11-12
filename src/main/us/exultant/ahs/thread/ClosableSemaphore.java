@@ -71,15 +71,16 @@ public class ClosableSemaphore extends FlippableSemaphore {
 	}
 	
 	public void acquireUninterruptibly() {
-		super.acquireUninterruptibly();
+		return isAcquireSuccessful($sync.acquireSharedInterruptibly(1));
 	}
 	
 	public boolean tryAcquire(long $timeout, TimeUnit $unit) throws InterruptedException {
 		return super.tryAcquire($timeout, $unit);
 	}
 	
-	public void acquire(int $permits) throws InterruptedException {
-		super.acquire($permits);
+	public boolean acquire(int $permits) throws InterruptedException {
+		if ($permits < 0) throw new IllegalArgumentException();
+		return isAcquireSuccessful($sync.acquireSharedInterruptibly($permits));
 	}
 	
 	public void acquireUninterruptibly(int $permits) {
@@ -92,5 +93,13 @@ public class ClosableSemaphore extends FlippableSemaphore {
 	
 	public String toString() {
 		return super.toString() + "[Permits=" + availablePermits() + ";Closed="+isClosed()+"]";
+	}
+	
+	
+	
+	
+	
+	private boolean isAcquireSuccessful(int $response) {	// actually i guess i could save myself a lot of footwork if i made this protected too or specified by the Decider
+		return ($response >= 0 && $response != 2);
 	}
 }

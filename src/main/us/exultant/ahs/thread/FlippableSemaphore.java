@@ -28,16 +28,43 @@ package us.exultant.ahs.thread;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * This is a Semaphore that, in addition to the normal concepts of permits, also keeps a
+ * single bit of additonal state which can be read atomically along with the permit count.
+ * 
+ * Additionally, the interface of this semaphore allows even blocking acquistions to fail,
+ * even without interrupts. Under the default behavior, this will never occur, but
+ * subclasses are allowed to decide they will not service requests and return false from
+ * an acquisition attempt.
+ * 
+ * It also supports subclassing to specify different behaviors for acquisition attempts
+ * based on the current state (so for example one could make a subclass that blocks all
+ * attempts to acquire as long as the semaphore is not flipped, or that instantly returns
+ * all acquistions as soon as the semaphore is flipped, etc).
+ * 
+ * @author hash
+ * 
+ */
 public class FlippableSemaphore {
-	public void flip(boolean $flip) {
-		$sync.flip($flip);
-	}	// ... should i support a cas'able variation to this?  otherwise it could be a bit tough to use outside of an idempotent situation
-	
-	public final boolean isFlipped() {
-		return $sync.isFlipped();
+	/**
+	 * Creates a {@code FlippableSemaphore} with zero permits in the unflipped state
+	 * with the nonfair fairness setting.
+	 */
+	public FlippableSemaphore() {
+		this(false);
 	}
 	
-	
+	/**
+	 * Creates a {@code FlippableSemaphore} with zero permits in the unflipped state
+	 * with the given fairness setting.
+	 * 
+	 * @param $fair
+	 *                {@code true} if this semaphore will guarantee first-in first-out
+	 *                granting of permits under contention, else {@code false}
+	 */
+	public FlippableSemaphore(boolean $fair) {
+		$sync = $fair ? new FairSync() : new NonfairSync();
+	}
 	
 	protected final Sync	$sync;
 	
@@ -87,8 +114,6 @@ public class FlippableSemaphore {
 	 * 
 	 */
 	abstract static class Sync extends AQS {
-		//Sync() { setState(0); }
-		
 		final int getPermitsRaw() {
 			return getState();
 		}
@@ -178,31 +203,18 @@ public class FlippableSemaphore {
 		}
 	}
 	
-	
-
-	/**
-	 * Creates a {@code ClosableSemaphore} with zero permits and nonfair fairness
-	 * setting.
-	 */
-	public FlippableSemaphore() {
-		this(false);
+	public void flip(boolean $flip) {
+		$sync.flip($flip);
 	}
 	
-	/**
-	 * Creates a {@code ClosableSemaphore} with zero permits and the given fairness
-	 * setting.
-	 * 
-	 * @param $fair
-	 *                {@code true} if this semaphore will guarantee first-in first-out
-	 *                granting of permits under contention, else {@code false}
-	 */
-	public FlippableSemaphore(boolean $fair) {
-		$sync = $fair ? new FairSync() : new NonfairSync();
+	public final boolean isFlipped() {
+		return $sync.isFlipped();
 	}
 	
 	/**
 	 * Acquires a permit from this semaphore, blocking until one is available, or the
-	 * thread is {@linkplain Thread#interrupt interrupted}.
+	 * thread is {@linkplain Thread#interrupt interrupted}, or the semaphore decides
+	 * it is not willing to service this request.
 	 * 
 	 * <p>
 	 * Acquires a permit, if one is available and returns immediately, reducing the
@@ -227,11 +239,13 @@ public class FlippableSemaphore {
 	 * then {@link InterruptedException} is thrown and the current thread's
 	 * interrupted status is cleared.
 	 * 
+	 * @return true if a permit was acquired; false if the semaphore decides it is not
+	 *         willing to service this request.
 	 * @throws InterruptedException
 	 *                 if the current thread is interrupted
 	 */
-	public void acquire() throws InterruptedException {
-		int $response = $sync.acquireSharedInterruptibly(1);
+	public boolean acquire() throws InterruptedException {
+		return ($sync.acquireSharedInterruptibly(1) >= 0);
 	}
 	
 	/**
@@ -386,14 +400,15 @@ public class FlippableSemaphore {
 	 * 
 	 * @param $permits
 	 *                the number of permits to acquire
+	 * @return 
 	 * @throws InterruptedException
 	 *                 if the current thread is interrupted
 	 * @throws IllegalArgumentException
 	 *                 if {@code permits} is negative
 	 */
-	public void acquire(int $permits) throws InterruptedException {
+	public boolean acquire(int $permits) throws InterruptedException {
 		if ($permits < 0) throw new IllegalArgumentException();
-		$sync.acquireSharedInterruptibly($permits);
+		return ($sync.acquireSharedInterruptibly($permits) >= 0);
 	}
 	
 	/**

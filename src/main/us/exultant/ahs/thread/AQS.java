@@ -33,11 +33,12 @@
  * http://creativecommons.org/licenses/publicdomain
  */
 
-package java.util.concurrent.locks;
+package us.exultant.ahs.thread;
 
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 import sun.misc.Unsafe;
 
 /**
@@ -302,15 +303,12 @@ import sun.misc.Unsafe;
  * @since 1.5
  * @author Doug Lea
  */
-public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer implements java.io.Serializable {
-	
-	private static final long	serialVersionUID	= 7373984972572414691L;
-	
+public abstract class AQS extends AbstractOwnableSynchronizer {
 	/**
 	 * Creates a new <tt>AbstractQueuedSynchronizer</tt> instance with initial
 	 * synchronization state of zero.
 	 */
-	protected AbstractQueuedSynchronizer() {}
+	protected AQS() {}
 	
 	
 	
@@ -963,7 +961,7 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 	 * @param arg
 	 *                the acquire argument
 	 */
-	private void doAcquireSharedInterruptibly(int arg) throws InterruptedException {
+	private int doAcquireSharedInterruptibly(int arg) throws InterruptedException {	//BINGO this returns an int now instead of void
 		final Node node = addWaiter(Node.SHARED);
 		boolean failed = true;
 		try {
@@ -975,7 +973,7 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 						setHeadAndPropagate(node, r);
 						p.next = null; // help GC
 						failed = false;
-						return;
+						return r;	//BINGO this returns an int now instead of void
 					}
 				}
 				if (shouldParkAfterFailedAcquire(p, node) && parkAndCheckInterrupt()) throw new InterruptedException();
@@ -1785,7 +1783,7 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 	
 	
 	/**
-	 * Condition implementation for a {@link AbstractQueuedSynchronizer} serving as
+	 * Condition implementation for a {@link AQS} serving as
 	 * the basis of a {@link Lock} implementation.
 	 * 
 	 * <p>
@@ -2117,13 +2115,13 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 		 * 
 		 * @return {@code true} if owned
 		 */
-		final boolean isOwnedBy(AbstractQueuedSynchronizer sync) {
-			return sync == AbstractQueuedSynchronizer.this;
+		final boolean isOwnedBy(AQS sync) {
+			return sync == AQS.this;
 		}
 		
 		/**
 		 * Queries whether any threads are waiting on this condition. Implements
-		 * {@link AbstractQueuedSynchronizer#hasWaiters}.
+		 * {@link AQS#hasWaiters}.
 		 * 
 		 * @return {@code true} if there are any waiting threads
 		 * @throws IllegalMonitorStateException
@@ -2139,7 +2137,7 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 		
 		/**
 		 * Returns an estimate of the number of threads waiting on this condition.
-		 * Implements {@link AbstractQueuedSynchronizer#getWaitQueueLength}.
+		 * Implements {@link AQS#getWaitQueueLength}.
 		 * 
 		 * @return the estimated number of waiting threads
 		 * @throws IllegalMonitorStateException
@@ -2157,7 +2155,7 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 		/**
 		 * Returns a collection containing those threads that may be waiting on
 		 * this Condition. Implements
-		 * {@link AbstractQueuedSynchronizer#getWaitingThreads}.
+		 * {@link AQS#getWaitingThreads}.
 		 * 
 		 * @return the collection of threads
 		 * @throws IllegalMonitorStateException
@@ -2193,9 +2191,9 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 	
 	static {
 		try {
-			stateOffset = unsafe.objectFieldOffset(AbstractQueuedSynchronizer.class.getDeclaredField("state"));
-			headOffset = unsafe.objectFieldOffset(AbstractQueuedSynchronizer.class.getDeclaredField("head"));
-			tailOffset = unsafe.objectFieldOffset(AbstractQueuedSynchronizer.class.getDeclaredField("tail"));
+			stateOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("state"));
+			headOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("head"));
+			tailOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("tail"));
 			waitStatusOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("waitStatus"));
 			nextOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("next"));
 			
