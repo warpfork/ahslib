@@ -174,7 +174,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			Work[] $wt = new Work[8];
 			@SuppressWarnings("unchecked")	//srsly.
-			WorkFuture<Void>[] $f = (WorkFuture<Void>[])new WorkFuture<?>[8];
+			WorkFuture<Void>[] $f = new WorkFuture[8];
 			for (int $i = 0; $i < 8; $i++) $wt[$i] = new Work();
 			for (int $i = 0; $i < 8; $i++) $f[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
 			for (int $i = 0; $i < 8; $i++) $f[$i].addCompletionListener(new Listener<WorkFuture<Void>>() {
@@ -186,6 +186,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 			for (int $i = 0; $i < 8; $i++) $f[$i].get();
 			
 			for (int $i = 0; $i < 8; $i++) assertEquals(0, $wt[$i].x);
+			
+			// so, funny thing about this next.  um, completion calls come AFTER that future.get guy is capable of returning.  not "much" after, of course, but still after.  so... yeah, this is kinda hard to test.  like, it may fail.  without the system being wrong.  i need a better test here.
+			X.chill(10);
 			assertEquals(8, $completionCalls.intValue());
 			
 			breakCaseIfFailed();
