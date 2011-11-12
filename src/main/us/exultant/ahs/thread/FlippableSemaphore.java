@@ -145,18 +145,22 @@ public class FlippableSemaphore {
 		 *         and no more permits, &ge;1 for success and permits still
 		 *         available... or, more generally, negatives is we shouldn't let
 		 *         threads wake, positive or zero if we should let them wake,
-		 *         positive if we should keep trying to wake others as well.
-		 *         Specific positive and negative values may be used to indicate
-		 *         extra data.
+		 *         positive if we should keep trying to wake others as well. It's
+		 *         possible to use specific positive values to indicate extra
+		 *         data; negative values are unlikely to be of any use since AQS
+		 *         will never actually return them.
 		 */
-		final int nonfairTryAcquireShared(int $acquires) {
+		protected final int tryAcquireShared(int $acquires) {
 			for (;;) {
+				if (pauseToBeFair()) return Integer.MIN_VALUE;	//... you know, none of the negative values really matter, since AQS will never let us see them.
 				int $status = getState();
 				int $next = shift($status, -$acquires);
 				if ($next == Integer.MAX_VALUE) return -1;	// not enough permits to acquire that many	//XXX this is where we decide what to do if there's too few permits.
 				if (compareAndSetState($status, $next)) return ($next == Integer.MIN_VALUE) ? 0 : 1;		//XXX we could also hand a decider real($next) here and have it decide whether to return 0, 1, or some greater positive.  don't know what i'd do with that right now, though.  also suspect maybe i'd want to let the decider know about the flip state, but don't really want to reveal exactly what i did to integers.
 			}
 		}
+		
+		protected abstract boolean pauseToBeFair();
 		
 		/**
 		 * @return true.  the only way this function can fail is if there's an integer overflow issue, and then there's shit thrown.
@@ -186,20 +190,14 @@ public class FlippableSemaphore {
 		}
 	}
 	static final class NonfairSync extends Sync {
-		protected int tryAcquireShared(int acquires) {
-			return nonfairTryAcquireShared(acquires);
+		protected final boolean pauseToBeFair() {
+			return false;
 		}
 	}
 	static final class FairSync extends Sync {
-		protected int tryAcquireShared(int $acquires) {
-			for (;;) {
-				//if (hasQueuedPredecessors()) return -1;		// ... this is 1.7 only?!  rage.  the below is functionally equivalent, but is likely to be slower.
-				if (hasQueuedThreads() && getFirstQueuedThread() != Thread.currentThread()) return -1;
-				int $status = getState();
-				int $next = shift($status, -$acquires);
-				if ($next == Integer.MAX_VALUE) return -1;	// not enough permits to acquire that many
-				if (compareAndSetState($status, $next)) return ($next == Integer.MIN_VALUE) ? 0 : Math.abs($next);
-			}
+		protected final boolean pauseToBeFair() {
+			return hasQueuedPredecessors();
+			//return (hasQueuedThreads() && getFirstQueuedThread() != Thread.currentThread());	// if one doesn't have access to the AQS methods in 1.7, this is a (potentially slower) alternative to the above.  fortunately we don't have to worry about that anymore since we're shipping our own fork of AQS.
 		}
 	}
 	
@@ -249,7 +247,8 @@ public class FlippableSemaphore {
 	}
 	
 	/**
-	 * Acquires a permit from this semaphore, blocking until one is available.
+	 * Acquires a permit from this semaphore, blocking until one is available, or the
+	 * semaphore decides it is not willing to service this request.
 	 * 
 	 * <p>
 	 * Acquires a permit, if one is available and returns immediately, reducing the
@@ -267,8 +266,11 @@ public class FlippableSemaphore {
 	 * thread is assigned a permit may change compared to the time it would have
 	 * received the permit had no interruption occurred. When the thread does return
 	 * from this method its interrupt status will be set.
+	 * 
+	 * @return true if a permit was acquired; false if the semaphore decides it is not
+	 *         willing to service this request.
 	 */
-	public void acquireUninterruptibly() {
+	public boolean acquireUninterruptibly() {
 		int $response = $sync.acquireShared(1);
 	}
 	
@@ -369,7 +371,8 @@ public class FlippableSemaphore {
 	
 	/**
 	 * Acquires the given number of permits from this semaphore, blocking until all
-	 * are available, or the thread is {@linkplain Thread#interrupt interrupted}.
+	 * are available, or the thread is {@linkplain Thread#interrupt interrupted}, or
+	 * the semaphore decides it is not willing to service this request.
 	 * 
 	 * <p>
 	 * Acquires the given number of permits, if they are available, and returns
@@ -400,7 +403,8 @@ public class FlippableSemaphore {
 	 * 
 	 * @param $permits
 	 *                the number of permits to acquire
-	 * @return 
+	 * @return true if a permit was acquired; false if the semaphore decides it is not
+	 *         willing to service this request.
 	 * @throws InterruptedException
 	 *                 if the current thread is interrupted
 	 * @throws IllegalArgumentException
@@ -413,7 +417,8 @@ public class FlippableSemaphore {
 	
 	/**
 	 * Acquires the given number of permits from this semaphore, blocking until all
-	 * are available.
+	 * are available, or the semaphore decides it is not willing to service this
+	 * request.
 	 * 
 	 * <p>
 	 * Acquires the given number of permits, if they are available, and returns
@@ -434,11 +439,13 @@ public class FlippableSemaphore {
 	 * 
 	 * @param $permits
 	 *                the number of permits to acquire
+	 * @return true if a permit was acquired; false if the semaphore decides it is not
+	 *         willing to service this request.
 	 * @throws IllegalArgumentException
 	 *                 if {@code permits} is negative
 	 * 
 	 */
-	public void acquireUninterruptibly(int $permits) {
+	public boolean acquireUninterruptibly(int $permits) {
 		if ($permits < 0) throw new IllegalArgumentException();
 		$sync.acquireShared($permits);
 	}
