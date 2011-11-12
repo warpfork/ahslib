@@ -73,8 +73,11 @@ public class FlippableSemaphore {
 	 * @param $fair
 	 *                {@code true} if this semaphore will guarantee first-in first-out
 	 *                granting of permits under contention, else {@code false}
+	 * @param $decider
+	 *                the set of functions to use in deciding how to handle requests
+	 *                that cannot immediately succeed
 	 */
-	protected FlippableSemaphore(boolean $fair, Decider $decider) {
+	protected FlippableSemaphore(boolean $fair, BlockPolicyDecider $decider) {
 		$sync = $fair ? new FairSync($decider) : new NonfairSync($decider);
 	}
 	
@@ -112,9 +115,40 @@ public class FlippableSemaphore {
 	
 	
 	
-	protected abstract static class Decider {
+	/**
+	 * Defines a set of functions to use in deciding how to handle requests that
+	 * cannot immediately succeed. (Note that for performance reasons, implementors of
+	 * this are strongly suggested to be final.)
+	 */
+	protected abstract static class BlockPolicyDecider {
+		/**
+		 * <p>
+		 * The return of this method is used to determine when acquisition
+		 * attempts should block. Negatives mean that if this is a blocking
+		 * request, we shouldn't let that thread return yet; positive or zero
+		 * means it's okay for them to return; positive also we should keep trying
+		 * to wake other blocked threads as well. Nonblocking requests never block
+		 * (obviously) but they will still recieve the answer decided on by this
+		 * method if there are no permits immediately available to them.
+		 * 
+		 * <p>
+		 * It's possible to use specific positive values to indicate extra data;
+		 * negative values can also be used but be aware that only nonblocking
+		 * requests will ever be able to see them, since AQS will never let a
+		 * negative return escape out to a blocking request.
+		 */
 		public abstract int answerTooFewPermits(boolean $currentlyFlipped);
 		
+		/**
+		 * This will receive the integer returned from
+		 * {@link #answerTooFewPermits(boolean)} if applicable; otherwise it will
+		 * receive a 0 or 1 if sufficient permits were available for an acquire
+		 * request to succeed directly.
+		 * 
+		 * @param $response
+		 * @return whether or not the Semaphore should report this as a successful
+		 *         acquire that consumed a permit.
+		 */
 		public abstract boolean isAcquireSuccessful(int $response);
 	}
 	
@@ -124,8 +158,8 @@ public class FlippableSemaphore {
 	 * Default decider: insufficient permits always block, any non-negative answer
 	 * from tryAcquire means we got a permit.
 	 */
-	private final static class DefaultDecider extends Decider {
-		public static final Decider INSTANCE = new DefaultDecider();
+	private final static class DefaultDecider extends BlockPolicyDecider {
+		public static final BlockPolicyDecider INSTANCE = new DefaultDecider();
 		
 		public int answerTooFewPermits(boolean $currentlyFlipped) {
 			return -1;
@@ -153,11 +187,11 @@ public class FlippableSemaphore {
 	 * 
 	 */
 	abstract static class Sync extends AQS {
-		public Sync(Decider $decider) {
+		public Sync(BlockPolicyDecider $decider) {
 			this.$decider = $decider;
 		}
 		
-		private final Decider	$decider;
+		private final BlockPolicyDecider	$decider;
 		
 		final int getPermitsRaw() {
 			return getState();
@@ -237,7 +271,7 @@ public class FlippableSemaphore {
 		}
 	}
 	static final class NonfairSync extends Sync {
-		public NonfairSync(Decider $decider) {
+		public NonfairSync(BlockPolicyDecider $decider) {
 			super($decider);
 		}
 
@@ -246,7 +280,7 @@ public class FlippableSemaphore {
 		}
 	}
 	static final class FairSync extends Sync {
-		public FairSync(Decider $decider) {
+		public FairSync(BlockPolicyDecider $decider) {
 			super($decider);
 		}
 
