@@ -19,6 +19,8 @@
 
 package us.exultant.ahs.thread;
 
+import java.util.concurrent.locks.*;
+
 public class ClosableSemaphore extends FlippableSemaphore {
 	/**
 	 * Creates a {@code ClosableSemaphore} with zero permits with the nonfair fairness
@@ -56,6 +58,8 @@ public class ClosableSemaphore extends FlippableSemaphore {
 	
 	public void close() {
 		super.flip(true);
+		for (Thread $t : $sync.getQueuedThreads())
+			LockSupport.unpark($t);
 	}
 	
 	public String toString() {

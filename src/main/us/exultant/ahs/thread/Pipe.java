@@ -56,7 +56,7 @@ public class Pipe<$T> implements Flow<$T> {
 	 */
 	public Pipe() {
 		$queue = new ConcurrentLinkedQueue<$T>();
-		$gate = new FlippableSemaphore(true);
+		$gate = new ClosableSemaphore(true);
 		SRC = new Source();
 		SINK = new Sink();
 		$lock = new ReentrantLock();
@@ -115,7 +115,7 @@ public class Pipe<$T> implements Flow<$T> {
 	 * locked and all permits are then drained, an effcetive read locked is attained.
 	 * </p>
 	 */
-	private final FlippableSemaphore	$gate;
+	private final ClosableSemaphore	$gate;
 	
 	/**
 	 * @return {@link #SRC}.
@@ -226,11 +226,10 @@ public class Pipe<$T> implements Flow<$T> {
 		public void close() {
 			$lock.lock();
 			try {
-				$gate.flip(true); // set our state to closed
+				$gate.close();
 			} finally {
 				$lock.unlock();
 			}
-//			$gate.interrupt(); // interrupt any currently blocking reads
 			X.notifyAll($gate); // trigger the return of any final readAll calls
 			
 			// give our listener a chance to notice our closure.
