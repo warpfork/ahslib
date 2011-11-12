@@ -42,7 +42,7 @@ public class ClosableSemaphore extends FlippableSemaphore {
 	
 	public void acquire() throws InterruptedException {
 		super.acquire();
-		//CORESTRAT:
+		//CORESTRAT CAREFUL WAKEUPS AND CROSSCUTTING:
 		//    - make tryAcquireShared(int) actually return a positive when we're closed, but without actually draining shit.
 		//            implication: must deal with that in every other method too, because we don't want to look like we actually got an acquire if we didn't.
 		//             ... I'm pretty sure this is actually impossible to do with AQS.  if doAcquireSharedInterruptibly(int) would return the int from tryAcquireShared(int), i could use that to see if an acquire was fake-successful/return-by-cancel, but without that i see no real options.
@@ -51,6 +51,20 @@ public class ClosableSemaphore extends FlippableSemaphore {
 		//            on the plus side, you'll note that once we're closed we CAN stop new threads from starting to block, so we're safe there.  so maybe this is doable.
 		//    - call LockSupport.unpark with those threads.
 		
+		//CORESTRAT OVERRELEASE:
+		//    really i only have one problem with this, but it's a big one: you can't turn the availablePermits() number into a lie.  that's not okay.
+		
+		//CORESTRAT SPIN BABY SPIN:
+		//    just set up acquires to do fairly stupid timed waits.
+		//         in some ways i'm fine with this, because
+		//            if you're using a fully blocking call, you obviously aren't all that efficiency-minded to begin with.
+		//            even if you get a whole millisecond delay, it's not going to happy to you repeatedly and add up to a real problem.  it'll happen at most once per close.
+		//         the thing that does make me kinda twitch is that concepts of fairness are just totally shredded.
+		
+		//CORESTRAT INTERRUPT:
+		//    this is what an older generation of work did, and it... works...
+		//    the problem is that if another thread interrupts this thread AND there's a system interrupt to deal with closure at the same time, the interrupt from elsewhere in the application is going to get eaten.
+		//         now, that's not exactly something that's ever before been a practical problem for me, but it's still just not a battle that i want to concede.
 	}
 	
 	public void acquireUninterruptibly() {
