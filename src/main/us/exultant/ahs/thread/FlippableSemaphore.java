@@ -250,7 +250,7 @@ public class FlippableSemaphore {
 			for (;;) {
 				int $status = getState();
 				int $next = shift($status, $releases);
-				if (compareAndSetState($status, $next)) return true;
+				if (compareAndSetState($status, $next)) return true;	//FIXME i still need a way to block this from CloseableSemaphore.
 			}
 		}
 		
