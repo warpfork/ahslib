@@ -47,8 +47,11 @@ public class ClosableSemaphore extends FlippableSemaphore {
 		//            implication: must deal with that in every other method too, because we don't want to look like we actually got an acquire if we didn't.
 		//             ... I'm pretty sure this is actually impossible to do with AQS.  if doAcquireSharedInterruptibly(int) would return the int from tryAcquireShared(int), i could use that to see if an acquire was fake-successful/return-by-cancel, but without that i see no real options.
 		//                 even if we could do that, then in this whole situation, i don't think we can really reuse FlippableSemaphore, because it has no idea that there should be different kinds of acquire success, and it certainly doesn't know what it has to do in tryAcquireShared when flipped that's special.  we could overide tryAcquireShared, actually, but only if those classes of the implementation weren't final and we had a rational way to override their construction in the superclass.
+		//             also i have a bit of a problem with this on interface reusability level.  There's both the problem mentioned above about having to override the AQS subclasses again, but also this:  FlippableSemaphore should only reveal boolean whether or not an acquire succeeded, amirite?  That's not gonna work here.
+		//                       hmm.  maybe we could implement some sort of Decider interface?  hand it to AQS-extender, have them keep it as a final field.  i think that would actually be pretty dang inline-able and efficient.
 		//    - then somehow magically get the list of blocked threads
 		//            on the plus side, you'll note that once we're closed we CAN stop new threads from starting to block, so we're safe there.  so maybe this is doable.
+		//              (you can still have people escape via interruption, but it's actually fine if we try to unpark them anyway; unparking is allowed to be spurious for exactly this reason.)
 		//    - call LockSupport.unpark with those threads.
 		
 		//CORESTRAT OVERRELEASE:
@@ -63,7 +66,7 @@ public class ClosableSemaphore extends FlippableSemaphore {
 		
 		//CORESTRAT INTERRUPT:
 		//    this is what an older generation of work did, and it... works...
-		//    the problem is that if another thread interrupts this thread AND there's a system interrupt to deal with closure at the same time, the interrupt from elsewhere in the application is going to get eaten.
+		//    the problem is that if another thread interrupts this thread AND there's a system interrupt to deal with closure at the same time, the interrupt from elsewhere in the application is either going to get eaten because we assume it was ours, or it's going to let that thread escape with an interrupted exception while we're about to interrupt it (it violates the assumption that we can have a well-defined set of blocked threads once closure and emptiness sets in).
 		//         now, that's not exactly something that's ever before been a practical problem for me, but it's still just not a battle that i want to concede.
 	}
 	

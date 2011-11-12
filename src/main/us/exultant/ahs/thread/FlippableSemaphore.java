@@ -27,7 +27,6 @@ package us.exultant.ahs.thread;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
 
 public class FlippableSemaphore {
 	public void flip(boolean $flip) {
@@ -40,7 +39,7 @@ public class FlippableSemaphore {
 	
 	
 	
-	private final Sync	$sync;
+	protected final Sync	$sync;
 	
 	/**
 	 * 
@@ -87,7 +86,7 @@ public class FlippableSemaphore {
 	 * @author hash
 	 * 
 	 */
-	abstract static class Sync extends AbstractQueuedSynchronizer {
+	abstract static class Sync extends AQS {
 		//Sync() { setState(0); }
 		
 		final int getPermitsRaw() {
@@ -117,14 +116,20 @@ public class FlippableSemaphore {
 		}
 		
 		/**
-		 * @return -1 for impossible, 0 for success and no more permits, &gt;1 for success and permits still available.
+		 * @return &le;-1 for acquisition not currently possible, 0 for success
+		 *         and no more permits, &ge;1 for success and permits still
+		 *         available... or, more generally, negatives is we shouldn't let
+		 *         threads wake, positive or zero if we should let them wake,
+		 *         positive if we should keep trying to wake others as well.
+		 *         Specific positive and negative values may be used to indicate
+		 *         extra data.
 		 */
 		final int nonfairTryAcquireShared(int $acquires) {
 			for (;;) {
 				int $status = getState();
 				int $next = shift($status, -$acquires);
-				if ($next == Integer.MAX_VALUE) return -1;	// not enough permits to acquire that many
-				if (compareAndSetState($status, $next)) return ($next == Integer.MIN_VALUE) ? 0 : Math.abs($next);
+				if ($next == Integer.MAX_VALUE) return -1;	// not enough permits to acquire that many	//XXX this is where we decide what to do if there's too few permits.
+				if (compareAndSetState($status, $next)) return ($next == Integer.MIN_VALUE) ? 0 : 1;		//XXX we could also hand a decider real($next) here and have it decide whether to return 0, 1, or some greater positive.  don't know what i'd do with that right now, though.  also suspect maybe i'd want to let the decider know about the flip state, but don't really want to reveal exactly what i did to integers.
 			}
 		}
 		
@@ -226,7 +231,7 @@ public class FlippableSemaphore {
 	 *                 if the current thread is interrupted
 	 */
 	public void acquire() throws InterruptedException {
-		$sync.acquireSharedInterruptibly(1);
+		int $response = $sync.acquireSharedInterruptibly(1);
 	}
 	
 	/**
@@ -250,7 +255,7 @@ public class FlippableSemaphore {
 	 * from this method its interrupt status will be set.
 	 */
 	public void acquireUninterruptibly() {
-		$sync.acquireShared(1);
+		int $response = $sync.acquireShared(1);
 	}
 	
 	/**
