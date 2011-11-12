@@ -1,45 +1,36 @@
 /*
- * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * 
+ * This file is part of AHSlib.
  *
+ * AHSlib is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License, or
+ * (at the original copyright holder's option) any later version.
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
  *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 /*
- *
- *
- *
- *
- *
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
+ * This code is inspired by and borrows heavily from code originally written
+ * by Doug Lea with assistance from members of JCP JSR-166 Expert Group and
+ * released to the public domain.  The author of this code gratefully 
+ * acknowledges their contributions to the field.
  */
 
 package us.exultant.ahs.thread;
 
+import sun.misc.*;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
-import sun.misc.Unsafe;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Provides a framework for implementing blocking locks and related synchronizers
@@ -2186,7 +2177,16 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * at it, we do the same for other CASable fields (which could otherwise be done
 	 * with atomic field updaters).
 	 */
-	private static final Unsafe	unsafe	= Unsafe.getUnsafe();
+	private static final Unsafe	unsafe;
+	static {
+		try {
+			Field field = Unsafe.class.getDeclaredField("theUnsafe");
+			field.setAccessible(true);
+			unsafe = (Unsafe) field.get(null);
+		} catch (Exception e) {
+			throw new Error("I'm sorry, but I really need this.", e);
+		}
+	}
 	private static final long	stateOffset;
 	private static final long	headOffset;
 	private static final long	tailOffset;

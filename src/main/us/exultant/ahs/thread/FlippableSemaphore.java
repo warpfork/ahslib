@@ -19,7 +19,7 @@
 /*
  * This code is inspired by and borrows heavily from code originally written
  * by Doug Lea with assistance from members of JCP JSR-166 Expert Group and
- * released to the public domain.  The author of this code greatfully 
+ * released to the public domain.  The author of this code gratefully 
  * acknowledges their contributions to the field.
  */
 
