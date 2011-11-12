@@ -63,7 +63,19 @@ public class FlippableSemaphore {
 	 *                granting of permits under contention, else {@code false}
 	 */
 	public FlippableSemaphore(boolean $fair) {
-		$sync = $fair ? new FairSync() : new NonfairSync();
+		this($fair, DefaultDecider.INSTANCE);
+	}
+	
+	/**
+	 * Creates a {@code FlippableSemaphore} with zero permits in the unflipped state
+	 * with the given fairness setting.
+	 * 
+	 * @param $fair
+	 *                {@code true} if this semaphore will guarantee first-in first-out
+	 *                granting of permits under contention, else {@code false}
+	 */
+	protected FlippableSemaphore(boolean $fair, Decider $decider) {
+		$sync = $fair ? new FairSync($decider) : new NonfairSync($decider);
 	}
 	
 	protected final Sync	$sync;
@@ -99,6 +111,33 @@ public class FlippableSemaphore {
 	}
 	
 	
+	
+	protected abstract static class Decider {
+		public abstract int answerTooFewPermits(boolean $currentlyFlipped);
+		
+		public abstract boolean isAcquireSuccessful(int $response);
+	}
+	
+	
+	
+	/**
+	 * Default decider: insufficient permits always block, any non-negative answer
+	 * from tryAcquire means we got a permit.
+	 */
+	private final static class DefaultDecider extends Decider {
+		public static final Decider INSTANCE = new DefaultDecider();
+		
+		public int answerTooFewPermits(boolean $currentlyFlipped) {
+			return -1;
+		}
+
+		public boolean isAcquireSuccessful(int $response) {
+			return $response >= 0;
+		}
+	}
+	
+	
+	
 	/**
 	 * State herein is mostly how you would expect semaphore permits to be described,
 	 * except:
@@ -114,6 +153,12 @@ public class FlippableSemaphore {
 	 * 
 	 */
 	abstract static class Sync extends AQS {
+		public Sync(Decider $decider) {
+			this.$decider = $decider;
+		}
+		
+		private final Decider	$decider;
+		
 		final int getPermitsRaw() {
 			return getState();
 		}
@@ -152,11 +197,13 @@ public class FlippableSemaphore {
 		 */
 		protected final int tryAcquireShared(int $acquires) {
 			for (;;) {
-				if (pauseToBeFair()) return Integer.MIN_VALUE;	//... you know, none of the negative values really matter, since AQS will never let us see them.
+				if (pauseToBeFair()) return Integer.MIN_VALUE;	//... you know, none of the negative values really matter, since AQS will never let us see them anywhere else.
 				int $status = getState();
 				int $next = shift($status, -$acquires);
-				if ($next == Integer.MAX_VALUE) return -1;	// not enough permits to acquire that many	//XXX this is where we decide what to do if there's too few permits.
-				if (compareAndSetState($status, $next)) return ($next == Integer.MIN_VALUE) ? 0 : 1;		//XXX we could also hand a decider real($next) here and have it decide whether to return 0, 1, or some greater positive.  don't know what i'd do with that right now, though.  also suspect maybe i'd want to let the decider know about the flip state, but don't really want to reveal exactly what i did to integers.
+				if ($next == Integer.MAX_VALUE)			// not enough permits to acquire that many
+					return $decider.answerTooFewPermits($status < 0);
+				if (compareAndSetState($status, $next))
+					return ($next == Integer.MIN_VALUE || $next == 0) ? 0 : 1;	// we could also hand a decider real($next) here and have it decide whether to return 0, 1, or some greater positive.  don't know what i'd do with that right now, though.
 			}
 		}
 		
@@ -190,11 +237,19 @@ public class FlippableSemaphore {
 		}
 	}
 	static final class NonfairSync extends Sync {
+		public NonfairSync(Decider $decider) {
+			super($decider);
+		}
+
 		protected final boolean pauseToBeFair() {
 			return false;
 		}
 	}
 	static final class FairSync extends Sync {
+		public FairSync(Decider $decider) {
+			super($decider);
+		}
+
 		protected final boolean pauseToBeFair() {
 			return hasQueuedPredecessors();
 			//return (hasQueuedThreads() && getFirstQueuedThread() != Thread.currentThread());	// if one doesn't have access to the AQS methods in 1.7, this is a (potentially slower) alternative to the above.  fortunately we don't have to worry about that anymore since we're shipping our own fork of AQS.
@@ -674,7 +729,13 @@ public class FlippableSemaphore {
 	}
 	
 	/**
-	 * This is the exact same as asking isFlipped() && !availablePermits() (assuming that when you flip, it's idempotent/permanent), but ever so slightly more efficient. 
+	 * This is the exact same as asking isFlipped() && !availablePermits() (assuming
+	 * that when you flip, it's idempotent/permanent), but ever so slightly more
+	 * efficient.
+	 * 
+	 * (I essentially made this so that pipes can tell if they're permanently empty as
+	 * quickly as possible, since they have to do a check upon every single read to
+	 * see if their final drain has transpired and they need to notify someone.)
 	 */
 	boolean isFlippedAndZero() {
 		return ($sync.getPermitsRaw() == Integer.MIN_VALUE); 

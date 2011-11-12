@@ -1276,9 +1276,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * @throws InterruptedException
 	 *                 if the current thread is interrupted
 	 */
-	public final void acquireSharedInterruptibly(int arg) throws InterruptedException {
+	public final int acquireSharedInterruptibly(int arg) throws InterruptedException {
 		if (Thread.interrupted()) throw new InterruptedException();
-		if (tryAcquireShared(arg) < 0) doAcquireSharedInterruptibly(arg);
+		int $response = tryAcquireShared(arg);
+		return ($response >= 0) ? $response : doAcquireSharedInterruptibly(arg);
 	}
 	
 	/**

@@ -16,12 +16,6 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-/*
- * This code is inspired by and borrows heavily from code originally written
- * by Doug Lea with assistance from members of JCP JSR-166 Expert Group and
- * released to the public domain.  The author of this code greatfully 
- * acknowledges their contributions to the field.
- */
 
 package us.exultant.ahs.thread;
 
