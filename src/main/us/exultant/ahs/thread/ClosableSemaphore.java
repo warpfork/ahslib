@@ -36,11 +36,21 @@ public class ClosableSemaphore extends FlippableSemaphore {
 		throw new UnsupportedOperationException();
 	}
 	
+	public void close() {
+		super.flip(true);
+	}
+	
 	public void acquire() throws InterruptedException {
 		super.acquire();
-		//loldongs you can't atomically interrupt a thread... so if you support this you have a chance of ignoring a legit interruption from somewhere else if someone closes this phore.  nothing you can do about it.
-		//CORESTRAT: make tryAcquireShared(int) actually return a positive when we're closed, but without actually draining shit.  then somehow magically get the list of blocked threads -- you see the problem there i assume -- and call LockSupport.unpark with those threads.  And pray.
-		// on the plus side, you'll note that once we're closed we CAN stop new threads from starting to block, so we're safe there.  so maybe this is doable.
+		//CORESTRAT:
+		//    - make tryAcquireShared(int) actually return a positive when we're closed, but without actually draining shit.
+		//            implication: must deal with that in every other method too, because we don't want to look like we actually got an acquire if we didn't.
+		//             ... I'm pretty sure this is actually impossible to do with AQS.  if doAcquireSharedInterruptibly(int) would return the int from tryAcquireShared(int), i could use that to see if an acquire was fake-successful/return-by-cancel, but without that i see no real options.
+		//                 even if we could do that, then in this whole situation, i don't think we can really reuse FlippableSemaphore, because it has no idea that there should be different kinds of acquire success, and it certainly doesn't know what it has to do in tryAcquireShared when flipped that's special.  we could overide tryAcquireShared, actually, but only if those classes of the implementation weren't final and we had a rational way to override their construction in the superclass.
+		//    - then somehow magically get the list of blocked threads
+		//            on the plus side, you'll note that once we're closed we CAN stop new threads from starting to block, so we're safe there.  so maybe this is doable.
+		//    - call LockSupport.unpark with those threads.
+		
 	}
 	
 	public void acquireUninterruptibly() {
