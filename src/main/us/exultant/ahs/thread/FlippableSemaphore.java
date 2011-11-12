@@ -332,7 +332,7 @@ public class FlippableSemaphore {
 	 *                 if the current thread is interrupted
 	 */
 	public boolean acquire() throws InterruptedException {
-		return ($sync.acquireSharedInterruptibly(1) >= 0);
+		return $sync.$decider.isAcquireSuccessful($sync.acquireSharedInterruptibly(1));
 	}
 	
 	/**
@@ -360,7 +360,7 @@ public class FlippableSemaphore {
 	 *         willing to service this request.
 	 */
 	public boolean acquireUninterruptibly() {
-		int $response = $sync.acquireShared(1);
+		return $sync.$decider.isAcquireSuccessful($sync.acquireShared(1));
 	}
 	
 	/**
@@ -375,19 +375,10 @@ public class FlippableSemaphore {
 	 * If no permit is available then this method will return immediately with the
 	 * value {@code false}.
 	 * 
-	 * <p>
-	 * Even when this semaphore has been set to use a fair ordering policy, a call to
-	 * {@code tryAcquire()} <em>will</em> immediately acquire a permit if one is
-	 * available, whether or not other threads are currently waiting. This
-	 * &quot;barging&quot; behavior can be useful in certain circumstances, even
-	 * though it breaks fairness. If you want to honor the fairness setting, then use
-	 * {@link #tryAcquire(long, TimeUnit) tryAcquire(0, TimeUnit.SECONDS) } which is
-	 * almost equivalent (it also detects interruption).
-	 * 
 	 * @return {@code true} if a permit was acquired and {@code false} otherwise
 	 */
-	public boolean tryAcquire() {
-		return $sync.nonfairTryAcquireShared(1) >= 0;
+	public boolean tryAcquire() {	// Doug Lea's orginal method here allowed barging.  mine doesn't.  I could; just not going to because I think it kinda violates the principle of least surprise.
+		return $sync.$decider.isAcquireSuccessful($sync.tryAcquireShared(1));
 	}
 	
 	/**
@@ -437,7 +428,7 @@ public class FlippableSemaphore {
 	 *                 if the current thread is interrupted
 	 */
 	public boolean tryAcquire(long $timeout, TimeUnit $unit) throws InterruptedException {
-		return $sync.tryAcquireSharedNanos(1, $unit.toNanos($timeout));
+		return $sync.$decider.isAcquireSuccessful($sync.tryAcquireSharedNanos(1, $unit.toNanos($timeout)));
 	}
 	
 	/**
@@ -501,7 +492,7 @@ public class FlippableSemaphore {
 	 */
 	public boolean acquire(int $permits) throws InterruptedException {
 		if ($permits < 0) throw new IllegalArgumentException();
-		return ($sync.acquireSharedInterruptibly($permits) >= 0);
+		return $sync.$decider.isAcquireSuccessful($sync.acquireSharedInterruptibly($permits));
 	}
 	
 	/**
@@ -536,7 +527,7 @@ public class FlippableSemaphore {
 	 */
 	public boolean acquireUninterruptibly(int $permits) {
 		if ($permits < 0) throw new IllegalArgumentException();
-		$sync.acquireShared($permits);
+		return $sync.$decider.isAcquireSuccessful($sync.acquireShared($permits));
 	}
 	
 	/**
@@ -552,24 +543,15 @@ public class FlippableSemaphore {
 	 * If insufficient permits are available then this method will return immediately
 	 * with the value {@code false} and the number of available permits is unchanged.
 	 * 
-	 * <p>
-	 * Even when this semaphore has been set to use a fair ordering policy, a call to
-	 * {@code tryAcquire} <em>will</em> immediately acquire a permit if one is
-	 * available, whether or not other threads are currently waiting. This
-	 * &quot;barging&quot; behavior can be useful in certain circumstances, even
-	 * though it breaks fairness. If you want to honor the fairness setting, then use
-	 * {@link #tryAcquire(int, long, TimeUnit) tryAcquire(permits, 0,
-	 * TimeUnit.SECONDS) } which is almost equivalent (it also detects interruption).
-	 * 
 	 * @param $permits
 	 *                the number of permits to acquire
 	 * @return {@code true} if the permits were acquired and {@code false} otherwise
 	 * @throws IllegalArgumentException
 	 *                 if {@code permits} is negative
 	 */
-	public boolean tryAcquire(int $permits) {
+	public boolean tryAcquire(int $permits) {	// Doug Lea's orginal method here allowed barging.  mine doesn't.  I could; just not going to because I think it kinda violates the principle of least surprise.
 		if ($permits < 0) throw new IllegalArgumentException();
-		return $sync.nonfairTryAcquireShared($permits) >= 0;
+		return $sync.$decider.isAcquireSuccessful($sync.tryAcquireShared($permits));
 	}
 	
 	/**
@@ -632,7 +614,7 @@ public class FlippableSemaphore {
 	 */
 	public boolean tryAcquire(int $permits, long $timeout, TimeUnit $unit) throws InterruptedException {
 		if ($permits < 0) throw new IllegalArgumentException();
-		return $sync.tryAcquireSharedNanos($permits, $unit.toNanos($timeout));
+		return $sync.$decider.isAcquireSuccessful($sync.tryAcquireSharedNanos($permits, $unit.toNanos($timeout)));
 	}
 	
 	/**

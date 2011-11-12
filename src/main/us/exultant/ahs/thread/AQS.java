@@ -931,7 +931,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * @param arg
 	 *                the acquire argument
 	 */
-	private void doAcquireShared(int arg) {
+	private int doAcquireShared(int arg) {
 		final Node node = addWaiter(Node.SHARED);
 		boolean failed = true;
 		try {
@@ -945,7 +945,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 						p.next = null; // help GC
 						if (interrupted) selfInterrupt();
 						failed = false;
-						return;
+						return r;
 					}
 				}
 				if (shouldParkAfterFailedAcquire(p, node) && parkAndCheckInterrupt()) interrupted = true;
@@ -992,8 +992,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 *                max wait time
 	 * @return {@code true} if acquired
 	 */
-	private boolean doAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException {
-		
+	private int doAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException {
 		long lastTime = System.nanoTime();
 		final Node node = addWaiter(Node.SHARED);
 		boolean failed = true;
@@ -1006,10 +1005,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 						setHeadAndPropagate(node, r);
 						p.next = null; // help GC
 						failed = false;
-						return true;
+						return r;
 					}
 				}
-				if (nanosTimeout <= 0) return false;
+				if (nanosTimeout <= 0) return Integer.MIN_VALUE;
 				if (shouldParkAfterFailedAcquire(p, node) && nanosTimeout > spinForTimeoutThreshold) LockSupport.parkNanos(this, nanosTimeout);
 				long now = System.nanoTime();
 				nanosTimeout -= now - lastTime;
@@ -1258,8 +1257,9 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 *                {@link #tryAcquireShared} but is otherwise uninterpreted and can
 	 *                represent anything you like.
 	 */
-	public final void acquireShared(int arg) {
-		if (tryAcquireShared(arg) < 0) doAcquireShared(arg);
+	public final int acquireShared(int arg) {
+		int $response = tryAcquireShared(arg);
+		return ($response >= 0) ? $response : doAcquireShared(arg);
 	}
 	
 	/**
@@ -1296,13 +1296,16 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 *                represent anything you like.
 	 * @param nanosTimeout
 	 *                the maximum number of nanoseconds to wait
-	 * @return {@code true} if acquired; {@code false} if timed out
+	 * @return the value eventually returned from {@link #tryAcquireShared(int)}, or
+	 *         {@link Integer#MIN_VALUE} if we timed out before getting a non-negative
+	 *         from {@link #tryAcquireShared(int)}.
 	 * @throws InterruptedException
 	 *                 if the current thread is interrupted
 	 */
-	public final boolean tryAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException {
+	public final int tryAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException {
 		if (Thread.interrupted()) throw new InterruptedException();
-		return tryAcquireShared(arg) >= 0 || doAcquireSharedNanos(arg, nanosTimeout);
+		int $response = tryAcquireShared(arg);
+		return ($response >= 0) ? $response : doAcquireSharedNanos(arg, nanosTimeout);
 	}
 	
 	/**
