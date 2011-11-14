@@ -16,7 +16,7 @@
 	
 	<echo>Ant version:       ${ant.version}</echo>
 	<echo>Ant jvm version:   ${ant.java.version}</echo>
-	<import file="build-common.xml"/> 
+	<import file="build-exultant.xml"/> 
 	
 	
 	<target name="init">
@@ -62,7 +62,7 @@
 	<target name="test"
 		depends="dist"
 		description="build tests">
-		<ahsjavac
+		<exusJavacStrict
 			tree="test"
 			module="test"
 			classes="us/exultant/ahs/test/*"
@@ -71,7 +71,7 @@
 	</target>
 	
 	<target name="compile-core" depends="init">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/core"
 			classes="us/exultant/ahs/core/**, us/exultant/ahs/util/**"
 			depends=""
@@ -82,7 +82,7 @@
 	</target>
 	
 	<target name="compile-codec" depends="compile-core">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/codec"
 			classes="us/exultant/ahs/codec/*, us/exultant/ahs/codec/eon/*"
 			depends="build/main/core"
@@ -93,7 +93,7 @@
 	</target>
 	
 	<target name="compile-codec-json" depends="compile-codec">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/codec-json"
 			classes="us/exultant/ahs/codec/json/**"
 			depends="build/main/codec : build/main/core"
@@ -104,7 +104,7 @@
 	</target>
 	
 	<target name="compile-codec-ebon" depends="compile-codec">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/codec-ebon"
 			classes="us/exultant/ahs/codec/ebon/**"
 			depends="build/main/codec : build/main/core"
@@ -115,7 +115,7 @@
 	</target>
 		
 	<target name="compile-codec-pre" depends="compile-codec">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/codec-pre"
 			classes="us/exultant/ahs/codec/eon/pre/**"
 			depends="build/main/codec : build/main/core"
@@ -126,7 +126,7 @@
 	</target>
 	
 	<target name="compile-log" depends="compile-core">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/log"
 			classes="us/exultant/ahs/log/**"
 			depends="build/main/core"
@@ -137,7 +137,7 @@
 	</target>
 	
 	<target name="compile-test" depends="compile-log">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/test"
 			classes="us/exultant/ahs/test/*.java"
 			depends="build/main/core : build/main/log"
@@ -147,7 +147,7 @@
 		<jar jarfile="dist/ahslib-test.jar" basedir="build/main/test"/>
 	</target>
 	<target name="compile-test-junit" depends="compile-test">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/test-junit"
 			classes="us/exultant/ahs/test/junit/**"
 			depends="build/main/core : build/main/log : lib/junit.jar"
@@ -158,7 +158,7 @@
 	</target>
 	
 	<target name="compile-thread" depends="compile-core">
-		<ahsjavac
+		<exusJavacStrict
 			module="main/thread"
 			classes="us/exultant/ahs/thread/**"
 			depends="build/main/core"
@@ -169,7 +169,7 @@
 	</target>
 	
 	<target name="compile-io" depends="compile-thread">
-		<ahsjavac
+		<exusJavacStrict
 			 module="main/io"
 			 classes="us/exultant/ahs/io/**"
 			 depends="build/main/core : build/main/thread"
@@ -180,7 +180,7 @@
 	</target>
 	
 	<target name="compile-scratch" depends="compile-core, compile-codec, compile-codec-ebon, compile-codec-pre">
-		<ahsjavac
+		<exusJavacStrict
 			 module="main/scratch"
 			 classes="us/exultant/ahs/scratch/**"
 			 depends="build/main/core : build/main/codec : build/main/codec-ebon : build/main/codec-pre : lib/plugin.jar"
