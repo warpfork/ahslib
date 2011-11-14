@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.*;
 /**
  * A useful statement is this:
  * <tt>
- * i=0; while true; do i=$(math $i + 1); echo $i; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; if [ "$?" -ne "0" ]; then break; fi; done
+ * i=0; while true; do i=$(math $i + 1); echo $i; d; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; echo; if [ "$?" -ne "0" ]; then break; fi; done
  * </tt>
  * 
  * @author hash
@@ -418,10 +418,10 @@ public abstract class WorkSchedulerTest extends TestCase {
 				$log.trace(this, "WT"+$name+" pulled "+$move);
 				return $move;
 			}
-			public synchronized boolean isReady() {
-				return !isDone();
+			public boolean isReady() {		// note that these actually CAN NOT be synchronized.  if they are, deadlock can occur in schedulers.
+				return $pipe.SRC.hasNext();
 			}
-			public synchronized boolean isDone() {
+			public boolean isDone() {		// note that these actually CAN NOT be synchronized.  if they are, deadlock can occur in schedulers.
 				return $pipe.SRC.isClosed() && !$pipe.SRC.hasNext();
 			}
 			public int getPriority() {
@@ -447,6 +447,13 @@ public abstract class WorkSchedulerTest extends TestCase {
 	/** Same as {@link TestNonblockingManyWorkSingleSource}, but the input pipe will be closed from the sink thread when the source is already empty (resulting in a (probably) concurrent finish for the WorkTargets). */
 	private class TestConcurrentFinish extends TestNonblockingManyWorkSingleSource {
 		protected void feedPipe() {
+			final WorkSchedulerFlexiblePriority $bs = (WorkSchedulerFlexiblePriority) $ws;
+			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() {
+				public void run() {
+					$log.trace("SCHEDULER STATUS:\n" + $bs.getStatus(true));
+				}
+			}, 100000, false), ScheduleParams.makeFixedDelay(100));
+			
 			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() { public void run() { TestConcurrentFinish.super.feedPipe(); } }), ScheduleParams.NOW);	// that was an incredibly satisfying line to write
 		}
 		
