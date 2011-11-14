@@ -164,9 +164,7 @@ public class Pipe<$T> implements Flow<$T> {
 				return readNow();
 			} else {
 				try {
-					// so... i need to acquire atomically with the closed check, or else acquire can happen immediately after an interrupt and end up blocking forever.
-					// the above is impossible.  so instead i just made the semaphore -always- throw interrupted exceptions after it's been interrupted once.
-					$gate.acquire();
+					if (!$gate.acquire()) return null;
 				} catch (InterruptedException $e) {
 					return null;
 				}
@@ -178,8 +176,8 @@ public class Pipe<$T> implements Flow<$T> {
 		
 		public $T readNow() {
 			boolean $one = $gate.tryAcquire();
-			if (!$one) return null;
 			checkForFinale();
+			if (!$one) return null;
 			return $queue.poll();
 		}
 		
