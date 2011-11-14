@@ -90,6 +90,9 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		// just push this into the set of requested updates.
 		$updatereq.add($fut);
+		
+		// wake a thread that might be blocking because there's no work, because it needs to drain the updatereq list again before it can be sure it should still be waiting
+		$available.signal();
 	}
 	
 	
