@@ -106,7 +106,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private final PriorityHeap		$scheduled	= new PriorityHeap(WorkFuture.PriorityComparator.INSTANCE);
 	private final Set<WorkFuture<?>>	$unready	= new HashSet<WorkFuture<?>>();
 	private final Set<WorkFuture<?>>	$updatereq	= Collections.newSetFromMap(new ConcurrentHashMap<WorkFuture<?>,Boolean>());	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
-	private final Map<Thread,WorkFuture<?>> $running	= new ConcurrentHashMap<Thread,WorkFuture<?>>();	// this is purely for bookkeeping/debugging/statusreporting and serves absolutely zero functional purpose out of that. 
+	private final Map<Thread,Object> 	$running	= new ConcurrentHashMap<Thread,Object>();	// this is purely for bookkeeping/debugging/statusreporting and serves absolutely zero functional purpose out of that. 
 	
 	private final ReentrantLock		$lock		= new ReentrantLock();
 	private Thread				$leader		= null;
@@ -148,7 +148,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
 				$lock.lockInterruptibly();
-				$running.remove(Thread.currentThread());
+				$running.put(Thread.currentThread(), "planning next move");
 				try {
 					if ($chosen.$sync.scheduler_shift()) {
 						$scheduled.add($chosen);
@@ -209,6 +209,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			if ($first != null) return $scheduled.poll();
 			
 			// if we don't have any ready work, wait for signal of new work submission or until what we were told would be the next delay expiry; then we just retry.
+			$running.put(Thread.currentThread(), "waiting for availability of new work events");
 			if ($leader != null) {
 				$available.await();
 			} else {
@@ -219,6 +220,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 					if ($leader == Thread.currentThread()) $leader = null;
 				}
 			}
+			$running.put(Thread.currentThread(), "planning next move");
 		}} finally {
 			if ($leader == null && $scheduled.peek() != null) $available.signal();
 		}
@@ -292,7 +294,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				
 				$sb.append("\n\t\tRUNNING:");
 				if ($running.size() > 0)
-					for (Map.Entry<Thread,WorkFuture<?>> $thing : $running.entrySet())
+					for (Map.Entry<Thread,Object> $thing : $running.entrySet())
 						$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
 				else
 					$sb.append("\n\t\t\t--- none ---");
