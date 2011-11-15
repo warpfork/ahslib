@@ -156,6 +156,7 @@ public class Pipe<$T> implements Flow<$T> {
 		 * operation on the matching {@link Sink} and upon close.
 		 */
 		public void setListener(Listener<ReadHead<$T>> $el) {
+			$el.hear(this);	/* this call may be "spurious", but it's actually extremely important to make sure you don't get screwed by a race condition when scheduling at the same time as doing last writes... I explained this at length in an email just a bit ago; I should clean that up and post it in the package docs or something. */
 			Pipe.this.$el = $el;
 		}
 		
