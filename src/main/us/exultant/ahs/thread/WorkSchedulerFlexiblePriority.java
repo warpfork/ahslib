@@ -92,7 +92,12 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		$updatereq.add($fut);
 		
 		// wake a thread that might be blocking because there's no work, because it needs to drain the updatereq list again before it can be sure it should still be waiting
-		$available.signal();
+		$lock.lock();	// i am NOT a big fan of this lock being acquirable in the update method where it can be triggered by arbitrary threads, but we have to be able to wake the system if it's blocking on work.  we could and should definitely look into performance improvement options for detecting if the system is halted before calling this lock, but that's gonna be much easier said than done.
+		try {
+			$available.signal();
+		} finally {
+			$lock.unlock();
+		}
 	}
 	
 	
