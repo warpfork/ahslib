@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.*;
 /**
  * A useful statement is this:
  * <tt>
- * i=0; while true; do i=$(math $i + 1); echo $i; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; if [ "$?" -ne "0" ]; then break; fi; done
+ * i=0; while true; do i=$(math $i + 1); echo $i; d; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; echo; if [ "$?" -ne "0" ]; then break; fi; done
  * </tt>
  * 
  * @author hash
@@ -174,7 +174,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			Work[] $wt = new Work[8];
 			@SuppressWarnings("unchecked")	//srsly.
-			WorkFuture<Void>[] $f = (WorkFuture<Void>[])new WorkFuture<?>[8];
+			WorkFuture<Void>[] $f = new WorkFuture[8];
 			for (int $i = 0; $i < 8; $i++) $wt[$i] = new Work();
 			for (int $i = 0; $i < 8; $i++) $f[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
 			for (int $i = 0; $i < 8; $i++) $f[$i].addCompletionListener(new Listener<WorkFuture<Void>>() {
@@ -186,6 +186,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 			for (int $i = 0; $i < 8; $i++) $f[$i].get();
 			
 			for (int $i = 0; $i < 8; $i++) assertEquals(0, $wt[$i].x);
+			
+			// so, funny thing about this next.  um, completion calls come AFTER that future.get guy is capable of returning.  not "much" after, of course, but still after.  so... yeah, this is kinda hard to test.  like, it may fail.  without the system being wrong.  i need a better test here.
+			X.chill(10);
 			assertEquals(8, $completionCalls.intValue());
 			
 			breakCaseIfFailed();
@@ -281,6 +284,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 	}
+	
+	
+	// TestCancelWhileRunning
+	
+	// TestFinishWhileRunning	// I mean, come on.  you can make a much more direct test of this than what TestConcurrentFinish is doing, and you can (and should) do it without pipes.
 	
 	
 	
@@ -410,10 +418,10 @@ public abstract class WorkSchedulerTest extends TestCase {
 				$log.trace(this, "WT"+$name+" pulled "+$move);
 				return $move;
 			}
-			public synchronized boolean isReady() {
-				return !isDone();
+			public boolean isReady() {		// note that these actually CAN NOT be synchronized.  if they are, deadlock can occur in schedulers.
+				return $pipe.SRC.hasNext();
 			}
-			public synchronized boolean isDone() {
+			public boolean isDone() {		// note that these actually CAN NOT be synchronized.  if they are, deadlock can occur in schedulers.
 				return $pipe.SRC.isClosed() && !$pipe.SRC.hasNext();
 			}
 			public int getPriority() {
@@ -439,6 +447,13 @@ public abstract class WorkSchedulerTest extends TestCase {
 	/** Same as {@link TestNonblockingManyWorkSingleSource}, but the input pipe will be closed from the sink thread when the source is already empty (resulting in a (probably) concurrent finish for the WorkTargets). */
 	private class TestConcurrentFinish extends TestNonblockingManyWorkSingleSource {
 		protected void feedPipe() {
+			final WorkSchedulerFlexiblePriority $bs = (WorkSchedulerFlexiblePriority) $ws;
+			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() {
+				public void run() {
+					$log.trace("SCHEDULER STATUS:\n" + $bs.getStatus(true));
+				}
+			}, 100000, false), ScheduleParams.makeFixedDelay(100));
+			
 			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() { public void run() { TestConcurrentFinish.super.feedPipe(); } }), ScheduleParams.NOW);	// that was an incredibly satisfying line to write
 		}
 		

@@ -55,9 +55,8 @@ public class Pipe<$T> implements Flow<$T> {
 	 * Constructs a new, open, active, empty, usable Pipe.
 	 */
 	public Pipe() {
-		$closed = new boolean[] { false };
 		$queue = new ConcurrentLinkedQueue<$T>();
-		$gate = new InterruptableSemaphore(0, true); // fair.
+		$gate = new ClosableSemaphore(true);
 		SRC = new Source();
 		SINK = new Sink();
 		$lock = new ReentrantLock();
@@ -116,15 +115,7 @@ public class Pipe<$T> implements Flow<$T> {
 	 * locked and all permits are then drained, an effcetive read locked is attained.
 	 * </p>
 	 */
-	private final InterruptableSemaphore	$gate;
-	
-	/**
-	 * This array is of length one. Its only value describes whether or not this Pipe
-	 * is closed to new writes; {@link #$gate} is interrupted immediately after this
-	 * value is set to true when closing a Pipe. (An array is used here instead of a
-	 * boolean primitive directly in order to provide a monitor for synchronization.)
-	 */
-	private final boolean[]			$closed;
+	private final ClosableSemaphore	$gate;
 	
 	/**
 	 * @return {@link #SRC}.
@@ -173,9 +164,7 @@ public class Pipe<$T> implements Flow<$T> {
 				return readNow();
 			} else {
 				try {
-					// so... i need to acquire atomically with the closed check, or else acquire can happen immediately after an interrupt and end up blocking forever.
-					// the above is impossible.  so instead i just made the semaphore -always- throw interrupted exceptions after it's been interrupted once.
-					$gate.acquire();
+					if (!$gate.acquire()) return null;
 				} catch (InterruptedException $e) {
 					return null;
 				}
@@ -187,8 +176,8 @@ public class Pipe<$T> implements Flow<$T> {
 		
 		public $T readNow() {
 			boolean $one = $gate.tryAcquire();
-			if (!$one) return null;
 			checkForFinale();
+			if (!$one) return null;
 			return $queue.poll();
 		}
 		
@@ -219,7 +208,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $closed[0];
+			return $gate.isFlipped();
 		}
 		
 		/**
@@ -235,12 +224,11 @@ public class Pipe<$T> implements Flow<$T> {
 		public void close() {
 			$lock.lock();
 			try {
-				$closed[0] = true; // set our state to closed
+				$gate.close();
 			} finally {
 				$lock.unlock();
 			}
-			$gate.interrupt(); // interrupt any currently blocking reads
-			X.notifyAll($closed); // trigger the return of any final readAll calls
+			X.notifyAll($gate); // trigger the return of any final readAll calls
 			
 			// give our listener a chance to notice our closure.
 			Listener<ReadHead<$T>> $dated_el = $el;
@@ -248,9 +236,9 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		private void waitForClose() {
-			synchronized ($closed) {
+			synchronized ($gate) {
 				while (!isClosed())
-					X.wait($closed);
+					X.wait($gate);
 			}
 		}
 	}
@@ -331,7 +319,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $closed[0];
+			return $gate.isFlipped();
 		}
 		
 		/**

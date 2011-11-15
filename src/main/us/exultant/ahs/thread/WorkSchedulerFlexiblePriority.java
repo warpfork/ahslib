@@ -66,7 +66,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				} else {
 					$delayed.add($wf);
 				}
-
+				
 				if ($work.isDone()) {
 					// this check MUST be done AFTER adding the task to a heap, or otherwise it becomes more than slightly dodgy, for all the usual reasons: you could have failed to shift because you just weren't ready, then the done check happens, then you concurrently "finish" from someone else draining your pipe before this scheduler knows to take update requests about you seriously.
 					$wf.$sync.tryFinish(false, null, null);
@@ -80,6 +80,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
+		if ($fut.isDone()) return;
+		
 		// check doneness; try to transition immediate to FINISHED if is done.
 		if ($fut.$work.isDone()) {
 			$fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
@@ -88,6 +90,14 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		// just push this into the set of requested updates.
 		$updatereq.add($fut);
+		
+		// wake a thread that might be blocking because there's no work, because it needs to drain the updatereq list again before it can be sure it should still be waiting
+		$lock.lock();	// i am NOT a big fan of this lock being acquirable in the update method where it can be triggered by arbitrary threads, but we have to be able to wake the system if it's blocking on work.  we could and should definitely look into performance improvement options for detecting if the system is halted before calling this lock, but that's gonna be much easier said than done.
+		try {
+			$available.signal();
+		} finally {
+			$lock.unlock();
+		}
 	}
 	
 	
@@ -96,6 +106,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private final PriorityHeap		$scheduled	= new PriorityHeap(WorkFuture.PriorityComparator.INSTANCE);
 	private final Set<WorkFuture<?>>	$unready	= new HashSet<WorkFuture<?>>();
 	private final Set<WorkFuture<?>>	$updatereq	= Collections.newSetFromMap(new ConcurrentHashMap<WorkFuture<?>,Boolean>());	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
+	private final Map<Thread,WorkFuture<?>> $running	= new ConcurrentHashMap<Thread,WorkFuture<?>>();	// this is purely for bookkeeping/debugging/statusreporting and serves absolutely zero functional purpose out of that. 
 	
 	private final ReentrantLock		$lock		= new ReentrantLock();
 	private Thread				$leader		= null;
@@ -105,7 +116,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	
 	private void worker_cycle() throws InterruptedException {
-		WorkFuture<?> $chosen;
+		WorkFuture<?> $chosen = null;
 		doWork: for (;;) {	// we repeat this loop... well, forever, really.
 			
 			// lock until we can pull someone out who's state is scheduled.
@@ -127,15 +138,17 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 						throw new MajorBug("work acquisition turned up a target that had been placed in the scheduled heap, but was neither in a scheduled state nor had undergone any of the valid concurrent transitions.");
 				}
 			}} finally {
+				$running.put(Thread.currentThread(), $chosen);
 				$lock.unlock();
 			}
 			
 			// run the work we pulled out.
-			boolean $requiresMoar = $chosen.$sync.scheduler_power();
+			boolean $mayRunAgain = $chosen.$sync.scheduler_power();
 			
 			// requeue the work for future attention if necessary
-			if ($requiresMoar) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.				
+			if ($mayRunAgain) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
 				$lock.lockInterruptibly();
+				$running.remove(Thread.currentThread());
 				try {
 					if ($chosen.$sync.scheduler_shift()) {
 						$scheduled.add($chosen);
@@ -161,6 +174,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			} else {
 				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
 				hearTaskDrop($chosen);
+				$running.remove(Thread.currentThread());
 			}
 		}
 	}
@@ -182,6 +196,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * out immediately following this function.
 	 */
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
+		assert $lock.isHeldByCurrentThread();
 		try { for (;;) {
 			// offer to shift any unclocked tasks that have had updates requested
 			worker_pollUpdates();
@@ -215,11 +230,12 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * called only while holding the lock.
 	 */
 	private void worker_pollUpdates() {
+		assert $lock.isHeldByCurrentThread();
 		final Iterator<WorkFuture<?>> $itr = $updatereq.iterator();
 		while ($itr.hasNext()) {
 			WorkFuture<?> $wf = $itr.next(); $itr.remove();
-			if ($wf.$sync.scheduler_shift()) {
-				//if ($unready.remove($wf))	//FIXME this appears to be poo.  which is odd, since things shouldn't really not be in there when this happens... that would imply we dropped the ball somewhere already and that remembrance of this task is purely from... uh, updates.  which isn't even remembrance.
+			if ($wf.$sync.scheduler_shift()) {	//FIXME AHH HAH!  if something is told to finish while its running, the finish fails and ends up as an updatereq............erm, where was i going with that?  to fail, you'd nee the final updatereq to come in and get eaten by another thread BEFORE the working thread does the cas from running to waiting and yet AFTER the working thread checks if that work is still not done.  no such moment exists.  though that does definitely explain why that thing about removing from unready being necessary is a brok.
+				//if ($unready.remove($wf))	// this appears to be poo.  which is odd, since things shouldn't really not be in there when this happens... that would imply we dropped the ball somewhere already and that remembrance of this task is purely from... uh, updates.  which isn't even remembrance.
 				$unready.remove($wf);
 				$scheduled.add($wf);
 			} else {
@@ -244,14 +260,15 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * pushes it into the scheduled heap, and sifts the shifted tasks as necessary by
 	 * priority.
 	 * 
-	 * Hold the friggin' lock when calling, of course. Since cause WorkFuture's to
-	 * change their state in here, we must enforce that this aligns with changing the
-	 * heap they're in so the rest of the scheduler doesn't go insane.
+	 * Hold the friggin' lock when calling, of course. Since we cause WorkFuture
+	 * instances to change their state in here, we must enforce that this aligns with
+	 * changing the heap they're in so the rest of the scheduler doesn't go insane.
 	 * 
 	 * @return the delay (in nanosec) until the next known clocked task will be ready
 	 *         (or Long.MAX_VALUE if there are no more clocked tasks present).
 	 */
 	private long worker_pollDelayed() {
+		assert $lock.isHeldByCurrentThread();
 		WorkFuture<?> $key;
 		for (;;) {
 			$key = $delayed.peek();
@@ -272,22 +289,46 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			String $moar = null;
 			if ($allOfIt) {
 				StringBuilder $sb = new StringBuilder();
-				$sb.append("\n\tSCHEDULED:");
-				for (int $i = 0; $i < $scheduled.$size; $i++)
-					$sb.append("\n\t\t"+$scheduled.$queue[$i]);
-				$sb.append("\n\tUNREADY:");
-				for (WorkFuture<?> $thing : $unready)
-					$sb.append("\n\t\t"+$thing);
-				$sb.append("\n\tDELAYED:");
-				for (int $i = 0; $i < $delayed.$size; $i++)
-					$sb.append("\n\t\t"+$delayed.$queue[$i]);
-				$sb.append("\n\tUPDATEREQ:");
-				for (WorkFuture<?> $thing : $updatereq)
-					$sb.append("\n\t\t"+$thing);
+				
+				$sb.append("\n\t\tRUNNING:");
+				if ($running.size() > 0)
+					for (Map.Entry<Thread,WorkFuture<?>> $thing : $running.entrySet())
+						$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
+				$sb.append("\n\t\tSCHEDULED:");
+				if ($scheduled.$size > 0)
+					for (int $i = 0; $i < $scheduled.$size; $i++)
+						$sb.append("\n\t\t\t"+$scheduled.$queue[$i]);
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
+				$sb.append("\n\t\tUNREADY:");
+				if ($unready.size() > 0)
+					for (WorkFuture<?> $thing : $unready)
+						$sb.append("\n\t\t\t"+$thing);
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
+				$sb.append("\n\t\tDELAYED:");
+				if ($delayed.$size > 0)
+					for (int $i = 0; $i < $delayed.$size; $i++)
+						$sb.append("\n\t\t\t"+$delayed.$queue[$i]);
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
+				$sb.append("\n\t\tUPDATEREQ:");
+				if ($updatereq.size() > 0)
+					for (WorkFuture<?> $thing : $updatereq)
+						$sb.append("\n\t\t\t"+$thing);
+				else
+					$sb.append("\n\t\t\t--- none ---");
+				
 				$moar = $sb.toString();
 			}
 			return 
-			"running: "   + Strings.padLeftToWidth("x", 5)                  + "    " +
+			"running: "   + Strings.padLeftToWidth($running.size()+"", 5)   + "    " +
 			"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
 			"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
 			"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
@@ -325,6 +366,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		/** Returns the first element, replacing the first element with the last and sifting it down. Call only when holding lock. */
 		private WorkFuture<?> poll() {
+			assert $lock.isHeldByCurrentThread();
 			int $s = --$size;
 			WorkFuture<?> f = $queue[0];
 			WorkFuture<?> x = $queue[$s];
@@ -336,6 +378,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 
 		/** Add a new element and immediately sift it to its heap-ordered spot. Call only when holding lock. */
 		public boolean add(WorkFuture<?> $newb) {
+			assert $lock.isHeldByCurrentThread();
 			if ($newb == null) throw new NullPointerException();
 			$lock.lock();
 			try {
@@ -360,6 +403,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		/** Sift element added at bottom up to its heap-ordered spot. Call only when holding lock. */
 		private void siftUp(int $k, WorkFuture<?> $x) {
+			assert $lock.isHeldByCurrentThread();
 			while ($k > 0) {
 				int $parent = ($k - 1) >>> 1;
 				WorkFuture<?> $e = $queue[$parent];
@@ -374,6 +418,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		/** Sift element added at top down to its heap-ordered spot. Call only when holding lock. */
 		private void siftDown(int $k, WorkFuture<?> $x) {
+			assert $lock.isHeldByCurrentThread();
 			int $half = $size >>> 1;
 			while ($k < $half) {
 				int $child = ($k << 1) + 1;
@@ -391,6 +436,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		/** Resize the heap array. Call only when holding lock. */
 		private void grow() {
+			assert $lock.isHeldByCurrentThread();
 			int $oldCapacity = $queue.length;
 			int $newCapacity = $oldCapacity + ($oldCapacity >> 1); // grow 50%
 			if ($newCapacity < 0) // overflow
@@ -399,14 +445,34 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}
 	}
 	
-	private class RelentlessGC implements WorkTarget<Void> {
+
+
+	/**
+	 * <p>
+	 * When run, dumps the entire set of tasks known to this WorkScheduler as
+	 * "waiting"/"unready" into a queue that requests rechecking and updating of their
+	 * status.
+	 * </p>
+	 * 
+	 * <p>
+	 * This is not not necessarily advised for normal use, since it should typically
+	 * be entirely feasible to construct event flows to insure that all task
+	 * completions and all work availability changes are updated in an event-based
+	 * fashion and without requiring a polling operation such as this (the entire
+	 * exultant thread module and Pipes in particular are designed with the intention
+	 * of supporting such a pure event-based model). While use of this mechanism is
+	 * acceptable as a last-ditch recovery system, it will provide less rapid
+	 * reactions than a pure event-based system, and it also acquires a global lock on
+	 * the entire Scheduler in order to perform its function, and so is clearly not of
+	 * optimal performance.
+	 * </p>
+	 */
+	public class RelentlessGC implements WorkTarget<Void> {
 		public Void call() throws Exception {
 			$lock.lockInterruptibly();
 			try {
-//				$log.trace(this, "tick.  unready.size="+$unready.size());
 				$updatereq.addAll($unready);
-			} finally {	
-//				$log.trace(this, "tick done.  updatereq.size="+$updatereq.size()+"  unready.size="+$unready.size());
+			} finally {
 				$lock.unlock();
 			}
 			return null;
@@ -421,11 +487,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}
 
 		public int getPriority() {
-			return -1000;
-		}
-		
-		public String toString() {
-			return "WorkSchedulerFlexiblePriority-RelentlessGC";
+			return -100000;
 		}
 	}
 }

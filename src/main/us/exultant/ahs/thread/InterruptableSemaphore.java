@@ -67,7 +67,7 @@ public class InterruptableSemaphore {
 	private int		$permits;
 	private boolean		$interrupted;
 	
-	public void acquire() throws InterruptedException {
+	public void acquire() throws InterruptedException {	// i'd be happier if this returned a boolean for success and reserved the throw for a real interrupt
 		$lock.lock();
 		try {
 			while ($permits < 1) {

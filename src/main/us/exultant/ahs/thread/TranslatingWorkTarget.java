@@ -20,6 +20,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 
 /**
  * <p>
@@ -54,7 +55,7 @@ import us.exultant.ahs.core.*;
  * @param <$FROM>
  * @param <$TO>
  */
-public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Void> {
+public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Integer> {
 	public TranslatingWorkTarget(ReadHead<$FROM> $src, Translator<$FROM, $TO> $trans, WriteHead<$TO> $sink) {
 		this($src, $trans, $sink, 0);
 	}
@@ -63,6 +64,7 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Void> {
 		this.$src = $src;
 		this.$sink = $sink;
 		this.$prio = $priority;
+		this.$actsDone = 0;
 	}
 	
 	private final ReadHead<$FROM>			$src;
@@ -70,6 +72,7 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Void> {
 	private final Translator<$FROM,$TO>		$trans;
 	private ExceptionHandler<TranslationException>	$eh;
 	private final int				$prio;
+	private int					$actsDone;
 	
 	public boolean isDone() {
 		return $src.isClosed() && !$src.hasNext();
@@ -84,16 +87,24 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Void> {
 		return $prio;
 	}
 	
-	public Void call() {
-		if (isDone()) return null;
+	/**
+	 * @return an integer that represents how many times this TranslatingWorkTarget
+	 *         has read and performed some action on the read data. Note that this is
+	 *         not necessarily the same number as how many bits of data it has written
+	 *         out again, since exceptions or null returns from translators will not
+	 *         lead to a write.
+	 */
+	public Integer call() {
+		if (isDone()) return $actsDone;
 		
 		$FROM $a = $src.readNow();
-		if ($a == null) return null;
-	
+		if ($a == null) return $actsDone;
+		$actsDone++;
+		
 		try {
 			$TO $b = $trans.translate($a);
 			
-			if ($b == null) return null;
+			if ($b == null) return $actsDone;
 			
 			$sink.write($b);
 		} catch (TranslationException $e) {
@@ -101,7 +112,7 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Void> {
 			ExceptionHandler<TranslationException> $dated_eh = $eh;
 			if ($dated_eh != null) $dated_eh.hear($e);
 		}
-		return null;
+		return $actsDone;
 	}
 	
 	/**
@@ -137,5 +148,9 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Void> {
 	 */
 	public void setExceptionHandler(ExceptionHandler<TranslationException> $eh) {
 		this.$eh = $eh;
+	}
+	
+	public String toString() {
+		return Reflect.getObjectName(this)+"(acts="+$actsDone+")";
 	}
 }

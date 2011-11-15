@@ -39,19 +39,9 @@ public class WorkSchedulerFlexiblePriorityTest extends WorkSchedulerTest {
 	}
 	
 	protected WorkScheduler makeScheduler(int $threads) {
-		WorkSchedulerFlexiblePriority $bs;
 		if ($threads == 0)
-			$bs = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()));
+			return new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()));
 		else
-			$bs = new WorkSchedulerFlexiblePriority($threads);
-		final WorkSchedulerFlexiblePriority $ws = $bs;
-		
-		$bs.schedule(new WorkTarget.RunnableWrapper(new Runnable() {
-			public void run() {
-				$log.trace("SCHEDULER STATUS:\n" + $ws.getStatus(true));
-			}
-		}, 1000, false), ScheduleParams.makeFixedDelay(100));	// it's a bit ballsy to put this in every test unit of course, but what the hell.
-		
-		return $bs;
+			return new WorkSchedulerFlexiblePriority($threads);
 	}
 }

@@ -56,14 +56,17 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * The return value of this method is used by {@link WorkScheduler} to determine
 	 * whether or not it is presently appropriate to consider scheduling this
 	 * WorkTarget to be powered by a thread. {@link WorkScheduler} checks this method
-	 * under one of two conditions: either when triggered (i.e. by a callback on a
-	 * {@link Pipe} that feeds work data for this target; this is the preferred
-	 * mechanism) or when polled (in which case this WorkTarget must have been
-	 * specially registered with the WorkScheduler for polling-based readiness checks;
-	 * this mechanism can be useful if work data is produced at such a high volume
-	 * that the reduced synchronization is a performance improvement, but the
-	 * event-based mechanism is generally preferred and will have better performance
-	 * when the system is at rest).
+	 * under two conditions: whenever it finishes a run of the work, and sometime
+	 * after an update is requested via the {@link WorkScheduler#update(WorkFuture)}
+	 * method. (Typically, updates are requested when triggered (i.e. by a callback on
+	 * a {@link Pipe} that feeds work data for this target; this is the preferred
+	 * mechanism); otherwise it may be done in polling fashion (this mechanism can be
+	 * useful if work data is produced at such a high volume that the reduced
+	 * synchronization is a performance improvement, but the event-based mechanism is
+	 * generally preferred and will have better performance when the system is at
+	 * rest. In either case it is necessary to make these arrangements after
+	 * scheduling a WorkTarget, since the WorkFuture returned from the scheduling
+	 * process is necessary.)
 	 * </p>
 	 * 
 	 * <p>
@@ -71,7 +74,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * exactly true under all circumstances due to the concurrent nature of the
 	 * question. For example, this WorkTarget may claim to be ready when asked by the
 	 * WorkScheduler, but then may turn out to not find work when it's actually
-	 * powered because some other WorkTarget has drained from the some Pipe that
+	 * powered because some other WorkTarget has drained from the same Pipe that
 	 * provides the flow of work input data to both WorkTarget.
 	 * </p>
 	 * 
@@ -155,7 +158,8 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * </p>
 	 * 
 	 * <p>
-	 * Once this method returns true, it should never again return false.
+	 * Once this method returns true, it should never again return false. (In other
+	 * words, the property of doneness must be idempotent.)
 	 * </p>
 	 * 
 	 * @return false if the WorkScheduler should continue to call
