@@ -351,7 +351,7 @@ public class Pipe<$T> implements Flow<$T> {
 	}
 	
 	private void checkForFinale() {
-		if (SRC.isClosed() && !SRC.hasNext()) {
+		if ($gate.isPermanentlyEmpty()) {
 			// give our listener a chance to notice our final drain.
 			Listener<ReadHead<$T>> $dated_el = $el;
 			if ($dated_el != null) $dated_el.hear(SRC);
