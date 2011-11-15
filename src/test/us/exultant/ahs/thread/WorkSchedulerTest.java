@@ -393,7 +393,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			for (int $i = 0; $i < WTC; $i++)
 				$wf[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
 			
-			configurePipe();
+			configurePipe();	// this actually illustrates an important conundrum: one can't assign listeners until after we have the WorkFuture to make noise about... so if you want to be able to write (and possibly finish writing) concurrently with starting up new work to do reading, you actually require the ReadHead to send a "spurious" (that is, not triggered by any actual life-cycle event of write, close, or final read) event when you assign that Listener to it. 
 			
 			$log.trace(this, "waiting for work future completion");
 			boolean $wonOnce = false;
@@ -450,7 +450,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			final WorkSchedulerFlexiblePriority $bs = (WorkSchedulerFlexiblePriority) $ws;
 			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() {
 				public void run() {
-					$log.trace("SCHEDULER STATUS:\n" + $bs.getStatus(true));
+					$log.trace("PIPE SIZE: "+$pipe.size()+"\nSCHEDULER STATUS:\n" + $bs.getStatus(true));
 				}
 			}, 100000, false), ScheduleParams.makeFixedDelay(100));
 			

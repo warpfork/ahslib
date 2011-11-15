@@ -80,9 +80,6 @@ public class Pipe<$T> implements Flow<$T> {
 	 * This Listener is triggered for every completed write operation and for close
 	 * operations.
 	 */
-	// you know, i'm really not sure i need this to be volatile.  i never promised all that much sanity if you're changing this thing while data is flowing.
-	//  and we're pretty much giving it up anyway when we do that crap temp-copy to do the null check.
-	//   well, no, we don't.  the write locks do provide safe ordering around that so you won't get something on listener A and then B and then A again.  i just never documented that before.
 	private volatile Listener<ReadHead<$T>>	$el;
 	
 	/**
@@ -157,6 +154,7 @@ public class Pipe<$T> implements Flow<$T> {
 		 */
 		public void setListener(Listener<ReadHead<$T>> $el) {
 			Pipe.this.$el = $el;
+			$el.hear(this);	/* this call may be "spurious", but it's actually extremely important to make sure you don't get screwed by a race condition when scheduling at the same time as doing last writes... I explained this at length in an email just a bit ago; I should clean that up and post it in the package docs or something. */
 		}
 		
 		public $T read() {
@@ -351,7 +349,7 @@ public class Pipe<$T> implements Flow<$T> {
 	}
 	
 	private void checkForFinale() {
-		if (SRC.isClosed() && !SRC.hasNext()) {
+		if ($gate.isPermanentlyEmpty()) {
 			// give our listener a chance to notice our final drain.
 			Listener<ReadHead<$T>> $dated_el = $el;
 			if ($dated_el != null) $dated_el.hear(SRC);
