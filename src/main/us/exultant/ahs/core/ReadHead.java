@@ -19,7 +19,6 @@
 
 package us.exultant.ahs.core;
 
-import java.io.*;
 import java.util.*;
 
 /**
@@ -273,10 +272,6 @@ public interface ReadHead<$T> {
 	 * Only the first invocation of this function should have any effect; closing a
 	 * closed ReadHead is illogical (but should not typically throw exceptions).
 	 * </p>
-	 * 
-	 * @throws IOException
-	 *                 if the close operation results in problems or if the underlying
-	 *                 stream throws an IOException.
 	 */
-	public void close() throws IOException;
+	public void close();
 }
