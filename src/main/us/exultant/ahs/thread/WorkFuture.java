@@ -49,7 +49,7 @@ public class WorkFuture<$V> implements Future<$V> {
 		this.$work = $wt;
 		this.$schedp = $schedp;
 		this.$sync = new Sync();
-		this.$completionListeners = new ArrayList<Listener<WorkFuture<$V>>>(1);
+		this.$completionListeners = new ArrayList<Listener<WorkFuture<?>>>(1);
 	}
 	
 	
@@ -75,7 +75,7 @@ public class WorkFuture<$V> implements Future<$V> {
 	volatile Thread					$runner;
 	
 	/** A list of Listener to be called as soon as possible after this task becomes done.  This is synchronized on before adding new elements, and before transitioning to done (we're not worried about efficiency because this operation should be quite rare (i.e. never ever ever ever in a loop) and contention not really an issue). */
-	private final List<Listener<WorkFuture<$V>>>	$completionListeners;
+	private final List<Listener<WorkFuture<?>>>	$completionListeners;
 	
 	
 	WorkTarget<$V> getWorkTarget() {	// this can't be public because giving out a WorkFuture to untrusted code isn't supposed to give that code the ability to call call() on the WT.
@@ -137,7 +137,7 @@ public class WorkFuture<$V> implements Future<$V> {
 	 * the task was already done).
 	 * </p>
 	 */
-	public void addCompletionListener(Listener<WorkFuture<$V>> $completionListener) {
+	public void addCompletionListener(Listener<WorkFuture<?>> $completionListener) {
 		synchronized ($completionListeners) {
 			if (isDone()) $completionListener.hear(this);
 			else $completionListeners.add($completionListener);
@@ -254,7 +254,7 @@ public class WorkFuture<$V> implements Future<$V> {
 		/** Called exactly once.  Called AFTER the CAS to completion has already been completed. */
 		protected void hearDone() {
 			synchronized ($completionListeners) {
-				for (Listener<WorkFuture<$V>> $x : $completionListeners)
+				for (Listener<WorkFuture<?>> $x : $completionListeners)
 					$x.hear(WorkFuture.this);
 				$completionListeners.clear();	// let that crap be gc'd even if this future is forced to hang around for a while
 			}

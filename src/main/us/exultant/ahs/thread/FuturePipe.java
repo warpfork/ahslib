@@ -84,11 +84,13 @@ public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
 		}
 	}
 	
-	private final Listener<WorkFuture<$T>> $lol = new Listener<WorkFuture<$T>>() {
-		public void hear(WorkFuture<$T> $finished) {
+	private final Listener<WorkFuture<?>> $lol = new Listener<WorkFuture<?>>() {
+		@SuppressWarnings("unchecked")	// casting our generic type back on to the WorkFuture is safe at runtime
+		public void hear(WorkFuture<?> $finished) {
+			assert $finished.isDone();
 			synchronized ($held) {
 				if (!$held.remove($finished)) return;
-				$outbound.sink().write($finished);
+				$outbound.sink().write((WorkFuture<$T>)$finished);
 				if ($held.size() <= 0) $outbound.sink().close();
 			}
 		}

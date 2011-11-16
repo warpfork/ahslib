@@ -105,8 +105,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			final Work $wt = new Work();
 			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt, 0, true), ScheduleParams.NOW);
 			
-			$wf.addCompletionListener(new Listener<WorkFuture<Void>>() {
-				public void hear(WorkFuture<Void> $lol) {
+			$wf.addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $lol) {
 					// demand an immediate response
 					$completionCalls.incrementAndGet();
 					try {
@@ -142,8 +142,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			$wf.get();
 			
-			$wf.addCompletionListener(new Listener<WorkFuture<Void>>() {
-				public void hear(WorkFuture<Void> $lol) {
+			$wf.addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $lol) {
 					// demand an immediate response
 					$completionCalls.incrementAndGet();
 					try {
@@ -177,8 +177,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			WorkFuture<Void>[] $f = new WorkFuture[8];
 			for (int $i = 0; $i < 8; $i++) $wt[$i] = new Work();
 			for (int $i = 0; $i < 8; $i++) $f[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
-			for (int $i = 0; $i < 8; $i++) $f[$i].addCompletionListener(new Listener<WorkFuture<Void>>() {
-				public void hear(WorkFuture<Void> $lol) {
+			for (int $i = 0; $i < 8; $i++) $f[$i].addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $lol) {
 					$completionCalls.incrementAndGet();
 				}
 			});
