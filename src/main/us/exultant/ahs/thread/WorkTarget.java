@@ -264,6 +264,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		public RunnableWrapper(Runnable $wrap, boolean $once) { this($wrap,0,$once); }
 		public RunnableWrapper(Runnable $wrap, int $prio) { this($wrap,$prio,true); }
 		public RunnableWrapper(Runnable $wrap, int $prio, boolean $once) {
+			if ($wrap == null) throw new NullPointerException();
 			this.$once = $once;
 			this.$prio = $prio;
 			this.$wrap = $wrap;
