@@ -305,4 +305,14 @@ public interface ReadHead<$T> {
 	 */
 	// i might consider making a boolean parameter to this method for forcefulness.  perhaps there are applications that would actually want to be able to insist on losing data to the abyss between buffers?
 	public void close();
+	
+	/**
+	 * Signals whether or not a read may ever again return data. This method is
+	 * functionally identical to calling <code>(isClosed() && !hasNext())</code>, but
+	 * may be more efficient. A return of true does not guarantee that a future read
+	 * <i>will</i> return data, only that it <i>may</i>.
+	 * 
+	 * @return true if it is possible for a read to return data in the future; false otherwise.
+	 */
+	public boolean isExhausted();
 }
