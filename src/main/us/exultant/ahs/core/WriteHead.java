@@ -23,7 +23,8 @@ import java.util.*;
 
 /**
  * <p>
- * The complement of ReadHead.
+ * Provides an interface to make file, network, and internal pipe operations all
+ * transparent; WriteHead is the complement of {@link ReadHead}.
  * </p>
  * 
  * <p>
@@ -39,8 +40,6 @@ import java.util.*;
  * reason, one ought not violate the standards of the WriteHead interface; instead, one
  * should use a Pipe to create a buffer between the real, blocking WriteHead, and a much
  * softer WriteHead that returns as soon as it has committed its chunk to the buffer.
- * Exceptions from the "real" WriteHead can then be handed to the ExceptionHandler in the
- * Pipe's ReadHead.
  * </p>
  * 
  * <p>
@@ -54,8 +53,57 @@ import java.util.*;
  * @author hash
  */
 public interface WriteHead<$T> {
+	/**
+	 * Writes a chunk of data to a stream, returning when the write is complete.
+	 * 
+	 * @param $chunk
+	 * @throws IllegalStateException
+	 *                 if the WriteHead has been closed.
+	 * @throws NullPointerException
+	 *                 if the chunk is null
+	 */
 	public void write($T $chunk);
 	
+	/**
+	 * <p>
+	 * Writes a collection of data chunks to a stream, returning when the write is
+	 * complete.
+	 * </p>
+	 * 
+	 * <p>
+	 * All elements added as a group in this way should be guaranteed to come out of a
+	 * paired ReadHead in the same order as the original ordering of the collection,
+	 * and shall not be intermingled with other objects; if an implementation does not
+	 * support this behavior, it should be documented loudly.
+	 * </p>
+	 * 
+	 * <p>
+	 * Some elements added as a group in this way may be made available to a paired
+	 * ReadHead before this call returns and before the entire group is added (so it
+	 * may be possible for a thread reading from a pipe in a non-blocking fashion to
+	 * read half of the group of elements, then get nulls, and then later return to
+	 * see the other half of the group).
+	 * </p>
+	 * 
+	 * <p>
+	 * Though it is allowed for written objects to begin becoming available from a
+	 * paired ReadHead before this method returns, it is not necessary for the
+	 * listener on such a read head to be called as each of those objects become
+	 * available (though it may be).
+	 * </p>
+	 * 
+	 * <p>
+	 * If an exception is thrown in the middle of writing the collection of data, that
+	 * exception will bubble out of this method immediately and elements of the
+	 * collection that have not yet been written shall not be written as a result.
+	 * </p>
+	 * 
+	 * @param $chunks
+	 * @throws IllegalStateException
+	 *                 if the WriteHead has been closed.
+	 * @throws NullPointerException
+	 *                 if any chunk in the collection is null
+	 */
 	public void writeAll(Collection<? extends $T> $chunks);
 	
 	/**
@@ -74,7 +122,6 @@ public interface WriteHead<$T> {
 	 */
 	public boolean hasRoom();
 	
-
 	/**
 	 * @return true if the underlying stream is closed and writes are not possible.
 	 */
@@ -83,7 +130,8 @@ public interface WriteHead<$T> {
 	/**
 	 * <p>
 	 * Closes the underlying stream or channel. Invocations of write methods after
-	 * this close method should result in failure and IOExceptions.
+	 * this close method should result in failure and the throwing of
+	 * IllegalStateException.
 	 * </p>
 	 * 
 	 * <p>
@@ -91,9 +139,9 @@ public interface WriteHead<$T> {
 	 * with a WriteHead at some other position along the same underlying stream or
 	 * channel; network connections are typically exemplary of this as well as
 	 * in-program pipes), this method may typically be expected to maintain the same
-	 * semantics as the general contract of close methods of the underlying type --
-	 * namely, that the matching WriteHead (or equivalent) may find its stream or
-	 * channel to have become closed as well. However, it's worth noting that there
+	 * semantics as the general contract of close methods of the underlying type
+	 * &mdash; namely, that the matching WriteHead (or equivalent) may find its stream
+	 * or channel to have become closed as well. However, it's worth noting that there
 	 * may be some delay between the invocation of close on one and the resolution of
 	 * the closed state on the remote partner (even if the remote partner is in the
 	 * same machine or program), since layers of buffering can delay the movement of
@@ -102,7 +150,7 @@ public interface WriteHead<$T> {
 	 * 
 	 * <p>
 	 * Only the first invocation of this function should have any effect; closing a
-	 * closed WriteHead is illogical (but should not typically throw exceptions).
+	 * closed WriteHead is illogical (but should not throw exceptions).
 	 * </p>
 	 */
 	public void close();

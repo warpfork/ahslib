@@ -23,14 +23,13 @@ import java.util.*;
 
 /**
  * <p>
- * Provides a decorator to make file, network, and internal pipe operations all
- * transparent and operational in either blocking or nonblocking modes via interfaces for
- * possible buffering and a unified scheme for pumping underlying streams or channels.
- * This unified scheme has the noteworthy aspect of always allowing incoming data to be
- * requested at the application's leisure (as opposed to requiring any sort of event
- * listener), while simultaneously allowing event listeners to be attached if the old
- * "listener" pattern is desired or "select"-like functionality need be implemented across
- * multiple ReadHead instances.
+ * Provides an interface to make file, network, and internal pipe operations all
+ * transparent and operational in either blocking or nonblocking modes. This unified
+ * scheme has the noteworthy aspect of always allowing incoming data to be requested at
+ * the application's leisure (as opposed to requiring any sort of event listener), while
+ * simultaneously allowing event listeners to be attached if the old "listener" pattern is
+ * desired or "select"-like functionality need be implemented across multiple ReadHead
+ * instances. ReadHead is the complement of {@link WriteHead}.
  * </p>
  * 
  * <p>
@@ -312,7 +311,8 @@ public interface ReadHead<$T> {
 	 * may be more efficient. A return of true does not guarantee that a future read
 	 * <i>will</i> return data, only that it <i>may</i>.
 	 * 
-	 * @return true if it is possible for a read to return data in the future; false otherwise.
+	 * @return true if it is possible for a read to return data in the future; false
+	 *         otherwise.
 	 */
 	public boolean isExhausted();
 }
