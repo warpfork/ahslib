@@ -239,6 +239,10 @@ public class Pipe<$T> implements Flow<$T> {
 					X.wait($gate);
 			}
 		}
+		
+		public boolean isExhausted() {
+			return $gate.isFlippedAndZero();
+		}
 	}
 	
 	public final class Sink implements WriteHead<$T> {
