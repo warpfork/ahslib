@@ -28,10 +28,28 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 /**
- * A useful statement is this:
- * <tt>
- * i=0; while true; do i=$(math $i + 1); echo $i; d; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; echo; if [ "$?" -ne "0" ]; then break; fi; done
+ * <p>
+ * Tests any kind of {@link WorkSchedulerTest} implementation for adherence to the basic
+ * contracts. Subclasses need simply override the {@link #makeScheduler(int)} method in
+ * order to make a valid test case for any specific implementation of
+ * {@link WorkScheduler}.
+ * </p>
+ * 
+ * <p>
+ * It's essential to run this test repeatedly for confidence in its success being no mere
+ * series of false positives; threading is a fickle thing. And we're not talking about a
+ * two or three runs, or a dozen: you need to run this THOUSANDS of times if you want to
+ * be confident. A useful statement is this: <tt>
+ * i=0; while true; do i=$(math $i + 1); echo $i; date; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; echo; if [ "$?" -ne "0" ]; then break; fi; done
  * </tt>
+ * </p>
+ * 
+ * <p>
+ * {@code DEPENDS: }
+ * <ul>
+ * <li>{@link PipeTest}
+ * </ul>
+ * </p>
  * 
  * @author hash
  * 
