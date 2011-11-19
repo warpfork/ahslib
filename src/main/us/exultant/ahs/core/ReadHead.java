@@ -35,20 +35,25 @@ import java.util.*;
  * 
  * <p>
  * Unlike other stream and channel interfaces, ReadHead intends to always be aligned to
- * something <i>meaningful</i> -- though what exactly constitutes "meaningful" is left up
- * to the implementation, and is specified by the generic type. ReadHead specifically
- * intends to prevent any excessive copying of arrays around by its clients; a single
- * instance of the generic object returned by the read methods should be sufficient to
- * warrant processing in its own right, and the readAll methods are provided only as a
- * matter of completeness and convenience (and because many stream and channel interfaces
- * lack such simple conveniences) for use when the total volume of data is manageably
- * small.
+ * something <i>meaningful</i> &mdash; though what exactly constitutes "meaningful" is
+ * left up to the implementation, and is specified by the generic type. ReadHead
+ * specifically intends to prevent any excessive copying of arrays around by its clients;
+ * a single instance of the generic object returned by the read methods should be
+ * sufficient to warrant processing in its own right, and the readAll methods are provided
+ * only as a matter of completeness and convenience (and because many stream and channel
+ * interfaces lack such simple conveniences) for use when the total volume of data is
+ * manageably small. Thus, a binary transport with a ReadHead interface would typically be
+ * designed to return ByteBuffer representing an entire frame of data.
  * </p>
  * 
  * <p>
  * Implementers of this interface could potentially be used to decorate an instance
- * java.io.InputStream, java.util.concurrent.ConcurrentLinkedQueue,
- * java.nio.channels.Channel... whatever.
+ * {@link java.io.InputStream}, {@link java.util.concurrent.ConcurrentLinkedQueue},
+ * {@link java.nio.channels.Channel}... whatever. Most typically, communication between
+ * threads in a single VM is handled by using a {@link us.exultant.ahs.thread.Pipe}, which
+ * provides highly efficient synchronized message passing with ReadHead and WriteHead
+ * interfaces. Communication across sockets or to the filesystem is provided ready-made by
+ * ReadHead implementations in the {@link us.exultant.ahs.io} package.
  * </p>
  * 
  * <p>
@@ -63,8 +68,9 @@ import java.util.*;
  * relating to nonblocking reads if at all possible even when the underlying stream or
  * channel is provides only blocking services. Such issues can be resolved by reading the
  * blocking stream into a nonblocking buffer using an external thread, then providing
- * direct access only to the nonblocking buffer. (The Pipe class in the {@code threading}
- * module of AHSlib is an ideal helper for such a role.)
+ * direct access only to the nonblocking buffer. (The {@link us.exultant.ahs.thread.Pipe}
+ * class in the {@link us.exultant.ahs.thread} module of AHSlib is an ideal helper for
+ * such a role.)
  * </p>
  * 
  * <p>
@@ -93,30 +99,40 @@ public interface ReadHead<$T> {
 	 * <p>
 	 * Despite the listener's intended purpose, it is critical to note that even if a
 	 * {@link #hasNext()} call is the first thing within the Listener's
-	 * <code>hear(ReadHead<$T>)</code> procedure, that call may return false. This may
-	 * situation may arise even if the call to the Listener was intended to signal new
-	 * data availability, since multithreaded access to the ReadHead can result in
-	 * another thread having pre-empted the Listener and consumed the data before the
-	 * Listener can respond.
+	 * {@link Listener#hear(Object) hear(ReadHead<$T>)} procedure, that call may
+	 * return false. This may situation may arise even if the call to the Listener was
+	 * intended to signal new data availability, since multithreaded access to the
+	 * ReadHead can result in another thread having pre-empted the Listener and
+	 * consumed the data before the Listener can respond.
 	 * </p>
 	 * 
 	 * <p>
-	 * The Listener's <code>hear(ReadHead<$T>)</code> method will be invoked from the
-	 * thread that caused the state change (often the one powering a connected
-	 * WriteHead), and as such must not be responsible for any intensive or
-	 * time-consuming operations. The recommended usage is to simply provide an event
-	 * listener that marks the ReadHead as (probably) having data available in some
-	 * other "selector"-like scheme.
+	 * The Listener's {@link Listener#hear(Object) hear(ReadHead<$T>)} method will be
+	 * invoked from the thread that caused the state change, and as such must not be
+	 * responsible for any intensive or time-consuming operations, nor is it allowed
+	 * to block. The recommended usage is to simply provide an event listener that
+	 * marks the ReadHead as (probably) having data available in some other
+	 * "selector"-like scheme. (If you're unfamiliar with
+	 * {@link us.exultant.ahs.thread.WorkTarget} and
+	 * {@link us.exultant.ahs.thread.WorkScheduler} tools, consider reading up on
+	 * those; you may find them extremely useful because they're able to deal with
+	 * such concepts of readiness very powerfully and efficiently).
 	 * </p>
 	 * 
 	 * <p>
-	 * Implementers typically call the listener's {@code hear()} method once per
-	 * semantic event &mdash however, this is not required, and if for example
-	 * multiple new chunks become available in a batch, then it is allowed for the
-	 * implementer to only invoke the listener one time after the entire batch is
-	 * loaded in order to reduce noise. Therefore, users of events from ReadHead are
-	 * advised to use readAllNow instead of just readNow in response to hearing an
-	 * update.
+	 * Implementers typically call the listener's {@link Listener#hear(Object)} method
+	 * once per semantic event &mdash however, this is not required, and if multiple
+	 * new chunks become available in a batch, then it is allowed for the implementer
+	 * to only invoke the listener one time after the entire batch is loaded in order
+	 * to reduce noise. Therefore, users of events from ReadHead are advised to use
+	 * {@link #readAllNow()} instead of just {@link #readNow()} (or use
+	 * {@link #readNow()} in a loop until it returns null, which may provide better
+	 * load balancing between reading threads if applicable) in response to hearing an
+	 * update. (Again, consider applying a {@link us.exultant.ahs.thread.WorkTarget}
+	 * here: implementing a {@link us.exultant.ahs.thread.WorkTarget#call()} method
+	 * that uses {@link #readNow()} in a WorkTarget and defines
+	 * {@link us.exultant.ahs.thread.WorkTarget#isReady()} by {@link #hasNext()} is a
+	 * useful idiom.)
 	 * </p>
 	 * 
 	 * @param $el
@@ -151,7 +167,7 @@ public interface ReadHead<$T> {
 	 * 
 	 * @return a chunk of input if possible, or null otherwise; null may indicate
 	 *         either <code>EOF</code> or simply nothing available at the time.
-	 *         {@link #isClosed()}</code> should be used to determine the difference.
+	 *         {@link #isClosed()} should be used to determine the difference.
 	 */
 	public $T readNow();
 	
@@ -175,7 +191,7 @@ public interface ReadHead<$T> {
 	 * place <i>after</i> the invocation of <code>readAll()</code>, and including even
 	 * entries that may have been written to the stream after this invocation of
 	 * {@link #readAll()}). If multiple threads invoke this, then one of them will
-	 * receive a normal result, and the rest will receive empty arrays (as will
+	 * receive a normal result, and the rest will receive empty lists (as will
 	 * subsequent invocations).
 	 * </p>
 	 * 
@@ -191,17 +207,17 @@ public interface ReadHead<$T> {
 	 * them they'll get everything.
 	 * <li>In some implementations (namely those based on semaphore permits), it's
 	 * difficult to stop other readers internally without linking the locking of reads
-	 * and writes, which is highly undesirable since it implies greater complexity and
-	 * overhead to all calls.
+	 * and writes, which is highly undesirable since it implies greater complexity,
+	 * overhead, and contention to all calls.
 	 * </ol>
 	 * </p>
 	 * 
-	 * @return a primitive array containing one entry for each chunk of input
-	 *         following the last invocation of a read method that is available from
-	 *         the stream between the time of this method's invocation and the closing
-	 *         of the stream. The array returned may have zero entries if no data ever
-	 *         becomes available (including if the stream is already closed and empty
-	 *         when the invocation occurs), but null may never be returned.
+	 * @return a list containing one entry for each chunk of input following the last
+	 *         invocation of a read method that is available from the stream between
+	 *         the time of this method's invocation and the closing of the stream. The
+	 *         array returned may have zero entries if no data ever becomes available
+	 *         (including if the stream is already closed and empty when the
+	 *         invocation occurs), but null may never be returned.
 	 * @throws UnsupportedOperationException
 	 *                 if the underlying stream has no notion of closed or finished,
 	 *                 since this method is then not well defined.
@@ -212,38 +228,52 @@ public interface ReadHead<$T> {
 	/**
 	 * Immediately returns entire contents of this stream at once (minus, of course,
 	 * any entries that have already been read). Similarly to the blocking
-	 * {@link #readAll()} method, if multiple threads invoke this after the stream
-	 * is closed then the first will receive a normal result, and other threads and
-	 * subsequent invocations will receive empty arrays.
+	 * {@link #readAll()} method, if multiple threads invoke this after the stream is
+	 * closed then the first will receive a normal result, and other threads and
+	 * subsequent invocations will receive empty lists.
 	 * 
-	 * @return a primitive array containing one entry for each chunk of input
-	 *         following the last invocation of a read method that is currently
-	 *         available from the stream. The array returned may have zero entries if
-	 *         there is no input currently available, but null may never be returned.
+	 * @return a list containing one entry for each chunk of input following the last
+	 *         invocation of a read method that is currently available from the
+	 *         stream. The list returned may have zero entries if there is no input
+	 *         currently available, but null may never be returned.
 	 */
 	public List<$T> readAllNow();
 	
 	
 
 	/**
+	 * <p>
+	 * Returns the closure status of this ReadHead (in other words, whether or not
+	 * this buffer is capable of growing).
+	 * </p>
+	 * 
+	 * <p>
+	 * Note that if a ReadHead is semantically paired with a WriteHead (as in a the
+	 * two heads of a pipe, or the two endpoints of a network connections), their
+	 * closures are not necessarily related. In a network connection for example
+	 * clearly it is possible for one side to consider the connection closed well
+	 * before the other side notices the change in state. Check the documentation of
+	 * implementators in any system that deals with semantically linked ReadHead and
+	 * WriteHead to see how they deal with synchronity in this situation.
+	 * </p>
+	 * 
 	 * @return true if the ReadHead has internally reached some sort of
 	 *         <code>EOF</code> state; false otherwise. If true is ever returned, no
-	 *         subsequent invocations may return false. Upon returning true, data may
-	 *         still exist in buffers waiting to be read; however, it is guaranteed
-	 *         that once both {@link #isClosed()} and {@link #hasNext()} return true
-	 *         and false respectively that no further invocations of hasNext() will
-	 *         return true. (In other words, this method signals whether or not this
-	 *         buffer is capable of growing.)
+	 *         subsequent invocations may return false (i.e. this method is
+	 *         idempotent). Upon returning true, data may still exist in buffers
+	 *         waiting to be read; however, it is guaranteed that once both
+	 *         {@link #isClosed()} and {@link #hasNext()} return true and false
+	 *         respectively that no further invocations of hasNext() will return true.
 	 */
 	public boolean isClosed();
 	
 	/**
 	 * <p>
-	 * Closes the underlying stream or channel. The semantics of this are somewhat
-	 * nebulous in many cases; however, at bare minimum, implementers should adhere to
-	 * the general contract that read invocations blocking for any reason (and, in
-	 * particular, reads blocking for stream completion) will return following
-	 * invocation of this function.
+	 * Closes the underlying stream or channel. The semantics of this are not always
+	 * well defined in all contexts; however, at bare minimum, implementers should
+	 * adhere to the general contract that read invocations blocking for any reason
+	 * (and, in particular, reads blocking for stream completion) will return
+	 * following invocation of this function.
 	 * </p>
 	 * 
 	 * <p>
@@ -270,8 +300,9 @@ public interface ReadHead<$T> {
 	 * 
 	 * <p>
 	 * Only the first invocation of this function should have any effect; closing a
-	 * closed ReadHead is illogical (but should not typically throw exceptions).
+	 * closed ReadHead is illogical (but should not throw exceptions).
 	 * </p>
 	 */
+	// i might consider making a boolean parameter to this method for forcefulness.  perhaps there are applications that would actually want to be able to insist on losing data to the abyss between buffers?
 	public void close();
 }
