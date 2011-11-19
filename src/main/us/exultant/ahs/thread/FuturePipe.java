@@ -76,11 +76,13 @@ public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
 		}
 		
 		public boolean isClosed() {
-			return !$allowMore;
+			return !$allowMore;	// so, note!  closure on the writehead side is DIFFERENT than closure on the readhead side for a FuturePipe!
 		}
 		
 		public void close() {
-			$allowMore = false;
+			synchronized ($held) {	// synchronizing this is requisite for proper synchronous closure of the outbound pipe to be possible
+				$allowMore = false;
+			}
 		}
 	}
 	
@@ -91,7 +93,7 @@ public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
 			synchronized ($held) {
 				if (!$held.remove($finished)) return;
 				$outbound.sink().write((WorkFuture<$T>)$finished);
-				if ($held.size() <= 0) $outbound.sink().close();
+				if ($inbound.isClosed() && $held.size() <= 0) $outbound.sink().close();
 			}
 		}
 	};
