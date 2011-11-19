@@ -27,8 +27,6 @@ import java.util.concurrent.locks.*;
 public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	public WorkSchedulerFlexiblePriority(int $threadCount) {
 		this.$threadCount = $threadCount;
-		
-		//schedule(new RelentlessGC(), ScheduleParams.makeFixedDelay(2));	// i want to be better than this.
 	}
 	
 	private final int $threadCount;
