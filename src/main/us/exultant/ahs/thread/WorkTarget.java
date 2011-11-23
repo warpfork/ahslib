@@ -153,8 +153,9 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	
 	/**
 	 * <p>
-	 * Implementers use this method to allow the WorkTarget's <code>run()</code>
-	 * method to know when to stop spinning.
+	 * Signals whether or not the WorkTarget may wish to be run again at some time in
+	 * the future, or if it considers itself done and not in need of further
+	 * scheduling.
 	 * </p>
 	 * 
 	 * <p>
@@ -162,9 +163,18 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * words, the property of doneness must be idempotent.)
 	 * </p>
 	 * 
-	 * @return false if the WorkScheduler should continue to call
-	 *         <code>run(int)</code> cyclically; true to when the cycle should exit at
-	 *         its earliest opportunity.
+	 * <p>
+	 * Note that due to the inherently concurrent nature of this method and scheduling
+	 * in general, a WorkTarget is not generally allowed to assume that its
+	 * {@link #call()} will never be invoked again after this {@code isDone()} method
+	 * returns true. A WorkScheduler will make its best effort to honor that (and if
+	 * the change to doneness happened during a run of the task, most implementations
+	 * will certainly succeed), but this should not be relied upon.
+	 * </p>
+	 * 
+	 * @return false if the WorkScheduler should continue to call continute to manage
+	 *         this task instance; true if the scheduler should drop the task and
+	 *         never again invoke the {@link #call()} method.
 	 */
 	public boolean isDone();
 	
