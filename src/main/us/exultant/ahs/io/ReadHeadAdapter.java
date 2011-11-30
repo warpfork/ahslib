@@ -75,7 +75,11 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		return $pipe.SRC.isClosed();
 	}
 	
-	public abstract void close() throws IOException;	// is abstract because you probably want to close any underlying channels, then have the pump close the pipe close itself when appropriate.
+	public abstract void close();	// is abstract because you probably want to close any underlying channels, then have the pump close the pipe close itself when appropriate.
+	
+	public boolean isExhausted() {
+		return isClosed() && !hasNext();
+	}
 	
 	protected void handleException(IOException $e) {
 		ExceptionHandler<IOException> $dated_eh = $eh;

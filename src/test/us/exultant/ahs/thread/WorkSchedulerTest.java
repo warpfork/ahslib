@@ -28,10 +28,28 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 /**
- * A useful statement is this:
- * <tt>
- * i=0; while true; do i=$(math $i + 1); echo $i; d; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; echo; if [ "$?" -ne "0" ]; then break; fi; done
+ * <p>
+ * Tests any kind of {@link WorkSchedulerTest} implementation for adherence to the basic
+ * contracts. Subclasses need simply override the {@link #makeScheduler(int)} method in
+ * order to make a valid test case for any specific implementation of
+ * {@link WorkScheduler}.
+ * </p>
+ * 
+ * <p>
+ * It's essential to run this test repeatedly for confidence in its success being no mere
+ * series of false positives; threading is a fickle thing. And we're not talking about a
+ * two or three runs, or a dozen: you need to run this THOUSANDS of times if you want to
+ * be confident. A useful statement is this: <tt>
+ * i=0; while true; do i=$(math $i + 1); echo $i; date; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; echo; if [ "$?" -ne "0" ]; then break; fi; done
  * </tt>
+ * </p>
+ * 
+ * <p>
+ * {@code DEPENDS: }
+ * <ul>
+ * <li>{@link PipeTest}
+ * </ul>
+ * </p>
  * 
  * @author hash
  * 
@@ -105,8 +123,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			final Work $wt = new Work();
 			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt, 0, true), ScheduleParams.NOW);
 			
-			$wf.addCompletionListener(new Listener<WorkFuture<Void>>() {
-				public void hear(WorkFuture<Void> $lol) {
+			$wf.addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $lol) {
 					// demand an immediate response
 					$completionCalls.incrementAndGet();
 					try {
@@ -142,8 +160,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			$wf.get();
 			
-			$wf.addCompletionListener(new Listener<WorkFuture<Void>>() {
-				public void hear(WorkFuture<Void> $lol) {
+			$wf.addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $lol) {
 					// demand an immediate response
 					$completionCalls.incrementAndGet();
 					try {
@@ -177,8 +195,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			WorkFuture<Void>[] $f = new WorkFuture[8];
 			for (int $i = 0; $i < 8; $i++) $wt[$i] = new Work();
 			for (int $i = 0; $i < 8; $i++) $f[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
-			for (int $i = 0; $i < 8; $i++) $f[$i].addCompletionListener(new Listener<WorkFuture<Void>>() {
-				public void hear(WorkFuture<Void> $lol) {
+			for (int $i = 0; $i < 8; $i++) $f[$i].addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $lol) {
 					$completionCalls.incrementAndGet();
 				}
 			});

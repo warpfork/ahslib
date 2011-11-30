@@ -76,20 +76,24 @@ public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
 		}
 		
 		public boolean isClosed() {
-			return !$allowMore;
+			return !$allowMore;	// so, note!  closure on the writehead side is DIFFERENT than closure on the readhead side for a FuturePipe!
 		}
 		
 		public void close() {
-			$allowMore = false;
+			synchronized ($held) {	// synchronizing this is requisite for proper synchronous closure of the outbound pipe to be possible
+				$allowMore = false;
+			}
 		}
 	}
 	
-	private final Listener<WorkFuture<$T>> $lol = new Listener<WorkFuture<$T>>() {
-		public void hear(WorkFuture<$T> $finished) {
+	private final Listener<WorkFuture<?>> $lol = new Listener<WorkFuture<?>>() {
+		@SuppressWarnings("unchecked")	// casting our generic type back on to the WorkFuture is safe at runtime
+		public void hear(WorkFuture<?> $finished) {
+			assert $finished.isDone();
 			synchronized ($held) {
 				if (!$held.remove($finished)) return;
-				$outbound.sink().write($finished);
-				if ($held.size() <= 0) $outbound.sink().close();
+				$outbound.sink().write((WorkFuture<$T>)$finished);
+				if ($inbound.isClosed() && $held.size() <= 0) $outbound.sink().close();
 			}
 		}
 	};

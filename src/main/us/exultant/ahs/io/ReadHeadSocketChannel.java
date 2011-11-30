@@ -101,8 +101,12 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	 * {@link PumperSelector} that has been handling events for this channel to
 	 * deregister it as soon as has a chance to do so.
 	 */
-	public void close() throws IOException {
-		$ssc.close();
+	public void close() {
+		try {
+			$ssc.close();
+		} catch (IOException $e) {
+			handleException($e);
+		}
 		$ps.cancel($ssc);
 	}
 	

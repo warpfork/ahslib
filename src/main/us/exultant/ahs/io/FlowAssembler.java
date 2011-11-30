@@ -99,9 +99,7 @@ public class FlowAssembler {
 					try {
 						$last.write();
 					} catch (IOException $e) {
-						try {
-							close();
-						} catch (IOException $e1) { /* we've already got more than we know what to do with */ }
+						close();
 						handleException($e);
 						break;
 					}
@@ -136,9 +134,7 @@ public class FlowAssembler {
 					try {
 						$last.write();
 					} catch (IOException $e) {
-						try {
-							close();
-						} catch (IOException $e1) { /* we've already got more than we know what to do with */ }
+						close();
 						handleException($e);
 						break;
 					}
@@ -154,8 +150,12 @@ public class FlowAssembler {
 			return $pipe.SRC.isClosed() && !$pipe.SRC.hasNext();
 		}
 		
-		public void close() throws IOException {
-			$trans.$base.close();
+		public void close() {
+			try {
+				$trans.$base.close();
+			} catch (IOException $e) {
+				handleException($e);
+			}
 			$ps.cancel((SelectableChannel)$trans.$base);
 		}
 	}
@@ -200,9 +200,7 @@ public class FlowAssembler {
 					$chunk = $trans.translate($base);
 					if ($chunk == null) break;
 				} catch (IOException $e) {
-					try {
-						close();
-					} catch (IOException $e1) { /* we've already got more than we know what to do with */ }
+					close();
 					handleException($e);
 					break;
 				}
@@ -218,8 +216,12 @@ public class FlowAssembler {
 			return !$base.isOpen();
 		}
 		
-		public void close() throws IOException {
-			$base.close();
+		public void close() {
+			try {
+				$base.close();
+			} catch (IOException $e) {
+				handleException($e);
+			}
 			$ps.cancel((SelectableChannel)$base);
 		}
 	}
