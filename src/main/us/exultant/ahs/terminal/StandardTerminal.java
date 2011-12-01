@@ -138,5 +138,6 @@ public class StandardTerminal implements Terminal {
 				$dimensions.height = Integer.parseInt($tok.substring(0, $tok.indexOf(" ")).trim());
 			}
 		}
+		// a good bet on what's normally available on a modern monitor seems to be about 60x200 as far as i can tell.  take that with a huge dose of ymmv of course.
 	}
 }
