@@ -78,18 +78,33 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
-		if ($fut.isDone()) return;
+		// note that this entire method could be replaced by "update(Arr.asList(new WorkFuture<?>[] {$fut}));".  we're going out of our way to avoid creating those garbage objects.
+		if (update_per($fut));
+			update_postSignal();
+	}
+	public <$V> void update(Collection<WorkFuture<$V>> $futs) {
+		boolean $areDeferredUpdates = false;
+		for (WorkFuture<$V> $fut : $futs)
+			$areDeferredUpdates |= update_per($fut);
+		if ($areDeferredUpdates) update_postSignal();
+	}
+	/** makes an immediate attempt to finish a task, and pushes it into a list of things that need to be touched again the next time a worker thread checks in.
+	 * @return true if {@link #$updatereq} has new members, which means that {@link #update_postSignal()} must be called soon. */
+	private boolean update_per(WorkFuture<?> $fut) {
+		if ($fut.isDone()) return false;
 		
 		// check doneness; try to transition immediate to FINISHED if is done.
 		if ($fut.$work.isDone()) {
 			$fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
-//			$log.trace(this, "FINAL UPDATE REQUESTED for "+$fut);
+//			$log.debug(this, "FINAL UPDATE REQUESTED for "+$fut);
+			//TODO:AHS:THREAD: ...can't we return return false here if the finish succeeded?  double check this later; it's a mild efficiency gain if we can.
 		}
 		
 		// just push this into the set of requested updates.
-		$updatereq.add($fut);
-		
-		// wake a thread that might be blocking because there's no work, because it needs to drain the updatereq list again before it can be sure it should still be waiting
+		return $updatereq.add($fut);
+	}
+	/** wake a thread that might be blocking because there's no work, because it needs to drain the updatereq list again before it can be sure it should still be waiting */
+	private void update_postSignal() {
 		$lock.lock();	// i am NOT a big fan of this lock being acquirable in the update method where it can be triggered by arbitrary threads, but we have to be able to wake the system if it's blocking on work.  we could and should definitely look into performance improvement options for detecting if the system is halted before calling this lock, but that's gonna be much easier said than done.
 		try {
 			$available.signal();
