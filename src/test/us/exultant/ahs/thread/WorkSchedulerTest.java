@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.*;
  * series of false positives; threading is a fickle thing. And we're not talking about a
  * two or three runs, or a dozen: you need to run this THOUSANDS of times if you want to
  * be confident. A useful statement is this: <tt>
- * i=0; while true; do i=$(math $i + 1); echo $i; date; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; echo; if [ "$?" -ne "0" ]; then break; fi; done
+ * i=0; while true; do i=$(math $i + 1); echo $i; date; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; if [ "$?" -ne "0" ]; then break; fi; echo; done
  * </tt>
  * </p>
  * 
@@ -83,11 +83,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 	/** If this is a positive integer, we want that many threads.  A zero means that you can use your default (presumably threads=cores). */
 	protected abstract WorkScheduler makeScheduler(int $threads);
 	
-	/** Helper method &mdash I want a message straight to stdout every time I throw a major exception, because there's a dangerous tendancy for Runnable to eat those if there's a mistake somewhere. */
-	protected void blow(String $msg) {
-		X.saye("BLOW: "+$msg);
-		throw new AssertionFailed($msg);
-	}
 	
 	
 	/** One runnable wrapped to be a one-shot WorkTarget. */
@@ -284,7 +279,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			public volatile WorkLeader $leader;
 			public volatile int x = HIGH;
 			public synchronized Void call() {
-				if (!isReady()) blow("");	// not normal semantics for ready, obviously, but true for this test, since it should only be possible to flip to unready by running and one should never be scheduled for multiple runs without a check of readiness having already occurred between each run.
+				if (!isReady()) throw new IllegalStateException();	// not normal semantics for ready, obviously, but true for this test, since it should only be possible to flip to unready by running and one should never be scheduled for multiple runs without a check of readiness having already occurred between each run.
 				x--;
 				return null;
 			}
