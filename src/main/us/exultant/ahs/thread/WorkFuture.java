@@ -318,7 +318,7 @@ public class WorkFuture<$V> implements Future<$V> {
 		 */
 		boolean scheduler_power() {
 			if (!compareAndSetState(State.SCHEDULED.ordinal(), State.RUNNING.ordinal())) {
-				// we were concurrently cancelled.  weep.
+				/* we were concurrently cancelled.  weep. */
 				return false;
 			}
 			
@@ -340,12 +340,11 @@ public class WorkFuture<$V> implements Future<$V> {
 					
 					if ($work.isDone()) {
 						tryFinish(true, $potentialResult, null);
-						return false;	// even if tryFinish failed and returned false, since we're the running thread, that still means the task is finished (just that we weren't the ones to make it happen).
+						return false;	/* even if tryFinish failed and returned false, since we're the running thread, that still means the task is finished (just that we weren't the ones to make it happen). */
 					} else {
 						if ($potentialResult != null) $result = $potentialResult;
-						boolean $waiting = compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
-						if ($waiting) $schedp.setNextRunTime();
-						return $waiting;	// false if the cas to waiting failed (which would be due to a concurrent cancel)
+						$schedp.setNextRunTime(); /* it'd be cool if we could set this only if we cas'd to waiting successfully, but that actually introduces a mind-bending race where if you call update on a clock based tasks immediately after that cas, you'll get it to skip ahead into the scheduled heap because we haven't shifted its goal time yet. */
+						return  compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal()); /* return is false if the cas to waiting failed (which would be due to a concurrent cancel) */
 					}
 				} catch (Throwable $t) {
 					$exception = new ExecutionException($t);
@@ -353,7 +352,8 @@ public class WorkFuture<$V> implements Future<$V> {
 					return false;
 				}
 			} else {
-				releaseShared(0); // there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).)
+				/* there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).) */
+				releaseShared(0);
 				return false;
 			}
 		}
