@@ -206,7 +206,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $gate.isFlipped();
+			return $gate.isClosed();
 		}
 		
 		/**
@@ -241,7 +241,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isExhausted() {
-			return $gate.isFlippedAndZero();
+			return $gate.isPermanentlyEmpty();
 		}
 	}
 	
@@ -264,7 +264,7 @@ public class Pipe<$T> implements Flow<$T> {
 			try {
 				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
 				$queue.add($chunk);
-				$gate.release();
+				$gate.release();	// this can't return false because gate closure involves locking, and we're locked right now.  and that's essentially why the write-lock exists (otherwise we'd have to go dredge back through the queue if this did return false, and that would be... mucky).
 				
 				Listener<ReadHead<$T>> $el_dated = $el;
 				if ($el_dated != null) $el_dated.hear(SRC);
@@ -321,7 +321,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $gate.isFlipped();
+			return $gate.isClosed();
 		}
 		
 		/**
