@@ -95,9 +95,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		// check doneness; try to transition immediate to FINISHED if is done.
 		if ($fut.$work.isDone()) {
-			$fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
-//			$log.debug(this, "FINAL UPDATE REQUESTED for "+$fut);
-			//TODO:AHS:THREAD: ...can't we return return false here if the finish succeeded?  double check this later; it's a mild efficiency gain if we can.
+			if ($fut.$sync.tryFinish(false, null, null))	// this is allowed to fail completely if the work is currently running.
+				return false;
 		}
 		
 		// just push this into the set of requested updates.
@@ -211,7 +210,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
 		assert $lock.isHeldByCurrentThread();
 		try { for (;;) {
-			// offer to shift any unclocked tasks that have had updates requested
+			// offer to shift any tasks that have had updates requested
 			worker_pollUpdates();
 			
 			// shift any clock-based tasks that need no further delay into the scheduled heap.  note the time until the next of those clocked tasks will be delay-free.
@@ -256,6 +255,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			} else {
 				if ($wf.$work.isDone())	{
 					boolean $causedFinish = $wf.$sync.tryFinish(false, null, null);
+					// note that even if this guy is scheduled, we don't chase that object down.  we could.  we don't need to; he'll bubble out eventually.  if he's in unready... i'm not sure he'll escape.
 //					$log.trace(this, "isDone "+$wf+" noticed in worker_pollUpdates(); we caused finish "+$causedFinish);
 				}
 				switch ($wf.getState()) {
@@ -263,6 +263,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 					case CANCELLED:
 						$unready.remove($wf);
 						hearTaskDrop($wf);
+						break;
 					default: // still just waiting, leave it there
 						continue;
 				}
