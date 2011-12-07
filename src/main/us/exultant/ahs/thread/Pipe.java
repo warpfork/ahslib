@@ -179,6 +179,18 @@ public class Pipe<$T> implements Flow<$T> {
 			return $queue.poll();
 		}
 		
+		public $T readSoon(long $timeout, TimeUnit $unit) {
+			boolean $one;
+			try {
+				$one = $gate.tryAcquire($timeout, $unit);
+			} catch (InterruptedException $e) {
+				return null;
+			}
+			checkForFinale();
+			if (!$one) return null;
+			return $queue.poll();
+		}
+		
 		public boolean hasNext() {
 			return $gate.availablePermits() > 0;
 		}

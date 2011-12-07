@@ -20,6 +20,7 @@
 package us.exultant.ahs.core;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * <p>
@@ -156,9 +157,6 @@ public interface ReadHead<$T> {
 	 *         underlying stream reaches an {@code EOF} state while this call is still
 	 *         blocking for more input; others may try to return a partial chunk.
 	 */
-	// it might be better semantics to ALWAYS have the normal read methods return full chunks,
-	//  and then provide a single extra readLast() method that throws exceptions unless called after the head is closed.
-	// on the other hand, nobody ever said that a particular subclass can't choose to do that anyway.  there's no need to make it explicit here.
 	public $T read();
 	
 	/**
@@ -169,6 +167,26 @@ public interface ReadHead<$T> {
 	 *         {@link #isClosed()} should be used to determine the difference.
 	 */
 	public $T readNow();
+
+	/**
+	 * <p>
+	 * Blocking read with timeout. Elements that are read are removed from the stream.
+	 * </p>
+	 * 
+	 * <p>
+	 * If multiple threads block on this concurrently, the choice of whether or not to
+	 * provide a guarantee of fairness is left up to the implementer. Regardless,
+	 * basic synchronicity must be maintained &mdash; there will be no double-reads,
+	 * null pointer exceptions, concurrent modification exceptions, or etc.
+	 * </p>
+	 * 
+	 * @return next chunk of input, or null if there is no data available and the
+	 *         underlying stream has reached an {@code EOF} state. Some
+	 *         implementations may also choose to return null in the case that the
+	 *         underlying stream reaches an {@code EOF} state while this call is still
+	 *         blocking for more input; others may try to return a partial chunk.
+	 */
+	public $T readSoon(long $timeout, TimeUnit $unit);
 	
 	/**
 	 * Tells whether or not input is immediately available to be read. If the ReadHead
