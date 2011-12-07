@@ -69,7 +69,7 @@ public class WorkFuture<$V> implements Future<$V> {
 	private ExecutionException			$exception	= null;
 	
 	/** Index into delay queue, to support faster updates. */
-	int						$heapIndex	= 0;
+	int						$heapIndex	= -1;
 	
 	/** When nulled after set/cancel, this indicates that the results are accessible. */
 	volatile Thread					$runner;
@@ -289,7 +289,8 @@ public class WorkFuture<$V> implements Future<$V> {
 		 * <p>
 		 * If this method returns false, it may merely because the task isn't
 		 * ready or is delayed, but it may also be because the task is FINISHED or
-		 * CANCELLED, which is something the caller is advised to check.
+		 * CANCELLED, which is something the caller is advised to check. False
+		 * will also be returned is the task is already SCHEDULED.
 		 * </p>
 		 * 
 		 * @return true if the scheduler must now remove the WF from the waiting
