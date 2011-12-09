@@ -96,11 +96,10 @@ public final class Eon {
 	public static final String MAGICWORD_HINT = "!";
 	
 	public static String getKlass(Class<?> $c) {
-		String[] $arrg = Primitives.PATTERN_DOT.split($c.getCanonicalName());
-		return $arrg[$arrg.length-1];
+		return Reflect.getShortClassName($c);
 	}
 	public static String getKlass(Object $x) {
-		return getKlass($x.getClass());
+		return Reflect.getShortClassName($x);
 	}
 	
 	public static <$TM extends EonObject> $TM fill($TM $holder, Map<String,String> $map) throws UnencodableException {
