@@ -344,7 +344,7 @@ public class WorkFuture<$V> implements Future<$V> {
 					} else {
 						if ($potentialResult != null) $result = $potentialResult;
 						$schedp.setNextRunTime(); /* it'd be cool if we could set this only if we cas'd to waiting successfully, but that actually introduces a mind-bending race where if you call update on a clock based tasks immediately after that cas, you'll get it to skip ahead into the scheduled heap because we haven't shifted its goal time yet. */
-						return  compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal()); /* return is false if the cas to waiting failed (which would be due to a concurrent cancel) */
+						return compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal()); /* return is false if the cas to waiting failed (which would be due to a concurrent cancel) */
 					}
 				} catch (Throwable $t) {
 					$exception = new ExecutionException($t);

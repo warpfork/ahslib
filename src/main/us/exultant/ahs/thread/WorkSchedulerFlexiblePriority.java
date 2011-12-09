@@ -264,7 +264,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 						hearTaskDrop($wf);
 						break;
 					case SCHEDULED:
-						if ($wf.$heapIndex == -1)
+						if ($wf.$heapIndex == -1)	//XXX:AHS:THREAD: this won't be necessary once we perform the refactors to fix Issue #38.
 							break;	// there's actually a brief moment of time where the scheduler has polled work out of the scheduled heap and released the lock before it CAS's the work to RUNNING.  this is because that case doesn't happen until within the scheduler_power method, which clearly cannot be called until the lock is released.  possibly bad abstraction there.
 						$scheduled.siftDown($wf.$heapIndex, $wf);
 						$scheduled.siftUp($wf.$heapIndex, $wf);
