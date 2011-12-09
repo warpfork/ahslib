@@ -34,9 +34,9 @@ import java.nio.channels.*;
  * <p>
  * The new {@link SocketChannel} returned when reading from this ReadHead are already
  * configured to be nonblocking themselves (but of course have not yet been registered
- * with any {@link PumperSelector}, since they aren't yet wrapped in any of the other
+ * with any {@link WorkTargetSelector}, since they aren't yet wrapped in any of the other
  * abstractions typical of the AHS library that would make a relationship with a
- * PumperSelector appropriate).
+ * WorkTargetSelector appropriate).
  * </p>
  * 
  * @author hash
@@ -50,7 +50,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	 * @param $localBinding
 	 *                as per {@link ServerSocket#bind(SocketAddress)}.
 	 * @param $ps
-	 *                the PumperSelector to register this server socket with (the
+	 *                the WorkTargetSelector to register this server socket with (the
 	 *                registration will be performed by the time this constructor
 	 *                returns).
 	 * 
@@ -63,7 +63,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	 *                 if endpoint is a SocketAddress subclass not supported by this
 	 *                 socket
 	 */
-	public ReadHeadSocketChannel(SocketAddress $localBinding, PumperSelector $ps) throws IOException {
+	public ReadHeadSocketChannel(SocketAddress $localBinding, WorkTargetSelector $ps) throws IOException {
 		this.$pump = new PumpT();
 		
 		$ssc = ServerSocketChannel.open();
@@ -75,7 +75,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	
 	private final ServerSocketChannel	$ssc;
 	private final PumpT			$pump;
-	private final PumperSelector		$ps;
+	private final WorkTargetSelector	$ps;
 	
 	/**
 	 * Exposes the {@link ServerSocketChannel} that this ReadHead is decorating. (If
@@ -89,7 +89,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	/**
 	 * It should not prove necessary to use this method, since a ReadHeadSocketChannel
 	 * is among the classes which it is appropriate to power via the indirection of a
-	 * PumperSelector and not by any other means.
+	 * WorkTargetSelector and not by any other means.
 	 */
 	Pump getPump() {
 		return $pump;
@@ -98,7 +98,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	/**
 	 * Closes the {@link ServerSocketChannel} that this ReadHead is decorating (as per
 	 * the general contract for {@link ReadHead#close()}), then instructs the
-	 * {@link PumperSelector} that has been handling events for this channel to
+	 * {@link WorkTargetSelector} that has been handling events for this channel to
 	 * deregister it as soon as has a chance to do so.
 	 */
 	public void close() {
