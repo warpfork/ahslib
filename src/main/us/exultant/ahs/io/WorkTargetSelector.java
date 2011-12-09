@@ -192,10 +192,9 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	}
 	
 	
-
-
-
-
+	
+	
+	
 	private final Pipe<Event>	$pipe;
 	
 	private SelectionKey getKey(Event $evt) {
@@ -208,8 +207,6 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		return null;
 	}
 	
-	
-
 	private class Attache {
 		public Listener<SelectableChannel>	$reader;
 		public Listener<SelectableChannel>	$writer;
@@ -343,7 +340,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	}
 	
 	
-
+	
 	private static abstract class Event {
 		protected Event(SelectableChannel $thing, Listener<SelectableChannel> $listener, int $ops) {
 			this.$chan = $thing;
@@ -356,8 +353,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		public final int				$ops;
 	}
 	
-
-
+	
+	
 	private static class Event_Reg extends Event {
 		private Event_Reg(SelectableChannel $ch, Listener<SelectableChannel> $p, int $ops) {
 			super($ch, $p, $ops);
@@ -365,8 +362,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		}
 	}
 	
-
-
+	
+	
 	private static class Event_Dereg extends Event {
 		private Event_Dereg(Listener<SelectableChannel> $p, int $ops) {
 			super(null, $p, $ops);
@@ -377,8 +374,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		}
 	}
 	
-
-
+	
+	
 	private static class Event_Cancel extends Event {
 		private Event_Cancel(SelectableChannel $ch) {
 			super($ch, null, 0);
