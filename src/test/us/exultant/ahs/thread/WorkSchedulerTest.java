@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.*;
  */
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
-		super(new Logger(Logger.LEVEL_TRACE), true);
+		super(new Logger(Logger.LEVEL_DEBUG), true);
 	}
 	
 	public WorkSchedulerTest(Logger $log, boolean $enableConfirmation) {
@@ -279,7 +279,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			public volatile WorkLeader $leader;
 			public volatile int x = HIGH;
 			public synchronized Void call() {
-				if (!isReady()) throw new IllegalStateException();	// not normal semantics for ready, obviously, but true for this test, since it should only be possible to flip to unready by running and one should never be scheduled for multiple runs without a check of readiness having already occurred between each run.
+				if (!isReady()) throw new IllegalStateException("called while unready with x="+x);	// not normal semantics for ready, obviously, but true for this test, since it should only be possible to flip to unready by running and one should never be scheduled for multiple runs without a check of readiness having already occurred between each run.
 				x--;
 				return null;
 			}
@@ -348,10 +348,10 @@ public abstract class WorkSchedulerTest extends TestCase {
 			Work $wt = new Work();
 			WorkFuture<Integer> $wf = $ws.schedule($wt, ScheduleParams.makeFixedDelay(300, 100));
 			
-			X.chill(310);
+			X.chill(320);	//XXX:AHS:THREAD:TEST: this is seriously way too loose of a system.  it has fairly high odds of producing false "failures" of the test.
 			assertEquals(9, $wt.x);
 			for (int $i = 8; $i >= 0; $i--) {
-				X.chill(100);
+				X.chill(99);
 				assertEquals($i, $wt.x);
 			}
 			assertEquals(0, $wf.get().intValue());
@@ -441,7 +441,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				return 0;
 			}
 			public String toString() {
-				return us.exultant.ahs.codec.eon.Eon.getKlass(this)+":[WT:"+$name+";];";
+				return Reflect.getShortClassName(this)+":[WT:"+$name+";];";
 			}
 		}
 		protected void feedPipe() {
