@@ -61,8 +61,6 @@ public class WorkFuture<$V> implements Future<$V> {
 	/** The parameters with which the work target was scheduled. */
 	private final ScheduleParams			$schedp;
 	
-	/** Set to true when someone calls the cancel method.  Never again becomes false.  If there's currently a thread from the scheduler working on this, it must eventually notice this and deal with it; if there is no thread running this, the cancelling thread may act immediately. */
-	volatile boolean				$cancelPlz	= false;
 	/** The result to return from get(). Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
 	private $V					$result		= null;
 	/** The (already wrapped) exception to throw from get(). Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
