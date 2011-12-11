@@ -106,11 +106,12 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * leaves me no choice &mdash; it provides no method for inquiring about readiness
 	 * without actually performing a select.
 	 */
-	// a selectNow might actually be legal for this?  or a synchronized query on selectionset?  does the latter really even need synchronization?
 	public boolean isReady() {
 		return true;
 		//try {
-		//	return $selector.selectedKeys().isEmpty();
+		//	return 
+		//		$selector.selectedKeys().isEmpty() ||		// i don't think this works, actually, because you have to call select() in order to get that key set to be updated by the OS.  Also: mind that if you DID use selectNow here, you'd have to change the $freshWorkExists boolean in the call method, because that optimization would no longer be valid. 
+		//		$pipe.hasNext();
 		//} catch (ClosedSelectorException $e) {
 		//	return false;
 		//}
@@ -140,7 +141,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		
 		// PHASE TWO
 		// chill out
-		boolean $workExists = callSelect() > 0;
+		boolean $freshWorkExists = callSelect() > 0;
 		
 		// PHASE... TWO AND A HALF?
 		// if we were a blocking selector, we might have been woken up specifically to deal with a new event, so we should do so asap
@@ -149,7 +150,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		
 		// PHASE THREE
 		// disbatch events to folks who're deserving
-		if ($workExists) callDisbatchEvents();
+		if ($freshWorkExists) callDisbatchEvents();
 		
 		return null;
 	}
