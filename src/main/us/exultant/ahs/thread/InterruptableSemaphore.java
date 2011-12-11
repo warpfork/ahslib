@@ -43,8 +43,10 @@ import java.util.concurrent.locks.*;
  * </p>
  * 
  * @author hash
- * 
+ * @deprecated {@link FlippableSemaphore} is better, faster, and more flexible than this
+ *             for all purposes.
  */
+@Deprecated
 public class InterruptableSemaphore {
 	/**
 	 * Fairness defaults to false.

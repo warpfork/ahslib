@@ -20,6 +20,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -105,9 +106,21 @@ public interface WorkScheduler {
 	 * 
 	 * @param <$V>
 	 * @param $fut
-	 *                The Future returned from an earlier invocation of the
+	 *                The WorkFuture returned from an earlier invocation of the
 	 *                {@link #schedule(WorkTarget, ScheduleParams)} method on this
 	 *                same WorkScheduler.
 	 */
 	public <$V> void update(WorkFuture<$V> $fut);
+	
+	/**
+	 * Same as iteratively calling {@link #update(WorkFuture)}, but more efficient in
+	 * many implementations.
+	 * 
+	 * @param <$V>
+	 * @param $futs
+	 *                A collection of WorkFuture instances returned from an earlier
+	 *                invocation of the {@link #schedule(WorkTarget, ScheduleParams)}
+	 *                method on this same WorkScheduler.
+	 */
+	public <$V> void update(Collection<WorkFuture<$V>> $futs);
 }

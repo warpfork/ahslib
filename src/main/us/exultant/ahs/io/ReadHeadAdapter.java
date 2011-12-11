@@ -23,6 +23,7 @@ import us.exultant.ahs.core.*;
 import us.exultant.ahs.thread.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Provides a ReadHead backed by a buffer which is only writable by subclasses and exposes
@@ -56,6 +57,10 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	}
 	
 	public $T readNow() {
+		return $pipe.SRC.readNow();
+	}
+	
+	public $T readSoon(long $timeout, TimeUnit $unit) {
 		return $pipe.SRC.readNow();
 	}
 	

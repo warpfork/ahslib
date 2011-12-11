@@ -67,11 +67,12 @@ public class ClosableSemaphore extends FlippableSemaphore {
 	}
 	
 	
-	
+
 	/**
 	 * Insufficient permits blocks unless we're closed in which case it returns 2, any
 	 * non-negative answer from tryAcquire means we got a permit unless it's 2 in
-	 * which case it was released because we were just sick of it.
+	 * which case it was released because we were just sick of it, releases are
+	 * permitted only when state isn't negative.
 	 */
 	private final static class Decider extends BlockPolicyDecider {
 		public static final BlockPolicyDecider INSTANCE = new Decider();
@@ -82,6 +83,10 @@ public class ClosableSemaphore extends FlippableSemaphore {
 
 		public boolean isAcquireSuccessful(int $response) {
 			return ($response >= 0 && $response != 2);
+		}
+		
+		public boolean isReleasePermitted(int $status) {
+			return $status >= 0;
 		}
 	}
 }
