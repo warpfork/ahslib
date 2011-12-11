@@ -47,6 +47,12 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	/**
 	 * Creates a new system default Selector back-end. Selects run with a configurable
 	 * timeout; the WorkTarget's priority is zero.
+	 * 
+	 * @param $selectionTimeout
+	 *                the number of milliseconds a select call should block for, or
+	 *                negative for completely nonblocking operation. If this
+	 *                WorkTarget will be run in its own personal thread, you may set
+	 *                this timeout to be arbitrarily high.
 	 */
 	public WorkTargetSelector(int $selectionTimeout) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
@@ -55,6 +61,13 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	/**
 	 * Creates a new system default Selector back-end. Select timeouts are
 	 * configurable, as is the WorkTarget's priority.
+	 * 
+	 * @param $selectionTimeout
+	 *                the number of milliseconds a select call should block for, or
+	 *                negative for completely nonblocking operation. If this
+	 *                WorkTarget will be run in its own personal thread, you may set
+	 *                this timeout to be arbitrarily high.
+	 * @param $workPriority
 	 */
 	public WorkTargetSelector(int $selectionTimeout, int $workPriority) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
@@ -122,16 +135,21 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 */
 	public Void call() {
 		// PHASE ONE
+		// check for new registration or deregistration events
+		callRegistrationProcessing();
+		
+		// PHASE TWO
 		// chill out
 		boolean $workExists = callSelect() > 0;
 		
-		// PHASE TWO
-		// disbatch events to folks who're deserving
-		if ($workExists) callDisbatchEvents();
+		// PHASE... TWO AND A HALF?
+		// if we were a blocking selector, we might have been woken up specifically to deal with a new event, so we should do so asap
+		//callRegistrationProcessing();
+		// actually no, this is silly.  if we're being used in blocking mode, we're probably also being used in our own thread, so we'll be looping back to phase one momentarily anyway and it's all kay.
 		
 		// PHASE THREE
-		// check for new registration or deregistration events
-		callRegistrationProcessing();
+		// disbatch events to folks who're deserving
+		if ($workExists) callDisbatchEvents();
 		
 		return null;
 	}
@@ -217,6 +235,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		}
 		return null;
 	}
+	
+	
 	
 	private class Attache {
 		public Listener<SelectableChannel>	$reader;
