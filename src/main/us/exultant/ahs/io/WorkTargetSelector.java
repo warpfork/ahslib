@@ -123,9 +123,24 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	public Void call() {
 		// PHASE ONE
 		// chill out
+		boolean $workExists = callSelect() > 0;
+		
+		// PHASE TWO
+		// disbatch events to folks who're deserving
+		if ($workExists) callDisbatchEvents();
+		
+		// PHASE THREE
+		// check for new registration or deregistration events
+		callRegistrationProcessing();
+		
+		return null;
+	}
+	
+	private int callSelect() {
 		try {
 			/* block until channel events, or wakeups triggered by the event pipe's listener, or thread interrupts. */
-			$selector.select();
+			if ($timeout < 0) return $selector.selectNow();
+			return $selector.select();
 		} catch (ClosedSelectorException $e) {
 			/* selectors can't be closed except by their close method, which we control all access to, so this shouldn't happen in a way that surprises us. */
 			throw new MajorBug($e);
@@ -133,10 +148,9 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 			/* I just plain don't know what would cause this. */
 			throw new Error($e);
 		}
-		
-
-		// PHASE TWO
-		// disbatch events to folks who're deserving
+	}
+	
+	private void callDisbatchEvents() {
 		Iterator<SelectionKey> $itr = $selector.selectedKeys().iterator();
 		while ($itr.hasNext()) {
 			SelectionKey $k = $itr.next();
@@ -150,10 +164,9 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 			if (Primitives.containsFullMask($ops, SelectionKey.OP_WRITE) && $a.$writer != null) $a.$writer.hear($k.channel());
 			if (Primitives.containsFullMask($ops, SelectionKey.OP_ACCEPT) && $a.$accepter != null) $a.$accepter.hear($k.channel());
 		}
-		
-
-		// PHASE THREE
-		// check for new registration or deregistration events
+	}
+	
+	private void callRegistrationProcessing() {
 		List<Event> $evts = $pipe.SRC.readAllNow();
 		for (Event $evt : $evts) {
 			if ($evt instanceof Event_Reg) {
@@ -187,8 +200,6 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 				$k.attach(null); // gc help
 			}
 		}
-		
-		return null;
 	}
 	
 	
