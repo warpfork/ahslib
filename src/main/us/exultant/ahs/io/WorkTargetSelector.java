@@ -27,7 +27,8 @@ import java.util.*;
  * it &mdash; so, we're stuck with an {@link #isReady()} method that helplessly always
  * returns true, and fundamentally no way to disbatch events relating to the core
  * selector's readiness. So, all in all, you may still actually need to just run this
- * system in its own personal thread.
+ * system in its own personal thread &mdash {@link WorkSchedulerPrivateThread} is ideal
+ * for this.
  * </p>
  * 
  * @author hash
@@ -39,6 +40,12 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	/**
 	 * Creates a new system default Selector back-end. Selects run with a timeout of 1
 	 * millisecond; the WorkTarget's priority is zero.
+	 * 
+	 * This default timeout is a conservative choice: regardless of if planning to run
+	 * the WorkTargetSelector in a private thread or a WorkScheduler with pooling, the
+	 * 1 millisecond timeout won't kill you (it'll never leave a thread spinning at
+	 * 100% of a core, nor will it completely choke up a pool), but for a most
+	 * optimial system you might wish to consider other settings.
 	 */
 	public WorkTargetSelector() {
 		this(1);
