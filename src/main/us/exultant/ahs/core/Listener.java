@@ -21,8 +21,7 @@ package us.exultant.ahs.core;
 
 /**
  * <p>
- * Generic interface for listeners (whether for events or messages). Collaborates with the
- * Transport interface.
+ * Generic interface for listeners (whether for events or messages).
  * </p>
  * 
  * <p>
