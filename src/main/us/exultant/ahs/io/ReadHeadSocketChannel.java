@@ -49,7 +49,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	 * 
 	 * @param $localBinding
 	 *                as per {@link ServerSocket#bind(SocketAddress)}.
-	 * @param $ps
+	 * @param $eventSource
 	 *                the WorkTargetSelector to register this server socket with (the
 	 *                registration will be performed by the time this constructor
 	 *                returns).
@@ -63,14 +63,14 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	 *                 if endpoint is a SocketAddress subclass not supported by this
 	 *                 socket
 	 */
-	public ReadHeadSocketChannel(SocketAddress $localBinding, WorkTargetSelector $ps) throws IOException {
+	public ReadHeadSocketChannel(SocketAddress $localBinding, WorkTargetSelector $eventSource, WorkScheduler $scheduler) throws IOException {
 		this.$pump = new PumpT();
 		
 		$ssc = ServerSocketChannel.open();
 		$ssc.configureBlocking(false);
 		$ssc.socket().bind($localBinding);
-		$ps.register($ssc, getPump());	//TODO:AHS:IO: mkay so this should be a listener.  but who's he gonna tell?  we need a WorkFuture first.  and that implies we need to have schedule'd our WorkTarget with someone already!
-		this.$ps = $ps;
+		$eventSource.register($ssc, getPump());	//TODO:AHS:IO: mkay so this should be a listener.  but who's he gonna tell?  we need a WorkFuture first.  and that implies we need to have schedule'd our WorkTarget with someone already!
+		this.$ps = $eventSource;
 	}
 	
 	private final ServerSocketChannel	$ssc;
@@ -113,10 +113,10 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	
 	//TODO:AHS:IO: so... should we have a method that exposes the WorkFuture here?  because it would actually be sensible to be able to wait for completion on that basis.  otherwise i guess the readhead's listener is the normative way to deal with that, and maybe that's enough.  but being able to use a future would let you use future pipes, as well as just plain being less noisy.
 	//TODO:AHS:IO: if we want to make it possible to do flexible priority we'd have to either make a specific method for that, or expose the WorkTarget.  The latter would be kinda weird (we don't want to let people register it more than once, after all).
-	//TODO:AHS:IO: shit, should we allow setting an additional listener that we have our internal one call in a chain?
+	//TODO:AHS:IO: shit, should we allow setting an additional listener that we have our internal one call in a chain?  NO, USE THE READHEAD DAMNIT.
 	
 	
-	private class PumpT implements Pump {
+	private class Wrok implements WorkTarget {
 		public boolean isDone() {
 			return isClosed();
 		}
