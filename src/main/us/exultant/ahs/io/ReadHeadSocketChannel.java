@@ -53,6 +53,10 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	 *                the WorkTargetSelector to register this server socket with (the
 	 *                registration will be performed by the time this constructor
 	 *                returns).
+	 * @param $scheduler
+	 *                the scheduler that should be responsible for allocating threads
+	 *                to do the work of accepting new sockets when they become
+	 *                available.
 	 * 
 	 * @throws IOException
 	 *                 if the bind operation fails, or if the socket is already bound.
@@ -81,6 +85,11 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	private final WorkFuture<SocketChannel>		$wf;
 	private final Listener<SelectableChannel>	$listener;
 	private final WorkTargetSelector		$ps;
+	
+	// i feel incredibly awkward about this method being a hanger-on to a readhead.  strongly feeling that there should be some other class here that's a container for a wf + rh.
+	public WorkFuture<SocketChannel> getWorkFuture() {
+		return $wf;
+	}
 	
 	/**
 	 * Exposes the {@link ServerSocketChannel} that this ReadHead is decorating. (If
@@ -112,7 +121,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	private class Trigger implements Listener<SelectableChannel> {
 		public void hear(SelectableChannel $x) {
 			$work.$ready = true;
-			//TODO call update on the future... yez, that means i have to store the scheduler pointer as well -_-
+			$wf.update();
 		}
 	}
 	
@@ -141,6 +150,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 				if ($chunk == null) return null;
 				$pipe.SINK.write($chunk);
 				$ready = true;	/* if we didn't find the work source already emptied out, we pessimistically assume that there's more to do. */
+				return $chunk;
 			} catch (TranslationException $e) {
 				handleException($e);
 			} finally {
