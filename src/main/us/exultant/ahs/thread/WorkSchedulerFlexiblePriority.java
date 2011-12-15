@@ -52,7 +52,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
-		WorkFuture<$V> $wf = new WorkFuture<$V>($work, $when);
+		WorkFuture<$V> $wf = new WorkFuture<$V>(this, $work, $when);
 		$lock.lock();
 		try {
 			if ($wf.$sync.scheduler_shift()) {
