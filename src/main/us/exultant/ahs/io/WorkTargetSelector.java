@@ -318,7 +318,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * @param $p
 	 *                a Listener to notify when connections are ready to be accepted
 	 */
-	public void register(ServerSocketChannel $ch, Listener<SelectableChannel> $p) {
+	public void registerAccept(ServerSocketChannel $ch, Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
 	}
 	
@@ -363,10 +363,10 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	/**
 	 * Stops selecting for new connection availablity events on a server socket and
 	 * discards the presently set Listener. Calling this method repeatedly will have
-	 * no effect unless {@link #register(ServerSocketChannel, Listener)} is called in
-	 * the meanwhile.
+	 * no effect unless {@link #registerAccept(ServerSocketChannel, Listener)} is
+	 * called in the meanwhile.
 	 */
-	public void deregister(ServerSocketChannel $ch) {
+	public void deregisterAccept(ServerSocketChannel $ch) {
 		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
 	}
 	
