@@ -64,18 +64,23 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	 *                 socket
 	 */
 	public ReadHeadSocketChannel(SocketAddress $localBinding, WorkTargetSelector $eventSource, WorkScheduler $scheduler) throws IOException {
-		this.$pump = new PumpT();
+		$work = new Matter();
+		$listener = new Trigger();
+		$wf = $scheduler.schedule($work, ScheduleParams.NOW);
+		$ps = $eventSource;
 		
 		$ssc = ServerSocketChannel.open();
 		$ssc.configureBlocking(false);
 		$ssc.socket().bind($localBinding);
-		$eventSource.register($ssc, getPump());	//TODO:AHS:IO: mkay so this should be a listener.  but who's he gonna tell?  we need a WorkFuture first.  and that implies we need to have schedule'd our WorkTarget with someone already!
-		this.$ps = $eventSource;
+		$ps.registerAccept($ssc, $listener);
+		
 	}
 	
-	private final ServerSocketChannel	$ssc;
-	private final PumpT			$pump;
-	private final WorkTargetSelector	$ps;
+	private final ServerSocketChannel		$ssc;
+	private final Matter				$work;
+	private final WorkFuture<SocketChannel>		$wf;
+	private final Listener<SelectableChannel>	$listener;
+	private final WorkTargetSelector		$ps;
 	
 	/**
 	 * Exposes the {@link ServerSocketChannel} that this ReadHead is decorating. (If
@@ -87,19 +92,10 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 	}
 	
 	/**
-	 * It should not prove necessary to use this method, since a ReadHeadSocketChannel
-	 * is among the classes which it is appropriate to power via the indirection of a
-	 * WorkTargetSelector and not by any other means.
-	 */
-	Pump getPump() {
-		return $pump;
-	}
-	
-	/**
 	 * Closes the {@link ServerSocketChannel} that this ReadHead is decorating (as per
 	 * the general contract for {@link ReadHead#close()}), then instructs the
 	 * {@link WorkTargetSelector} that has been handling events for this channel to
-	 * deregister it as soon as has a chance to do so.
+	 * deregister it as soon it has a chance to do so.
 	 */
 	public void close() {
 		try {
@@ -108,33 +104,53 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 			handleException($e);
 		}
 		$ps.cancel($ssc);
+		$pipe.close();
 	}
 	
 	
-	//TODO:AHS:IO: so... should we have a method that exposes the WorkFuture here?  because it would actually be sensible to be able to wait for completion on that basis.  otherwise i guess the readhead's listener is the normative way to deal with that, and maybe that's enough.  but being able to use a future would let you use future pipes, as well as just plain being less noisy.
-	//TODO:AHS:IO: if we want to make it possible to do flexible priority we'd have to either make a specific method for that, or expose the WorkTarget.  The latter would be kinda weird (we don't want to let people register it more than once, after all).
-	//TODO:AHS:IO: shit, should we allow setting an additional listener that we have our internal one call in a chain?  NO, USE THE READHEAD DAMNIT.
+	
+	private class Trigger implements Listener<SelectableChannel> {
+		public void hear(SelectableChannel $x) {
+			$work.$ready = true;
+			//TODO call update on the future... yez, that means i have to store the scheduler pointer as well -_-
+		}
+	}
 	
 	
-	private class Wrok implements WorkTarget {
+	
+	private class Matter implements WorkTarget<SocketChannel> {
+		private volatile boolean $ready;
+		
 		public boolean isDone() {
 			return isClosed();
 		}
 		
-		public synchronized void run(final int $times) {
-			for (int $i = 0; $i < $times; $i++) {
-				if (isDone()) break;
-				
-				try {
-					SocketChannel $chunk = TranslatorServerChannelToSocket.INSTANCE.translate($ssc);
-					if ($chunk == null) break;
-					$pipe.SINK.write($chunk);
-				} catch (TranslationException $e) {
-					handleException($e);
-					break;
-				}
+		public boolean isReady() {
+			return $ready;
+		}
+		
+		public SocketChannel call() {
+			if (isDone()) return null;
+			
+			try {
+				/* set $ready to false on the optomistic assumption we're going about to do all the work */
+				$ready = false;
+				/* nom work from source */
+				SocketChannel $chunk = TranslatorServerChannelToSocket.INSTANCE.translate($ssc);
+				/* if selector again signalled more data came in here, $ready became true again.  (if we'd set $ready false after nom'ing, we'd have room for a race condition where we empty the source but new data comes in right after that and yet right before we false'd $ready.) */
+				if ($chunk == null) return null;
+				$pipe.SINK.write($chunk);
+				$ready = true;	/* if we didn't find the work source already emptied out, we pessimistically assume that there's more to do. */
+			} catch (TranslationException $e) {
+				handleException($e);
+			} finally {
+				if (!$ssc.isOpen()) $pipe.SRC.close();
 			}
-			if (!$ssc.isOpen()) $pipe.SRC.close();
+			return null;
+		}
+
+		public int getPriority() {
+			return 0;	//XXX:AHS:THREAD: this should be configurable later, at least at construction time and maybe just generally.
 		}
 	}
 }

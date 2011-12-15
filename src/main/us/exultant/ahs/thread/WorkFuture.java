@@ -44,6 +44,7 @@ import java.util.concurrent.locks.*;
  * 
  * @param <$V>
  */
+//FIXME:AHS:THREAD: why the fuck don't these just have a pointer to their scheduler in them?  there is almost NO place where I won't ever want to call update on these, and it's just damned redundant code if i have to keep a scheduler pointer every darn place i have a work future (especially when they're being called by a listener)
 public class WorkFuture<$V> implements Future<$V> {
 	public WorkFuture(WorkTarget<$V> $wt, ScheduleParams $schedp) {
 		this.$work = $wt;
