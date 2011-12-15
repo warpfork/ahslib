@@ -21,7 +21,7 @@ package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.io.TranslatorByteBufferToChannel.Completor;
+import us.exultant.ahs.io.TranslatorByteBufferToChannelByFrame.Completor;
 import us.exultant.ahs.thread.*;
 import java.io.*;
 import java.nio.*;
@@ -69,14 +69,14 @@ public class FlowAssembler {
 	 *         ByteBuffer.
 	 */
 	public static WriteHead<ByteBuffer> makeNonblockingChannelWriter(SocketChannel $chan, WorkTargetSelector $ps) {
-		Fuu $fuu = new Fuu(new TranslatorByteBufferToChannel.Nonblocking($chan), $ps);
+		Fuu $fuu = new Fuu(new TranslatorByteBufferToChannelByFrame.Nonblocking($chan), $ps);
 		return $fuu;
 	}
 	private static class Fuu extends WriteHeadAdapter<ByteBuffer> implements Pump {
 		/**
 		 * @param $tran must have been constructed over a SelectableChannel or we'll throw ClassCastException later on. 
 		 */
-		public Fuu(TranslatorByteBufferToChannel $tran, WorkTargetSelector $p) {
+		public Fuu(TranslatorByteBufferToChannelByFrame $tran, WorkTargetSelector $p) {
 			this.$trans = $tran;
 			this.$ps = $p;
 			$pipe.SRC.setListener(new Listener<ReadHead<ByteBuffer>>() {
@@ -142,7 +142,7 @@ public class FlowAssembler {
 			}
 		}
 		
-		private final TranslatorByteBufferToChannel	$trans;
+		private final TranslatorByteBufferToChannelByFrame	$trans;
 		private final WorkTargetSelector		$ps;
 		private volatile Completor			$last;
 		
@@ -170,7 +170,7 @@ public class FlowAssembler {
 	 * @return a ReadHead which yields a ByteBuffer for every frame of binary babble.
 	 */
 	public static ReadHead<ByteBuffer> makeNonblockingChannelReader(SocketChannel $chan, WorkTargetSelector $ps) {
-		Quu $fuu = new Quu($chan, new TranslatorChannelToByteBuffer.Nonblocking(), $ps);
+		Quu $fuu = new Quu($chan, new TranslatorChannelToByteBufferByFrame.Nonblocking(), $ps);
 		$ps.registerRead($chan, $fuu);
 		return $fuu;
 	}
@@ -184,7 +184,7 @@ public class FlowAssembler {
 		 *                purely to conceal their mistakes (which I'm not willing
 		 *                to do)).
 		 */
-		public Quu(ReadableByteChannel $base, TranslatorChannelToByteBuffer $trans, WorkTargetSelector $p) {
+		public Quu(ReadableByteChannel $base, TranslatorChannelToByteBufferByFrame $trans, WorkTargetSelector $p) {
 			this.$trans = $trans;
 			this.$base = $base;
 			this.$ps = $p;
@@ -210,7 +210,7 @@ public class FlowAssembler {
 
 		private final ReadableByteChannel		$base;
 		private final WorkTargetSelector		$ps;
-		private final TranslatorChannelToByteBuffer	$trans;
+		private final Translator<ReadableByteChannel,ByteBuffer>	$trans;
 		
 		public boolean isDone() {
 			return !$base.isOpen();
