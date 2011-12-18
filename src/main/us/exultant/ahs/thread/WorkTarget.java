@@ -261,7 +261,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * 
 	 * @author hash
 	 */
-	public static final class RunnableWrapper implements WorkTarget<Void> {
+	public static class RunnableWrapper implements WorkTarget<Void> {
 		public RunnableWrapper(Runnable $wrap) { this($wrap,0,true); }
 		public RunnableWrapper(Runnable $wrap, boolean $once) { this($wrap,0,$once); }
 		public RunnableWrapper(Runnable $wrap, int $prio) { this($wrap,$prio,true); }
@@ -276,7 +276,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		private final int		$prio;
 		private volatile Runnable	$wrap;	// flip this to null when it's done.
 		
-		public Void call() {
+		public final Void call() {
 			try {
 				if ($wrap == null) throw new IllegalStateException("This task can only be run once, and is already done!");
 				// yes, it's possible for $wrap to become null betweent the above check and the below call
@@ -294,10 +294,46 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		}
 		
 		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public boolean isReady() { return !isDone(); }
+		public final boolean isReady() { return !isDone(); }
 		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public boolean isDone() { return ($wrap == null); }
-		public int getPriority() { return $prio; }
+		public final boolean isDone() { return ($wrap == null); }
+		public final int getPriority() { return $prio; }
+	}
+	
+
+
+	/**
+	 * <p>
+	 * Bridges the gap between {@link Callable} and WorkTarget.
+	 * </p>
+	 * 
+	 * @author hash
+	 */
+	public static class CallableWrapper<$V> implements WorkTarget<$V> {
+		public CallableWrapper(Callable<$V> $wrap) { this($wrap,0); }
+		public CallableWrapper(Callable<$V> $wrap, int $prio) {
+			if ($wrap == null) throw new NullPointerException();
+			this.$prio = $prio;
+			this.$wrap = $wrap;
+		}
+		
+		private final int		$prio;
+		private volatile Callable<$V>	$wrap;	// flip this to null when it's done.
+		
+		public final $V call() throws Exception {
+			try {
+				if ($wrap == null) throw new IllegalStateException("This task can only be run once, and is already done!");
+				return $wrap.call();
+			} finally {
+				$wrap = null;
+			}
+		}
+		
+		/** We have no clue whether or not the Callable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
+		public final boolean isReady() { return !isDone(); }
+		/** We have no clue whether or not the Callable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
+		public final boolean isDone() { return ($wrap == null); }
+		public final int getPriority() { return $prio; }
 	}
 	
 	//TODO:AHS:THREAD: a readymade WorkTarget implementation which oneshots itself in response to one or more Future becoming done.  this will tend to be what gets used whenever you might otherwise have wished for a continuation/park (and where other libraries are resorting to serious weaving).
