@@ -259,14 +259,6 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * Bridges the gap between {@link Runnable} and WorkTarget.
 	 * </p>
 	 * 
-	 * <p>
-	 * Implementation note: all of the methods of this class are synchronized, which
-	 * means if you ask if this WorkTarget is ready while it's being run, you might
-	 * well be waiting a while for an answer. This design choice was made on the
-	 * presumption that there's no rational reason to be asking those state questions
-	 * whilst the task is in progress.
-	 * </p>
-	 * 
 	 * @author hash
 	 */
 	public static final class RunnableWrapper implements WorkTarget<Void> {

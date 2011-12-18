@@ -61,8 +61,6 @@ public class WorkFuture<$V> implements Future<$V> {
 	/** The parameters with which the work target was scheduled. */
 	private final ScheduleParams			$schedp;
 	
-	/** Set to true when someone calls the cancel method.  Never again becomes false.  If there's currently a thread from the scheduler working on this, it must eventually notice this and deal with it; if there is no thread running this, the cancelling thread may act immediately. */
-	volatile boolean				$cancelPlz	= false;
 	/** The result to return from get(). Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
 	private $V					$result		= null;
 	/** The (already wrapped) exception to throw from get(). Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
@@ -296,7 +294,6 @@ public class WorkFuture<$V> implements Future<$V> {
 		 * @return true if the scheduler must now remove the WF from the waiting
 		 *         pool (or delayed heap) and push it into the scheduled heap.
 		 */
-		//FIXME:AHS:THREAD: we have to notice doneness eventually even if no update was called and isReady is now returning false because it's done!  it's a bit troublesome since we'll never bubble to the top of the scheduled heap.  though really, the most straightforward fix isn't at all wrong: just run low-priority low-frequency fixed-rate task that calls update on all of the stuff in the waiting pool.  only question with that is who decides exactly what priority and how rate that should be, since it's clearly one of those things we're really only want one of per vm.		// I don't think this is a problem in a well-designed program anymore, because Pipes now fire their listeners both on closure and if necessary on emptyness-after-closure... so there's never any real excuse to not do a final update correctly.
 		boolean scheduler_shift() {
 			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState(State.WAITING.ordinal(), State.SCHEDULED.ordinal());
 			// the CAS will occur if:
