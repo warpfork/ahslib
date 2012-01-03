@@ -180,7 +180,22 @@ public interface ReadHead<$T> {
 	 * null pointer exceptions, concurrent modification exceptions, or etc.
 	 * </p>
 	 * 
-	 * @return next chunk of input, or null if there is no data available and the
+	 * <p>
+	 * Since null is returned from this method both in the case of timeouts and
+	 * emptiness of a closed data source, if it is necessary to make sure all data has
+	 * been drained from the ReadHead, then a null return from this method should be
+	 * followed by a check of {@link #isExhausted()}, followed by looping back to
+	 * another {@link #readSoon(long,TimeUnit)} if the ReadHead is not exhausted. Note
+	 * that this is not the same as checking {@link #isClosed()} after a null return!!
+	 * Checking {@link #isClosed()} instead of {@link #isExhausted()} would allow a
+	 * race condition where a final piece of data becomes available for reading
+	 * between a {@link #readSoon(long,TimeUnit)} call that timed out and when the
+	 * {@link #isClosed()} check is made, which would result in that data being
+	 * unnoticed.
+	 * </p>
+	 * 
+	 * @return next chunk of input, or null if the timeout elapses without a chunk
+	 *         becoming available, or null if there is no data available and the
 	 *         underlying stream has reached an {@code EOF} state. Some
 	 *         implementations may also choose to return null in the case that the
 	 *         underlying stream reaches an {@code EOF} state while this call is still
