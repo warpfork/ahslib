@@ -1,5 +1,7 @@
 package us.exultant.ahs.core.anno;
 
+import java.lang.annotation.*;
+
 /**
  * "Idempotent" describes an operation that will produce the same results if executed once
  * or multiple times.
@@ -14,6 +16,9 @@ package us.exultant.ahs.core.anno;
  * @author hash
  * 
  */
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.METHOD)
 public @interface Idempotent {
 	
 }

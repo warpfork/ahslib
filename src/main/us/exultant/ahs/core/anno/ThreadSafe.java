@@ -71,17 +71,30 @@ public @interface ThreadSafe {
 		 */
 		SYNCHRONIZED,
 		
+		
+		/**
+		 * <p>
+		 * Declares that this block of code is <i>conditionally</i> thread safe,
+		 * and that you must hold a particular lock when calling it.
+		 * </p>
+		 */
+		HOLDLOCK,
+		
 		/**
 		 * <p>
 		 * Declares that this block of code is safe to call from any thread: it
 		 * may perform some kind of internal locking at some points and be
-		 * referrentially transparent at others, and you'll likely need to read
-		 * the documentation completely in order to reason validly about the
-		 * system.
+		 * referrentially transparent at others, and so in order to design a
+		 * high-performance system you'll likely need to read the documentation
+		 * completely in order to reason validly about the system.
+		 * </p>
+		 * 
+		 * <p>
+		 * Methods with delicate locking may perform badly if used incorrectly,
+		 * but they still should NOT be capable of deadlock, no matter how they
+		 * are used.
 		 * </p>
 		 */
 		DELICATE
-		
-		// something that was annotated HoldLock can fall under either SYNCHRONIZED or DELICATE depending on whether or not it waits, i suppose.
 	}
 }
