@@ -66,7 +66,7 @@ import java.io.Writer;
  * @author JSON.org
  * @version 2008-09-18
  */
-public class JsonWriter {
+class JsonWriter {
 	private static final int	maxdepth	= 20;
 	
 	/**

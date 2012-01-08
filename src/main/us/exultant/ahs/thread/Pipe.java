@@ -154,6 +154,8 @@ public class Pipe<$T> implements Flow<$T> {
 		 */
 		public void setListener(Listener<ReadHead<$T>> $el) {
 			Pipe.this.$el = $el;
+			//if !empty
+			//~~~concurrent last write	// but if we grab the write lock, we can do this.  and that's totally reasonable to performance, i think, since it's not like anyone is going to setListener in a tight loop.
 			$el.hear(this);	/* this call may be "spurious", but it's actually extremely important to make sure you don't get screwed by a race condition when scheduling at the same time as doing last writes... I explained this at length in an email just a bit ago; I should clean that up and post it in the package docs or something. */
 		}
 		
