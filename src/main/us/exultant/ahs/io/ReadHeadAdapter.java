@@ -23,6 +23,7 @@ import us.exultant.ahs.core.*;
 import us.exultant.ahs.thread.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Provides a ReadHead backed by a buffer which is only writable by subclasses and exposes
@@ -34,6 +35,8 @@ import java.util.*;
  * 
  * @param <$T>
  */
+// this isn't what i intended on several levels.  mainly: pipes are the boundaries between threads.  you set them up first, and you choose where they go as a developer.  they shouldn't just appear without your explicit desire.
+//   
 public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	protected ReadHeadAdapter() {
 		$pipe = new Pipe<$T>();
@@ -56,6 +59,10 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	}
 	
 	public $T readNow() {
+		return $pipe.SRC.readNow();
+	}
+	
+	public $T readSoon(long $timeout, TimeUnit $unit) {
 		return $pipe.SRC.readNow();
 	}
 	

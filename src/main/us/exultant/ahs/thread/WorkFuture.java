@@ -45,7 +45,8 @@ import java.util.concurrent.locks.*;
  * @param <$V>
  */
 public class WorkFuture<$V> implements Future<$V> {
-	public WorkFuture(WorkTarget<$V> $wt, ScheduleParams $schedp) {
+	WorkFuture(WorkScheduler $parent, WorkTarget<$V> $wt, ScheduleParams $schedp) {
+		this.$parent = $parent;
 		this.$work = $wt;
 		this.$schedp = $schedp;
 		this.$sync = new Sync();
@@ -53,7 +54,11 @@ public class WorkFuture<$V> implements Future<$V> {
 	}
 	
 	
+	/** My guts. */
 	final Sync					$sync;
+	
+	/** This is largely just for being able to pass on {@link #update()} calls.  We could use it in a lot of defensive sanity checks as well, but we usually don't because of reasons (tight loops, mainly). */
+	final WorkScheduler				$parent;
 	
 	/** The underlying callable */
         final WorkTarget<$V>				$work;
@@ -61,15 +66,13 @@ public class WorkFuture<$V> implements Future<$V> {
 	/** The parameters with which the work target was scheduled. */
 	private final ScheduleParams			$schedp;
 	
-	/** Set to true when someone calls the cancel method.  Never again becomes false.  If there's currently a thread from the scheduler working on this, it must eventually notice this and deal with it; if there is no thread running this, the cancelling thread may act immediately. */
-	volatile boolean				$cancelPlz	= false;
 	/** The result to return from get(). Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
 	private $V					$result		= null;
 	/** The (already wrapped) exception to throw from get(). Need not be volatile or synchronized since the value is only important when it is idempotent, which is once $state has made its own final idempotent transition. */
 	private ExecutionException			$exception	= null;
 	
 	/** Index into delay queue, to support faster updates. */
-	int						$heapIndex	= 0;
+	int						$heapIndex	= -1;
 	
 	/** When nulled after set/cancel, this indicates that the results are accessible. */
 	volatile Thread					$runner;
@@ -114,6 +117,14 @@ public class WorkFuture<$V> implements Future<$V> {
 	
 	public boolean cancel(boolean $mayInterruptIfRunning) {
 		return $sync.cancel($mayInterruptIfRunning);
+	}
+	
+	/**
+	 * Functions exactly as calling {@link WorkScheduler#update(WorkFuture)} with this
+	 * object on its parent scheduler.
+	 */
+	public void update() {
+		$parent.update(this);
 	}
 	
 	/**
@@ -289,13 +300,13 @@ public class WorkFuture<$V> implements Future<$V> {
 		 * <p>
 		 * If this method returns false, it may merely because the task isn't
 		 * ready or is delayed, but it may also be because the task is FINISHED or
-		 * CANCELLED, which is something the caller is advised to check.
+		 * CANCELLED, which is something the caller is advised to check. False
+		 * will also be returned is the task is already SCHEDULED.
 		 * </p>
 		 * 
 		 * @return true if the scheduler must now remove the WF from the waiting
 		 *         pool (or delayed heap) and push it into the scheduled heap.
 		 */
-		//FIXME:AHS:THREAD: we have to notice doneness eventually even if no update was called and isReady is now returning false because it's done!  it's a bit troublesome since we'll never bubble to the top of the scheduled heap.  though really, the most straightforward fix isn't at all wrong: just run low-priority low-frequency fixed-rate task that calls update on all of the stuff in the waiting pool.  only question with that is who decides exactly what priority and how rate that should be, since it's clearly one of those things we're really only want one of per vm.		// I don't think this is a problem in a well-designed program anymore, because Pipes now fire their listeners both on closure and if necessary on emptyness-after-closure... so there's never any real excuse to not do a final update correctly.
 		boolean scheduler_shift() {
 			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState(State.WAITING.ordinal(), State.SCHEDULED.ordinal());
 			// the CAS will occur if:
@@ -317,7 +328,7 @@ public class WorkFuture<$V> implements Future<$V> {
 		 */
 		boolean scheduler_power() {
 			if (!compareAndSetState(State.SCHEDULED.ordinal(), State.RUNNING.ordinal())) {
-				// we were concurrently cancelled.  weep.
+				/* we were concurrently cancelled.  weep. */
 				return false;
 			}
 			
@@ -339,12 +350,11 @@ public class WorkFuture<$V> implements Future<$V> {
 					
 					if ($work.isDone()) {
 						tryFinish(true, $potentialResult, null);
-						return false;	// even if tryFinish failed and returned false, since we're the running thread, that still means the task is finished (just that we weren't the ones to make it happen).
+						return false;	/* even if tryFinish failed and returned false, since we're the running thread, that still means the task is finished (just that we weren't the ones to make it happen). */
 					} else {
 						if ($potentialResult != null) $result = $potentialResult;
-						boolean $waiting = compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal());
-						if ($waiting) $schedp.setNextRunTime();
-						return $waiting;	// false if the cas to waiting failed (which would be due to a concurrent cancel)
+						$schedp.setNextRunTime(); /* it'd be cool if we could set this only if we cas'd to waiting successfully, but that actually introduces a mind-bending race where if you call update on a clock based tasks immediately after that cas, you'll get it to skip ahead into the scheduled heap because we haven't shifted its goal time yet. */
+						return compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal()); /* return is false if the cas to waiting failed (which would be due to a concurrent cancel) */
 					}
 				} catch (Throwable $t) {
 					$exception = new ExecutionException($t);
@@ -352,7 +362,8 @@ public class WorkFuture<$V> implements Future<$V> {
 					return false;
 				}
 			} else {
-				releaseShared(0); // there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).)
+				/* there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).) */
+				releaseShared(0);
 				return false;
 			}
 		}

@@ -52,7 +52,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
-		WorkFuture<$V> $wf = new WorkFuture<$V>($work, $when);
+		WorkFuture<$V> $wf = new WorkFuture<$V>(this, $work, $when);
 		$lock.lock();
 		try {
 			if ($wf.$sync.scheduler_shift()) {
@@ -78,18 +78,32 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
-		if ($fut.isDone()) return;
+		// note that this entire method could be replaced by "update(Arr.asList(new WorkFuture<?>[] {$fut}));".  we're going out of our way to avoid creating those garbage objects.
+		if (update_per($fut));
+			update_postSignal();
+	}
+	public <$V> void update(Collection<WorkFuture<$V>> $futs) {
+		boolean $areDeferredUpdates = false;
+		for (WorkFuture<$V> $fut : $futs)
+			$areDeferredUpdates |= update_per($fut);
+		if ($areDeferredUpdates) update_postSignal();
+	}
+	/** makes an immediate attempt to finish a task, and pushes it into a list of things that need to be touched again the next time a worker thread checks in.
+	 * @return true if {@link #$updatereq} has new members, which means that {@link #update_postSignal()} must be called soon. */
+	private boolean update_per(WorkFuture<?> $fut) {
+		if ($fut.isDone()) return false;
 		
 		// check doneness; try to transition immediate to FINISHED if is done.
 		if ($fut.$work.isDone()) {
-			$fut.$sync.tryFinish(false, null, null);	// this is allowed to fail completely if the work is currently running.
-//			$log.trace(this, "FINAL UPDATE REQUESTED for "+$fut);
+			if ($fut.$sync.tryFinish(false, null, null))	// this is allowed to fail completely if the work is currently running.
+				return false;
 		}
 		
 		// just push this into the set of requested updates.
-		$updatereq.add($fut);
-		
-		// wake a thread that might be blocking because there's no work, because it needs to drain the updatereq list again before it can be sure it should still be waiting
+		return $updatereq.add($fut);
+	}
+	/** wake a thread that might be blocking because there's no work, because it needs to drain the updatereq list again before it can be sure it should still be waiting */
+	private void update_postSignal() {
 		$lock.lock();	// i am NOT a big fan of this lock being acquirable in the update method where it can be triggered by arbitrary threads, but we have to be able to wake the system if it's blocking on work.  we could and should definitely look into performance improvement options for detecting if the system is halted before calling this lock, but that's gonna be much easier said than done.
 		try {
 			$available.signal();
@@ -196,7 +210,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
 		assert $lock.isHeldByCurrentThread();
 		try { for (;;) {
-			// offer to shift any unclocked tasks that have had updates requested
+			// offer to shift any tasks that have had updates requested
 			worker_pollUpdates();
 			
 			// shift any clock-based tasks that need no further delay into the scheduled heap.  note the time until the next of those clocked tasks will be delay-free.
@@ -235,12 +249,12 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		while ($itr.hasNext()) {
 			WorkFuture<?> $wf = $itr.next(); $itr.remove();
 			if ($wf.$sync.scheduler_shift()) {	//FIXME AHH HAH!  if something is told to finish while its running, the finish fails and ends up as an updatereq............erm, where was i going with that?  to fail, you'd nee the final updatereq to come in and get eaten by another thread BEFORE the working thread does the cas from running to waiting and yet AFTER the working thread checks if that work is still not done.  no such moment exists.  though that does definitely explain why that thing about removing from unready being necessary is a brok.
-				//if ($unready.remove($wf))	// this appears to be poo.  which is odd, since things shouldn't really not be in there when this happens... that would imply we dropped the ball somewhere already and that remembrance of this task is purely from... uh, updates.  which isn't even remembrance.
-				$unready.remove($wf);
+				$unready.remove($wf);	// this may be a no-op.  why?  because the CAS from RUNNING to WAITING happens inside the scheduler_power method, and it has to happen before the addition of work to the unready pile.  this is another one of those things we could fix, but only by refactoring actions outside of that scheduler_power method so that we can lock them.	//FIXME:AHS:THREAD: this is actually a little troubling because it can leave people in the unready heap forever if they concurrently finish or cancel while in the scheduled heap after we put them there too fast.
 				$scheduled.add($wf);
 			} else {
 				if ($wf.$work.isDone())	{
 					boolean $causedFinish = $wf.$sync.tryFinish(false, null, null);
+					// note that even if this guy is scheduled, we don't chase that object down.  we could.  we don't need to; he'll bubble out eventually.  if he's in unready... i'm not sure he'll escape.
 //					$log.trace(this, "isDone "+$wf+" noticed in worker_pollUpdates(); we caused finish "+$causedFinish);
 				}
 				switch ($wf.getState()) {
@@ -248,7 +262,15 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 					case CANCELLED:
 						$unready.remove($wf);
 						hearTaskDrop($wf);
-					default: // still just waiting, leave it there
+						break;
+					case SCHEDULED:
+						if ($wf.$heapIndex == -1)	//XXX:AHS:THREAD: this won't be necessary once we perform the refactors to fix Issue #38.
+							break;	// there's actually a brief moment of time where the scheduler has polled work out of the scheduled heap and released the lock before it CAS's the work to RUNNING.  this is because that case doesn't happen until within the scheduler_power method, which clearly cannot be called until the lock is released.  possibly bad abstraction there.
+						$scheduled.siftDown($wf.$heapIndex, $wf);
+						$scheduled.siftUp($wf.$heapIndex, $wf);
+						break;
+					default:
+						/* it's still just waiting, leave it there */
 						continue;
 				}
 			}

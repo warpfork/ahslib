@@ -150,13 +150,26 @@ public class FlippableSemaphore {
 		 *         acquire that consumed a permit.
 		 */
 		public abstract boolean isAcquireSuccessful(int $response);
+		
+		/**
+		 * The return of this method is used to determine if a release should be
+		 * rejected.
+		 * 
+		 * @param $status
+		 *                the state of the Semaphore when the current CAS round of
+		 *                releasing was initiated.
+		 * @return true if the release is permitted; false if it should be
+		 *         forbidden and fail immediately.
+		 */
+		public abstract boolean isReleasePermitted(int $status);
+		// this could actually be uber-generalized into a isTransitionPermitted($status,$delta) i suppose, but the need isn't jumping out at me.
 	}
 	
 	
 	
 	/**
 	 * Default decider: insufficient permits always block, any non-negative answer
-	 * from tryAcquire means we got a permit.
+	 * from tryAcquire means we got a permit, and releases are always permitted.
 	 */
 	private final static class DefaultDecider extends BlockPolicyDecider {
 		public static final BlockPolicyDecider INSTANCE = new DefaultDecider();
@@ -167,6 +180,10 @@ public class FlippableSemaphore {
 
 		public boolean isAcquireSuccessful(int $response) {
 			return $response >= 0;
+		}
+
+		public boolean isReleasePermitted(int $status) {
+			return true;
 		}
 	}
 	
@@ -244,13 +261,14 @@ public class FlippableSemaphore {
 		protected abstract boolean pauseToBeFair();
 		
 		/**
-		 * @return true.  the only way this function can fail is if there's an integer overflow issue, and then there's shit thrown.
+		 * @return true if allowed by the Decider, false if that transition on the current state forbidden.
 		 */
 		protected final boolean tryReleaseShared(int $releases) {
 			for (;;) {
 				int $status = getState();
 				int $next = shift($status, $releases);
-				if (compareAndSetState($status, $next)) return true;	//FIXME i still need a way to block this from CloseableSemaphore.
+				if (!$decider.isReleasePermitted($status)) return false;
+				if (compareAndSetState($status, $next)) return true;
 			}
 		}
 		
@@ -444,9 +462,12 @@ public class FlippableSemaphore {
 	 * There is no requirement that a thread that releases a permit must have acquired
 	 * that permit by calling {@link #acquire}. Correct usage of a semaphore is
 	 * established by programming convention in the application.
+	 * 
+	 * @returns true if the release of the permits as successful; false if it was
+	 *          forbidden by the semaphore.
 	 */
-	public void release() {
-		$sync.releaseShared(1);
+	public boolean release() {
+		return $sync.releaseShared(1);
 	}
 	
 	/**
@@ -632,17 +653,19 @@ public class FlippableSemaphore {
 	 * 
 	 * <p>
 	 * There is no requirement that a thread that releases a permit must have acquired
-	 * that permit by calling {@link #acquire acquire}. Correct usage of a
-	 * semaphore is established by programming convention in the application.
+	 * that permit by calling {@link #acquire acquire}. Correct usage of a semaphore
+	 * is established by programming convention in the application.
 	 * 
 	 * @param $permits
 	 *                the number of permits to release
+	 * @returns true if the release of the permits as successful; false if it was
+	 *          forbidden by the semaphore.
 	 * @throws IllegalArgumentException
 	 *                 if {@code permits} is negative
 	 */
-	public void release(int $permits) {
+	public boolean release(int $permits) {
 		if ($permits < 0) throw new IllegalArgumentException();
-		$sync.releaseShared($permits);
+		return $sync.releaseShared($permits);
 	}
 	
 	/**
