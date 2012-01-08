@@ -73,7 +73,7 @@
 	<target name="compile-core" depends="init">
 		<exusJavacStrict
 			module="main/core"
-			classes="us/exultant/ahs/core/**, us/exultant/ahs/util/**"
+			classes="us/exultant/ahs/core/**, us/exultant/ahs/util/**, us/exultant/ahs/anno/**"
 			depends=""
 		/>
 	</target>
@@ -237,7 +237,7 @@
 				<exclude name="**todo**"/>
 				<exclude name="**krap**"/>
 			</packageset>
-			<group title="Core"				packages="us.exultant.ahs.core*,us.exultant.ahs.util*"/>
+			<group title="Core"				packages="us.exultant.ahs.core*,us.exultant.ahs.util*,us.exultant.ahs.anno*"/>
 			<group title="Codec Core"			packages="us.exultant.ahs.codec*"/>
 			<group title="Codec (JSON)"			packages="us.exultant.ahs.codec.json*"/>
 			<group title="Codec (EBON)"			packages="us.exultant.ahs.codec.ebon*"/>
