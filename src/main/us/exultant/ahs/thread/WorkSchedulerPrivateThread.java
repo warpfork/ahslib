@@ -23,7 +23,7 @@ public class WorkSchedulerPrivateThread implements WorkScheduler {
 		synchronized ($thread) {
 			if ($workTarget != null) throw new IllegalStateException("this scheduler can only accept one work target");
 			//hmm.  i suppose we can deal with delays, sure.  todo.
-			WorkFuture<$V> $v = new WorkFuture<$V>($work,$when);
+			WorkFuture<$V> $v = new WorkFuture<$V>(this,$work,$when);
 			$workFuture = $v;
 			X.notifyAll($thread);
 			return $v;

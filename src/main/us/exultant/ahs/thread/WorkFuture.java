@@ -45,7 +45,8 @@ import java.util.concurrent.locks.*;
  * @param <$V>
  */
 public class WorkFuture<$V> implements Future<$V> {
-	public WorkFuture(WorkTarget<$V> $wt, ScheduleParams $schedp) {
+	WorkFuture(WorkScheduler $parent, WorkTarget<$V> $wt, ScheduleParams $schedp) {
+		this.$parent = $parent;
 		this.$work = $wt;
 		this.$schedp = $schedp;
 		this.$sync = new Sync();
@@ -53,7 +54,11 @@ public class WorkFuture<$V> implements Future<$V> {
 	}
 	
 	
+	/** My guts. */
 	final Sync					$sync;
+	
+	/** This is largely just for being able to pass on {@link #update()} calls.  We could use it in a lot of defensive sanity checks as well, but we usually don't because of reasons (tight loops, mainly). */
+	final WorkScheduler				$parent;
 	
 	/** The underlying callable */
         final WorkTarget<$V>				$work;
@@ -112,6 +117,14 @@ public class WorkFuture<$V> implements Future<$V> {
 	
 	public boolean cancel(boolean $mayInterruptIfRunning) {
 		return $sync.cancel($mayInterruptIfRunning);
+	}
+	
+	/**
+	 * Functions exactly as calling {@link WorkScheduler#update(WorkFuture)} with this
+	 * object on its parent scheduler.
+	 */
+	public void update() {
+		$parent.update(this);
 	}
 	
 	/**
