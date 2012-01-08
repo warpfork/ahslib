@@ -1,4 +1,4 @@
-package us.exultant.ahs.core.anno;
+package us.exultant.ahs.anno;
 
 import java.lang.annotation.*;
 import java.util.*;
