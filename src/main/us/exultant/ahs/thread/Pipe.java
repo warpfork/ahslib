@@ -146,7 +146,7 @@ public class Pipe<$T> implements Flow<$T> {
 	 *
 	 */
 	public final class Source implements ReadHead<$T> {
-		private Source() {} // this should be a singleton per instance of the enclosing class
+		private Source() {} /* this should be a singleton per instance of the enclosing class */
 		
 		/**
 		 * Sets the Listener that will be triggered for every completed write
@@ -154,9 +154,14 @@ public class Pipe<$T> implements Flow<$T> {
 		 */
 		public void setListener(Listener<ReadHead<$T>> $el) {
 			Pipe.this.$el = $el;
-			//if !empty
-			//~~~concurrent last write	// but if we grab the write lock, we can do this.  and that's totally reasonable to performance, i think, since it's not like anyone is going to setListener in a tight loop.
-			$el.hear(this);	/* this call may be "spurious", but it's actually extremely important to make sure you don't get screwed by a race condition when scheduling at the same time as doing last writes... I explained this at length in an email just a bit ago; I should clean that up and post it in the package docs or something. */
+
+			// it's possible that there wasn't a listener before this, and we need to make sure we fire an event now in case there aren't any more writes forthcoming for a while (if indeed ever).
+			// this can be "spurious", since it doesn't actually come as news of a write, but it's terribly important not to ignore this.
+			boolean $mustSpur = false;
+			lockWrite();
+			if (SRC.hasNext()) $mustSpur = true;
+			unlockWrite();	/* we prefer to release locks before we let the listener go on a tear, just as a matter of best/simplest practice. */
+			if ($mustSpur) $el.hear(this);
 		}
 		
 		public $T read() {
@@ -274,6 +279,8 @@ public class Pipe<$T> implements Flow<$T> {
 		 *                 if the chunk is null
 		 */
 		public void write($T $chunk) throws IllegalStateException {
+			/* it's not actually necessary to check for NullPointerException ourselves;
+			 * it'll be thrown by $queue.add anyway, and we don't care to waste time checking that twice just to avoid a lock, because if it explodes, then who cares if locking was a waste that time? */
 			$lock.lock();
 			try {
 				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
