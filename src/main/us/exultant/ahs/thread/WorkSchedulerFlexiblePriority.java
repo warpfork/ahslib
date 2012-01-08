@@ -26,29 +26,68 @@ import java.util.concurrent.locks.*;
 
 public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	public WorkSchedulerFlexiblePriority(int $threadCount) {
-		this.$threadCount = $threadCount;
-	}
-	
-	private final int $threadCount;
-	private boolean $started;
-	
-	public synchronized WorkScheduler start() {
-		if ($started) return null;
-		$started = true;
-		
-		Thread[] $threads = ThreadUtil.wrapAll(new Runnable() {
+		$threads = ThreadUtil.wrapAll(new Runnable() {
 			public void run() {
-				for (;;) {
-					try {
-						worker_cycle();
-					} catch (InterruptedException $e) { $e.printStackTrace(); }
-				}
+				worker_cycle();
 			}
 		}, $threadCount);
+	}
+		
+	public WorkScheduler start() {
+		$lock.lock();
+		try {
+			switch ($requestedStat) {
+				case NOT_STARTED:
+					$requestedStat = RequestedStatus.RUNNING;
+					break;
+				case RUNNING:
+					return this;
+				case STOPPING_HARD:
+				case STOPPING:
+				case STOPPED:
+					throw new IllegalStateException("cannot start a scheduler that is already in \""+$requestedStat+"\" state!");
+			}
+		} finally {
+			$lock.unlock();
+		}
 		
 		ThreadUtil.startAll($threads);
 		
 		return this;
+	}
+	
+	public void stop(boolean $aggressively) {
+		$lock.lock();
+		// try to transition
+		try {
+			switch ($requestedStat) {
+				case NOT_STARTED:
+					$requestedStat = RequestedStatus.STOPPED;
+					return;
+				case RUNNING:
+					$requestedStat = $aggressively ? RequestedStatus.STOPPING_HARD : RequestedStatus.STOPPING;
+					$available.signalAll();
+					break;
+				case STOPPING_HARD:
+					break; /* can't stop any harder, and downgrading is not allowed */
+				case STOPPING:
+					$requestedStat = $aggressively ? RequestedStatus.STOPPING_HARD : RequestedStatus.STOPPING;
+					break;
+				case STOPPED:
+					return;
+			}
+		} finally {
+			$lock.unlock();
+		}
+		
+		//TODO:AHS:THREAD: this is a total hackjob for the moment being.  We need to do some snazzy stuff with Futures here.
+		ThreadUtil.joinAll($threads);
+		$lock.lock();
+		try {
+			$requestedStat = RequestedStatus.STOPPED;
+		} finally {
+			$lock.unlock();
+		}
 	}
 	
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
@@ -115,6 +154,9 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	
 	
+	private final Thread[]			$threads;
+	private volatile RequestedStatus	$requestedStat	= RequestedStatus.NOT_STARTED;
+	
 	private final PriorityHeap		$delayed	= new PriorityHeap(WorkFuture.DelayComparator.INSTANCE);
 	private final PriorityHeap		$scheduled	= new PriorityHeap(WorkFuture.PriorityComparator.INSTANCE);
 	private final Set<WorkFuture<?>>	$unready	= new HashSet<WorkFuture<?>>();
@@ -127,32 +169,51 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 //	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
 	
+	private static enum RequestedStatus { NOT_STARTED, RUNNING, STOPPING, STOPPING_HARD, STOPPED }
 	
-	private void worker_cycle() throws InterruptedException {
+	
+	
+	private void worker_cycle() {
 		WorkFuture<?> $chosen = null;
-		doWork: for (;;) {	// we repeat this loop... well, forever, really.
-			
+		doWork: for (;;) {
 			// lock until we can pull someone out who's state is scheduled.
 			//    delegate our attention to processing update requests and waiting for delay expirations as necessary.
-			$lock.lockInterruptibly();
-			try { retry: for (;;) {
-				WorkFuture<?> $wf = worker_acquireWork();	// this may block.
-				switch ($wf.getState()) {
-					case FINISHED:
-						hearTaskDrop($wf);
-						continue retry;
-					case CANCELLED:
-						hearTaskDrop($wf);
-						continue retry;
-					case SCHEDULED:
-						$chosen = $wf;
-						break retry;
-					default:
-						throw new MajorBug("work acquisition turned up a target that had been placed in the scheduled heap, but was neither in a scheduled state nor had undergone any of the valid concurrent transitions.");
+			$lock.lock();
+			try {
+				retry: for (;;) {
+					switch ($requestedStat) {
+						case RUNNING:
+							// kay.  carry on.
+							break;
+						case STOPPING_HARD:
+							// don't care if there's work available.  we're leaving.
+							$chosen = null;
+							break doWork;
+						case STOPPING:
+							// carry on.  we'll stop in a little bit if worker_acquireWork can't come up with anything to do.
+							break;
+						default:
+							throw new MajorBug("illegal state transition occured ("+$requestedStat+")");
+					}
+					WorkFuture<?> $wf = worker_acquireWork();	/* this may block. */
+					if ($wf == null) break doWork;	/* we either ran out of work or we were shifted to hard-stopping. */
+					switch ($wf.getState()) {
+						case FINISHED:
+							hearTaskDrop($wf);
+							continue retry;
+						case CANCELLED:
+							hearTaskDrop($wf);
+							continue retry;
+						case SCHEDULED:
+							$chosen = $wf;
+							break retry;
+						default:
+							throw new MajorBug("work acquisition turned up a target that had been placed in the scheduled heap, but was neither in a scheduled state nor had undergone any of the valid concurrent transitions.");
+					}
 				}
-			}} finally {
 				$running.put(Thread.currentThread(), $chosen);
 				$chosen.$sync.scheduler_shiftToRunning();
+			} finally {
 				$lock.unlock();
 			}
 			
@@ -161,7 +222,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
-				$lock.lockInterruptibly();
+				$lock.lock();
 				$running.put(Thread.currentThread(), "planning next move");
 				try {
 					if ($chosen.$sync.scheduler_shiftToScheduled()) {
@@ -190,6 +251,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				$running.remove(Thread.currentThread());
 			}
 		}
+		$running.put(Thread.currentThread(), "shutting down");
 	}
 	
 	/**
@@ -208,7 +270,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * possible the correctly atomic shifts to RUNNING or WAITING that may be carried
 	 * out immediately following this function.
 	 */
-	private WorkFuture<?> worker_acquireWork() throws InterruptedException {
+	private WorkFuture<?> worker_acquireWork() {
 		assert $lock.isHeldByCurrentThread();
 		try { for (;;) {
 			// offer to shift any tasks that have had updates requested
@@ -221,18 +283,27 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			WorkFuture<?> $first = $scheduled.peek();
 			if ($first != null) return $scheduled.poll();
 			
+			// if we couldn't get any work immediately and stopping is requested, we'll concede.
+			if ($requestedStat == RequestedStatus.STOPPING) /* checking for STOPPING_HARD isn't necessary because we wouldn't get here if it was */
+				return null;
+			
 			// if we don't have any ready work, wait for signal of new work submission or until what we were told would be the next delay expiry; then we just retry.
 			$running.put(Thread.currentThread(), "waiting for availability of new work events");
 			if ($leader != null) {
-				$available.await();
+				$available.awaitUninterruptibly();
 			} else {
 				$leader = Thread.currentThread();
 				try {
 					$available.awaitNanos($delay);	// note that if we had zero delayed work, this is just an obscenely long timeout and no special logic is needed.
+				} catch (InterruptedException $e) {
+					/* don't rightly reckon I give a damn. */
 				} finally {
 					if ($leader == Thread.currentThread()) $leader = null;
 				}
 			}
+			if ($requestedStat == RequestedStatus.STOPPING_HARD)
+				// don't care if there's work available.  we're leaving.
+				return null;
 			$running.put(Thread.currentThread(), "planning next move");
 		}} finally {
 			if ($leader == null && $scheduled.peek() != null) $available.signal();

@@ -101,6 +101,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertEquals(999, $w.x);
 			
 			breakCaseIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 		private class Work implements Runnable {
@@ -141,6 +142,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertEquals(1, $completionCalls.intValue());
 			
 			breakCaseIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 		private class Work implements Runnable { public void run() {} }
@@ -174,6 +176,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertEquals(1, $completionCalls.intValue());
 			
 			breakCaseIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 		private class Work implements Runnable { public void run() {} }
@@ -207,6 +210,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertEquals(8, $completionCalls.intValue());
 			
 			breakCaseIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 		private class Work implements WorkTarget<Void> {
@@ -254,6 +258,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertEquals(LOW, $w1.x);
 			
 			breakCaseIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 		private class WorkLeader implements WorkTarget<Void> {
@@ -337,6 +342,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 			
 			breakCaseIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 		private class Work implements Runnable {
@@ -369,6 +375,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertEquals(0, $wf.get().intValue());
 			
 			breakCaseIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 		private class Work implements WorkTarget<Integer> {
@@ -433,6 +440,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertTrue("Exactly one WorkTarget finished with the high value.", $wonOnce);
 			
 			breakCaseIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 		private class Work implements WorkTarget<Integer> {
@@ -509,7 +517,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 			X.chill(50-AOD);
 			assertFalse($wf_low.isDone());
 			$wf_low.get();
-			
+
+			$ws.stop(false);
 			return null;
 		}
 		
@@ -520,8 +529,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/**  */
 	private class TestBasic extends TestCase.Unit {
+		protected WorkScheduler $ws = makeScheduler(0).start();
+		
 		public Object call() {
+			//TMPL
 			breakIfFailed();
+			$ws.stop(false);
 			return null;
 		}
 	}
