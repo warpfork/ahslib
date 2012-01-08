@@ -228,7 +228,12 @@ public class WorkFuture<$V> implements Future<$V> {
 	
 	
 	
-	/** Uses AQS sync state to represent run status. */
+	/**
+	 * Uses AQS sync state to represent run status.
+	 * 
+	 * Method names prefixed with "scheduler_" are those that I wish were in the damn
+	 * WorkScheduler, but aren't because the CAS'ing must come from inside here.
+	 */
 	final class Sync extends AbstractQueuedSynchronizer {
 		Sync() {}
 		
@@ -301,13 +306,13 @@ public class WorkFuture<$V> implements Future<$V> {
 		 * If this method returns false, it may merely because the task isn't
 		 * ready or is delayed, but it may also be because the task is FINISHED or
 		 * CANCELLED, which is something the caller is advised to check. False
-		 * will also be returned is the task is already SCHEDULED.
+		 * will also be returned if the task is already SCHEDULED.
 		 * </p>
 		 * 
 		 * @return true if the scheduler must now remove the WF from the waiting
 		 *         pool (or delayed heap) and push it into the scheduled heap.
 		 */
-		boolean scheduler_shift() {
+		boolean scheduler_shiftToScheduled() {
 			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState(State.WAITING.ordinal(), State.SCHEDULED.ordinal());
 			// the CAS will occur if:
 			//   - the task if delay-free (if clocked) or ready (if unclocked).
@@ -319,7 +324,18 @@ public class WorkFuture<$V> implements Future<$V> {
 		}
 		
 		/**
+		 * @return true, mostly.  False if we were concurrently cancelled.
+		 */
+		boolean scheduler_shiftToRunning() {
+			return compareAndSetState(State.SCHEDULED.ordinal(), State.RUNNING.ordinal());
+		}
+		
+		/**
 		 * Causes the current thread to take ownership of the task and power it.
+		 * 
+		 * This should be immediately preceded by a call to
+		 * {@link #scheduler_shiftToRunning()}. This should NOT be called while
+		 * holding the Scheduler's lock.
 		 * 
 		 * @return true if all went well and the task can be put back in a heap
 		 *         for more action later; false if there was a finish or
@@ -327,11 +343,6 @@ public class WorkFuture<$V> implements Future<$V> {
 		 *         dropping the task).
 		 */
 		boolean scheduler_power() {
-			if (!compareAndSetState(State.SCHEDULED.ordinal(), State.RUNNING.ordinal())) {
-				/* we were concurrently cancelled.  weep. */
-				return false;
-			}
-			
 			$runner = Thread.currentThread();
 			if (getState() == State.RUNNING.ordinal()) { // recheck after setting thread
 				try {

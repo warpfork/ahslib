@@ -55,7 +55,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		WorkFuture<$V> $wf = new WorkFuture<$V>(this, $work, $when);
 		$lock.lock();
 		try {
-			if ($wf.$sync.scheduler_shift()) {
+			if ($wf.$sync.scheduler_shiftToScheduled()) {
 				$scheduled.add($wf);
 			} else {
 				if ($when.isUnclocked()) {
@@ -78,7 +78,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	}
 	
 	public <$V> void update(WorkFuture<$V> $fut) {
-		// note that this entire method could be replaced by "update(Arr.asList(new WorkFuture<?>[] {$fut}));".  we're going out of our way to avoid creating those garbage objects.
+		/* note that this entire method could be replaced by "update(Arr.asList(new WorkFuture<?>[] {$fut}));".
+		 * we're going out of our way to avoid creating those garbage objects. */
 		if (update_per($fut));
 			update_postSignal();
 	}
@@ -151,6 +152,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				}
 			}} finally {
 				$running.put(Thread.currentThread(), $chosen);
+				$chosen.$sync.scheduler_shiftToRunning();
 				$lock.unlock();
 			}
 			
@@ -162,7 +164,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				$lock.lockInterruptibly();
 				$running.put(Thread.currentThread(), "planning next move");
 				try {
-					if ($chosen.$sync.scheduler_shift()) {
+					if ($chosen.$sync.scheduler_shiftToScheduled()) {
 						$scheduled.add($chosen);
 					} else {
 						if ($chosen.$work.isDone()) {
@@ -171,9 +173,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 							hearTaskDrop($chosen);
 							continue doWork;
 						}
-						// bit of a dodgy spot here: tasks are allowed to become done without notification (i.e. a readhead that was closed long ago but only emptied now due to a concurrent read; a task based on eating from that thing becomes done, but doesn't notice it at all).  And they're allowed to do that at any time after they're in the unready pool, too.  :/
-						//    There are two ways of dealing with something like that: having every read from a RH check for doneness, and everyone subscribe to the RH so we could notify for them (which is an INSANE degree of complication to add to the API, and completely useless for a lot of other applications of pipes)... Or, do periodic cleanup.
-						// oh, and also someone can do a concurrent cancel before that scheduler_shift attempt, which will bring us here and also leave us with an awkward cancelled task stuck in our unready heap (which isn't as bad as a done-but-not-finished task, since no one can get stuck waiting on it, but is still a garbage problem).
+						//FIXME:AHS:THREAD someone can do a concurrent cancel before that scheduler_shift attempt, which will bring us here and also leave us with an awkward cancelled task stuck in our unready heap
+						//   (which isn't as bad as a done-but-not-finished task, since no one can get stuck waiting on it, but is still a garbage problem).
 						if ($chosen.getScheduleParams().isUnclocked()) {
 //							$log.trace(this, "added to unready: "+$chosen);
 							$unready.add($chosen);
@@ -203,7 +204,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * caller of this function should be aware of that, and either finish and drop the
 	 * task or immediately return it to waiting as necessary.
 	 * 
-	 * The lock much be acquired during this entire function, in order to make
+	 * The lock must be acquired during this entire function, in order to make
 	 * possible the correctly atomic shifts to RUNNING or WAITING that may be carried
 	 * out immediately following this function.
 	 */
@@ -248,7 +249,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		final Iterator<WorkFuture<?>> $itr = $updatereq.iterator();
 		while ($itr.hasNext()) {
 			WorkFuture<?> $wf = $itr.next(); $itr.remove();
-			if ($wf.$sync.scheduler_shift()) {	//FIXME AHH HAH!  if something is told to finish while its running, the finish fails and ends up as an updatereq............erm, where was i going with that?  to fail, you'd nee the final updatereq to come in and get eaten by another thread BEFORE the working thread does the cas from running to waiting and yet AFTER the working thread checks if that work is still not done.  no such moment exists.  though that does definitely explain why that thing about removing from unready being necessary is a brok.
+			if ($wf.$sync.scheduler_shiftToScheduled()) {	//FIXME AHH HAH!  if something is told to finish while its running, the finish fails and ends up as an updatereq............erm, where was i going with that?  to fail, you'd need the final updatereq to come in and get eaten by another thread BEFORE the working thread does the cas from running to waiting and yet AFTER the working thread checks if that work is still not done.  no such moment exists.  though that does definitely explain why that thing about removing from unready being necessary is a brok.
 				$unready.remove($wf);	// this may be a no-op.  why?  because the CAS from RUNNING to WAITING happens inside the scheduler_power method, and it has to happen before the addition of work to the unready pile.  this is another one of those things we could fix, but only by refactoring actions outside of that scheduler_power method so that we can lock them.	//FIXME:AHS:THREAD: this is actually a little troubling because it can leave people in the unready heap forever if they concurrently finish or cancel while in the scheduled heap after we put them there too fast.
 				$scheduled.add($wf);
 			} else {
@@ -295,7 +296,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		for (;;) {
 			$key = $delayed.peek();
 			if ($key == null) return Long.MAX_VALUE;	// the caller should just wait indefinitely for notification of new tasks entering the system, because we're empty.
-			if (!$key.$sync.scheduler_shift()) return $key.getScheduleParams().getDelay();
+			if (!$key.$sync.scheduler_shiftToScheduled()) return $key.getScheduleParams().getDelay();
 			$delayed.poll();	// get it outta there
 			$scheduled.add($key);	
 		}
