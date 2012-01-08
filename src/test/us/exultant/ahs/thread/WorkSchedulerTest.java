@@ -313,22 +313,25 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public final int WTC = 8;
 		
 		public Object call() throws InterruptedException, ExecutionException {
+			final int space = 100;
 			WorkFuture<?>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
-			$wf[3] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 03, true), ScheduleParams.makeDelayed(400));
-			$wf[4] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -9, true), ScheduleParams.makeDelayed(500));
-			$wf[5] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 07, true), ScheduleParams.makeDelayed(600));
-			$wf[0] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 00, true), ScheduleParams.makeDelayed(100));
-			$wf[1] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 40, true), ScheduleParams.makeDelayed(200));
-			$wf[2] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 17, true), ScheduleParams.makeDelayed(300));
-			$wf[6] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 30, true), ScheduleParams.makeDelayed(700));
-			$wf[7] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -6, true), ScheduleParams.makeDelayed(800));
+			$wf[3] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 03, true), ScheduleParams.makeDelayed(4*space));
+			$wf[4] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -9, true), ScheduleParams.makeDelayed(5*space));
+			$wf[5] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 07, true), ScheduleParams.makeDelayed(6*space));
+			$wf[0] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 00, true), ScheduleParams.makeDelayed(1*space));
+			$wf[1] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 40, true), ScheduleParams.makeDelayed(2*space));
+			$wf[2] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 17, true), ScheduleParams.makeDelayed(3*space));
+			$wf[6] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 30, true), ScheduleParams.makeDelayed(7*space));
+			$wf[7] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -6, true), ScheduleParams.makeDelayed(8*space));
+			$log.trace(this, "work scheduler starting...");
 			$ws.start();
+			$log.trace(this, "work scheduler started.");
 			
 			long $startTime = X.time();
 			for (int $i = 1; $i < WTC; $i++) {
 				$wf[$i-1].get();
 				long $timeTaken = X.time() - $startTime;
-				$log.trace(this, "task with "+$i+"00ms delay finished");
+				$log.trace(this, "task with "+$i*space+"ms delay finished");
 				assertTrue("task less than "+AOD+"ms overdue ($timeTaken="+$timeTaken+")", $timeTaken-AOD < $i*100);
 				assertFalse($wf[$i].isDone());
 			}
