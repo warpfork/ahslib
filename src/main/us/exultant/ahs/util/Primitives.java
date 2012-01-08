@@ -79,6 +79,8 @@ public class Primitives {
 	
 	
 	public static final Pattern		PATTERN_DOT		= Pattern.compile(".", Pattern.LITERAL);
+	public static final Pattern		PATTERN_DASH		= Pattern.compile("-", Pattern.LITERAL);
+	public static final Pattern		PATTERN_UNDERSCORE	= Pattern.compile("_", Pattern.LITERAL);
 	
 	
 	
