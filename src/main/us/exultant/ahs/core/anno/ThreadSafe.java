@@ -2,48 +2,45 @@ package us.exultant.ahs.core.anno;
 
 import java.lang.annotation.*;
 
+/**
+ * <p>
+ * </p>
+ * 
+ * <p>
+ * If {@link #value()} is not the empty string, it means that this function is
+ * <i>conditionally</i> thread safe, and that you must hold a particular lock when calling
+ * it. The string should describe where to access the appropriate lock, and be formatted
+ * in the same way as arguments to javadoc's link tag (in other words, if a function on
+ * this object returns the appropriate lock, the string should be "#getLock()" for
+ * example). If the object thusly referred to is an instance of
+ * {@link java.util.concurrent.locks.Lock}, then it should be used as such; other wise,
+ * the locking should be done by synchronizing on that object's monitor.
+ * </p>
+ * 
+ * <p>
+ * Note that if {@link #value()} is the empty string, then that signifies that this method
+ * is constructed in such a way that immune to deadlock! However, if {@link #value()} does
+ * define a lock that must be held for thread safety, then this annotation does <i>not</i>
+ * guarantee immunity from deadlock. FIXME this is stupid and wrong. you're muddying the
+ * water: you need a way to declare that something must be held, and something must be
+ * held AND isn't done for you such that YOU must be sure to grab it yourself. one of them
+ * is a curiosity, and need not end up in published javadoc; the other is damn important
+ * to document.
+ * </p>
+ * 
+ * TODO is there any way we should think about referring to permits or semaphores? it's an
+ * interesting thought, but probably not. those are just way too complex and powerful to
+ * reduce to this level.
+ * 
+ * @author hash
+ * 
+ */
 @Documented()
-@Target({ElementType.METHOD, ElementType.CONSTRUCTOR})	// REFT doesn't make sense on a whole class obviously, but the other two?  maaaybe might.
+@Target({ElementType.METHOD})	// i would put ElementType.CONSTRUCTOR here, but honestly?  you should NEVER do anything in a constructor that's not Nullipotent, or you're just fucking nuts and there's no salvation for you.
 public @interface ThreadSafe {
-	Type how();
+	String[] value() default "";
 	
 	public enum Type {
-		/**
-		 * <p>
-		 * Declares that this entire code block is
-		 * {@code referentially transparent} &mdash; that is, it neither reads nor
-		 * writes any memory outside of its own scope. Specifically, it must treat
-		 * its arguments as read-only, and only write memory it allocates
-		 * internally, and its return value must either be one of its arguments or
-		 * a piece of new memory. As long as the arguments to a referentially
-		 * transparent method are not themselves subject to concurrent
-		 * modification, referentially transparent method is trivially thread-safe
-		 * under all conditions and need perform zero locking.
-		 * </p>
-		 * 
-		 * <p>
-		 * Referentially transparent functions are the holy grail of multithreaded
-		 * performance: they are trivially thread-safe under all conditions and
-		 * need perform zero locking.
-		 * </p>
-		 * 
-		 * <p>
-		 * A re-entrant code block is inherently nullipotent and idempotent (and
-		 * should thus also be annotated with {@link Nullipotent}). A
-		 * {@code referentially transparent} expression also deterministic by
-		 * definition, as well as a valid candidate for memoization.
-		 * </p>
-		 * 
-		 * <p>
-		 * This concept is often mistakenly referred to as being re-entrant. See
-		 * this <a href=
-		 * "https://secure.wikimedia.org/wikipedia/en/wiki/Reentrancy_%28computing%29"
-		 * >wikipedia article</a> for a discussion of the subtle reasons this
-		 * terminology is inaccurate.
-		 * </p>
-		 */
-		REFTRANSPARENT,
-		
 		/**
 		 * <p>
 		 * Declares that this entire block of code is synchronized: only one
@@ -70,31 +67,5 @@ public @interface ThreadSafe {
 		 * </p>
 		 */
 		SYNCHRONIZED,
-		
-		
-		/**
-		 * <p>
-		 * Declares that this block of code is <i>conditionally</i> thread safe,
-		 * and that you must hold a particular lock when calling it.
-		 * </p>
-		 */
-		HOLDLOCK,
-		
-		/**
-		 * <p>
-		 * Declares that this block of code is safe to call from any thread: it
-		 * may perform some kind of internal locking at some points and be
-		 * referrentially transparent at others, and so in order to design a
-		 * high-performance system you'll likely need to read the documentation
-		 * completely in order to reason validly about the system.
-		 * </p>
-		 * 
-		 * <p>
-		 * Methods with delicate locking may perform badly if used incorrectly,
-		 * but they still should NOT be capable of deadlock, no matter how they
-		 * are used.
-		 * </p>
-		 */
-		DELICATE
 	}
 }
