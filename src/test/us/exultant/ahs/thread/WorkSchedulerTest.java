@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.*;
  */
 public abstract class WorkSchedulerTest extends TestCase {
 	public WorkSchedulerTest() {
-		super(new Logger(Logger.LEVEL_DEBUG), true);
+		super(new Logger(Logger.LEVEL_TRACE), true);
 	}
 	
 	public WorkSchedulerTest(Logger $log, boolean $enableConfirmation) {
@@ -83,6 +83,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 	/** If this is a positive integer, we want that many threads.  A zero means that you can use your default (presumably threads=cores). */
 	protected abstract WorkScheduler makeScheduler(int $threads);
 	
+	/** Number of milliseconds which we'll consider as "<b>a</b>cceptably <b>o</b>ver<b>d</b>ue". */
+	private static final int	AOD	= 5;
+	
 	
 	
 	/** One runnable wrapped to be a one-shot WorkTarget. */
@@ -101,7 +104,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			return null;
 		}
 		private class Work implements Runnable {
-			public int x = 1000;
+			public volatile int x = 1000;
 			public void run() {
 				x--;
 			}
@@ -134,7 +137,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			$wf.get();
 			
-			X.chill(15);
+			X.chill(5);	// some delay can be required here, because the get() method must be able to return without blocking before listeners are called.
 			assertEquals(1, $completionCalls.intValue());
 			
 			breakCaseIfFailed();
@@ -200,23 +203,22 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			for (int $i = 0; $i < 8; $i++) assertEquals(0, $wt[$i].x);
 			
-			// so, funny thing about this next.  um, completion calls come AFTER that future.get guy is capable of returning.  not "much" after, of course, but still after.  so... yeah, this is kinda hard to test.  like, it may fail.  without the system being wrong.  i need a better test here.
-			X.chill(10);
+			X.chill(5);	// some delay can be required here, because the get() method must be able to return without blocking before listeners are called.
 			assertEquals(8, $completionCalls.intValue());
 			
 			breakCaseIfFailed();
 			return null;
 		}
 		private class Work implements WorkTarget<Void> {
-			public int x = 1000;
-			public synchronized Void call() {
+			public volatile int x = 1000;
+			public Void call() {
 				x--;
 				return null;
 			}
-			public synchronized boolean isReady() {
+			public boolean isReady() {
 				return !isDone();
 			}
-			public synchronized boolean isDone() {
+			public boolean isDone() {
 				return (x <= 0);
 			}
 			public int getPriority() {
@@ -257,15 +259,15 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private class WorkLeader implements WorkTarget<Void> {
 			public volatile WorkFuture<?> $followerFuture;
 			public volatile int x = HIGH;
-			public synchronized Void call() {
+			public Void call() {
 				x--;
 				$ws.update($followerFuture);
 				return null;
 			}
-			public synchronized boolean isReady() {
+			public boolean isReady() {
 				return !isDone();
 			}
-			public synchronized boolean isDone() {
+			public boolean isDone() {
 				return (x <= LOW);
 			}
 			public int getPriority() {
@@ -278,15 +280,15 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public class WorkFollower implements WorkTarget<Void> {
 			public volatile WorkLeader $leader;
 			public volatile int x = HIGH;
-			public synchronized Void call() {
+			public Void call() {
 				if (!isReady()) throw new IllegalStateException("called while unready with x="+x);	// not normal semantics for ready, obviously, but true for this test, since it should only be possible to flip to unready by running and one should never be scheduled for multiple runs without a check of readiness having already occurred between each run.
 				x--;
 				return null;
 			}
-			public synchronized boolean isReady() {
+			public boolean isReady() {
 				return (x > $leader.x);
 			}
-			public synchronized boolean isDone() {
+			public boolean isDone() {
 				return (x <= LOW);
 			}
 			public int getPriority() {
@@ -322,9 +324,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$wf[7] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -6, true), ScheduleParams.makeDelayed(800));
 			$ws.start();
 			
+			long $startTime = X.time();
 			for (int $i = 1; $i < WTC; $i++) {
 				$wf[$i-1].get();
+				long $timeTaken = X.time() - $startTime;
 				$log.trace(this, "task with "+$i+"00ms delay finished");
+				assertTrue("task less than "+AOD+"ms overdue ($timeTaken="+$timeTaken+")", $timeTaken-AOD < $i*100);
 				assertFalse($wf[$i].isDone());
 			}
 			
@@ -340,19 +345,23 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	
-	/** One task with a fixed delay is scheduled to run 10 times, and is checked by another thread (at fixed delay, awkwardly, but the resolution is low enough that it's kay). */
+	/** One task with a fixed delay is scheduled to run 10 times, and is checked by another thread. */
 	private class TestScheduleFixedRate extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
 		public Object call() throws InterruptedException, ExecutionException {
 			Work $wt = new Work();
-			WorkFuture<Integer> $wf = $ws.schedule($wt, ScheduleParams.makeFixedDelay(300, 100));
+			final int initialDelay = 100;
+			final int repeatDelay = 25;
+			WorkFuture<Integer> $wf = $ws.schedule($wt, ScheduleParams.makeFixedRate(initialDelay, repeatDelay));
 			
-			X.chill(320);	//XXX:AHS:THREAD:TEST: this is seriously way too loose of a system.  it has fairly high odds of producing false "failures" of the test.
-			assertEquals(9, $wt.x);
+			long $startTime = X.time();
+			long $targetTime = $startTime + initialDelay;
+			X.chillUntil($targetTime+AOD);
+			assertEquals("check amount of work completed after initial delay", 9, $wt.x);
 			for (int $i = 8; $i >= 0; $i--) {
-				X.chill(99);
-				assertEquals($i, $wt.x);
+				X.chillUntil(($targetTime += repeatDelay)+AOD);
+				assertEquals("check amount of work completed after repeating delay", $i, $wt.x);
 			}
 			assertEquals(0, $wf.get().intValue());
 			
@@ -360,16 +369,16 @@ public abstract class WorkSchedulerTest extends TestCase {
 			return null;
 		}
 		private class Work implements WorkTarget<Integer> {
-			public int x = 10;
-			public synchronized Integer call() {
+			public volatile int x = 10;
+			public Integer call() {
 				x--;
 				$log.trace(this, "reached count "+x);
 				return x;
 			}
-			public synchronized boolean isReady() {
+			public boolean isReady() {
 				return !isDone();
 			}
-			public synchronized boolean isDone() {
+			public boolean isDone() {
 				return (x <= 0);
 			}
 			public int getPriority() {
@@ -426,7 +435,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private class Work implements WorkTarget<Integer> {
 			public Work(int $name) { this.$name = $name; }
 			private final int $name;
-			public synchronized Integer call() {
+			public Integer call() {
 				Integer $move = $pipe.SRC.readNow();
 				$log.trace(this, "WT"+$name+" pulled "+$move);
 				return $move;
@@ -483,7 +492,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	
-	/** Test that when two tasks of different priority are scheduled, the higher priority goes first. */
+	/** Test that when two tasks of different priority are scheduled, the higher priority goes first.
+	 *  A scheduler with a thread pool size of one is used. */
 	private class TestPrioritizedDuo extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(1).start();
 		
@@ -493,14 +503,14 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$ws.start();
 			
 			$wf_high.get();
-			X.chill(10);
+			X.chill(50-AOD);
 			assertFalse($wf_low.isDone());
 			$wf_low.get();
 			
 			return null;
 		}
 		
-		private class Work implements Runnable { public void run() { X.chill(100); } }
+		private class Work implements Runnable { public void run() { X.chill(50); } }
 	}
 	
 	
