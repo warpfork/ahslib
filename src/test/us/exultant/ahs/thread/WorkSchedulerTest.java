@@ -73,7 +73,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		$tests.add(new TestScheduleSingleDelayMany());
 		$tests.add(new TestScheduleFixedRate());
 		$tests.add(new TestNonblockingManyWorkSingleSource());
-		$tests.add(new TestConcurrentFinish());
+		$tests.add(new TestNonblockingManyWorkSingleConcurrentSource());
 		$tests.add(new TestPrioritizedDuo());
 		return $tests;
 	}
@@ -84,7 +84,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	protected abstract WorkScheduler makeScheduler(int $threads);
 	
 	/** Number of milliseconds which we'll consider as "<b>a</b>cceptably <b>o</b>ver<b>d</b>ue". */
-	private static final int	AOD	= 5;
+	private static final int	AOD	= 7;
 	
 	
 	
@@ -478,7 +478,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	/** Same as {@link TestNonblockingManyWorkSingleSource}, but the input pipe will be closed from the sink thread when the source is already empty (resulting in a (probably) concurrent finish for the WorkTargets). */
-	private class TestConcurrentFinish extends TestNonblockingManyWorkSingleSource {
+	private class TestNonblockingManyWorkSingleConcurrentSource extends TestNonblockingManyWorkSingleSource {
 		protected void feedPipe() {
 			final WorkSchedulerFlexiblePriority $bs = (WorkSchedulerFlexiblePriority) $ws;
 			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() {
@@ -487,7 +487,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				}
 			}, 100000, false), ScheduleParams.makeFixedDelay(100));
 			
-			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() { public void run() { TestConcurrentFinish.super.feedPipe(); } }), ScheduleParams.NOW);	// that was an incredibly satisfying line to write
+			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() { public void run() { TestNonblockingManyWorkSingleConcurrentSource.super.feedPipe(); } }), ScheduleParams.NOW);	// that was an incredibly satisfying line to write
 		}
 		
 		protected void configurePipe() {
