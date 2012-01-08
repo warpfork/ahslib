@@ -36,7 +36,7 @@ import java.nio.channels.*;
  * 
  * <p>
  * The concrete implementation of this is provided as a nested class in order to match the
- * organization of the closely related {@link TranslatorByteBufferToChannel} class; at
+ * organization of the closely related {@link TranslatorByteBufferToChannelByFrame} class; at
  * present there is only one such implementation ({@link Nonblocking}). It is presumed
  * that the base channel has already been set to a nonblocking mode.
  * </p>
@@ -44,7 +44,7 @@ import java.nio.channels.*;
  * @author hash
  * 
  */
-public abstract class TranslatorChannelToByteBuffer implements Translator<ReadableByteChannel,ByteBuffer> {
+public abstract class TranslatorChannelToByteBufferByFrame implements Translator<ReadableByteChannel,ByteBuffer> {
 	/**
 	 * <p>
 	 * This implementation of translating reads off of a channel is nonblocking.
@@ -66,7 +66,7 @@ public abstract class TranslatorChannelToByteBuffer implements Translator<Readab
 	 * 
 	 * @author hash
 	 */
-	public static class Nonblocking extends TranslatorChannelToByteBuffer {
+	public static class Nonblocking extends TranslatorChannelToByteBufferByFrame {
 		private final ByteBuffer	$preint	= ByteBuffer.allocate(4);
 		private int			$messlen = -1;
 		private ByteBuffer		$mess;

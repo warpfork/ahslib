@@ -35,6 +35,8 @@ import java.util.concurrent.*;
  * 
  * @param <$T>
  */
+// this isn't what i intended on several levels.  mainly: pipes are the boundaries between threads.  you set them up first, and you choose where they go as a developer.  they shouldn't just appear without your explicit desire.
+//   
 public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	protected ReadHeadAdapter() {
 		$pipe = new Pipe<$T>();

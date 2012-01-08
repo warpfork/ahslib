@@ -27,35 +27,22 @@ import java.util.concurrent.locks.*;
 
 /**
  * <p>
- * This class behaves almost exactly as per ConcurrentLinkedQueue (and is implemented
- * using it), but also provides additional semantics that allow one to determine at least
- * how many entries are in the queue as a constant time operation, and also provides a
- * blocking get functionality. This allows easy use as a work distributor, since one can
- * make get calls that will not return null simply because work is not instantaneously
- * available. Additionally, this class provides the ability to notify a {@link Listener}
- * whenever the pipe has a change in state nonblocking readers might wish to know of (i.e.
- * when it recieves new information, is closed, or becomes empty).
- * </p>
- * 
- * <p>
- * Requests that are blocking in nature are given fair ordering; nonblocking requests
- * disregard this entirely.
- * </p>
- * 
- * <p>
- * This Pipe will not accept nulls, and its WriteHead will throw a NullPointerException in
- * response to any attempt to write nulls.
+ * This is silly, todo, and will be silly even when it's done.
  * </p>
  * 
  * @author hash
  * 
  */
-public class Pipe<$T> implements Flow<$T> {
+// The biggest heresy of this class?
+// You *can't* implement my kind of closure over a BlockingQueue without synchronizing the reads (or placing harsh restrictions on who does the reading).
+// Poison objects don't work in the face of arbitrary readers unless you're willing to keep pumping poison in forever and ever, or you can have the class itself notice poison and remember that (i.e. require synchronzing on read so you can check and set that field).
+// So, while this does sorta sate my curiousity about performance, it's also isn't even a fair comparison because it's incapable of doing the same things my pipe implementation is.
+public class PipeGamma<$T> implements Flow<$T> {
 	/**
 	 * Constructs a new, open, active, empty, usable Pipe.
 	 */
-	public Pipe() {
-		$queue = new ConcurrentLinkedQueue<$T>();
+	public PipeGamma() {
+		$queue = new LinkedBlockingQueue<$T>();
 		$gate = new ClosableSemaphore(true);
 		SRC = new Source();
 		SINK = new Sink();
@@ -85,7 +72,7 @@ public class Pipe<$T> implements Flow<$T> {
 	/**
 	 * This is the data-containing buffer itself.
 	 */
-	private final ConcurrentLinkedQueue<$T>	$queue;
+	private final BlockingQueue<$T>		$queue;
 	
 	/**
 	 * The write lock.
@@ -134,13 +121,13 @@ public class Pipe<$T> implements Flow<$T> {
 	 * @return the minimal amount of work immediately available.
 	 */
 	public int size() {
-		return $gate.availablePermits();
+		return $queue.size();
 	}
 	
 	
 	
 	/**
-	 * {@link Pipe}'s internal implementation of ReadHead.
+	 * {@link PipeGamma}'s internal implementation of ReadHead.
 	 * 
 	 * @author hash
 	 *
@@ -153,9 +140,7 @@ public class Pipe<$T> implements Flow<$T> {
 		 * operation on the matching {@link Sink} and upon close.
 		 */
 		public void setListener(Listener<ReadHead<$T>> $el) {
-			Pipe.this.$el = $el;
-			//if !empty
-			//~~~concurrent last write	// but if we grab the write lock, we can do this.  and that's totally reasonable to performance, i think, since it's not like anyone is going to setListener in a tight loop.
+			PipeGamma.this.$el = $el;
 			$el.hear(this);	/* this call may be "spurious", but it's actually extremely important to make sure you don't get screwed by a race condition when scheduling at the same time as doing last writes... I explained this at length in an email just a bit ago; I should clean that up and post it in the package docs or something. */
 		}
 		
@@ -163,38 +148,30 @@ public class Pipe<$T> implements Flow<$T> {
 			if (isClosed()) {
 				return readNow();
 			} else {
-				try {
-					if (!$gate.acquire()) return null;
-				} catch (InterruptedException $e) {
-					return null;
-				}
-				$T $v = $queue.remove();
+				$T $v = $queue.remove();	// this is actually wrong, obviously
 				checkForFinale();
 				return $v;
 			}
 		}
 		
 		public $T readNow() {
-			boolean $one = $gate.tryAcquire();
+			$T $v = $queue.poll();
 			checkForFinale();
-			if (!$one) return null;
-			return $queue.poll();
+			return $v;
 		}
 		
 		public $T readSoon(long $timeout, TimeUnit $unit) {
-			boolean $one;
 			try {
-				$one = $gate.tryAcquire($timeout, $unit);
+				$T $v = $queue.poll($timeout, $unit);
+				checkForFinale();
+				return $v;
 			} catch (InterruptedException $e) {
 				return null;
 			}
-			checkForFinale();
-			if (!$one) return null;
-			return $queue.poll();
 		}
 		
 		public boolean hasNext() {
-			return $gate.availablePermits() > 0;
+			return $queue.isEmpty();
 		}
 		
 		public List<$T> readAll() {
@@ -208,10 +185,8 @@ public class Pipe<$T> implements Flow<$T> {
 		public List<$T> readAllNow() {
 			$lock.lock();
 			try {
-				int $p = $gate.drainPermits();
-				List<$T> $v = new ArrayList<$T>($p);
-				for (int $i = 0; $i < $p; $i++)
-					$v.add($queue.poll());
+				List<$T> $v = new ArrayList<$T>($queue.size());
+				$queue.drainTo($v);
 				checkForFinale();
 				return $v;
 			} finally {
@@ -220,13 +195,13 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $gate.isClosed();
+			return $gate.isClosed();	// this is obviously broken
 		}
 		
 		/**
 		 * Closes the pipe. No more data will be allowed to be written to this
-		 * Pipe's WriteHead. Any blocked {@link Pipe.Source#readAll()} will return
-		 * whatever data they can, and other blocked {@link Pipe.Source#read()}
+		 * Pipe's WriteHead. Any blocked {@link PipeGamma.Source#readAll()} will return
+		 * whatever data they can, and other blocked {@link PipeGamma.Source#read()}
 		 * will immediately return null following this call even if they cannot
 		 * get data (these two processes still happen in fair order). All
 		 * subsequent reads (blocking or nonblocking) will either return data
@@ -255,7 +230,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isExhausted() {
-			return $gate.isPermanentlyEmpty();
+			return $gate.isPermanentlyEmpty();	///... how can i possibly translate this?!?!
 		}
 	}
 	
@@ -278,7 +253,7 @@ public class Pipe<$T> implements Flow<$T> {
 			try {
 				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
 				$queue.add($chunk);
-				$gate.release();	// this can't return false because gate closure involves locking, and we're locked right now.  and that's essentially why the write-lock exists (otherwise we'd have to go dredge back through the queue if this did return false, and that would be... mucky).
+				//$gate.release();	// this can't return false because gate closure involves locking, and we're locked right now.  and that's essentially why the write-lock exists (otherwise we'd have to go dredge back through the queue if this did return false, and that would be... mucky).
 				
 				Listener<ReadHead<$T>> $el_dated = $el;
 				if ($el_dated != null) $el_dated.hear(SRC);
@@ -340,8 +315,8 @@ public class Pipe<$T> implements Flow<$T> {
 		
 		/**
 		 * Closes the pipe. No more data will be allowed to be written to this
-		 * Pipe's WriteHead. Any blocked {@link Pipe.Source#readAll()} will return
-		 * whatever data they can, and other blocked {@link Pipe.Source#read()}
+		 * Pipe's WriteHead. Any blocked {@link PipeGamma.Source#readAll()} will return
+		 * whatever data they can, and other blocked {@link PipeGamma.Source#read()}
 		 * will immediately return null following this call even if they cannot
 		 * get data (these two processes still happen in fair order). All
 		 * subsequent reads (blocking or nonblocking) will either return data

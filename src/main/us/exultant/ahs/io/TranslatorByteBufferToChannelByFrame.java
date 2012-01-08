@@ -44,8 +44,8 @@ import java.nio.channels.*;
  * @author hash
  * 
  */
-public abstract class TranslatorByteBufferToChannel implements Translator<ByteBuffer,TranslatorByteBufferToChannel.Completor> {
-	protected TranslatorByteBufferToChannel(WritableByteChannel $base) {
+public abstract class TranslatorByteBufferToChannelByFrame implements Translator<ByteBuffer,TranslatorByteBufferToChannelByFrame.Completor> {
+	protected TranslatorByteBufferToChannelByFrame(WritableByteChannel $base) {
 		this.$base = $base;
 	}	
 	
@@ -59,7 +59,7 @@ public abstract class TranslatorByteBufferToChannel implements Translator<ByteBu
 	 * 
 	 * <p>
 	 * (This class bears close resemblance to
-	 * {@link TranslatorChannelToByteBuffer.Nonblocking} aside from the return type;
+	 * {@link TranslatorChannelToByteBufferByFrame.Nonblocking} aside from the return type;
 	 * TranslatorChannelToByteBuffer is just able to do a better job of hiding its
 	 * equivalent of {@link Completor} because {@link TranslatorStack} allows it to
 	 * return nulls if it isn't finished with an entire semantic read (whereas
@@ -69,7 +69,7 @@ public abstract class TranslatorByteBufferToChannel implements Translator<ByteBu
 	 * 
 	 * @author hash
 	 */
-	public static class Nonblocking extends TranslatorByteBufferToChannel {
+	public static class Nonblocking extends TranslatorByteBufferToChannelByFrame {
 		public Nonblocking(WritableByteChannel $base) {
 			super($base);
 		}
@@ -102,7 +102,7 @@ public abstract class TranslatorByteBufferToChannel implements Translator<ByteBu
 	 * 
 	 * @author hash
 	 */
-	public static class Blocking extends TranslatorByteBufferToChannel {
+	public static class Blocking extends TranslatorByteBufferToChannelByFrame {
 		public Blocking(WritableByteChannel $base) {
 			super($base);
 		}

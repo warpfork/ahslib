@@ -27,7 +27,8 @@ import java.util.*;
  * it &mdash; so, we're stuck with an {@link #isReady()} method that helplessly always
  * returns true, and fundamentally no way to disbatch events relating to the core
  * selector's readiness. So, all in all, you may still actually need to just run this
- * system in its own personal thread.
+ * system in its own personal thread &mdash {@link WorkSchedulerPrivateThread} is ideal
+ * for this.
  * </p>
  * 
  * @author hash
@@ -39,6 +40,12 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	/**
 	 * Creates a new system default Selector back-end. Selects run with a timeout of 1
 	 * millisecond; the WorkTarget's priority is zero.
+	 * 
+	 * This default timeout is a conservative choice: regardless of if planning to run
+	 * the WorkTargetSelector in a private thread or a WorkScheduler with pooling, the
+	 * 1 millisecond timeout won't kill you (it'll never leave a thread spinning at
+	 * 100% of a core, nor will it completely choke up a pool), but for a most
+	 * optimial system you might wish to consider other settings.
 	 */
 	public WorkTargetSelector() {
 		this(1);
@@ -47,6 +54,12 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	/**
 	 * Creates a new system default Selector back-end. Selects run with a configurable
 	 * timeout; the WorkTarget's priority is zero.
+	 * 
+	 * @param $selectionTimeout
+	 *                the number of milliseconds a select call should block for, or
+	 *                negative for completely nonblocking operation. If this
+	 *                WorkTarget will be run in its own personal thread, you may set
+	 *                this timeout to be arbitrarily high.
 	 */
 	public WorkTargetSelector(int $selectionTimeout) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
@@ -55,6 +68,13 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	/**
 	 * Creates a new system default Selector back-end. Select timeouts are
 	 * configurable, as is the WorkTarget's priority.
+	 * 
+	 * @param $selectionTimeout
+	 *                the number of milliseconds a select call should block for, or
+	 *                negative for completely nonblocking operation. If this
+	 *                WorkTarget will be run in its own personal thread, you may set
+	 *                this timeout to be arbitrarily high.
+	 * @param $workPriority
 	 */
 	public WorkTargetSelector(int $selectionTimeout, int $workPriority) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
@@ -93,11 +113,12 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * leaves me no choice &mdash; it provides no method for inquiring about readiness
 	 * without actually performing a select.
 	 */
-	// a selectNow might actually be legal for this?  or a synchronized query on selectionset?  does the latter really even need synchronization?
 	public boolean isReady() {
 		return true;
 		//try {
-		//	return $selector.selectedKeys().isEmpty();
+		//	return 
+		//		$selector.selectedKeys().isEmpty() ||		// i don't think this works, actually, because you have to call select() in order to get that key set to be updated by the OS.  Also: mind that if you DID use selectNow here, you'd have to change the $freshWorkExists boolean in the call method, because that optimization would no longer be valid. 
+		//		$pipe.hasNext();
 		//} catch (ClosedSelectorException $e) {
 		//	return false;
 		//}
@@ -122,10 +143,30 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 */
 	public Void call() {
 		// PHASE ONE
+		// check for new registration or deregistration events
+		callRegistrationProcessing();
+		
+		// PHASE TWO
 		// chill out
+		boolean $freshWorkExists = callSelect() > 0;
+		
+		// PHASE... TWO AND A HALF?
+		// if we were a blocking selector, we might have been woken up specifically to deal with a new event, so we should do so asap
+		//callRegistrationProcessing();
+		// actually no, this is silly.  if we're being used in blocking mode, we're probably also being used in our own thread, so we'll be looping back to phase one momentarily anyway and it's all kay.
+		
+		// PHASE THREE
+		// disbatch events to folks who're deserving
+		if ($freshWorkExists) callDisbatchEvents();
+		
+		return null;
+	}
+	
+	private int callSelect() {
 		try {
 			/* block until channel events, or wakeups triggered by the event pipe's listener, or thread interrupts. */
-			$selector.select();
+			if ($timeout < 0) return $selector.selectNow();
+			return $selector.select();
 		} catch (ClosedSelectorException $e) {
 			/* selectors can't be closed except by their close method, which we control all access to, so this shouldn't happen in a way that surprises us. */
 			throw new MajorBug($e);
@@ -133,10 +174,9 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 			/* I just plain don't know what would cause this. */
 			throw new Error($e);
 		}
-		
-
-		// PHASE TWO
-		// disbatch events to folks who're deserving
+	}
+	
+	private void callDisbatchEvents() {
 		Iterator<SelectionKey> $itr = $selector.selectedKeys().iterator();
 		while ($itr.hasNext()) {
 			SelectionKey $k = $itr.next();
@@ -146,14 +186,14 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 			
 			int $ops = $k.readyOps();
 			Attache $a = (Attache) $k.attachment();
+			if (Primitives.containsFullMask($ops, SelectionKey.OP_CONNECT)) try { if (((SocketChannel)$k.channel()).finishConnect()) $k.interestOps(Primitives.removeMask($k.interestOps(), SelectionKey.OP_CONNECT)); } catch (IOException $e) { $k.cancel(); }
 			if (Primitives.containsFullMask($ops, SelectionKey.OP_READ) && $a.$reader != null) $a.$reader.hear($k.channel());
 			if (Primitives.containsFullMask($ops, SelectionKey.OP_WRITE) && $a.$writer != null) $a.$writer.hear($k.channel());
 			if (Primitives.containsFullMask($ops, SelectionKey.OP_ACCEPT) && $a.$accepter != null) $a.$accepter.hear($k.channel());
 		}
-		
-
-		// PHASE THREE
-		// check for new registration or deregistration events
+	}
+	
+	private void callRegistrationProcessing() {
 		List<Event> $evts = $pipe.SRC.readAllNow();
 		for (Event $evt : $evts) {
 			if ($evt instanceof Event_Reg) {
@@ -187,8 +227,6 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 				$k.attach(null); // gc help
 			}
 		}
-		
-		return null;
 	}
 	
 	
@@ -206,6 +244,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		}
 		return null;
 	}
+	
+	
 	
 	private class Attache {
 		public Listener<SelectableChannel>	$reader;
@@ -278,7 +318,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * @param $p
 	 *                a Listener to notify when connections are ready to be accepted
 	 */
-	public void register(ServerSocketChannel $ch, Listener<SelectableChannel> $p) {
+	public void registerAccept(ServerSocketChannel $ch, Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
 	}
 	
@@ -323,10 +363,10 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	/**
 	 * Stops selecting for new connection availablity events on a server socket and
 	 * discards the presently set Listener. Calling this method repeatedly will have
-	 * no effect unless {@link #register(ServerSocketChannel, Listener)} is called in
-	 * the meanwhile.
+	 * no effect unless {@link #registerAccept(ServerSocketChannel, Listener)} is
+	 * called in the meanwhile.
 	 */
-	public void deregister(ServerSocketChannel $ch) {
+	public void deregisterAccept(ServerSocketChannel $ch) {
 		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
 	}
 	
