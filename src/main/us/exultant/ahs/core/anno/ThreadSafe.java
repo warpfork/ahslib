@@ -4,6 +4,8 @@ import java.lang.annotation.*;
 
 /**
  * <p>
+ * "Thread safe" defines a function that has been designed to produce valid results even
+ * when multiple threads are operating on the same data.
  * </p>
  * 
  * <p>
@@ -17,26 +19,32 @@ import java.lang.annotation.*;
  * the locking should be done by synchronizing on that object's monitor.
  * </p>
  * 
+ * <h3>About deadlock</h3>
+ * 
  * <p>
- * Note that if {@link #value()} is the empty string, then that signifies that this method
- * is constructed in such a way that immune to deadlock! However, if {@link #value()} does
- * define a lock that must be held for thread safety, then this annotation does <i>not</i>
- * guarantee immunity from deadlock. FIXME this is stupid and wrong. you're muddying the
- * water: you need a way to declare that something must be held, and something must be
- * held AND isn't done for you such that YOU must be sure to grab it yourself. one of them
- * is a curiosity, and need not end up in published javadoc; the other is damn important
- * to document.
+ * If {@link #value()} is the empty string, then that signifies that this method is
+ * constructed in such a way that immune to deadlock &mdash; it has been constructed based
+ * on {@link Deterministic} methods or using volatile variables.
+ * 
+ * However, if {@link #value()} does define a lock that must be held for thread safety,
+ * then this annotation does <i>not</i> guarantee immunity from deadlock. FIXME this is
+ * stupid and wrong. you're muddying the water: you need a way to declare that something
+ * must be held, and something must be held AND isn't done for you such that YOU must be
+ * sure to grab it yourself. one of them is a curiosity, and need not end up in published
+ * javadoc; the other is damn important to document.
  * </p>
  * 
- * TODO is there any way we should think about referring to permits or semaphores? it's an
- * interesting thought, but probably not. those are just way too complex and powerful to
- * reduce to this level.
  * 
  * @author hash
  * 
  */
-@Documented()
+@Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.METHOD})	// i would put ElementType.CONSTRUCTOR here, but honestly?  you should NEVER do anything in a constructor that's not Nullipotent, or you're just fucking nuts and there's no salvation for you.
+// Deeply now: how can you be threadsafe?
+//   - deterministic
+//   - volatiles
+//   - locking (of some kind)
+//   - ...um... not caring?  i guess?
 public @interface ThreadSafe {
 	String[] value() default "";
 	
