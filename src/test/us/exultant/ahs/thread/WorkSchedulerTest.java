@@ -71,6 +71,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		$tests.add(new TestWtAlwaysReady());
 		$tests.add(new TestNonblockingLeaderFollower());
 		$tests.add(new TestScheduleSingleDelayMany());
+		$tests.add(new TestFinishWhileRunning());
 		$tests.add(new TestScheduleFixedRate());
 		$tests.add(new TestNonblockingManyWorkSingleSource());
 		$tests.add(new TestNonblockingManyWorkSingleConcurrentSource());
@@ -306,9 +307,53 @@ public abstract class WorkSchedulerTest extends TestCase {
 	}
 	
 	
+	
 	// TestCancelWhileRunning
 	
-	// TestFinishWhileRunning	// I mean, come on.  you can make a much more direct test of this than what TestConcurrentFinish is doing, and you can (and should) do it without pipes.
+	
+	
+	private class TestFinishWhileRunning extends TestCase.Unit {
+		private final WorkScheduler $ws = makeScheduler(0).start();
+		private final Pipe<String> $pipe = new Pipe<String>();
+		
+		//XXX:AHS:THREAD: this really not a very smart test i think.  we should have one thread just constantly trying to finish a work target that's counting to 10.
+		public Object call() throws InterruptedException, ExecutionException {
+			$pipe.sink().write(TD.s1);
+			$pipe.sink().write(TD.s2);
+			$pipe.sink().close();
+			
+			WorkFuture<String> $wf1 = $ws.schedule(new Work(), ScheduleParams.NOW);
+			WorkFuture<String> $wf2 = $ws.schedule(new Work(), ScheduleParams.makeDelayed(3));
+			
+			$log.trace("waiting for first future...");
+			String $lol = $wf1.get();
+			assertNotNull($lol);
+			$log.trace("first future returned "+$lol+"; waiting for second...");
+			assertEquals($lol == TD.s1 ? TD.s2 : TD.s1, $wf2.get());	// which ever one the first to finish didn't get, the second must remember.
+			
+			breakCaseIfFailed();
+			$ws.stop(false);
+			return null;
+		}
+		private class Work implements WorkTarget<String> {
+			public String call() {
+				String $answer = $pipe.source().readNow();
+				$log.trace("read "+$answer);
+				X.chill(8);
+				$log.trace("returning "+$answer);
+				return $answer;
+			}
+			public boolean isReady() {
+				return !isDone();
+			}
+			public boolean isDone() {
+				return $pipe.source().isExhausted();
+			}
+			public int getPriority() {
+				return 0;
+			}
+		}
+	}
 	
 	
 	
