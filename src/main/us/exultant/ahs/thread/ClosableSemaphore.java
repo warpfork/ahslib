@@ -19,6 +19,7 @@
 
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.anno.*;
 import java.util.concurrent.locks.*;
 
 public class ClosableSemaphore extends FlippableSemaphore {
@@ -42,49 +43,77 @@ public class ClosableSemaphore extends FlippableSemaphore {
 		super($fair, Decider.INSTANCE);
 	}
 	
-	
-	
+	/**
+	 * @return true if the semaphore is permanently closed; false otherwise.
+	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean isClosed() {
 		return isFlipped();
 	}
 	
+	/**
+	 * @return true if {@link #availablePermits()} will return zero now and forever;
+	 *         false otherwise (i.e., even if {@link #availablePermits()} is currently
+	 *         zero, {@link #isClosed()} is currently false, so permits may be
+	 *         available in the future).
+	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean isPermanentlyEmpty() {
 		return isFlippedAndZero();
 	}
 	
-	public void flip(boolean $no) {
+	/** <i>invalid operation</i>. Flipping is used internally to implement closure. */
+	protected final void flip(boolean $no) {
 		throw new UnsupportedOperationException();
 	}
 	
+	/**
+	 * Permanently closes the semaphore. All future attempts to release permits will
+	 * fail. Once all the currently available permits have been acquired, all attempts
+	 * to acquire permits that would normally have blocked will now return instantly.
+	 */
+	@Idempotent
+	@ThreadSafe
 	public void close() {
 		super.flip(true);
 		for (Thread $t : $sync.getQueuedThreads())
 			LockSupport.unpark($t);
 	}
-	
+
+	@ThreadSafe
 	public String toString() {
 		return super.toString() + "[Permits=" + availablePermits() + ";Closed="+isClosed()+"]";
 	}
 	
 	
-
-	/**
-	 * Insufficient permits blocks unless we're closed in which case it returns 2, any
-	 * non-negative answer from tryAcquire means we got a permit unless it's 2 in
-	 * which case it was released because we were just sick of it, releases are
-	 * permitted only when state isn't negative.
-	 */
+	
 	private final static class Decider extends BlockPolicyDecider {
 		public static final BlockPolicyDecider INSTANCE = new Decider();
 		
+		/**
+		 * Returns -1 (an instruction to block), unless we're closed in which case it returns 2.
+		 */
+		@Deterministic
 		public int answerTooFewPermits(boolean $currentlyFlipped) {
 			return $currentlyFlipped ? 2 : -1;
 		}
-
+		
+		/**
+		 * Non-negative answers from tryAcquire means we got a permit unless it's 2 in
+		 * which case it was released because we were just sick of it.
+		 */
+		@Deterministic
 		public boolean isAcquireSuccessful(int $response) {
 			return ($response >= 0 && $response != 2);
 		}
 		
+		/**
+		 * Releases are permitted only when state isn't negative. (Zero and
+		 * positive are open; negative represents closed.)
+		 */
+		@Deterministic
 		public boolean isReleasePermitted(int $status) {
 			return $status >= 0;
 		}
