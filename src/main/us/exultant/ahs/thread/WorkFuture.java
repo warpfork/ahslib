@@ -243,7 +243,13 @@ public class WorkFuture<$V> implements Future<$V> {
 		
 		/** Implements AQS base acquire to succeed if finished or cancelled */
 		protected int tryAcquireShared(int $ignore) {
-			return isDone() ? 1 : -1;
+			/* denying acquires until that runner is null gives us a window
+			 * of time between doing the CAS to FINISHED and actually letting
+			 * the get(*) methods return where we can muck with the $result
+			 * field in a completely locked way, without actually ever building
+			 * a lock around it at any other time in our lifecycle.  neat, huh?
+			 */
+			return isDone() && $runner == null ? 1 : -1;
 		}
 		
 		/** Implements AQS base release to always signal after setting final done status by nulling runner thread. */
