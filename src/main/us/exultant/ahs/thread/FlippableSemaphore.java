@@ -308,11 +308,11 @@ public class FlippableSemaphore {
 		}
 	}
 	
-	public void flip(boolean $flip) {
+	protected void flip(boolean $flip) {
 		$sync.flip($flip);
 	}
 	
-	public final boolean isFlipped() {
+	protected final boolean isFlipped() {
 		return $sync.isFlipped();
 	}
 	
