@@ -224,6 +224,7 @@ public class PipeTest extends TestCase {
 				for (int $i = 0; $i < $msgsPerThread; $i++) {
 					$pipe.SINK.write($str);
 					if ($log.TRACE) $log.trace(this, "wrote \""+$str+"\", pipe size now "+$pipe.size());
+					if ($writesBetweenDelay > 0 && $writesBetweenDelay % $i+1 == 0) X.chill(1);
 				}
 				$log.trace(this, "writing thread done.");
 			}
