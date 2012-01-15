@@ -221,7 +221,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			boolean $mayRunAgain = $chosen.$sync.scheduler_power();
 			
 			// requeue the work for future attention if necessary
-			if ($mayRunAgain) {	// the work finished into a WAITING state; check it for immediate readiness and put it in the appropriate heap.
+			if ($mayRunAgain) {
+				// the work finished into a WAITING state; we'll check it for immediate readiness and put it in the appropriate heap.
 				$lock.lock();
 				$running.put(Thread.currentThread(), "planning next move");
 				try {
@@ -236,6 +237,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 						}
 						//FIXME:AHS:THREAD someone can do a concurrent cancel before that scheduler_shift attempt, which will bring us here and also leave us with an awkward cancelled task stuck in our unready heap
 						//   (which isn't as bad as a done-but-not-finished task, since no one can get stuck waiting on it, but is still a garbage problem).
+						//   i think the fix to this might actually be having cancellation on the workfuture request an update -- then any cancel in a locked section would lead to a later processing of that task again, and result in its appropriate and timely eviction from all heaps.
 						if ($chosen.getScheduleParams().isUnclocked()) {
 //							$log.trace(this, "added to unready: "+$chosen);
 							$unready.add($chosen);

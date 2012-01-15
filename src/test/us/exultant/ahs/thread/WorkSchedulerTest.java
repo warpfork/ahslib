@@ -85,7 +85,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 	protected abstract WorkScheduler makeScheduler(int $threads);
 	
 	/** Number of milliseconds which we'll consider as "<b>a</b>cceptably <b>o</b>ver<b>d</b>ue". */
-	private static final int	AOD	= 7;
+	// I'd really like to be able to set this lower, and in many practical use cases, you can.  However, I've observed that my computer will get very, very lazy about timestamps when it's under heavy load, and will in fact start returning them at only 10ms granularity!  So, I'm stuck with an AOD of anything less than 11 being quite unreasonable.
+	private static final int	AOD	= 11;
 	
 	
 	

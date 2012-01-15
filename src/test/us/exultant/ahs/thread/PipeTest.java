@@ -168,6 +168,7 @@ public class PipeTest extends TestCase {
 		final int n = 100;
 		
 		// VAGUE PERFORMANCE OBSERVATIONS (at n=1000000):
+		// first of all, note that these are really, really vague.  i made no attempt to factor out the impact of that event counter.
 		//  with the modern generation of flippable-semaphore-based pipes:
 		//   about (min;432k; max:663k; ave:541k)/sec on a 2.7ghz+4core+ubuntu11.04; about 95% of all cores utilized (~5% kernel, ~90% userspace).
 		//   performance remains in that range when increasing n another 100x, as well, if you're wondering.
