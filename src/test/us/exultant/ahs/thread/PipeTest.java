@@ -162,12 +162,36 @@ public class PipeTest extends TestCase {
 		}	
 	}
 	
-	private class TestConcurrent_ReadWriteBlocking extends TestCase.Unit {
-		Pipe<String> $pipe = new Pipe<String>();
-		ConcurrentCounter<String> $counter = ConcurrentCounter.make(Arr.asList(TD.s1, TD.s2, TD.s3));
-		final int n = 100;
+	private class TestConcurrent_ReadWriteBlockingGeneral extends TestCase.Unit {
+		/**
+		 * @param $msgsPerThread
+		 *                you'll end up with ($msgsPerThread*$threadPairsToSpawn)
+		 *                messages being passed
+		 * @param $threadPairsToSpawn
+		 *                you'll end up with ($threadPairsToSpawn*2) threads; half
+		 *                of them writers and half of them readers.
+		 * @param $writesBetweenDelay
+		 *                if >0, a one millisecond wait will be performed by the
+		 *                writing threads after every $writesBetweenDelay
+		 *                messages.
+		 */
+		public TestConcurrent_ReadWriteBlockingGeneral(int $msgsPerThread, int $threadPairsToSpawn, int $writesBetweenDelay) {
+			this.$msgsPerThread = $msgsPerThread;
+			this.$threadPairsToSpawn = $threadPairsToSpawn;
+			this.$writesBetweenDelay = $writesBetweenDelay;
+			List<String> $words = new ArrayList<String>($threadPairsToSpawn);
+			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
+				$words.add("w"+$i);
+			this.$counter = ConcurrentCounter.make($words);
+		}
 		
-		// VAGUE PERFORMANCE OBSERVATIONS (at n=1000000):
+		final Pipe<String> $pipe = new Pipe<String>();
+		final ConcurrentCounter<String> $counter;
+		final int $msgsPerThread;
+		final int $threadPairsToSpawn;
+		final int $writesBetweenDelay;
+		
+		// VAGUE PERFORMANCE OBSERVATIONS (at $msgsPerThread=1000000, $threadPairsToSpawn=2):
 		// first of all, note that these are really, really vague.  i made no attempt to factor out the impact of that event counter.
 		//  with the modern generation of flippable-semaphore-based pipes:
 		//   about (min;432k; max:663k; ave:541k)/sec on a 2.7ghz+4core+ubuntu11.04; about 95% of all cores utilized (~5% kernel, ~90% userspace).
@@ -177,29 +201,29 @@ public class PipeTest extends TestCase {
 		//   about (min:23k;  max:35k;  ave:27k)/sec  on a 2.7ghz+4core+ubuntu10.10; only about 50% of 2 cores utilized (20% userspace, 30% kernel). 
 		
 		public Object call() {
+			Runnable[] $tasks = new Runnable[$threadPairsToSpawn*2];
+			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
+				$tasks[$i] = new Reader();
+			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
+				$tasks[$threadPairsToSpawn+$i] = new Writer("w"+$i);
+			
 			long $start = X.time();
-			Runnable[] $tasks = new Runnable[4];
-			$tasks[0] = new Reader();
-			$tasks[1] = new Reader();
-			$tasks[2] = new Writer(TD.s1);
-			$tasks[3] = new Writer(TD.s2);
 			ThreadUtil.doAll($tasks);
-			assertEquals(n, $counter.getCount(TD.s1));
-			assertEquals(n, $counter.getCount(TD.s2));
-			assertEquals(0, $counter.getCount(TD.s3));
 			long $time = X.time() - $start;
-			$log.info("performance", ((n/1000.0)/($time/1000.0))+"k/sec");
+			
+			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
+				assertEquals($msgsPerThread, $counter.getCount("w"+$i));
+			$log.info("performance", (($msgsPerThread/1000.0)/($time/1000.0))+"k/sec");
 			return null;
 		}
 		
-
 		private class Writer implements Runnable {
 			public Writer(String $str) { this.$str = $str; }
 			private String $str;
 			public void run() {
-				for (int $i = 0; $i < n; $i++) {
+				for (int $i = 0; $i < $msgsPerThread; $i++) {
 					$pipe.SINK.write($str);
-					$log.trace(this, "wrote \""+$str+"\", pipe size now "+$pipe.size());
+					if ($log.TRACE) $log.trace(this, "wrote \""+$str+"\", pipe size now "+$pipe.size());
 				}
 				$log.trace(this, "writing thread done.");
 			}
@@ -207,13 +231,20 @@ public class PipeTest extends TestCase {
 		private class Reader implements Runnable {
 			public Reader() {}
 			public void run() {
-				for (int $i = 0; $i < n; $i++) {
+				for (int $i = 0; $i < $msgsPerThread; $i++) {
 					String $lol = $pipe.SRC.read();
-					$log.trace(this, "read \""+$lol+"\", pipe size now "+$pipe.size());
+					if ($log.TRACE) $log.trace(this, "read \""+$lol+"\", pipe size now "+$pipe.size());
 					$counter.hear($lol);
 				}
 				$log.trace(this, "reading thread done.");
 			}
+		}
+	}
+	
+
+	private class TestConcurrent_ReadWriteBlocking extends TestConcurrent_ReadWriteBlockingGeneral {
+		public TestConcurrent_ReadWriteBlocking() {
+			super(100, 2, 0);
 		}
 	}
 
