@@ -131,17 +131,20 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	/** makes an immediate attempt to finish a task, and pushes it into a list of things that need to be touched again the next time a worker thread checks in.
 	 * @return true if {@link #$updatereq} has new members, which means that {@link #update_postSignal()} must be called soon. */
 	private boolean update_per(WorkFuture<?> $fut) {
-		// check if it's even remotely possible that it's one of ours
+		// check if it's even remotely possible that it's one of ours, and cast it into something that exposes us the guts we need to pinch
 		if (!($fut instanceof WorkFutureImpl)) return false;
 		WorkFutureImpl<?> $fui = (WorkFutureImpl<?>)$fut;
 		
-		// if it already knows itself as done, we need pay no attention
-		if ($fui.isDone()) return false;
+		/* // if it already knows itself as complete, we need pay no attention
+		* if ($fui.isDone()) return false;
+		* This would be a nice idea, but unfortunately it's invalid because we sometimes have to use the update method for the express purpose of making sure completed tasks get kicked out of the unready pile. */
 		
 		// check doneness of the work; try to transition immediately to FINISHED if is done.
 		if ($fui.$work.isDone()) {
-			if ($fui.$sync.tryFinish(false, null, null))	// this is allowed to fail completely if the work is currently running.	//FIXME:AHS:THREAD: finish attempts outside of the scheduler lock must call update if they cause a finish to make sure tasks don't get stuck in waiting pile
-				return false;
+			$fui.$sync.tryFinish(false, null, null);
+			/* This is allowed to fail completely if the work is currently running.
+			 * Regardless of whether or not we were the ones to cause a finish, since we're currently outside of the scheduler lock, 
+			 *  we must call update to make sure tasks don't get stuck in waiting pile. */
 		}
 		
 		// just push this into the set of requested updates.
