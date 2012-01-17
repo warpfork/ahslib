@@ -232,13 +232,16 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 		 *         pool (or delayed heap) and push it into the scheduled heap.
 		 */
 		boolean scheduler_shiftToScheduled() {
-			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState(State.WAITING.ordinal(), State.SCHEDULED.ordinal());
 			// the CAS will occur if:
 			//   - the task if delay-free (if clocked) or ready (if unclocked).
 			//        if this is not the case, obviously we won't be switching out of waiting state.
 			// the CAS will fail and return false if:
 			//   - we're FINISHED (if this happened at the end of the task's last run, this task shouldn't have stayed in the scheduler to get to this call again.  but it could have happened concurrently as a result of a thread outside the scheduler calling an update on a task that become done concurrently (close of a data source for example).)
 			//   - we've been CANCELLED concurrently
+			return shiftToScheduled(State.WAITING.ordinal());
+		}
+		private boolean shiftToScheduled(int $prevState) {
+			if ($schedp.isUnclocked() ? $work.isReady() : $schedp.getDelay() <= 0) return compareAndSetState($prevState, State.SCHEDULED.ordinal());
 			return false;
 		}
 		
@@ -256,27 +259,15 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 		 * {@link #scheduler_shiftToRunning()}. This should NOT be called while
 		 * holding the Scheduler's lock.
 		 * 
-		 * @return true if all went well and the task can be put back in a heap
-		 *         for more action later; false if there was a finish or
-		 *         concurrent cancel that the scheduler must respond to (by
-		 *         dropping the task).
+		 * @return true if all went well and the task should be shifted out of
+		 *         running and back to either waiting or scheduled; false if we
+		 *         finished the task.
 		 */
 		boolean scheduler_power() {
 			$runner = Thread.currentThread();
-			if (getState() == State.RUNNING.ordinal()) { // recheck after setting thread
+			if (getState() == State.RUNNING.ordinal()) { /* recheck after setting thread */
 				try {
 					$V $potentialResult = $work.call();
-					// the saved result here can be a little weird for any task that's not one-shot:
-					//  we can't reliably differentiate between the run that made us done, or being already done when the run started, because we can't lock that... so we can't reliably ensure that what's returned by the last run before finishing isn't already something that's allowed to be insane according to the contract of WorkTarget.
-					
-					//   (I thought about having a null return from a work target causing this class to not overwrite whatever the last result was...
-					///     Okay, follow that again.
-					///     Putting the burden of repeatedly returning the same result after doneness onto the WorkTarget class means it has to store that crap, and makes every single WorkTarget include boilerplate -- not much, perhaps, but my entire goal at all times is zero boilerplate.
-					///     Putting the burden of repeatedly returning the same result after doneness onto the WorkTarget class also means it's redundant with the storage already in WorkFuture, which is just code smell.
-					///     The only thing that makes me feel seriously dodgy about it is what if someone legitimately wants to finish with a null return?  They're restricted to never returning anything else. 
-					////      Oh wait.  Null returns can cause a doneness check?  but no.  that lets the null return of a WorkTarget have wickedly nondeterministic results.
-					///       Anyway, can I actually think of any place where something wants to return a final null but also have returned other things in the meanwhile?  No.  I mean, those people can probably even throw an exception as their alt channel if they want, since we are talking about the final time here.
-					///    And going back to basics, I really don't think anyone should ever have a sane reason to give a flying fuck about the return of a WorkFuture for a WorkTarget that repeats.  That whole result thing is really only ever intended to be used in one-shots.  Anyone else is pretty much 200% guaranteed to do better with a pipe for output.
 					
 					if ($work.isDone()) {
 						tryFinish(true, $potentialResult, null);
@@ -284,7 +275,7 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 					} else {
 						if ($potentialResult != null) $result = $potentialResult;
 						$schedp.setNextRunTime(); /* it'd be cool if we could set this only if we cas'd to waiting successfully, but that actually introduces a mind-bending race where if you call update on a clock based tasks immediately after that cas, you'll get it to skip ahead into the scheduled heap because we haven't shifted its goal time yet. */
-						return compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal()); /* return is false if the cas to waiting failed (which would be due to a concurrent cancel) */
+						return true;
 					}
 				} catch (Throwable $t) {
 					$exception = new ExecutionException($t);
@@ -296,6 +287,26 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 				releaseShared(0);
 				return false;
 			}
+		}
+		
+		/**
+		 * This method is called immediately after {@link #scheduler_power()}, as
+		 * soon as the scheduler has reacquired its internal lock. The state of
+		 * this work is still almost certainly {@link WorkFuture.State#RUNNING},
+		 * unless it was concurrently cancelled or finished.
+		 * 
+		 * @return the State we shifted into.
+		 */
+		State scheduler_shiftPostRun() {
+			if ($work.isDone()) {
+				tryFinish(true, null, null);
+				return getWFState();	/* finished or canceled */
+			} else if (shiftToScheduled(State.RUNNING.ordinal())) {
+				return State.SCHEDULED;	/* scheduled.  a cancel could come, but after this it's the post-cancel update that bears the burden of releasing pointers. */
+			} else if (compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal())) {
+				return State.WAITING;	/* waiting.  a cancel could come, but after this it's the post-cancel update that bears the burden of releasing pointers. */
+			}
+			return getWFState();	/* cancelled or finished concurrently sometime during the run or our post-processing leading up to now. */
 		}
 		
 		/**

@@ -106,7 +106,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				
 				if ($work.isDone()) {
 					// this check MUST be done AFTER adding the task to a heap, or otherwise it becomes more than slightly dodgy, for all the usual reasons: you could have failed to shift because you just weren't ready, then the done check happens, then you concurrently "finish" from someone else draining your pipe before this scheduler knows to take update requests about you seriously.
-					$wf.$sync.tryFinish(false, null, null);
+					$wf.$sync.tryFinish(false, null, null);		//FIXME:AHS:THREAD: i don't want to be calling completion listeners from inside the scheduler lock!
 					hearTaskDrop($wf);
 				}
 			}
@@ -140,7 +140,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		
 		// check doneness of the work; try to transition immediately to FINISHED if is done.
 		if ($fui.$work.isDone()) {
-			if ($fui.$sync.tryFinish(false, null, null))	// this is allowed to fail completely if the work is currently running.
+			if ($fui.$sync.tryFinish(false, null, null))	// this is allowed to fail completely if the work is currently running.	//FIXME:AHS:THREAD: finish attempts outside of the scheduler lock must call update if they cause a finish to make sure tasks don't get stuck in waiting pile
 				return false;
 		}
 		
@@ -227,27 +227,25 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {
-				// the work finished into a WAITING state; we'll check it for immediate readiness and put it in the appropriate heap.
 				$lock.lock();
 				$running.put(Thread.currentThread(), "planning next move");
 				try {
-					if ($chosen.$sync.scheduler_shiftToScheduled()) {
-						$scheduled.add($chosen);
-					} else {
-						if ($chosen.$work.isDone()) {
-							boolean $causedFinish = $chosen.$sync.tryFinish(false, null, null);
-//							$log.trace(this, "isDone "+$chosen+" noticed in worker_cycle() after powering it; we caused finish "+$causedFinish);
+					switch ($chosen.$sync.scheduler_shiftPostRun()) {
+						case FINISHED:
+						case CANCELLED:
 							hearTaskDrop($chosen);
-							continue doWork;
-						}
-						//FIXME:AHS:THREAD someone can do a concurrent cancel before that scheduler_shift attempt, which will bring us here and also leave us with an awkward cancelled task stuck in our unready heap
-						//   (which isn't as bad as a done-but-not-finished task, since no one can get stuck waiting on it, but is still a garbage problem).
-						//   i think the fix to this might actually be having cancellation on the workfuture request an update -- then any cancel in a locked section would lead to a later processing of that task again, and result in its appropriate and timely eviction from all heaps.
-						if ($chosen.getScheduleParams().isUnclocked()) {
-//							$log.trace(this, "added to unready: "+$chosen);
-							$unready.add($chosen);
-						} else
-							$delayed.add($chosen);
+							break;
+						case SCHEDULED:
+							$scheduled.add($chosen);
+							break;
+						case WAITING:
+							if ($chosen.getScheduleParams().isUnclocked())
+								$unready.add($chosen);
+							else
+								$delayed.add($chosen);
+							break;
+						default:
+							throw new MajorBug("running is not a valid state in this branch");
 					}
 				} finally {
 					$lock.unlock();
@@ -255,7 +253,6 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			} else {
 				// the work is completed (either as FINISHED or CANCELLED); we must now drop it.
 				hearTaskDrop($chosen);
-				$running.remove(Thread.currentThread());
 			}
 			//TODO:AHS:THREAD:EFFIC: in the case that you're just looping around, we should actually just hold on to that lock.  it's fine like it is, but holding it will probably be more efficient.
 		}
