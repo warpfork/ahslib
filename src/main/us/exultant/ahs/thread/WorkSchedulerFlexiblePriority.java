@@ -257,6 +257,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				hearTaskDrop($chosen);
 				$running.remove(Thread.currentThread());
 			}
+			//TODO:AHS:THREAD:EFFIC: in the case that you're just looping around, we should actually just hold on to that lock.  it's fine like it is, but holding it will probably be more efficient.
 		}
 		$running.put(Thread.currentThread(), "shutting down");
 	}
