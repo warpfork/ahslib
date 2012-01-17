@@ -20,6 +20,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.anno.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -65,6 +66,25 @@ import java.util.concurrent.*;
  * </div>
  */
 public interface WorkScheduler {
+	/**
+	 * <p>
+	 * Starts the worker threads that this WorkScheduler will manage and use to
+	 * perform the work given to it, and returns immediately.
+	 * </p>
+	 * 
+	 * <p>
+	 * Calling this method repeatedly has no effect; the first invocation will start,
+	 * and all others will take no action.
+	 * </p>
+	 * 
+	 * @return the self-same object.
+	 * @throws IllegalStateException
+	 *                 if this method is called after after calling
+	 *                 {@link #stop(boolean)}
+	 */
+	@ChainableInvocation
+	@ThreadSafe
+	@Idempotent
 	public WorkScheduler start();
 	
 	/**
@@ -95,6 +115,8 @@ public interface WorkScheduler {
 	 * @return A {@link Future} representing the state of the progress of there
 	 *         WorkTarget.
 	 */
+	@ThreadSafe
+	@Idempotent
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when);
 	
 	/**
@@ -110,6 +132,8 @@ public interface WorkScheduler {
 	 *                {@link #schedule(WorkTarget, ScheduleParams)} method on this
 	 *                same WorkScheduler.
 	 */
+	@ThreadSafe
+	@Idempotent
 	public <$V> void update(WorkFuture<$V> $fut);
 	
 	/**
@@ -122,5 +146,30 @@ public interface WorkScheduler {
 	 *                invocation of the {@link #schedule(WorkTarget, ScheduleParams)}
 	 *                method on this same WorkScheduler.
 	 */
+	@ThreadSafe
+	@Idempotent
 	public <$V> void update(Collection<WorkFuture<$V>> $futs);
+	
+	/**
+	 * <p>
+	 * Requests that all worker threads of this scheduler cease to perform work and
+	 * stop, and returns immediately.
+	 * </p>
+	 * 
+	 * @param $aggressively
+	 *                false if the threads should continue to perform work as long as
+	 *                some is immediately available; true if threads should not pick
+	 *                up any new work after they finish their current task.
+	 *                (Clock-based tasks that are not ready are not considered
+	 *                available for the purpose of keeping threads alive.)
+	 */
+	@ThreadSafe
+	@Idempotent
+	public void stop(boolean $aggressively);
+	
+	//TODO:AHS:THREAD: we'll want to be able to wait for completion, no?  make stop return a future.
+	//   that would get quite pear shaped though.  i mean, a normal Future?  fine.  take the thread that calls get() first.  a WorkFuture?  there's no one to send the event in anything like realtime.
+	//      well.  i guess it's really no different than a WorkFuture you got from a WorkScheduler that hasn't been started yet.
+	//          lolurdumb.  we just have to make a different kind of WorkFuture that we very carefully finish manually with the last thread of the stopping scheduler.  also i think we'd tell you to go fuck yourself if you tried to cancel.
+	//TODO:AHS:THREAD it might be appropriate to cancel all tasks that were incomplete by the time we finish stopping.  (which is a bit of a pain; we should maybe even use all the threads for that, but that gives every single listener involved a chance to pretty much halt the whole damn stopping!)
 }
