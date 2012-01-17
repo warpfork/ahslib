@@ -209,6 +209,7 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 				if ($r != null) $r.interrupt();
 			}
 			releaseShared(0);
+			update();
 			hearDone();
 			return true;
 		}
@@ -304,7 +305,8 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 			} else if (shiftToScheduled(State.RUNNING.ordinal())) {
 				return State.SCHEDULED;	/* scheduled.  a cancel could come, but after this it's the post-cancel update that bears the burden of releasing pointers. */
 			} else if (compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal())) {
-				return State.WAITING;	/* waiting.  a cancel could come, but after this it's the post-cancel update that bears the burden of releasing pointers. */
+				if ($work.isDone()) tryFinish(false, null, null);	/* we have to do this AGAIN, yes.  we have to do it after the transition to waiting, or else another thread can do a final notify between the tryfinish at the top of this function and the one here. */
+				return getWFState();
 			}
 			return getWFState();	/* cancelled or finished concurrently sometime during the run or our post-processing leading up to now. */
 		}
