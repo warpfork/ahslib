@@ -27,8 +27,9 @@ import java.util.*;
  * it &mdash; so, we're stuck with an {@link #isReady()} method that helplessly always
  * returns true, and fundamentally no way to disbatch events relating to the core
  * selector's readiness. So, all in all, you may still actually need to just run this
- * system in its own personal thread &mdash {@link WorkSchedulerPrivateThread} is ideal
- * for this.
+ * system in its own personal thread &mdash creating a
+ * {@link WorkSchedulerFlexiblePriority} instance with a thread pool of size one is a
+ * reasonable way to do this..
  * </p>
  * 
  * @author hash
@@ -44,8 +45,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * This default timeout is a conservative choice: regardless of if planning to run
 	 * the WorkTargetSelector in a private thread or a WorkScheduler with pooling, the
 	 * 1 millisecond timeout won't kill you (it'll never leave a thread spinning at
-	 * 100% of a core, nor will it completely choke up a pool), but for a most
-	 * optimial system you might wish to consider other settings.
+	 * 100% of a core, nor will it completely choke up a pool), but for a most optimal
+	 * system you might wish to consider other settings.
 	 */
 	public WorkTargetSelector() {
 		this(1);
@@ -57,9 +58,10 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * 
 	 * @param $selectionTimeout
 	 *                the number of milliseconds a select call should block for, or
-	 *                negative for completely nonblocking operation. If this
-	 *                WorkTarget will be run in its own personal thread, you may set
-	 *                this timeout to be arbitrarily high.
+	 *                negative for completely nonblocking operation, or zero for
+	 *                blocking without timeout. If this WorkTarget will be run in its
+	 *                own personal thread, you may set this timeout to be arbitrarily
+	 *                high.
 	 */
 	public WorkTargetSelector(int $selectionTimeout) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
@@ -71,9 +73,10 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * 
 	 * @param $selectionTimeout
 	 *                the number of milliseconds a select call should block for, or
-	 *                negative for completely nonblocking operation. If this
-	 *                WorkTarget will be run in its own personal thread, you may set
-	 *                this timeout to be arbitrarily high.
+	 *                negative for completely nonblocking operation, or zero for
+	 *                blocking without timeout. If this WorkTarget will be run in its
+	 *                own personal thread, you may set this timeout to be arbitrarily
+	 *                high.
 	 * @param $workPriority
 	 */
 	public WorkTargetSelector(int $selectionTimeout, int $workPriority) {
@@ -166,7 +169,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		try {
 			/* block until channel events, or wakeups triggered by the event pipe's listener, or thread interrupts. */
 			if ($timeout < 0) return $selector.selectNow();
-			return $selector.select();
+			return $selector.select($timeout);
 		} catch (ClosedSelectorException $e) {
 			/* selectors can't be closed except by their close method, which we control all access to, so this shouldn't happen in a way that surprises us. */
 			throw new MajorBug($e);
