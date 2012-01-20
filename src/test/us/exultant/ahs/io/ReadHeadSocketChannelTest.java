@@ -21,12 +21,13 @@ package us.exultant.ahs.io;
 
 import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
+import us.exultant.ahs.thread.*;
 import java.io.*;
 import java.nio.channels.*;
 import java.util.*;
 
 public class ReadHeadSocketChannelTest extends TestCase {
-	public static void main(String... $args) {					new ReadHeadSocketChannelTest().run();				}
+	public static void main(String... $args) {					new ReadHeadSocketChannelTest().run();		}
 	public ReadHeadSocketChannelTest() {						super(new Logger(Logger.LEVEL_DEBUG), true);	}
 	public ReadHeadSocketChannelTest(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
 	public List<Unit> getUnits() {
@@ -37,13 +38,13 @@ public class ReadHeadSocketChannelTest extends TestCase {
 	}
 	
 	private class TestBasic extends TestCase.Unit {
-		PumperSelector $ps;
+		WorkTargetSelector $ps;
 		ReadHeadSocketChannel $rhsc;
 		public Object call() throws IOException {
-			$ps = new PumperSelector();
-			$ps.start();
+			$ps = new WorkTargetSelector();
+			WorkManager.getDefaultScheduler().schedule($ps, ScheduleParams.NOW);
 			
-			$rhsc = new ReadHeadSocketChannel(null, $ps);
+			$rhsc = new ReadHeadSocketChannel(null, $ps, WorkManager.getDefaultScheduler());
 			return null;
 		}
 	}

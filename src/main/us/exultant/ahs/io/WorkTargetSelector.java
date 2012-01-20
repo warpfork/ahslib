@@ -2,6 +2,7 @@ package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.anno.*;
 import us.exultant.ahs.thread.*;
 import us.exultant.ahs.thread.Pipe;
 import java.io.*;
@@ -27,8 +28,9 @@ import java.util.*;
  * it &mdash; so, we're stuck with an {@link #isReady()} method that helplessly always
  * returns true, and fundamentally no way to disbatch events relating to the core
  * selector's readiness. So, all in all, you may still actually need to just run this
- * system in its own personal thread &mdash {@link WorkSchedulerPrivateThread} is ideal
- * for this.
+ * system in its own personal thread &mdash creating a
+ * {@link WorkSchedulerFlexiblePriority} instance with a thread pool of size one is a
+ * reasonable way to do this..
  * </p>
  * 
  * @author hash
@@ -44,8 +46,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * This default timeout is a conservative choice: regardless of if planning to run
 	 * the WorkTargetSelector in a private thread or a WorkScheduler with pooling, the
 	 * 1 millisecond timeout won't kill you (it'll never leave a thread spinning at
-	 * 100% of a core, nor will it completely choke up a pool), but for a most
-	 * optimial system you might wish to consider other settings.
+	 * 100% of a core, nor will it completely choke up a pool), but for a most optimal
+	 * system you might wish to consider other settings.
 	 */
 	public WorkTargetSelector() {
 		this(1);
@@ -57,9 +59,10 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * 
 	 * @param $selectionTimeout
 	 *                the number of milliseconds a select call should block for, or
-	 *                negative for completely nonblocking operation. If this
-	 *                WorkTarget will be run in its own personal thread, you may set
-	 *                this timeout to be arbitrarily high.
+	 *                negative for completely nonblocking operation, or zero for
+	 *                blocking without timeout. If this WorkTarget will be run in its
+	 *                own personal thread, you may set this timeout to be arbitrarily
+	 *                high.
 	 */
 	public WorkTargetSelector(int $selectionTimeout) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
@@ -71,9 +74,10 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * 
 	 * @param $selectionTimeout
 	 *                the number of milliseconds a select call should block for, or
-	 *                negative for completely nonblocking operation. If this
-	 *                WorkTarget will be run in its own personal thread, you may set
-	 *                this timeout to be arbitrarily high.
+	 *                negative for completely nonblocking operation, or zero for
+	 *                blocking without timeout. If this WorkTarget will be run in its
+	 *                own personal thread, you may set this timeout to be arbitrarily
+	 *                high.
 	 * @param $workPriority
 	 */
 	public WorkTargetSelector(int $selectionTimeout, int $workPriority) {
@@ -166,7 +170,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		try {
 			/* block until channel events, or wakeups triggered by the event pipe's listener, or thread interrupts. */
 			if ($timeout < 0) return $selector.selectNow();
-			return $selector.select();
+			return $selector.select($timeout);
 		} catch (ClosedSelectorException $e) {
 			/* selectors can't be closed except by their close method, which we control all access to, so this shouldn't happen in a way that surprises us. */
 			throw new MajorBug($e);
@@ -286,6 +290,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * @param $p
 	 *                a Listener to notify when the channel has data
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void registerRead(SelectableChannel $ch, Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_READ));
 	}
@@ -303,6 +309,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * @param $p
 	 *                a Listener to notify when the channel can accept data
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void registerWrite(SelectableChannel $ch, Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_WRITE));
 	}
@@ -318,6 +326,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * @param $p
 	 *                a Listener to notify when connections are ready to be accepted
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void registerAccept(ServerSocketChannel $ch, Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
 	}
@@ -327,6 +337,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * Listener. Calling this method repeatedly will have no effect unless
 	 * {@link #registerWrite(SelectableChannel, Listener)} is called in the meanwhile.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterRead(SelectableChannel $ch) {
 		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_READ));
 	}
@@ -336,6 +348,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * set Listener. Calling this method repeatedly will have no effect unless
 	 * {@link #registerWrite(SelectableChannel, Listener)} is called in the meanwhile.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterWrite(SelectableChannel $ch) {
 		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_WRITE));
 	}
@@ -346,6 +360,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * {@link #deregisterRead(SelectableChannel)} instead, which is both unambiguous
 	 * and more efficient.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterRead(Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Dereg($p, SelectionKey.OP_READ));
 	}
@@ -356,6 +372,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * {@link #deregisterWrite(SelectableChannel)} instead if possible, which is both
 	 * unambiguous and more efficient.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterWrite(Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Dereg($p, SelectionKey.OP_WRITE));
 	}
@@ -366,6 +384,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * no effect unless {@link #registerAccept(ServerSocketChannel, Listener)} is
 	 * called in the meanwhile.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterAccept(ServerSocketChannel $ch) {
 		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
 	}
@@ -375,6 +395,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * Listeners, and cancels it. This channel may never again be registered with this
 	 * Selector. Repeated calls of this method have no effect.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void cancel(SelectableChannel $ch) {
 		$pipe.SINK.write(new Event_Cancel($ch));
 	}
