@@ -175,16 +175,7 @@ public class FlowAssembler {
 		return $fuu;
 	}
 	private static class Quu extends ReadHeadAdapter<ByteBuffer> implements Pump {
-		/**
-		 * @param $base
-		 *                must also be a SelectableChannel or we'll throw
-		 *                ClassCastException later on (unfortunately, the type
-		 *                hierarchy of Java's NIO package doesn't allow me to
-		 *                specify that clearly without making a decorator object
-		 *                purely to conceal their mistakes (which I'm not willing
-		 *                to do)).
-		 */
-		public Quu(ReadableByteChannel $base, TranslatorChannelToByteBufferByFrame $trans, WorkTargetSelector $p) {
+		public <$T extends SelectableChannel & ReadableByteChannel> Quu($T $base, TranslatorChannelToByteBufferByFrame $trans, WorkTargetSelector $p) {
 			this.$trans = $trans;
 			this.$base = $base;
 			this.$ps = $p;
