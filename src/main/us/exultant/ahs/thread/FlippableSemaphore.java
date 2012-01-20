@@ -141,9 +141,10 @@ public class FlippableSemaphore {
 		
 		/**
 		 * This will receive the integer returned from
-		 * {@link #answerTooFewPermits(boolean)} if applicable; otherwise it will
-		 * receive a 0 or 1 if sufficient permits were available for an acquire
-		 * request to succeed directly.
+		 * {@link FlippableSemaphore.Sync#tryAcquireShared(int)} (which may shell
+		 * out to {@link BlockPolicyDecider#answerTooFewPermits(boolean)} if there
+		 * were not enough permits available), or in the case of a timed acquire
+		 * that timed out {@link Integer#MIN_VALUE} is returned.
 		 * 
 		 * @param $response
 		 * @return whether or not the Semaphore should report this as a successful
@@ -237,18 +238,38 @@ public class FlippableSemaphore {
 		}
 		
 		/**
-		 * @return &le;-1 for acquisition not currently possible, 0 for success
-		 *         and no more permits, &ge;1 for success and permits still
-		 *         available... or, more generally, negatives is we shouldn't let
-		 *         threads wake, positive or zero if we should let them wake,
-		 *         positive if we should keep trying to wake others as well. It's
-		 *         possible to use specific positive values to indicate extra
-		 *         data; negative values are unlikely to be of any use since AQS
-		 *         will never actually return them.
+		 * <p>
+		 * Contractually, this method must return:
+		 * <ul>
+		 * <li>&le;-1 for acquisition not currently possible
+		 * <li>0 for success and no more permits
+		 * <li>&ge;1 for success and permits still available
+		 * </ul>
+		 * In other words: negatives indicate we shouldn't let threads wake, zero
+		 * indicates we should wake at least one, positives indicate we should
+		 * keep trying to wake others as well. Specific values may be used to
+		 * indicate extra data; these will be passed through
+		 * {@link BlockPolicyDecider#isAcquireSuccessful(int)}, allowing that
+		 * method to be used to provide enhanced functionality.
+		 * </p>
+		 * 
+		 * <p>
+		 * This implementation uses the following specific return values:
+		 * <ul>
+		 * <li>-2 if the current thread should pause in order to maintain fairness
+		 * (i.e. if {@link #pauseToBeFair()} returns true)
+		 * <li>{@link BlockPolicyDecider#answerTooFewPermits(boolean)}'s answer if
+		 * too few permits are available
+		 * <li>0 if success and no more permits
+		 * <li>1 if success and permits still available
+		 * </ul>
+		 * </p>
+		 * 
+		 * @return see above
 		 */
 		protected final int tryAcquireShared(int $acquires) {
 			for (;;) {
-				if (pauseToBeFair()) return Integer.MIN_VALUE;	//... you know, none of the negative values really matter, since AQS will never let us see them anywhere else.
+				if (pauseToBeFair()) return -2;
 				int $status = getState();
 				int $next = shift($status, -$acquires);
 				if ($next == Integer.MAX_VALUE)			// not enough permits to acquire that many
@@ -266,8 +287,8 @@ public class FlippableSemaphore {
 		protected final boolean tryReleaseShared(int $releases) {
 			for (;;) {
 				int $status = getState();
-				int $next = shift($status, $releases);
 				if (!$decider.isReleasePermitted($status)) return false;
+				int $next = shift($status, $releases);
 				if (compareAndSetState($status, $next)) return true;
 			}
 		}
@@ -304,15 +325,18 @@ public class FlippableSemaphore {
 
 		protected final boolean pauseToBeFair() {
 			return hasQueuedPredecessors();
-			//return (hasQueuedThreads() && getFirstQueuedThread() != Thread.currentThread());	// if one doesn't have access to the AQS methods in 1.7, this is a (potentially slower) alternative to the above.  fortunately we don't have to worry about that anymore since we're shipping our own fork of AQS.
+			/* if one doesn't have access to the AQS methods in 1.7, the following is a (potentially slower) alternative to the above.
+			 * fortunately we don't have to worry about that anymore since we're shipping our own fork of AQS.
+			 * return (hasQueuedThreads() && getFirstQueuedThread() != Thread.currentThread());
+			 */
 		}
 	}
 	
-	public void flip(boolean $flip) {
+	protected void flip(boolean $flip) {
 		$sync.flip($flip);
 	}
 	
-	public final boolean isFlipped() {
+	protected final boolean isFlipped() {
 		return $sync.isFlipped();
 	}
 	

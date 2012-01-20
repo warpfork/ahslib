@@ -339,6 +339,12 @@ public abstract class TestCase implements Runnable {
 	public boolean assertNull(String $label, Object $actual) {
 		return assertSame($label, null, $actual);
 	}
+	public boolean assertNotNull(Object $actual) {
+		return assertNotSame(null, null, $actual);
+	}
+	public boolean assertNotNull(String $label, Object $actual) {
+		return assertNotSame($label, null, $actual);
+	}
 	public boolean assertEquals(Object $expected, Object $actual) {
 		return assertEquals(null, $expected, $actual);
 	}
