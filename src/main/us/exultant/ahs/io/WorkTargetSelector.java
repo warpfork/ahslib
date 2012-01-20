@@ -2,6 +2,7 @@ package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.anno.*;
 import us.exultant.ahs.thread.*;
 import us.exultant.ahs.thread.Pipe;
 import java.io.*;
@@ -289,6 +290,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * @param $p
 	 *                a Listener to notify when the channel has data
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void registerRead(SelectableChannel $ch, Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_READ));
 	}
@@ -306,6 +309,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * @param $p
 	 *                a Listener to notify when the channel can accept data
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void registerWrite(SelectableChannel $ch, Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_WRITE));
 	}
@@ -321,6 +326,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * @param $p
 	 *                a Listener to notify when connections are ready to be accepted
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void registerAccept(ServerSocketChannel $ch, Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
 	}
@@ -330,6 +337,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * Listener. Calling this method repeatedly will have no effect unless
 	 * {@link #registerWrite(SelectableChannel, Listener)} is called in the meanwhile.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterRead(SelectableChannel $ch) {
 		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_READ));
 	}
@@ -339,6 +348,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * set Listener. Calling this method repeatedly will have no effect unless
 	 * {@link #registerWrite(SelectableChannel, Listener)} is called in the meanwhile.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterWrite(SelectableChannel $ch) {
 		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_WRITE));
 	}
@@ -349,6 +360,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * {@link #deregisterRead(SelectableChannel)} instead, which is both unambiguous
 	 * and more efficient.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterRead(Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Dereg($p, SelectionKey.OP_READ));
 	}
@@ -359,6 +372,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * {@link #deregisterWrite(SelectableChannel)} instead if possible, which is both
 	 * unambiguous and more efficient.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterWrite(Listener<SelectableChannel> $p) {
 		$pipe.SINK.write(new Event_Dereg($p, SelectionKey.OP_WRITE));
 	}
@@ -369,6 +384,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * no effect unless {@link #registerAccept(ServerSocketChannel, Listener)} is
 	 * called in the meanwhile.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void deregisterAccept(ServerSocketChannel $ch) {
 		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
 	}
@@ -378,6 +395,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * Listeners, and cancels it. This channel may never again be registered with this
 	 * Selector. Repeated calls of this method have no effect.
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void cancel(SelectableChannel $ch) {
 		$pipe.SINK.write(new Event_Cancel($ch));
 	}
