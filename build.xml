@@ -19,8 +19,7 @@
 	<import file="build-exultant.xml"/> 
 	
 	
-	<target name="init">
-		<tstamp/>
+	<target name="init" depends="exusInitId">
 		<mkdir dir="build/main"/>
 		<mkdir dir="build/test"/>
 		<mkdir dir="dist"/>
@@ -78,7 +77,12 @@
 		/>
 	</target>
 	<target name="dist-core" depends="compile-core">
-		<jar jarfile="dist/ahslib-core.jar" basedir="build/main/core"/>
+		<jar jarfile="dist/ahslib-core.jar" basedir="build/main/core">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="compile-codec" depends="compile-core">
@@ -89,7 +93,12 @@
 		/>
 	</target>
 	<target name="dist-codec" depends="compile-codec">
-		<jar jarfile="dist/ahslib-codec.jar" basedir="build/main/codec"/>
+		<jar jarfile="dist/ahslib-codec.jar" basedir="build/main/codec">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="compile-codec-json" depends="compile-codec">
@@ -100,7 +109,12 @@
 		/>
 	</target>
 	<target name="dist-codec-json" depends="compile-codec-json">
-		<jar jarfile="dist/ahslib-codec-json.jar" basedir="build/main/codec-json"/>
+		<jar jarfile="dist/ahslib-codec-json.jar" basedir="build/main/codec-json">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="compile-codec-ebon" depends="compile-codec">
@@ -111,7 +125,12 @@
 		/>
 	</target>
 	<target name="dist-codec-ebon" depends="compile-codec-ebon">
-		<jar jarfile="dist/ahslib-codec-ebon.jar" basedir="build/main/codec-ebon"/>
+		<jar jarfile="dist/ahslib-codec-ebon.jar" basedir="build/main/codec-ebon">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 		
 	<target name="compile-codec-pre" depends="compile-codec">
@@ -122,7 +141,12 @@
 		/>
 	</target>
 	<target name="dist-codec-pre" depends="compile-codec-pre">
-		<jar jarfile="dist/ahslib-codec-pre.jar" basedir="build/main/codec-pre"/>
+		<jar jarfile="dist/ahslib-codec-pre.jar" basedir="build/main/codec-pre">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="compile-log" depends="compile-core">
@@ -133,7 +157,12 @@
 		/>
 	</target>
 	<target name="dist-log" depends="compile-log">
-		<jar jarfile="dist/ahslib-log.jar" basedir="build/main/log"/>
+		<jar jarfile="dist/ahslib-log.jar" basedir="build/main/log">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="compile-test" depends="compile-log">
@@ -144,7 +173,12 @@
 		/>
 	</target>
 	<target name="dist-test" depends="compile-test">
-		<jar jarfile="dist/ahslib-test.jar" basedir="build/main/test"/>
+		<jar jarfile="dist/ahslib-test.jar" basedir="build/main/test">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	<target name="compile-test-junit" depends="compile-test">
 		<exusJavacStrict
@@ -154,7 +188,12 @@
 		/>
 	</target>
 	<target name="dist-test-junit" depends="compile-test-junit">
-		<jar jarfile="dist/ahslib-test-junit.jar" basedir="build/main/test-junit"/>
+		<jar jarfile="dist/ahslib-test-junit.jar" basedir="build/main/test-junit">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="compile-thread" depends="compile-core">
@@ -165,7 +204,12 @@
 		/>
 	</target>
 	<target name="dist-thread" depends="compile-thread">
-		<jar jarfile="dist/ahslib-thread.jar" basedir="build/main/thread"/>
+		<jar jarfile="dist/ahslib-thread.jar" basedir="build/main/thread">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="compile-io" depends="compile-thread">
@@ -176,7 +220,12 @@
 			 />
 	</target>
 	<target name="dist-io" depends="compile-io">
-		<jar jarfile="dist/ahslib-io.jar" basedir="build/main/io"/>
+		<jar jarfile="dist/ahslib-io.jar" basedir="build/main/io">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="compile-scratch" depends="compile-core, compile-codec, compile-codec-ebon, compile-codec-pre">
@@ -187,7 +236,12 @@
 			 />
 	</target>
 	<target name="dist-scratch" depends="compile-scratch">
-		<jar jarfile="dist/ahslib-scratch.jar" basedir="build/main/scratch"/>
+		<jar jarfile="dist/ahslib-scratch.jar" basedir="build/main/scratch">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
 	</target>
 	
 	<target name="dist-complete" depends="
@@ -214,6 +268,10 @@
 			<fileset dir="build/main/thread"/>
 			<fileset dir="build/main/io"/>
 			<!-- does not include scratch, and does not include anything with external dependancies (except junit, because who cares). -->
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
 		</jar>
 	</target>
 	

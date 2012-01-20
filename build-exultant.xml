@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="ExultantBuildCommon" basedir=".">
-	<target name="exusInit">
-		<tstamp/>
+	<target name="exusInit" depends="exusInitId">
 		<mkdir dir="src"/>
 		<mkdir dir="src/main"/>
 		<mkdir dir="src/test"/>
@@ -18,6 +17,21 @@
 		<mkdir dir="dox/javadoc"/>
 		<mkdir dir="build"/>
 		<mkdir dir="dist"/>
+	</target>
+	
+	<target name="exusInitId">
+		<tstamp>
+			<format property="builddate" pattern="yyyy/MM/dd HH:mm:ss Z" timezone="America/Los_Angeles"/>
+		</tstamp>
+		<exec executable="git" outputproperty="git-version">
+			<arg value="log"/>
+			<arg value="--pretty=format:%h"/>
+			<arg value="-n 1"/>
+		</exec>
+		<property name="version" value="snapshot-${git-version}" />	<!-- override this with -Dversion=[releasenumber] if you're doing a release build or something else with a special name. -->
+		<echo>Build date:        ${builddate}</echo>
+		<echo>Git commit hash:   ${git-version}</echo>
+		<echo>Version:           ${version}</echo>
 	</target>
 	
 	<macrodef name="exusIncArch">
