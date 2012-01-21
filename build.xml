@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ant-project>
 <project name="AHSlib" basedir="." default="dist">
 	<description>
 		The "And How Simple!" library provides open-source Java
