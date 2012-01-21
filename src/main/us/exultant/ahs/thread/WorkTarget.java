@@ -310,13 +310,17 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * @author hash
 	 */
 	public static class CallableWrapper<$V> implements WorkTarget<$V> {
-		public CallableWrapper(Callable<$V> $wrap) { this($wrap,0); }
-		public CallableWrapper(Callable<$V> $wrap, int $prio) {
+		public CallableWrapper(Callable<$V> $wrap) { this($wrap,0,true); }
+		public CallableWrapper(Callable<$V> $wrap, boolean $once) { this($wrap,0,$once); }
+		public CallableWrapper(Callable<$V> $wrap, int $prio) { this($wrap,$prio,true); }
+		public CallableWrapper(Callable<$V> $wrap, int $prio, boolean $once) {
 			if ($wrap == null) throw new NullPointerException();
+			this.$once = $once;
 			this.$prio = $prio;
 			this.$wrap = $wrap;
 		}
-		
+
+		private final boolean		$once;
 		private final int		$prio;
 		private volatile Callable<$V>	$wrap;	// flip this to null when it's done.
 		
@@ -325,7 +329,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 				if ($wrap == null) throw new IllegalStateException("This task can only be run once, and is already done!");
 				return $wrap.call();
 			} finally {
-				$wrap = null;
+				if ($once) $wrap = null;
 			}
 		}
 		
@@ -337,4 +341,6 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	}
 	
 	//TODO:AHS:THREAD: a readymade WorkTarget implementation which oneshots itself in response to one or more Future becoming done.  this will tend to be what gets used whenever you might otherwise have wished for a continuation/park (and where other libraries are resorting to serious weaving).
+	//  the above is maybe not so necessary.  the idiom of having a completion listener schedule a new WorkTarget works quite well.
+	//  still, something that takes a WorkFuture when constructed and uses it's isDone to define its own isReady seems quite straightforward.  (the one-shot'ing part is maybe not so necessary.)  i mean, the other option actually leaves less useless work in a heap somewhere, but i don't really care; i think usually the code readability of being able to declare all your tasks at once at the same level is more important.
 }
