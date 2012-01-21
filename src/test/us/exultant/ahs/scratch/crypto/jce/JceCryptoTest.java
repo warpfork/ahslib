@@ -29,6 +29,7 @@ import us.exultant.ahs.scratch.crypto.jce.sym.aes.*;
 import us.exultant.ahs.test.*;
 import java.security.*;
 
+@SuppressWarnings("deprecation")
 public class JceCryptoTest extends TestCaseRetro {
 	public JceCryptoTest(Logger $log, boolean $enableConfirmation) {
 		super($log, $enableConfirmation);

@@ -15,11 +15,11 @@ package us.exultant.ahs.scratch.jsap;
 import java.util.Iterator;
 
 /**
- * The class that performs the actual parsing on a set of arguments.  This is 
- * created and managed by a JSAP;
- * developers should never need to access this class directly.
+ * The class that performs the actual parsing on a set of arguments. This is created and
+ * managed by a JSAP; developers should never need to access this class directly.
+ * 
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.JSAP
+ * @see us.exultant.ahs.scratch.jsap.JSAP
  */
 @SuppressWarnings("rawtypes")
 class Parser {

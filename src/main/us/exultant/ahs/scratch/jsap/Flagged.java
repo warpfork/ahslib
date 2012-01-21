@@ -25,8 +25,8 @@ package us.exultant.ahs.scratch.jsap;
  * with the rest of the API.
  *
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Switch
- * @see ahs.scratch.jsap.FlaggedOption
+ * @see us.exultant.ahs.scratch.jsap.Switch
+ * @see us.exultant.ahs.scratch.jsap.FlaggedOption
  */
 public interface Flagged {
 

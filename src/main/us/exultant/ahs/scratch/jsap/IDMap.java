@@ -13,9 +13,9 @@ import java.util.*;
  * This class is used by DefaultSource in order to populate Defaults objects.
  *
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Flagged
- * @see ahs.scratch.jsap.DefaultSource
- * @see ahs.scratch.jsap.Defaults
+ * @see us.exultant.ahs.scratch.jsap.Flagged
+ * @see us.exultant.ahs.scratch.jsap.DefaultSource
+ * @see us.exultant.ahs.scratch.jsap.Defaults
  */
 public class IDMap {
 
