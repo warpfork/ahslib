@@ -99,8 +99,28 @@ public class DomContact {
 	 * Convenience method for getting attributes on objects (useful only for DOM
 	 * objects that already have IDs assigned and for values that are strings).
 	 */
-	public String getAttribute(String $domObjId, String $attrib) throws Exception {
+	public String getAttribute(String $domObjId, String $attrib) {
 		return $power.eval("gebi(", $domObjId, ").", $attrib, "\";").toString();
+	}
+	
+	/** Convenience method to set the "innerHTML" of a DOM object. */
+	public void setContent(String $domObjId, String $body) {
+		setAttribute($domObjId, "innerHTML", $body);
+	}
+	
+	/** Convenience method to get the "innerHTML" of a DOM object. */
+	public String getContent(String $domObjId) {
+		return getAttribute($domObjId, "innerHTML");
+	}
+	
+	/** Convenience method to append content to the "innerHTML" of a DOM object. */
+	public void appendContent(String $domObjId, String $body) {
+		eval("gebi(\"", $domObjId, "\").innerHTML+=\"", $body, "\";");
+	}
+
+	/** Convenience method to clear all content of a DOM object. */
+	public void clearContent(String $domObjId) {
+		setAttribute($domObjId, "innerHTML", "");
 	}
 	
 	/**
