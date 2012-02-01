@@ -219,7 +219,7 @@ public abstract class TestCase implements Runnable {
 			if ($unitFailures > 0) throw new AssertionFatal("breaking case: "+$unitFailures+" failures.");
 		}
 		
-		public final String getName() {
+		public String getName() {
 			String[] $arrg = Primitives.Patterns.DOT.split(getClass().getCanonicalName());
 			return $arrg[$arrg.length-1];
 		}
