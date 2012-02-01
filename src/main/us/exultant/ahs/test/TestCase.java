@@ -220,7 +220,7 @@ public abstract class TestCase implements Runnable {
 		}
 		
 		public final String getName() {
-			String[] $arrg = Primitives.PATTERN_DOT.split(getClass().getCanonicalName());
+			String[] $arrg = Primitives.Patterns.DOT.split(getClass().getCanonicalName());
 			return $arrg[$arrg.length-1];
 		}
 	}
