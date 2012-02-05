@@ -215,13 +215,29 @@
 	
 	<target name="compile-io" depends="compile-thread">
 		<exusJavacStrict
-			 module="main/io"
-			 classes="us/exultant/ahs/io/**"
-			 depends="build/main/core : build/main/thread"
-			 />
+				module="main/io"
+				classes="us/exultant/ahs/io/**"
+				depends="build/main/core : build/main/thread"
+				/>
 	</target>
 	<target name="dist-io" depends="compile-io">
 		<jar jarfile="dist/ahslib-io.jar" basedir="build/main/io">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="compile-crypto" depends="compile-codec">
+		<exusJavacStrict
+				module="main/crypto"
+				classes="us/exultant/ahs/crypto/**"
+				depends="build/main/core : build/main/codec: lib/bouncy.jar"
+				/>
+	</target>
+	<target name="dist-crypto" depends="compile-crypto">
+		<jar jarfile="dist/ahslib-crypto.jar" basedir="build/main/crypto">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -255,7 +271,8 @@
 			compile-test,
 			compile-test-junit,
 			compile-thread,
-			compile-io
+			compile-io,
+			compile-crypto
 		">
 		<jar jarfile="dist/ahslib-complete.jar">
 			<fileset dir="build/main/core"/>
@@ -268,7 +285,7 @@
 			<fileset dir="build/main/test-junit"/>
 			<fileset dir="build/main/thread"/>
 			<fileset dir="build/main/io"/>
-			<!-- does not include scratch, and does not include anything with external dependancies (except junit, because who cares). -->
+			<fileset dir="build/main/crypto"/>
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
