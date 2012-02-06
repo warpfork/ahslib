@@ -217,7 +217,7 @@ public class Pipe<$T> implements Flow<$T> {
 				List<$T> $v = new ArrayList<$T>($p);
 				for (int $i = 0; $i < $p; $i++)
 					$v.add($queue.poll());
-				checkForFinale();
+				checkForFinale();	//FIXME:AHS:THREAD: can call the listener.  should be outside the lock.
 				return $v;
 			} finally {
 				$lock.unlock();
@@ -382,6 +382,11 @@ public class Pipe<$T> implements Flow<$T> {
 			//... i don't think we want every read after closure and emptiness to make an event, in case someone's too stupid to realize that that event means they're supposed to stop reading.
 			// then again, we're all consenting adults here, and i don't believe i can do that without a cas here or vastly more locking than i can abide by.
 			// anyway!  point is that if there are two permits left in a closed pipe and two people acquire before either of them gets to that hasNext, this event's gonna get fired twice.
+			//FIXME:AHS:THREAD: this turns out to be a really shitty policy in practice, because if your first response to an event is to try to readAllNow (normal, right?  even seems like you should be able to do that *before checking isExhausted*) you'll get straight into a loop.
+			//   well, if you do it in a listener you're fucked, anyway.  i guess if you do it in a work target you're probably safe, because you'll just get another spurious event, and you'll never get a next run because the scheduler itself will check termination and find it for you.
+			//   hmm.  !isExhausted() { readallnow; doshit; } seems to work out pretty fine to fix the listener issue, i guess.  that's.... a long way from obvious, though.
+			//     on the other hand, you really should know better to do anything serious in a listener, and generally i'd say that reading from a pipe at all counts for that.  you should just spawn or trigger a workTarget for that.
+			//     actually?  having a boolean idempotent field here in the pipe that's used to keep from sending exhaustion events more than once could actually be worked out to be a non-expense in every listener call, so that's the superior option here.
 		}
 	}
 }
