@@ -48,6 +48,8 @@ public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
 		return $inbound;
 	}
 	
+	//public int size() {	// i don't actually know how i'd answer this!  the size of people done, or the size of people not yet done, or the sum not-yet-done and done-but-not-read, or...?
+	
 	private final WriteHead<WorkFuture<$T>> $inbound = new Sink();
 	private volatile boolean $allowMore = true;
 	private final Pipe<WorkFuture<$T>> $outbound = new Pipe<WorkFuture<$T>>();
