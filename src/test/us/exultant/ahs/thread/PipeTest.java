@@ -39,6 +39,7 @@ public class PipeTest extends TestCase {
 		$tests.add(new TestBasicClose_ReadAfterCloseReturns());
 		$tests.add(new TestConcurrent_ReadBlockBeforeWrite());
 		$tests.add(new TestConcurrent_ReadWriteBlocking());
+		$tests.add(new TestConcurrent_ReadPauseyWriteBlocking());
 		$tests.add(new TestConcurrent_Close());
 		return $tests;
 	}
@@ -224,7 +225,7 @@ public class PipeTest extends TestCase {
 				for (int $i = 0; $i < $msgsPerThread; $i++) {
 					$pipe.SINK.write($str);
 					if ($log.TRACE) $log.trace(this, "wrote \""+$str+"\", pipe size now "+$pipe.size());
-					if ($writesBetweenDelay > 0 && $writesBetweenDelay % $i+1 == 0) X.chill(1);
+					if ($writesBetweenDelay > 0 && $i % $writesBetweenDelay == 0) X.chill(1);
 				}
 				$log.trace(this, "writing thread done.");
 			}
@@ -242,13 +243,24 @@ public class PipeTest extends TestCase {
 		}
 	}
 	
-
+	
+	
 	private class TestConcurrent_ReadWriteBlocking extends TestConcurrent_ReadWriteBlockingGeneral {
 		public TestConcurrent_ReadWriteBlocking() {
 			super(100, 2, 0);
 		}
 	}
-
+	
+	
+	
+	private class TestConcurrent_ReadPauseyWriteBlocking extends TestConcurrent_ReadWriteBlockingGeneral {
+		public TestConcurrent_ReadPauseyWriteBlocking() {
+			super(100, 2, 10);
+		}
+	}
+	
+	
+	
 	private class TestConcurrent_Close extends TestCase.Unit {
 		Pipe<String> $pipe = new Pipe<String>();
 		ConcurrentCounter<String> $counter = ConcurrentCounter.make(Arr.asList(TD.s1));
