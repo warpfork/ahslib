@@ -410,6 +410,7 @@ public class Pipe<$T> implements Flow<$T> {
 			//   hmm.  !isExhausted() { readallnow; doshit; } seems to work out pretty fine to fix the listener issue, i guess.  that's.... a long way from obvious, though.
 			//     on the other hand, you really should know better to do anything serious in a listener, and generally i'd say that reading from a pipe at all counts for that.  you should just spawn or trigger a workTarget for that.
 			//     actually?  having a boolean idempotent field here in the pipe that's used to keep from sending exhaustion events more than once could actually be worked out to be a non-expense in every listener call, so that's the superior option here.
+			//        wait.  can we just set the listener to null?  that would kinda do the trick.  and it works fine unless you keep setting the listener again after the pipe is closed and empty, which would obviously make you a nutcase beyond help.
 		}
 	}
 }
