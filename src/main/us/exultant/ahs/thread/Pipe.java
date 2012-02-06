@@ -150,8 +150,8 @@ public class Pipe<$T> implements Flow<$T> {
 		
 		/**
 		 * <p>
-		 * Sets the Listener that will be triggered for every completed write
-		 * operation on the matching {@link Sink} and upon close and exhaustion.
+		 * Sets the Listener that will be triggered for completed write operations
+		 * on the matching {@link Sink} and upon close and exhaustion.
 		 * </p>
 		 * 
 		 * <p>
@@ -290,17 +290,16 @@ public class Pipe<$T> implements Flow<$T> {
 		public void write($T $chunk) throws IllegalStateException {
 			/* it's not actually necessary to check for NullPointerException ourselves;
 			 * it'll be thrown by $queue.add anyway, and we don't care to waste time checking that twice just to avoid a lock, because if it explodes, then who cares if locking was a waste that time? */
+			boolean $mustSpur = false;
 			lockWrite();
 			try {
 				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
 				$queue.add($chunk);
-				boolean $true = $gate.release();	// this can't return false because gate closure involves locking, and we're locked right now.  and that's essentially why the write-lock exists (otherwise we'd have to go dredge back through the queue if this did return false, and that would be... mucky).
-				if (!$true) throw new MajorBug("this isn't supposed to be possible.");
-				
-				invokeListener();
-				//XXX:AHS:EFFIC:THREAD: I don't think we have to do this notification from within the write-lock, do we?  (i guess we do in a batch situation whether we want to or not, though.)
+				$gate.release();	/* this can't return false because gate closure involves locking, and we're locked right now.  and that's essentially why the write-lock exists (otherwise we'd have to go dredge back through the queue if this did return false, and that would be... mucky). */
+				$mustSpur = true;	/* just by virtue of we didn't throw exception before now */
 			} finally {
 				unlockWrite();
+				if ($mustSpur) invokeListener();
 			}
 		}
 		
@@ -318,9 +317,10 @@ public class Pipe<$T> implements Flow<$T> {
 		 * </p>
 		 * 
 		 * <p>
-		 * Put another way: a single write-lock is maintained for the duration of
-		 * this method, but every element causes a release of permit and
-		 * notification to the pipe's listener.
+		 * Even if a {@link NullPointerException} is thrown, partial progress may
+		 * have been made &mdash; chunks preceeding the cause of the exception
+		 * have already been written to the Pipe, and permits for those chunks are
+		 * released before the exception bubbles out.
 		 * </p>
 		 * 
 		 * @throws IllegalStateException
@@ -329,13 +329,17 @@ public class Pipe<$T> implements Flow<$T> {
 		 *                 if any chunk in the collection is null
 		 */
 		public void writeAll(Collection<? extends $T> $chunks) {
-			// at first i thought i could implement this with addAll on the queue and a single big release... not actually so.  addAll on the queue can throw exceptions but still have made partial progress.
+			int $writes = 0;
 			lockWrite();
 			try {
-				for ($T $chunk : $chunks)
-					write($chunk);
+				for ($T $chunk : $chunks) {
+					$queue.add($chunk);	/* can't use addAll method because we have to count what happens. */
+					$writes++;
+				}
 			} finally {
+				if ($writes > 0) $gate.release($writes);
 				unlockWrite();
+				if ($writes > 0) invokeListener();
 			}
 		}
 		
