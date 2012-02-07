@@ -75,7 +75,7 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Integer> {
 	private int					$actsDone;
 	
 	public boolean isDone() {
-		return $src.isClosed() && !$src.hasNext();
+		return $src.isExhausted();
 	}
 	
 	public boolean isReady() {
