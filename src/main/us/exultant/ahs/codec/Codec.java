@@ -24,10 +24,13 @@ import java.util.*;
 /**
  * <p>
  * Many data-storage classes implement some form of serialization or encoding in their own
- * methods. This class and its contained interfaces allow classes such as these as well as
+ * methods; this interface describes methods to allow classes such as these as well as
  * other heterogeneous classes which may not provide their own internal encoding to all be
  * wrapped smoothly into one entry point for encoding and decoding into a single generic
- * format.
+ * format. Note that this class is extremely general: if you're looking for working
+ * implementations, start with {@link us.exultant.ahs.codec.eon.EonObject}, then choose
+ * either {@link us.exultant.ahs.codec.json.JsonObject} or
+ * {@link us.exultant.ahs.codec.ebon.EbonObject} as your implementation.
  * </p>
  * 
  * <p>
@@ -37,15 +40,16 @@ import java.util.*;
  * on context. It might allow one encoder class to perform the encoding operation for
  * several similar data classes, and thus allow optimizations reducing code size as well
  * as preparing often used variables (and making life easier for HotSpot). Overall, it's
- * just a better example of MVC practice -- a codec should be a C for any of your M.
+ * just a better example of MVC practice &mdash; a codec should be a C for any of your M.
  * </p>
- * 
- * @author hash
  * 
  * @param <$CODE>
  *                The type of object used to represent the encoded version of the data. A
  *                typical example might be {@link us.exultant.ahs.codec.json.JsonObject}
  *                or {@link us.exultant.ahs.codec.ebon.EbonObject}.
+ *                
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
+ * 
  */	// if you try to change those @link annotations above to use import statements, compiling will break because of the module boundaries.
 public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder);

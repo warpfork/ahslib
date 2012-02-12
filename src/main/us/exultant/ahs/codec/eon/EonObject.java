@@ -95,6 +95,9 @@ import java.util.*;
  * 
  * @see EonArray for the matching abstraction as applicable for arrays (as opposed to the
  *      maps provided here).
+ * 
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
+ * 
  */
 public interface EonObject {
 	/**
@@ -463,25 +466,38 @@ public interface EonObject {
 	
 	
 	/**
+	 * <p>
 	 * Produces a byte array which contains the serialized representation of all the
 	 * data in an EonObject.
+	 * </p>
 	 * 
+	 * <p>
 	 * Note that in implementations that are not binary, this tends to be a UTF-8
 	 * string.
+	 * </p>
 	 * 
 	 * @return a byte array which contains the serialized representation of an
 	 *         EonObject
 	 * @throws TranslationException
-	 *                 in case of extreme surprises
+	 *                 in case of unserializable data or other extreme surprises.
+	 *                 Generally, this should not happen, but some implementations may
+	 *                 accept a wider range of input when deserializing than they will
+	 *                 output when serializing, which leaves a space where the object
+	 *                 may contain data which is more or less valid but nonetheless
+	 *                 not serializable.
 	 */
 	public byte[] serialize() throws TranslationException;
 	
 	/**
+	 * <p>
 	 * Fills an empty EonObject with the data produced by deserializing the given byte
 	 * array.
+	 * </p>
 	 * 
+	 * <p>
 	 * If used on an EonObject that already contains some data, the result is not
 	 * defined and exceptions may be thrown.
+	 * </p>
 	 * 
 	 * @param $bats
 	 *                a byte array which contains the serialized representation of an
@@ -505,6 +521,6 @@ public interface EonObject {
 	 * @author hash
 	 */
 	public abstract static class Adapter {
-		//TODO:AHS: omg really.  this would make so much json stuff SO much more clear, to say nothing of consistent across other platforms to come.
+		//TODO:AHS:CODEC: omg really.  this would make so much json stuff SO much more clear, to say nothing of consistent across other platforms to come.
 	}
 }

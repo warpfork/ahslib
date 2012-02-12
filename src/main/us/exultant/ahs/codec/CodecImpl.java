@@ -19,7 +19,6 @@
 package us.exultant.ahs.codec;
 
 import us.exultant.ahs.core.*;
-import java.util.*;
 
 public class CodecImpl<$CODEC extends Codec<$CODEC, $CODE>, $CODE> implements Codec<$CODEC,$CODE> {
 	/**
@@ -62,34 +61,6 @@ public class CodecImpl<$CODEC extends Codec<$CODEC, $CODE>, $CODE> implements Co
 			return $dd.decode(($CODEC)this, $datenc, $datclrclass);
 		} catch (TranslationException $e) {
 			throw new TranslationException("Decoding failed for class "+$datclrclass.getName()+".", $e);
-		}
-	}
-	
-	
-	
-	public static class Brutemux<$CO extends Codec<$CO,$C>, $C> {
-        	public <$T> void putHook(Class<$T> $c, Listener<$T> $d) {
-        		$hooks.put($c, $d);
-        	}
-        	
-		private Map<Class<?>,Listener<?>>	$hooks	= new HashMap<Class<?>,Listener<?>>();
-		
-		public boolean disbatch(Codec<$CO,$C> $codec, $C $x) throws TranslationException {
-			//for (Map.Entry<Class<?>,Listener<?>> $ent : $hooks.entrySet()) {
-			for (Class<?> $c : $hooks.keySet()) {
-				try {
-					return disbatch($codec.decode($x, $c));
-				} catch (TranslationException $e) { /* just go on and try the next. */ }
-			}
-			return false;
-		}
-		
-		@SuppressWarnings("unchecked")	// yes, the following method is technically unsafe.  at runtime, it should be absolutely reliable.
-		public <$T> boolean disbatch($T $x) {
-			Listener<$T> $hook = (Listener<$T>)$hooks.get($x.getClass());
-			if ($hook == null) return false; 
-			$hook.hear($x);
-			return true;
 		}
 	}
 }

@@ -371,7 +371,7 @@ public class EbonObject implements EonObject {
 			}
 		} catch (IOException $e) {
 			// ought not happen.  we can't really get io exceptions from writing to an internal buffer we just declared...
-			throw new EbonException($e);
+			throw new MajorBug("Unimaginably strange error while writing to an internal buffer.", $e);
 		}
 	}
 	
