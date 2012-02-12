@@ -400,22 +400,23 @@ public class EbonObject implements EonObject {
 			byte $switch;	// temp bucket
 			String $key;	// self explanitory
 			Object $win;	// self explanitory
+			$bats = new byte[1024];
 			for (int $i = 0; $i < $mapl; $i++) {
 				$len = $din.readShort();
-				if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a key to be longer than remaining data.");
-				$bats = new byte[$len];
-				$din.read($bats);
-				$key = new String($bats, Strings.UTF_8);
+				if ($len > $din.available()) throw new EOFException("Invalid format; Length header specified a key to be longer than remaining data.");
+				if ($bats.length < $len) $bats = new byte[$len];
+				$din.read($bats, 0, $len);
+				$key = new String($bats, 0, $len, Strings.UTF_8);
 				if (has($key)) throw new EbonException("Duplicate key \"" + $key + "\"");
 				
 				$switch = $din.readByte();
 				switch ($switch) {
 					case '[':
 						$len = $din.readInt();
-						if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a field to be longer than remaining data.");
-						$bats = new byte[$len];
-						$din.read($bats);
-						$win = $bats;
+						if ($len > $din.available()) throw new EOFException("Invalid format; Length header specified a field to be longer than remaining data.");
+						byte[] $newbats = new byte[$len];	/* This is kind of awkward, but I'm betting that the inlining is easier this way than allocating $win as a byte[] directly and then having to cast for the read call. */
+						$din.read($newbats);
+						$win = $newbats;
 						break;
 					case 'b':
 						$win = $din.readBoolean();
@@ -431,10 +432,10 @@ public class EbonObject implements EonObject {
 						break;
 					case 's':
 						$len = $din.readInt();
-						if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a field to be longer than remaining data.");
-						$bats = new byte[$len];
-						$din.read($bats);
-						$win = new String($bats, Strings.UTF_8);	//XXX:AHS:EFFIC: it would be nice if there was a factory for strings that would let me read from DataInputStream directly without that intermediate byte array copy.
+						if ($len > $din.available()) throw new EOFException("Invalid format; Length header specified a field to be longer than remaining data.");
+						if ($bats.length < $len) $bats = new byte[$len];
+						$din.read($bats, 0, $len); /* it would be nice if there was a factory for strings that would let me read from DataInputStream directly without this intermediate byte array copy, but this is as close as we can get.  reusing the $bats array whenever possible does save us a lot of the garbage, anyway. */
+						$win = new String($bats, 0, $len, Strings.UTF_8);
 						break;
 					case 'o':
 						$win = new EbonObject();
