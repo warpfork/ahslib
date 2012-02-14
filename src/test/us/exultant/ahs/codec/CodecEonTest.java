@@ -39,7 +39,7 @@ import java.util.*;
  * others (like JSON) have other specifications that I have no control over which forbid
  * them these options.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 abstract class CodecEonTest extends JUnitTestCase {

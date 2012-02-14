@@ -7,7 +7,7 @@ import java.lang.annotation.*;
  * strictly speaking, access rules allow it) it is not appropriate to refer to in any
  * non-testing code.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented

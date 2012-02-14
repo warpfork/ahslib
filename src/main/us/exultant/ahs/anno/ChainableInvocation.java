@@ -7,7 +7,7 @@ import java.lang.annotation.*;
  * on. Methods with this type of signature are said to be supporting "chaining", because
  * it creates a distinctive form of syntactical sugar.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented

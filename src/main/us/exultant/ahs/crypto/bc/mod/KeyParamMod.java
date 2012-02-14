@@ -36,7 +36,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
  * same. Why BC wasn't smart enough to do this itself I do not know.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class KeyParamMod extends KeyParameter {
 	public KeyParamMod(byte[] key) {

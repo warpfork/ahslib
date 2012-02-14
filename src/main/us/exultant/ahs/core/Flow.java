@@ -22,7 +22,7 @@ package us.exultant.ahs.core;
 /**
  * Pairs a source and a sink, typically as in a Socket.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public interface Flow<$T> {	// or Membrane, or Doublet, or something...

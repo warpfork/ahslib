@@ -50,7 +50,7 @@ import java.util.*;
  * be significant blocking for the disk access itself.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public interface WriteHead<$T> {
 	/**

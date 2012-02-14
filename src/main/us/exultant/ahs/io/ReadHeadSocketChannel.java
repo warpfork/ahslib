@@ -39,7 +39,7 @@ import java.nio.channels.*;
  * WorkTargetSelector appropriate).
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {

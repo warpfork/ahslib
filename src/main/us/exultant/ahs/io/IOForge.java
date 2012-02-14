@@ -51,7 +51,7 @@ import java.util.*;
  * by Java novices.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class IOForge {

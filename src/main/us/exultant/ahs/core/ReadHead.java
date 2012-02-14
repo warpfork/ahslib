@@ -81,7 +81,7 @@ import java.util.concurrent.*;
  * some other sort of object as a container for batches.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  */

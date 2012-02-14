@@ -22,7 +22,7 @@ import us.exultant.ahs.core.*;
 import us.exultant.ahs.codec.eon.*;
 
 /**
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class JsonCodec extends EonCodec {
 	public static final JsonCodec X = new JsonCodec();

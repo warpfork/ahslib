@@ -24,7 +24,7 @@ import us.exultant.ahs.codec.ebon.*;
 import us.exultant.ahs.codec.eon.*;
 
 /**
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  *
  */
 public interface KeySystemIbeFak extends KeySystemIbe<KeyFakPub, KeyFakPrv> {

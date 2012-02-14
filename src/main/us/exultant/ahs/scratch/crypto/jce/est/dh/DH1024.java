@@ -30,7 +30,7 @@ import javax.crypto.interfaces.*;
 import javax.crypto.spec.*;
 
 /**
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  *
  */
 public class DH1024 implements KeySystemEstDh<KeyAes> {

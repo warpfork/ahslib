@@ -24,7 +24,7 @@ import java.security.*;
 /**
  * Just for grouping.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  *
  */
 public interface KeySystem {

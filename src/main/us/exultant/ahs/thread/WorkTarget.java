@@ -38,7 +38,7 @@ import java.util.concurrent.*;
  * WorkTarget into more than one WorkScheduler.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @param <$V>
  *                The type returned by {@link #call()}. (This can often be {@link Void} in
  *                the case of WorkTarget that are designed to be called repeatedly, since
@@ -242,7 +242,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * values between a billion and negative one billion and you'll be fine.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 * 
 	 */
 	public static class PriorityComparator implements Comparator<WorkTarget<?>> {
@@ -259,7 +259,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * Bridges the gap between {@link Runnable} and WorkTarget.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 */
 	public static class RunnableWrapper implements WorkTarget<Void> {
 		public RunnableWrapper(Runnable $wrap) { this($wrap,0,true); }
@@ -307,7 +307,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * Bridges the gap between {@link Callable} and WorkTarget.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 */
 	public static class CallableWrapper<$V> implements WorkTarget<$V> {
 		public CallableWrapper(Callable<$V> $wrap) { this($wrap,0,true); }

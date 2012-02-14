@@ -28,7 +28,7 @@ import java.security.*;
  * should never access a single KeySystem object without applying some sort of external
  * synchronization first.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$KEYSYM>
  */

@@ -20,7 +20,7 @@
 package us.exultant.ahs.scratch.crypto.jce.dig;
 
 /**
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  *
  */
 public interface Digester {

@@ -51,7 +51,7 @@ import java.awt.*;
  * with this clip is 5,3 (global 7,4).
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class Window {

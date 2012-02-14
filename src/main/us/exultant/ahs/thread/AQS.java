@@ -38,7 +38,7 @@ import java.util.concurrent.locks.Lock;
  * between internal calls, making more specialized functionality possible in subclasses;
  * otherwise, all of the core functionality is essentially the same.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @author Doug Lea
  */
 public abstract class AQS extends AbstractOwnableSynchronizer {

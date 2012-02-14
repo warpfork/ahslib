@@ -50,7 +50,7 @@ import us.exultant.ahs.util.*;
  * an application protocol.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$FROM>
  * @param <$TO>

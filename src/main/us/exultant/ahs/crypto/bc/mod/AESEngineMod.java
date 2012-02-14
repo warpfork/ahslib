@@ -44,7 +44,7 @@ import org.bouncycastle.crypto.params.*;
  * surprise when you figure out what an idiot you were about pointers.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class AESEngineMod extends AESFastEngine {
 	// note incredibly lazy initialization here it?  we even check these before setting them!  it's fine, though: the worst that can happen if either one of these is unset or wrong is an unnecessary init of the cipher... and that's exactly what should be done if either of these are unset.

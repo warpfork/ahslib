@@ -71,7 +71,7 @@ package us.exultant.ahs.terminal;
  * "▟" is referred to as "BBBN".
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public interface BoxChars {

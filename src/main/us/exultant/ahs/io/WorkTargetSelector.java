@@ -33,7 +33,7 @@ import java.util.*;
  * reasonable way to do this..
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 // in a perfect world, i'd like to be able to treat connection acceptance or whathaveyou has a separate priority than readability or whathaveyou.

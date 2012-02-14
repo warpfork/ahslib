@@ -28,7 +28,7 @@ import us.exultant.ahs.util.*;
  * should never access a single KeySystem object without applying some sort of external
  * synchronization first.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$KEYPUB>
  * @param <$KEYPRV>

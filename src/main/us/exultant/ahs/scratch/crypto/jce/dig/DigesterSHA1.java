@@ -24,7 +24,7 @@ import us.exultant.ahs.util.*;
 import java.security.*;
 
 /**
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  *
  */
 public class DigesterSHA1 implements Digester {

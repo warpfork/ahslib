@@ -47,7 +47,7 @@ import java.util.concurrent.locks.*;
  * response to any attempt to write nulls.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class Pipe<$T> implements Flow<$T> {
@@ -142,7 +142,7 @@ public class Pipe<$T> implements Flow<$T> {
 	/**
 	 * {@link Pipe}'s internal implementation of ReadHead.
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 *
 	 */
 	public final class Source implements ReadHead<$T> {

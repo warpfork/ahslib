@@ -70,7 +70,7 @@ public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	 * interface align nicely with these dispatcher implementations.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 * 
 	 * @param <$C>
 	 *                The type of object used to represent the encoded version of the
@@ -107,7 +107,7 @@ public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	 * interface align nicely with these dispatcher implementations.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 * 
 	 * @param <$C>
 	 *                The type of object used to represent the encoded version of the

@@ -68,7 +68,7 @@ import java.util.concurrent.*;
  * thereafter for recurring tasks, when an execution finishes).
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public final class ScheduleParams {

@@ -36,7 +36,7 @@ package us.exultant.ahs.core;
  * better designed before compile time in the first place).
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class UnencodableException extends TranslationException {

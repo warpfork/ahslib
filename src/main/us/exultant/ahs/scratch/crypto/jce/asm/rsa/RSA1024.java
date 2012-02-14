@@ -39,7 +39,7 @@ import javax.crypto.*;
  * out-of-the-box support for other modes that are actually secure.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class RSA1024 implements KeySystemAsymRsa {
 	/**

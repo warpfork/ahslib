@@ -22,7 +22,7 @@ package us.exultant.ahs.scratch.crypto.jce.asm.rsa;
 import us.exultant.ahs.scratch.crypto.jce.asm.*;
 
 /**
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  *
  */
 public interface KeySystemAsymRsa extends KeySystemAsym<KeyRsaPub, KeyRsaPrv> {

@@ -26,7 +26,7 @@ package us.exultant.ahs.util;
  * it's entirely possible to implement that method, but that it wasn't completed due to
  * time constraints.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class NotYetImplementedException extends UnsupportedOperationException {

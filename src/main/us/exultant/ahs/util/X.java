@@ -24,7 +24,7 @@ import java.io.*;
 /**
  * Low cohesion static methods for variegated conveniences.
  *  
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  *
  */
 public class X {

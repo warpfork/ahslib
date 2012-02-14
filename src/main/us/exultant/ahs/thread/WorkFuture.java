@@ -39,7 +39,7 @@ import java.util.concurrent.*;
  * WorkFuture.)
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$V>
  */

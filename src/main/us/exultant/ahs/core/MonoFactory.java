@@ -43,7 +43,7 @@ package us.exultant.ahs.core;
  * more flexible, but tends to result in substantial boilerplate code.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  */

@@ -518,7 +518,7 @@ public interface EonObject {
 	 * "opt"-like functionality, but still leaves the basic data-oriented methods to
 	 * be implemented by concrete subclasses.
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 */
 	public abstract static class Adapter {
 		//TODO:AHS:CODEC: omg really.  this would make so much json stuff SO much more clear, to say nothing of consistent across other platforms to come.
