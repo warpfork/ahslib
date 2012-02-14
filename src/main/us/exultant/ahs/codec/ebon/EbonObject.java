@@ -492,15 +492,7 @@ public class EbonObject implements EonObject {
 	}
 
 	public String toString() {
-		return "EbonObject [$map=" + this.$map + "]";
-	}
-	
-	public String toArrStr() {
-		try {
-			return Arr.toString(this.serialize());
-		} catch (EbonException $e) {
-			return X.toString($e);
-		}
+		return "EbonObject[$map=" + this.$map + "]";
 	}
 	
 	public Set<Map.Entry<String,Object>> entrySet() {

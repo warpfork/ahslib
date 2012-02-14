@@ -384,4 +384,8 @@ public class EbonArray implements EonArray {
 			throw new EbonException($e);
 		}
 	}
+
+	public String toString() {
+		return "EbonArray[$arr=" + this.$arr + "]";
+	}
 }
