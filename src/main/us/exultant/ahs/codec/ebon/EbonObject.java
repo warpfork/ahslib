@@ -330,8 +330,10 @@ public class EbonObject implements EonObject {
 		Bah $bah = new Bah(128);
 		DataOutputStream $dou = new DataOutputStream($bah);
 		serialize($dou);
-		return $bah.getByteArray();
+		return ($bah.size() == $bah.getByteArray().length) ? $bah.getByteArray() : $bah.toByteArray();
 	}
+	
+	//int calculateSerializedSize() { // this would let us do zero-copy goodness, but would also cost us having to traverse the entire tree twice.  i'm not sure which would be faster; i suspect usually the latter, but we should do this someday and then test. 
 	
 	/**
 	 * Package-visible so EbonArray and EbonObject can play tag.
