@@ -24,6 +24,18 @@ import us.exultant.ahs.codec.eon.*;
 import java.io.*;
 import java.util.*;
 
+/**
+ * This is a very fast binary protocol implementing {@link EonObject}. Fields are either
+ * fixed-lenth (i.e. booleans, doubles, integers, and longs), or length prefixes the field
+ * as a binary integer (i.e. strings and byte arrays); {@link EbonObject} and
+ * {@link EbonArray} can be nested. Key lengths for every field are stored as a short (2
+ * bytes), so keys may not exceed 65536 bytes in length. No type coersion is allowed by
+ * any of the methods that return stored values; when serialized, type is stored as one
+ * byte for each field.  Strings are stored in the UTF-8 charset.
+ * 
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
+ * 
+ */
 public class EbonArray implements EonArray {
 	public EbonArray() {
 		$arr = new ArrayList<Object>();

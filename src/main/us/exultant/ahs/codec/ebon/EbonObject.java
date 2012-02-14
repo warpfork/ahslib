@@ -24,6 +24,18 @@ import us.exultant.ahs.util.*;
 import java.io.*;
 import java.util.*;
 
+/**
+ * This is a very fast binary protocol implementing {@link EonObject}. Fields are either
+ * fixed-lenth (i.e. booleans, doubles, integers, and longs), or length prefixes the field
+ * as a binary integer (i.e. strings and byte arrays); {@link EbonObject} and
+ * {@link EbonArray} can be nested. Key lengths for every field are stored as a short (2
+ * bytes), so keys may not exceed 65536 bytes in length. No type coersion is allowed by
+ * any of the methods that return stored values; when serialized, type is stored as one
+ * byte for each field.  Strings are stored in the UTF-8 charset.
+ * 
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
+ * 
+ */
 public class EbonObject implements EonObject {
 	public EbonObject() {
 		$map = new HashMap<String,Object>();
@@ -434,7 +446,7 @@ public class EbonObject implements EonObject {
 						$len = $din.readInt();
 						if ($len > $din.available()) throw new EOFException("Invalid format; Length header specified a field to be longer than remaining data.");
 						if ($bats.length < $len) $bats = new byte[$len];
-						$din.read($bats, 0, $len); /* it would be nice if there was a factory for strings that would let me read from DataInputStream directly without this intermediate byte array copy, but this is as close as we can get.  reusing the $bats array whenever possible does save us a lot of the garbage, anyway. */
+						$din.read($bats, 0, $len);	/* it would be nice if there was a factory for strings that would let me read from DataInputStream directly without this intermediate byte array copy, but this is as close as we can get.  reusing the $bats array whenever possible does save us a lot of the garbage, anyway. */
 						$win = new String($bats, 0, $len, Strings.UTF_8);
 						break;
 					case 'o':
