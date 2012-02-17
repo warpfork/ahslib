@@ -25,7 +25,7 @@ import java.util.concurrent.*;
 /**
  * <p>
  * Provides an interface to make file, network, and internal pipe operations all
- * transparent and operational in either blocking or nonblocking modes. This unified
+ * transparently and operational in either blocking or nonblocking modes. This unified
  * scheme has the noteworthy aspect of always allowing incoming data to be requested at
  * the application's leisure (as opposed to requiring any sort of event listener), while
  * simultaneously allowing event listeners to be attached if the old "listener" pattern is

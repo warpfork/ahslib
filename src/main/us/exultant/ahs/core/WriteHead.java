@@ -24,7 +24,7 @@ import java.util.*;
 /**
  * <p>
  * Provides an interface to make file, network, and internal pipe operations all
- * transparent; WriteHead is the complement of {@link ReadHead}.
+ * transparently; WriteHead is the complement of {@link ReadHead}.
  * </p>
  * 
  * <p>
@@ -123,6 +123,8 @@ public interface WriteHead<$T> {
 	public boolean hasRoom();
 	
 	/**
+	 * Reports whether or not the WriteHead is closed to the entry of data.
+	 * 
 	 * @return true if the underlying stream is closed and writes are not possible.
 	 */
 	public boolean isClosed();
