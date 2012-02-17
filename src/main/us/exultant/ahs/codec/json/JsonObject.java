@@ -15,17 +15,9 @@ package us.exultant.ahs.codec.json;
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.codec.eon.*;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.io.*;
+import java.lang.reflect.*;
+import java.util.*;
 
 /**
  * A JsonObject is an unordered collection of name/value pairs. Its external form is a
@@ -156,7 +148,7 @@ public class JsonObject implements EonObject {
 	 * Construct an empty JsonObject.
 	 */
 	public JsonObject() {
-		this.map = new HashMap<String, Object>();
+		this.map = new LinkedHashMap<String, Object>();
 	}
 	
 	
@@ -250,7 +242,7 @@ public class JsonObject implements EonObject {
 	 *                JsonObject.
 	 */
 	public JsonObject(Map<String, Object> map) {
-		this.map = (map == null) ? new HashMap<String, Object>() : map;
+		this.map = (map == null) ? new LinkedHashMap<String, Object>() : map;
 	}
 	
 	/**

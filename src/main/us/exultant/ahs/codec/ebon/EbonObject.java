@@ -20,7 +20,6 @@ package us.exultant.ahs.codec.ebon;
 
 import us.exultant.ahs.codec.eon.*;
 import us.exultant.ahs.util.*;
-
 import java.io.*;
 import java.util.*;
 
@@ -38,7 +37,7 @@ import java.util.*;
  */
 public class EbonObject implements EonObject {
 	public EbonObject() {
-		$map = new HashMap<String,Object>();
+		$map = new LinkedHashMap<String,Object>();
 	}
 	
 	private Map<String,Object> $map;
