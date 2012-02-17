@@ -20,12 +20,23 @@
 package us.exultant.ahs.core;
 
 /**
- * Pairs a source and a sink, typically as in a Socket.
+ * Pairs a source and a sink, typically as in Pipe or a Socket.
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
+ * @param <$T>
+ *                the type spoken by the Flow.
  */
-public interface Flow<$T> {	// or Membrane, or Doublet, or something...
+public interface Flow<$T> {
+	/**
+	 * Basic adapter implementation of Flow. Slings a {@link ReadHead} and
+	 * {@link WriteHead} of matching type together.
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 * @param <$T>
+	 *                the type spoken by the Flow.
+	 */
 	public static class Basic<$T> implements Flow<$T> {
 		public Basic(ReadHead<$T> $src, WriteHead<$T> $sink) {
 			SRC = $src;
