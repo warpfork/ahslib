@@ -19,6 +19,7 @@
 
 package us.exultant.ahs.core;
 
+import us.exultant.ahs.anno.*;
 import java.util.*;
 
 /**
@@ -62,6 +63,7 @@ public interface WriteHead<$T> {
 	 * @throws NullPointerException
 	 *                 if the chunk is null
 	 */
+	@ThreadSafe
 	public void write($T $chunk);
 	
 	/**
@@ -104,6 +106,7 @@ public interface WriteHead<$T> {
 	 * @throws NullPointerException
 	 *                 if any chunk in the collection is null
 	 */
+	@ThreadSafe
 	public void writeAll(Collection<? extends $T> $chunks);
 	
 	/**
@@ -120,6 +123,8 @@ public interface WriteHead<$T> {
 	 *         realisticness of "immediacy" in multithreading aside) call to write()
 	 *         will return immediately without blocking.
 	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean hasRoom();
 	
 	/**
@@ -127,6 +132,8 @@ public interface WriteHead<$T> {
 	 * 
 	 * @return true if the underlying stream is closed and writes are not possible.
 	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean isClosed();
 	
 	/**
@@ -155,5 +162,7 @@ public interface WriteHead<$T> {
 	 * closed WriteHead is illogical (but should not throw exceptions).
 	 * </p>
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void close();
 }

@@ -19,6 +19,7 @@
 
 package us.exultant.ahs.core;
 
+import us.exultant.ahs.anno.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -137,6 +138,8 @@ public interface ReadHead<$T> {
 	 * 
 	 * @param $el
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void setListener(Listener<ReadHead<$T>> $el);
 	
 	/**
@@ -157,6 +160,7 @@ public interface ReadHead<$T> {
 	 *         underlying stream reaches an {@code EOF} state while this call is still
 	 *         blocking for more input; others may try to return a partial chunk.
 	 */
+	@ThreadSafe
 	public $T read();
 	
 	/**
@@ -166,6 +170,7 @@ public interface ReadHead<$T> {
 	 *         either <code>EOF</code> or simply nothing available at the time.
 	 *         {@link #isClosed()} should be used to determine the difference.
 	 */
+	@ThreadSafe
 	public $T readNow();
 
 	/**
@@ -201,6 +206,7 @@ public interface ReadHead<$T> {
 	 *         underlying stream reaches an {@code EOF} state while this call is still
 	 *         blocking for more input; others may try to return a partial chunk.
 	 */
+	@ThreadSafe
 	public $T readSoon(long $timeout, TimeUnit $unit);
 	
 	/**
@@ -214,6 +220,8 @@ public interface ReadHead<$T> {
 	 *         indicate either <code>EOF</code> or simply nothing available at the time.
 	 *         {@link #isClosed()} should be used to determine the difference.
 	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean hasNext();
 	
 	/**
@@ -255,6 +263,7 @@ public interface ReadHead<$T> {
 	 *                 since this method is then not well defined.
 	 * 
 	 */
+	@ThreadSafe
 	public List<$T> readAll();
 	
 	/**
@@ -269,6 +278,7 @@ public interface ReadHead<$T> {
 	 *         stream. The list returned may have zero entries if there is no input
 	 *         currently available, but null may never be returned.
 	 */
+	@ThreadSafe
 	public List<$T> readAllNow();
 	
 	
@@ -297,6 +307,8 @@ public interface ReadHead<$T> {
 	 *         {@link #isClosed()} and {@link #hasNext()} return true and false
 	 *         respectively that no further invocations of hasNext() will return true.
 	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean isClosed();
 	
 	/**
@@ -336,6 +348,8 @@ public interface ReadHead<$T> {
 	 * </p>
 	 */
 	// i might consider making a boolean parameter to this method for forcefulness.  perhaps there are applications that would actually want to be able to insist on losing data to the abyss between buffers?
+	@Idempotent
+	@ThreadSafe
 	public void close();
 	
 	/**
@@ -346,5 +360,7 @@ public interface ReadHead<$T> {
 	 * @return false if it is possible for a read to return data in the future; true
 	 *         otherwise.
 	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean isExhausted();
 }
