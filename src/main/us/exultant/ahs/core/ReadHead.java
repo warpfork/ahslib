@@ -325,9 +325,9 @@ public interface ReadHead<$T> {
 	 * with a WriteHead at some other position along the same underlying stream or
 	 * channel; network connections are typically exemplary of this as well as
 	 * in-program pipes), this method may typically be expected to maintain the same
-	 * semantics as the general contract of close methods of the underlying type --
-	 * namely, that the matching WriteHead (or equivalent) may find its stream or
-	 * channel to have become closed as well.
+	 * semantics as the general contract of close methods of the underlying type
+	 * &mdash; namely, that the matching WriteHead (or equivalent) may find its stream
+	 * or channel to have become closed as well.
 	 * </p>
 	 * 
 	 * <p>
@@ -341,10 +341,9 @@ public interface ReadHead<$T> {
 	/**
 	 * Signals whether or not a read may ever again return data. This method is
 	 * functionally identical to calling <code>(isClosed() && !hasNext())</code>, but
-	 * may be more efficient. A return of true does not guarantee that a future read
-	 * <i>will</i> return data, only that it <i>may</i>.
+	 * may be more efficient.
 	 * 
-	 * @return true if it is possible for a read to return data in the future; false
+	 * @return false if it is possible for a read to return data in the future; true
 	 *         otherwise.
 	 */
 	public boolean isExhausted();
