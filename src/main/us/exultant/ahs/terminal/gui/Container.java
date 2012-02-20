@@ -19,6 +19,7 @@
 
 package us.exultant.ahs.terminal.gui;
 
+import us.exultant.ahs.terminal.*;
 import java.util.*;
 
 public class Container implements Component {

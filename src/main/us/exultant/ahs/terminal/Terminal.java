@@ -19,6 +19,8 @@
 
 package us.exultant.ahs.terminal;
 
+import java.awt.*;
+
 public interface Terminal {
 	public void print(String $s);
 	
@@ -36,7 +38,19 @@ public interface Terminal {
 	
 	/** Returns the height of the drawable area as best as can be determined.  This is a best-effort method -- the return may be -1 if we have no clue, and may not update instantly after the terminal size is externally modified. */
 	public int getHeight();
-	
+
+	/**
+	 * Draw all characters buffered in this Window onto a region of a Terminal.
+	 * 
+	 * @param $buffer
+	 *                the buffer render characters and palettes from
+	 * @param $region
+	 *                the "dirty" area of the screen that needs rendering. If the
+	 *                coordinates of this rectangle are outside of the boundaries of
+	 *                the Terminal, this object will be modified such that the
+	 *                coordinates are now confined to the boundaries of the Terminal.
+	 */
+	public void render(Window $buffer, Rectangle $region);
 	
 	
 	public static interface Cursor {	// i'd like to be able to have component-like boxes that can confine the cursor... but we're talking about a system that regularly screws up the distinction between input and output channels, and so i'm deeply afraid we really might not be able to do that.

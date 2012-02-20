@@ -19,9 +19,15 @@
 
 package us.exultant.ahs.terminal;
 
+import static us.exultant.ahs.terminal.TermCodes.*;
+import java.awt.*;
 import java.io.*;
 import java.util.*;
 
+/**
+ * Implements interface to a terminal that understands ANSI control sequences that is on
+ * the System.console.
+ */
 public class StandardTerminal implements Terminal {
 	public static StandardTerminal get() {
 		return SingletonHolder.INSTANCE;
@@ -54,8 +60,33 @@ public class StandardTerminal implements Terminal {
 	public Palette setPalette(Palette $p) {
 		Palette $v = $palette;
 		$palette = $p;
-		$console.printf($p.code());
+		$console.printf(encodePalette($p));
 		return $v;
+	}
+	
+	public void render(Window $buffer, Rectangle $region) {
+		$region.x = Math.max(0, $region.x);
+		$region.y = Math.max(0, $region.y);
+		$region.width = Math.min(this.getWidth()-$region.x, $region.width);
+		$region.height = Math.min(this.getHeight()-$region.y, $region.height);
+		
+		final StringBuilder $sb = new StringBuilder();
+		Palette $prevPalette = null;		// use this to shortcut out of redundant escape sequences and checks whenever possible
+		final int $ymax = $region.y + $region.height;
+		final int $xmax = $region.x + $region.width;
+		for (int $y = $region.y; $y < $ymax; $y++) {
+			$sb.setLength(0);
+			this.cursor().place($region.x, $y);
+			final char[] $charsRow = $buffer.$chars[$y];
+			final Palette[] $palesRow = $buffer.$pales[$y];
+			for (int $x = $region.x; $x < $xmax; $x++) {
+				final Palette $palette = $palesRow[$x];
+				if (!$palette.equals($prevPalette)) $sb.append(encodePalette($palette));	//TODO:AHS:TERM: we could be doing substantially better delta'ing here.  also, the null selections are being allowed to go through here with an utterly odd concept of previous setting that's worse than useless for all practical purposes.
+				$sb.append(($charsRow[$x] == 0x0) ? ' ' : $charsRow[$x]);			//XXX:AHS:TERM: we're... kinda assuming that our application is going to be nice enough to give us one graphical character per char.  The alternative is to reset the cursor position with every single character we output, which... would certainly work, but would add at least 6 extra bytes of crap to write to the terminal per every single real character.
+				$prevPalette = $palette;
+			}
+			this.print($sb.toString());
+		}
 	}
 	
 	
@@ -139,5 +170,13 @@ public class StandardTerminal implements Terminal {
 			}
 		}
 		// a good bet on what's normally available on a modern monitor seems to be about 60x200 as far as i can tell.  take that with a huge dose of ymmv of course.
+	}
+	
+	private static String encodePalette(Palette $p) {
+		return
+		(($p.$fg == null) ? "" : CSI+"3"+$p.$fg.code()+"m") +
+		(($p.$bg == null) ? "" : CSI+"4"+$p.$bg.code()+"m") +
+		(($p.$bold == null) ? "" : ($p.$bold) ? CSI+"1m" : CSI+"22m") +
+		(($p.$underline == null) ? "" : ($p.$underline) ? REND_UNDERLINE_ON : REND_UNDERLINE_OFF);
 	}
 }

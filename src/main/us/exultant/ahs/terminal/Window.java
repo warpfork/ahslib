@@ -17,9 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package us.exultant.ahs.terminal.gui;
+package us.exultant.ahs.terminal;
 
-import us.exultant.ahs.terminal.*;
 import java.awt.*;
 
 /**
@@ -86,22 +85,36 @@ public class Window {
 	}
 	
 	/**
+	 * <p>
+	 * {@link Terminal} implementors may treat this as read-only.
+	 * </p>
+	 * 
+	 * <p>
 	 * {@code [y][x]}, because our priority is to iterate horizontally with high
 	 * efficiency; we're less concerned with vertical since that's not how we render.
+	 * </p>
 	 */
-	private final char[][]		$chars;
+	final char[][]		$chars;
 	
 	/**
+	 * <p>
+	 * {@link Terminal} implementors may treat this as read-only.
+	 * </p>
+	 * 
+	 * <p>
 	 * {@code [y][x]}, because our priority is to iterate horizontally with high
 	 * efficiency; we're less concerned with vertical since that's not how we render.
+	 * </p>
 	 * 
+	 * <p>
 	 * I'll be the first to admit that this seems like a rather obscenely large amount
 	 * of memory to throw at this (it's substantially larger than what we're likely to
 	 * actually issue as escape sequences to the console when we dump out the actual
 	 * render). But I can't think of any significantly better idea at the moment, and
 	 * we're still talking kilobytes here (not megs), even for large screens.
+	 * </p>
 	 */
-	private final Palette[][]	$pales;
+	final Palette[][]	$pales;
 	
 	/**
 	 * The active clip.  The {@code x} and {@code y} coordinates are global.
@@ -178,42 +191,6 @@ public class Window {
 	 */
 	public void render(Terminal $term) {
 		$term.clear();
-		render($term, new Rectangle(0, 0, $chars[0].length, $chars.length));
-	}
-	
-	/**
-	 * Draws all characters buffered in this Window onto a region of a Terminal.
-	 * 
-	 * @param $term
-	 *                the Terminal to render on
-	 * @param $region
-	 *                the "dirty" area of the screen that needs rendering. If the
-	 *                coordinates of this rectangle are outside of the boundaries of
-	 *                the Terminal, this object will be modified such that the
-	 *                coordinates are now confined to the boundaries of the Terminal.
-	 */
-	public void render(Terminal $term, Rectangle $region) {
-		$region.x = Math.max(0, $region.x);
-		$region.y = Math.max(0, $region.y);
-		$region.width = Math.min($term.getWidth()-$region.x, $region.width);
-		$region.height = Math.min($term.getHeight()-$region.y, $region.height);
-		
-		final StringBuilder $sb = new StringBuilder();
-		Palette $prevPalette = null;		// use this to shortcut out of redundant escape sequences and checks whenever possible
-		final int $ymax = $region.y + $region.height;
-		final int $xmax = $region.x + $region.width;
-		for (int $y = $region.y; $y < $ymax; $y++) {
-			$sb.delete(0, $sb.length());		// this is a really dumb way to have to phrase a request to just set the sb's internal count to zero.
-			$term.cursor().place($region.x, $y);
-			final char[] $charsRow = $chars[$y];
-			final Palette[] $palesRow = $pales[$y];
-			for (int $x = $region.x; $x < $xmax; $x++) {
-				final Palette $palette = $palesRow[$x];
-				if (!$palette.equals($prevPalette)) $sb.append($palette.code());	//TODO:AHS:TERM: we could be doing substantially better delta'ing here.  also, the null selections are being allowed to go through here with an utterly odd concept of previous setting that's worse than useless for all practical purposes.
-				$sb.append(($charsRow[$x] == 0x0) ? ' ' : $charsRow[$x]);		//XXX:AHS:TERM: we're... kinda assuming that our application is going to be nice enough to give us one graphical character per char.  The alternative is to reset the cursor position with every single character we output, which... would certainly work, but would add at least 6 extra bytes of crap to write to the terminal per every single real character.
-				$prevPalette = $palette;
-			}
-			$term.print($sb.toString());
-		}
+		$term.render(this, new Rectangle(0, 0, $chars[0].length, $chars.length));
 	}
 }
