@@ -20,13 +20,26 @@
 package us.exultant.ahs.terminal.gui;
 
 import us.exultant.ahs.terminal.Terminal.Color;
+import us.exultant.ahs.terminal.Window;
 import java.awt.*;
 
-public class Div extends Container {
+public class Div implements Container {
+	private Shaper $shaper;
 	private Rectangle $bound;
-	private Rectangle $marginsize;	// ... i dunno if i'm gonna honor this anything like the w3c concept.
 	private Rectangle $bordersize;
 	private Rectangle $paddingsize;
 	private Color $background;
-	private Color $border;
+	private Color $bordercolor;
+	
+	private Box $mybox;
+	private Box $childrenBox;
+	
+	public void paint(Window $buffer) {
+		$mybox.paint($buffer);
+		$childrenBox.paint($buffer);
+	}
+	
+	public void addChild(Component $x) {
+		$childrenBox.addChild($x);
+	}
 }

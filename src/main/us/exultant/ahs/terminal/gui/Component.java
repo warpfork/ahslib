@@ -19,6 +19,8 @@
 
 package us.exultant.ahs.terminal.gui;
 
+import us.exultant.ahs.terminal.*;
+
 public interface Component {
-	
+	public void paint(Window $buffer);
 }
