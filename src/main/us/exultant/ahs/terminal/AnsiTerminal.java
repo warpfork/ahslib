@@ -28,14 +28,14 @@ import java.util.*;
  * Implements interface to a terminal that understands ANSI control sequences that is on
  * the System.console.
  */
-public class StandardTerminal implements Terminal {
-	public static StandardTerminal get() {
+public class AnsiTerminal implements Terminal {
+	public static AnsiTerminal get() {
 		return SingletonHolder.INSTANCE;
 	}
 	private static class SingletonHolder {
-		public static final StandardTerminal INSTANCE = new StandardTerminal();
+		public static final AnsiTerminal INSTANCE = new AnsiTerminal();
 	}
-	private StandardTerminal() {
+	private AnsiTerminal() {
 		Stty.takeControl();
 		
 		$console = System.console();

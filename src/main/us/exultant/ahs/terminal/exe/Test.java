@@ -22,11 +22,10 @@ package us.exultant.ahs.terminal.exe;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.terminal.*;
 import us.exultant.ahs.terminal.Terminal.Color;
-import us.exultant.ahs.terminal.gui.*;
 import java.io.*;
 
 public class Test {
-	private static final Terminal T = StandardTerminal.get();
+	private static final Terminal T = AnsiTerminal.get();
 	public static void main(String... args) {
 		try {
 			main();
@@ -153,6 +152,6 @@ public class Test {
 			$e.printStackTrace();
 		}
 		
-		StandardTerminal.get().clear();
+		AnsiTerminal.get().clear();
 	}
 }
