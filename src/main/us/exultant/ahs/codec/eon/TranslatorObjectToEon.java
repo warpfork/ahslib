@@ -27,7 +27,7 @@ import us.exultant.ahs.codec.*;
  * this may even implicitly be a muxed type, since the codec will handle this
  * transparently if already properly configured with a {@link EonDecodingMux}.)
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$FACE>
  *                the type of Object this Translator should wield the Codec to encode into

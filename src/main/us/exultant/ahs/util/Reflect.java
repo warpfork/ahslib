@@ -22,6 +22,15 @@ package us.exultant.ahs.util;
 import java.lang.reflect.*;
 
 public class Reflect {
+	public static String getObjectName(Object $obj) {
+		// this is obviously a medium-janky use of hashcodes.  however, these kind of string are only intended to rough debugging, and if you're ever trying to do something serious with them in the code itself you're a jackass.
+		return getShortClassName($obj)+"@"+Strings.padLeftToWidth(Strings.toHex(Primitives.byteArrayFromInt(System.identityHashCode($obj))), '0', 8);
+	}
+	
+	public static String getShortClassName(Object $obj) {
+		return getShortClassName($obj.getClass());
+	}
+	
 	public static String getShortClassName(Class<?> $class) {
 		return Strings.getPartAfterLast($class.getCanonicalName(),".");
 	}

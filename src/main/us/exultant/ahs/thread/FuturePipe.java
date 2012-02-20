@@ -20,12 +20,17 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
-import java.util.concurrent.*;
+import java.util.*;
 
 /**
- * Given a set of {@link Future} entered into the {@link WriteHead} sink of this
- * {@link Flow}, the source {@link ReadHead} will return the same Futures once they are
- * completed, and in the order of completion.
+ * Given a set of {@link WorkFuture} entered into the {@link WriteHead} sink of this
+ * {@link Flow}, the source {@link ReadHead} will return the same WorkFutures once they
+ * are completed, and in the (approximate) order of completion.
+ * 
+ * Unfortunately, this could not be provided for Future as well as for WorkFuture, because
+ * there is no ability to detect the completion of a Future in a nonblocking way without
+ * resorting to polling (this of course was the entire reason for the WorkFuture interface
+ * to begin with).
  */
 //this is obscenely similar to ExecutorCompletionService.
 //note however that our semantics for close again come in handy here: 
@@ -34,16 +39,64 @@ import java.util.concurrent.*;
 //    the FuturePipe supplies a thread-safe closing operation that deals with that problem and thus broadens the range of applications significantly.
 //      in particular, think of a series of futures which can't all be loaded into a scheduler at once for some reason (maybe they can programmatically generate more of their own type, for example); a person can still use a FuturePipe to deal with this, whereas an ExecutorCompletionService may stumble quite seriously.
 //perhaps most importantly, ECS is kinda ridiculous in that you can't use it to watch something for completion unless you schedule it with that very ECS.  that's EXTREMELY limiting, and implies splitting things into different thread pools depending on what kind of notifications you require out of them (which, hello, is completely contrary to the whole point of POOLS of threads), and just generally sucks.
-public class FuturePipe<$T> implements Flow<Future<$T>> {
-
-	public ReadHead<Future<$T>> source() {
-		//TODO
-		return null;
+public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
+	public ReadHead<WorkFuture<$T>> source() {
+		return $outbound.source();
 	}
-
-	public WriteHead<Future<$T>> sink() {
-		//TODO
-		return null;
+	
+	public WriteHead<WorkFuture<$T>> sink() {
+		return $inbound;
 	}
-
+	
+	//public int size() {	// i don't actually know how i'd answer this!  the size of people done, or the size of people not yet done, or the sum not-yet-done and done-but-not-read, or...?
+	
+	private final WriteHead<WorkFuture<$T>> $inbound = new Sink();
+	private volatile boolean $allowMore = true;
+	private final Pipe<WorkFuture<$T>> $outbound = new Pipe<WorkFuture<$T>>();
+	private final Set<WorkFuture<$T>> $held = new HashSet<WorkFuture<$T>>();
+	
+	private final class Sink implements WriteHead<WorkFuture<$T>> {
+		private Sink() {} // this should be a singleton per instance of the enclosing class
+		
+		public void write(WorkFuture<$T> $chunk) throws IllegalStateException {
+			synchronized ($held) {
+				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
+				$held.add($chunk);
+				$chunk.addCompletionListener($lol);
+			}
+		}
+		
+		public void writeAll(Collection<? extends WorkFuture<$T>> $chunks) {
+			synchronized ($held) {
+				for (WorkFuture<$T> $chunk : $chunks)
+					write($chunk);
+			}
+		}
+		
+		public boolean hasRoom() {
+			return true;
+		}
+		
+		public boolean isClosed() {
+			return !$allowMore;	// so, note!  closure on the writehead side is DIFFERENT than closure on the readhead side for a FuturePipe!
+		}
+		
+		public void close() {
+			synchronized ($held) {	// synchronizing this is requisite for proper synchronous closure of the outbound pipe to be possible
+				$allowMore = false;
+			}
+		}
+	}
+	
+	private final Listener<WorkFuture<?>> $lol = new Listener<WorkFuture<?>>() {
+		@SuppressWarnings("unchecked")	// casting our generic type back on to the WorkFuture is safe at runtime
+		public void hear(WorkFuture<?> $finished) {
+			assert $finished.isDone();
+			synchronized ($held) {
+				if (!$held.remove($finished)) return;
+				$outbound.sink().write((WorkFuture<$T>)$finished);
+				if ($inbound.isClosed() && $held.size() <= 0) $outbound.sink().close();
+			}
+		}
+	};
 }

@@ -21,8 +21,7 @@ package us.exultant.ahs.core;
 
 /**
  * <p>
- * Generic interface for listeners (whether for events or messages). Collaborates with the
- * Transport interface.
+ * Generic interface for listeners (whether for events or messages).
  * </p>
  * 
  * <p>
@@ -40,7 +39,7 @@ package us.exultant.ahs.core;
  * potential for this synchronization to have a large performance impact.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$M>
  *                the message/event type

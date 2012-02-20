@@ -23,6 +23,7 @@ import us.exultant.ahs.core.*;
 import us.exultant.ahs.thread.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Provides a ReadHead backed by a buffer which is only writable by subclasses and exposes
@@ -30,10 +31,12 @@ import java.util.*;
  * except it also allows the overriding of some special functions needed by the relatively
  * "low-level" code that operates directly with java nio.)
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  */
+// this isn't what i intended on several levels.  mainly: pipes are the boundaries between threads.  you set them up first, and you choose where they go as a developer.  they shouldn't just appear without your explicit desire.
+//   
 public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	protected ReadHeadAdapter() {
 		$pipe = new Pipe<$T>();
@@ -59,6 +62,10 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		return $pipe.SRC.readNow();
 	}
 	
+	public $T readSoon(long $timeout, TimeUnit $unit) {
+		return $pipe.SRC.readNow();
+	}
+	
 	public boolean hasNext() {
 		return $pipe.SRC.hasNext();
 	}
@@ -75,7 +82,11 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 		return $pipe.SRC.isClosed();
 	}
 	
-	public abstract void close() throws IOException;	// is abstract because you probably want to close any underlying channels, then have the pump close the pipe close itself when appropriate.
+	public abstract void close();	// is abstract because you probably want to close any underlying channels, then have the pump close the pipe close itself when appropriate.
+	
+	public boolean isExhausted() {
+		return isClosed() && !hasNext();
+	}
 	
 	protected void handleException(IOException $e) {
 		ExceptionHandler<IOException> $dated_eh = $eh;

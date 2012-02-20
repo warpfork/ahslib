@@ -78,8 +78,15 @@ public class Primitives {
 	// consider the potential for replacing this with a SyncFreeProvider and some kind of map?  would be nice to remove references like these from core and yet maintain the non-need of repetition in client code.
 	
 	
-	public static final Pattern		PATTERN_DOT		= Pattern.compile(".", Pattern.LITERAL);
-	
+	public static abstract class Patterns {
+		public static final Pattern	DOT		= Pattern.compile(".", Pattern.LITERAL);
+		public static final Pattern	DASH		= Pattern.compile("-", Pattern.LITERAL);
+		public static final Pattern	UNDERSCORE	= Pattern.compile("_", Pattern.LITERAL);
+		public static final Pattern	AMPERSAND	= Pattern.compile("&", Pattern.LITERAL);
+		public static final Pattern	EQUAL		= Pattern.compile("=", Pattern.LITERAL);
+		public static final Pattern	QUESTION	= Pattern.compile("?", Pattern.LITERAL);
+		public static final Pattern	SLASH		= Pattern.compile("/", Pattern.LITERAL);
+	}
 	
 	
 	public static byte[] byteArrayFromInt(int $i) {

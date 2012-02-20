@@ -40,7 +40,7 @@ import java.io.StringReader;
  * @author JSON.org
  * @version 2008-09-18
  */
-public class JsonTokener {
+class JsonTokener {
 	
 	private int	index;
 	private Reader	reader;

@@ -38,7 +38,10 @@ public class WorkSchedulerFlexiblePriorityTest extends WorkSchedulerTest {
 		super($log, $enableConfirmation);
 	}
 	
-	protected WorkScheduler makeScheduler() {
-		return new WorkSchedulerFlexiblePriority(4);
+	protected WorkScheduler makeScheduler(int $threads) {
+		if ($threads == 0)
+			return new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()));
+		else
+			return new WorkSchedulerFlexiblePriority($threads);
 	}
 }

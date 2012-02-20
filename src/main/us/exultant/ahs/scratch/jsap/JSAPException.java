@@ -14,8 +14,8 @@ package us.exultant.ahs.scratch.jsap;
  * loading a DefaultSource.  The subclass can in these cases throw a new
  * JSAPException encapsulating the IOException.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Flagged
- * @see ahs.scratch.jsap.Option
+ * @see us.exultant.ahs.scratch.jsap.Flagged
+ * @see us.exultant.ahs.scratch.jsap.Option
  */
 public class JSAPException extends Exception {
 

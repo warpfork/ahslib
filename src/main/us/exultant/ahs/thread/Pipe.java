@@ -47,7 +47,7 @@ import java.util.concurrent.locks.*;
  * response to any attempt to write nulls.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class Pipe<$T> implements Flow<$T> {
@@ -55,9 +55,8 @@ public class Pipe<$T> implements Flow<$T> {
 	 * Constructs a new, open, active, empty, usable Pipe.
 	 */
 	public Pipe() {
-		$closed = new boolean[] { false };
 		$queue = new ConcurrentLinkedQueue<$T>();
-		$gate = new InterruptableSemaphore(0, true); // fair.
+		$gate = new ClosableSemaphore(true);
 		SRC = new Source();
 		SINK = new Sink();
 		$lock = new ReentrantLock();
@@ -67,26 +66,12 @@ public class Pipe<$T> implements Flow<$T> {
 	 * <p>
 	 * The source from which one reads data from the pipe.
 	 * </p>
-	 * 
-	 * <p>
-	 * (Note that it would be perfectly possible to use just the ReadHead and
-	 * WriteHead interfaces internally as well... but this lets clients avoid ever
-	 * having to wrap calls in a no-op try-catch block that actually happens to be
-	 * unreachable.)
-	 * </p>
 	 */
 	public final Source			SRC;
 	
 	/**
 	 * <p>
 	 * The sink to which one writes data into the pipe.
-	 * </p>
-	 * 
-	 * <p>
-	 * (Note that it would be perfectly possible to use just the ReadHead and
-	 * WriteHead interfaces internally as well... but this lets clients avoid ever
-	 * having to wrap calls in a no-op try-catch block that actually happens to be
-	 * unreachable.)
 	 * </p>
 	 */
 	public final Sink			SINK;
@@ -95,9 +80,6 @@ public class Pipe<$T> implements Flow<$T> {
 	 * This Listener is triggered for every completed write operation and for close
 	 * operations.
 	 */
-	// you know, i'm really not sure i need this to be volatile.  i never promised all that much sanity if you're changing this thing while data is flowing.
-	//  and we're pretty much giving it up anyway when we do that crap temp-copy to do the null check.
-	//   well, no, we don't.  the write locks do provide safe ordering around that so you won't get something on listener A and then B and then A again.  i just never documented that before.
 	private volatile Listener<ReadHead<$T>>	$el;
 	
 	/**
@@ -130,15 +112,7 @@ public class Pipe<$T> implements Flow<$T> {
 	 * locked and all permits are then drained, an effcetive read locked is attained.
 	 * </p>
 	 */
-	private final InterruptableSemaphore	$gate;
-	
-	/**
-	 * This array is of length one. Its only value describes whether or not this Pipe
-	 * is closed to new writes; {@link #$gate} is interrupted immediately after this
-	 * value is set to true when closing a Pipe. (An array is used here instead of a
-	 * boolean primitive directly in order to provide a monitor for synchronization.)
-	 */
-	private final boolean[]			$closed;
+	private final ClosableSemaphore	$gate;
 	
 	/**
 	 * @return {@link #SRC}.
@@ -168,18 +142,36 @@ public class Pipe<$T> implements Flow<$T> {
 	/**
 	 * {@link Pipe}'s internal implementation of ReadHead.
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 *
 	 */
 	public final class Source implements ReadHead<$T> {
-		private Source() {} // this should be a singleton per instance of the enclosing class
+		private Source() {} /* this should be a singleton per instance of the enclosing class */
 		
 		/**
-		 * Sets the Listener that will be triggered for every completed write
-		 * operation on the matching {@link Sink} and upon close.
+		 * <p>
+		 * Sets the Listener that will be triggered for completed write operations
+		 * on the matching {@link Sink} and upon close and exhaustion.
+		 * </p>
+		 * 
+		 * <p>
+		 * Note that this Listener MAY NOT under any circumstances throw an
+		 * exception. If it does so, it will NOT be propagated outside of the
+		 * Pipe, since the concurrent nature of this interface makes it
+		 * unreasonable to try to choose a relevant stack to propagate such an
+		 * exception up through.
+		 * </p>
 		 */
 		public void setListener(Listener<ReadHead<$T>> $el) {
 			Pipe.this.$el = $el;
+
+			// it's possible that there wasn't a listener before this, and we need to make sure we fire an event now in case there aren't any more writes forthcoming for a while (if indeed ever).
+			// this can be "spurious", since it doesn't actually come as news of a write, but it's terribly important not to ignore this.
+			boolean $mustSpur = false;
+			lockWrite();
+			if (SRC.hasNext()) $mustSpur = true;
+			unlockWrite();	/* we prefer to release locks before we let the listener go on a tear, just as a matter of best/simplest practice. */
+			if ($mustSpur) invokeListener();
 		}
 		
 		public $T read() {
@@ -187,9 +179,7 @@ public class Pipe<$T> implements Flow<$T> {
 				return readNow();
 			} else {
 				try {
-					// so... i need to acquire atomically with the closed check, or else acquire can happen immediately after an interrupt and end up blocking forever.
-					// the above is impossible.  so instead i just made the semaphore -always- throw interrupted exceptions after it's been interrupted once.
-					$gate.acquire();
+					if (!$gate.acquire()) return null;
 				} catch (InterruptedException $e) {
 					return null;
 				}
@@ -201,8 +191,20 @@ public class Pipe<$T> implements Flow<$T> {
 		
 		public $T readNow() {
 			boolean $one = $gate.tryAcquire();
-			if (!$one) return null;
 			checkForFinale();
+			if (!$one) return null;
+			return $queue.poll();
+		}
+		
+		public $T readSoon(long $timeout, TimeUnit $unit) {
+			boolean $one;
+			try {
+				$one = $gate.tryAcquire($timeout, $unit);
+			} catch (InterruptedException $e) {
+				return null;
+			}
+			checkForFinale();
+			if (!$one) return null;
 			return $queue.poll();
 		}
 		
@@ -219,21 +221,21 @@ public class Pipe<$T> implements Flow<$T> {
 		 * {@inheritDoc}
 		 */
 		public List<$T> readAllNow() {
-			$lock.lock();
+			lockWrite();
 			try {
 				int $p = $gate.drainPermits();
 				List<$T> $v = new ArrayList<$T>($p);
 				for (int $i = 0; $i < $p; $i++)
 					$v.add($queue.poll());
-				checkForFinale();
+				checkForFinale();	//FIXME:AHS:THREAD: can call the listener.  should be outside the lock.
 				return $v;
 			} finally {
-				$lock.unlock();
+				unlockWrite();
 			}
 		}
 		
 		public boolean isClosed() {
-			return $closed[0];
+			return $gate.isClosed();
 		}
 		
 		/**
@@ -247,25 +249,27 @@ public class Pipe<$T> implements Flow<$T> {
 		 * forevermore immediately return null once all buffered data is depleted.
 		 */
 		public void close() {
-			$lock.lock();
+			lockWrite();
 			try {
-				$closed[0] = true; // set our state to closed
+				$gate.close();
 			} finally {
-				$lock.unlock();
+				unlockWrite();
 			}
-			$gate.interrupt(); // interrupt any currently blocking reads
-			X.notifyAll($closed); // trigger the return of any final readAll calls
+			X.notifyAll($gate); // trigger the return of any final readAll calls
 			
 			// give our listener a chance to notice our closure.
-			Listener<ReadHead<$T>> $dated_el = $el;
-			if ($dated_el != null) $dated_el.hear(this);
+			invokeListener();
 		}
 		
 		private void waitForClose() {
-			synchronized ($closed) {
+			synchronized ($gate) {
 				while (!isClosed())
-					X.wait($closed);
+					X.wait($gate);
 			}
+		}
+		
+		public boolean isExhausted() {
+			return $gate.isPermanentlyEmpty();
 		}
 	}
 	
@@ -284,17 +288,18 @@ public class Pipe<$T> implements Flow<$T> {
 		 *                 if the chunk is null
 		 */
 		public void write($T $chunk) throws IllegalStateException {
-			$lock.lock();
+			/* it's not actually necessary to check for NullPointerException ourselves;
+			 * it'll be thrown by $queue.add anyway, and we don't care to waste time checking that twice just to avoid a lock, because if it explodes, then who cares if locking was a waste that time? */
+			boolean $mustSpur = false;
+			lockWrite();
 			try {
 				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
 				$queue.add($chunk);
-				$gate.release();
-				
-				Listener<ReadHead<$T>> $el_dated = $el;
-				if ($el_dated != null) $el_dated.hear(SRC);
-				//XXX:AHS:EFFIC:THREAD: I don't think we have to do this notification from within the write-lock, do we?  (i guess we do in a batch situation whether we want to or not, though.)
+				$gate.release();	/* this can't return false because gate closure involves locking, and we're locked right now.  and that's essentially why the write-lock exists (otherwise we'd have to go dredge back through the queue if this did return false, and that would be... mucky). */
+				$mustSpur = true;	/* just by virtue of we didn't throw exception before now */
 			} finally {
-				$lock.unlock();
+				unlockWrite();
+				if ($mustSpur) invokeListener();
 			}
 		}
 		
@@ -312,9 +317,10 @@ public class Pipe<$T> implements Flow<$T> {
 		 * </p>
 		 * 
 		 * <p>
-		 * Put another way: a single write-lock is maintained for the duration of
-		 * this method, but every element causes a release of permit and
-		 * notification to the pipe's listener.
+		 * Even if a {@link NullPointerException} is thrown, partial progress may
+		 * have been made &mdash; chunks preceeding the cause of the exception
+		 * have already been written to the Pipe, and permits for those chunks are
+		 * released before the exception bubbles out.
 		 * </p>
 		 * 
 		 * @throws IllegalStateException
@@ -323,13 +329,17 @@ public class Pipe<$T> implements Flow<$T> {
 		 *                 if any chunk in the collection is null
 		 */
 		public void writeAll(Collection<? extends $T> $chunks) {
-			// at first i thought i could implement this with addAll on the queue and a single big release... not actually so.  addAll on the queue can throw exceptions but still have made partial progress.
-			$lock.lock();
+			int $writes = 0;
+			lockWrite();
 			try {
-				for ($T $chunk : $chunks)
-					write($chunk);
+				for ($T $chunk : $chunks) {
+					$queue.add($chunk);	/* can't use addAll method because we have to count what happens. */
+					$writes++;
+				}
 			} finally {
-				$lock.unlock();
+				if ($writes > 0) $gate.release($writes);
+				unlockWrite();
+				if ($writes > 0) invokeListener();
 			}
 		}
 		
@@ -345,7 +355,7 @@ public class Pipe<$T> implements Flow<$T> {
 		}
 		
 		public boolean isClosed() {
-			return $closed[0];
+			return $gate.isClosed();
 		}
 		
 		/**
@@ -367,23 +377,40 @@ public class Pipe<$T> implements Flow<$T> {
 		SRC.close();
 	}
 	
-	/** Do not use this method unless you know what you're doing.  It should never be needed under normal circumstances. */
-	void lockWrite() {
+	private final void lockWrite() {
 		$lock.lock();
 	}
-	/** Do not use this method unless you know what you're doing.  It should never be needed under normal circumstances. */
-	void unlockWrite() {
+	
+	private final void unlockWrite() {
 		$lock.unlock();
 	}
 	
+	private final void invokeListener() {
+		Listener<ReadHead<$T>> $dated_el = $el;
+		if ($dated_el != null) 
+			try {
+				$dated_el.hear(SRC);
+			} catch (Throwable $t) {
+				/* listeners aren't allowed to throw these! */
+				X.saye("utterly unreasonable exception occurred!"+$t);	//FIXME:AHS:THREAD: this is not a good way to deal with this situation.  But what is?  A global oh-shit event handler is outrageous.  Some universal and annoying-to-configure logger?  Also not seeming ideal (although with SLF4J markers?  closer).
+			}
+	}
+	
+	
+	
 	private void checkForFinale() {
-		if (SRC.isClosed() && !SRC.hasNext()) {
+		if ($gate.isPermanentlyEmpty()) {
 			// give our listener a chance to notice our final drain.
-			Listener<ReadHead<$T>> $dated_el = $el;
-			if ($dated_el != null) $dated_el.hear(SRC);
+			invokeListener();
 			//... i don't think we want every read after closure and emptiness to make an event, in case someone's too stupid to realize that that event means they're supposed to stop reading.
 			// then again, we're all consenting adults here, and i don't believe i can do that without a cas here or vastly more locking than i can abide by.
 			// anyway!  point is that if there are two permits left in a closed pipe and two people acquire before either of them gets to that hasNext, this event's gonna get fired twice.
+			//FIXME:AHS:THREAD: this turns out to be a really shitty policy in practice, because if your first response to an event is to try to readAllNow (normal, right?  even seems like you should be able to do that *before checking isExhausted*) you'll get straight into a loop.
+			//   well, if you do it in a listener you're fucked, anyway.  i guess if you do it in a work target you're probably safe, because you'll just get another spurious event, and you'll never get a next run because the scheduler itself will check termination and find it for you.
+			//   hmm.  !isExhausted() { readallnow; doshit; } seems to work out pretty fine to fix the listener issue, i guess.  that's.... a long way from obvious, though.
+			//     on the other hand, you really should know better to do anything serious in a listener, and generally i'd say that reading from a pipe at all counts for that.  you should just spawn or trigger a workTarget for that.
+			//     actually?  having a boolean idempotent field here in the pipe that's used to keep from sending exhaustion events more than once could actually be worked out to be a non-expense in every listener call, so that's the superior option here.
+			//        wait.  can we just set the listener to null?  that would kinda do the trick.  and it works fine unless you keep setting the listener again after the pipe is closed and empty, which would obviously make you a nutcase beyond help.
 		}
 	}
 }

@@ -27,7 +27,6 @@ import java.util.concurrent.*;
 
 public abstract class TestCase implements Runnable {
 	/**
-	 * 
 	 * @param $log
 	 *                Fatal failures that cause the entire case to fail to complete
 	 *                are logged at ERROR level; failed assertions without a unit are
@@ -41,8 +40,22 @@ public abstract class TestCase implements Runnable {
 		this.$confirm = $enableConfirmation;
 	}
 	
-	public void run() {
+	/**
+	 * By default, this will always attempt to call {@link System#exit(int)} at the
+	 * end of running tests, exiting with 0 if all tests pass, 4 if any units have
+	 * failed, and 5 if any unit failed catastrophically (i.e. the entire case was not
+	 * completed). This behavior and/or those values can be overridden by overriding
+	 * the {@link #succeeded()}, {@link #failed()}, and {@link #aborted()} methods,
+	 * respectively.
+	 */
+	public synchronized void run() {
 		List<Unit> $units = getUnits();	// list is assumed immutable on pain of death or idiocy
+		
+		$numUnits = $units.size();
+		$numUnitsRun = 0;
+		$numUnitsPassed = 0;
+		$numUnitsFailed = 0;
+		
 		for (int $i = 0; $i < $units.size(); $i++) {
 			Unit $unit = $units.get($i);
 			if ($unit == null) continue;
@@ -51,60 +64,121 @@ public abstract class TestCase implements Runnable {
 				resetFailures();
 				
 				$log.info(this, "TEST UNIT "+$unit.getName()+" STARTING...");
+				$numUnitsRun++;
 				$unit.call();
-				if ($failures == 0)
+				if ($unit.expectExceptionType() != null) {
+					$numUnitsFailed++;
+					$log.error(this.getClass(), "EXPECTED EXCEPTION; TEST CASE ABORTED.");
+					aborted();
+				}
+				if ($unitFailures == 0) {
+					$numUnitsPassed++;
 					$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
-				else
-					$log.info(this, "TEST UNIT "+$unit.getName()+" FAILED (WITH "+$failures+" FAILURES)!\n");
+				} else {
+					$numUnitsFailed++;
+					$log.info(this, "TEST UNIT "+$unit.getName()+" FAILED (WITH "+$unitFailures+" FAILURES)!\n");
+				}
 			} catch (AssertionFatal $e) {
+				$numUnitsFailed++;
 				$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
-				abort();
+				aborted();
 				break;
 			} catch (AssertionFailed $e) {
+				$numUnitsFailed++;
 				$log.error(this.getClass(), "TEST UNIT "+$unit.getName()+" ABORTED.", $e);
 			} catch (Throwable $e) {
 				if ($unit.expectExceptionType() != null) {
 					// some kind of exception was expected.
 					if ($unit.expectExceptionType().isAssignableFrom($e.getClass())) {
 						// and it was this kind that was expected, so this is good.
+						$numUnitsPassed++;
 						assertInstanceOf($unit.expectExceptionType(), $e);	// generates a normal confirmation message
 						$log.info(this, "TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
 					} else {
 						// and it wasn't this kind.  this represents fatal failure.
+						$numUnitsFailed++;
 						$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
-						abort();
+						aborted();
 						break;
 					}
 				} else {
 					// no exception was expected.  any exception represents fatal failure.
+					$numUnitsFailed++;
 					$log.error(this.getClass(), "FATAL EXCEPTION; TEST CASE ABORTED.", $e);
-					abort();
+					aborted();
 					break;
 				}
 			}
 		}
+		
+		if ($numUnitsFailed > 0)
+			failed();
+		else
+			succeeded();
+	}
+	
+	
+	/**
+	 * <p>
+	 * Called when the entire test case finished with all units passing successfully.
+	 * Default behavior is printing {@link #preExitMessage()} to stdout followed by
+	 * forceful termination of the program via {@link System#exit(int)} with an exit
+	 * code of 0.
+	 * </p>
+	 */
+	protected void succeeded() {
+		System.out.println(preExitMessage());
+		System.exit(0);
+	}
+	
+	/**
+	 * <p>
+	 * Called when the entire test case finished, but at least one unit did not pass
+	 * successfully. Default behavior is printing {@link #preExitMessage()} to stdout
+	 * followed by forceful termination of the program via {@link System#exit(int)}
+	 * with an exit code of 4.
+	 * </p>
+	 */
+	protected void failed() {
+		System.out.println(preExitMessage());
+		System.exit(4);
 	}
 	
 	/**
 	 * <p>
 	 * Called when the entire test case is aborted (i.e. a unit throws an unexpected
-	 * exception or AssertionFatal). Default behavior is forceful termination of the
-	 * program via {@link System#exit(int)}.
+	 * exception or AssertionFatal). Default behavior is printing
+	 * {@link #preExitMessage()} to stdout followed byis forceful termination of the
+	 * program via {@link System#exit(int)} with an exit code of 5.
 	 * </p>
 	 * 
 	 * <p>
 	 * Note that the entire test case is <b>not</b> considered aborted when a single
 	 * unit of the case fails or or aborted, and as such this method will not be
-	 * called in that situation.
+	 * called in that situation ({@link #failed()} will be).
 	 * </p>
 	 */
-	public void abort() {
-		System.exit(42);
+	protected void aborted() {
+		System.out.println(preExitMessage());
+		System.exit(5);
 	}
 	
-	protected final Logger		$log;
-	private boolean			$confirm;
-	private int			$failures;
+	protected String preExitMessage() {
+		return "{\"#\":\"TESTCASE\",\n"+
+		"         \"numUnits\":"+$numUnits+",\n"+
+		"      \"numUnitsRun\":"+$numUnitsRun+",\n"+
+		"   \"numUnitsPassed\":"+$numUnitsPassed+",\n"+
+		"   \"numUnitsFailed\":"+$numUnitsFailed+"\n"+
+		"}";
+	}
+	
+	protected final Logger	$log;
+	private boolean		$confirm;
+	private int		$unitFailures;
+	private int		$numUnits;
+	private int		$numUnitsRun;
+	private int		$numUnitsPassed;
+	private int		$numUnitsFailed;
 	
 	public abstract List<Unit> getUnits();
 	
@@ -139,14 +213,14 @@ public abstract class TestCase implements Runnable {
 		// this method often seems to cause warnings about unchecked conversion in subclasses even when the return type is obviously legitimate, but i'm unsure of why.
 		
 		public void breakIfFailed() throws AssertionFailed {
-			if ($failures > 0) throw new AssertionFailed("breaking: "+$failures+" failures.");
+			if ($unitFailures > 0) throw new AssertionFailed("breaking: "+$unitFailures+" failures.");
 		}
 		public void breakCaseIfFailed() throws AssertionFatal {
-			if ($failures > 0) throw new AssertionFatal("breaking case: "+$failures+" failures.");
+			if ($unitFailures > 0) throw new AssertionFatal("breaking case: "+$unitFailures+" failures.");
 		}
 		
-		public final String getName() {
-			String[] $arrg = Primitives.PATTERN_DOT.split(getClass().getCanonicalName());
+		public String getName() {
+			String[] $arrg = Primitives.Patterns.DOT.split(getClass().getCanonicalName());
 			return $arrg[$arrg.length-1];
 		}
 	}
@@ -154,7 +228,7 @@ public abstract class TestCase implements Runnable {
 	
 	
 	protected void resetFailures() {
-		$failures = 0;
+		$unitFailures = 0;
 	}
 	
 	// using autoboxing on primitives as much as these message functions do bothers me but it does save me a helluva lot of lines of code here and i am assuming you're not using any assertions inside of terribly tight loops (or if you are, you're eiter not using confirmation or not failing hundreds of thousands of times).
@@ -223,7 +297,7 @@ public abstract class TestCase implements Runnable {
 	}
 	public boolean assertEquals(String $label, boolean $expected, boolean $actual) {
 		if ($expected != $actual) {
-			$failures++;
+			$unitFailures++;
 			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}
@@ -240,7 +314,7 @@ public abstract class TestCase implements Runnable {
 	}
 	public boolean assertSame(String $label, Object $expected, Object $actual) {
 		if ($expected != $actual) {
-			$failures++;
+			$unitFailures++;
 			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}
@@ -252,7 +326,7 @@ public abstract class TestCase implements Runnable {
 	}
 	public boolean assertNotSame(String $label, Object $expected, Object $actual) {
 		if ($expected == $actual) {
-			$failures++;
+			$unitFailures++;
 			$log.warn(this.getClass(), new AssertionFailed(messageFailNot($label, $expected, $actual)));
 			return false;
 		}
@@ -265,12 +339,18 @@ public abstract class TestCase implements Runnable {
 	public boolean assertNull(String $label, Object $actual) {
 		return assertSame($label, null, $actual);
 	}
+	public boolean assertNotNull(Object $actual) {
+		return assertNotSame(null, null, $actual);
+	}
+	public boolean assertNotNull(String $label, Object $actual) {
+		return assertNotSame($label, null, $actual);
+	}
 	public boolean assertEquals(Object $expected, Object $actual) {
 		return assertEquals(null, $expected, $actual);
 	}
 	public boolean assertEquals(String $label, Object $expected, Object $actual) {
 		if (!assertEqualsHelper($expected, $actual)) {
-			$failures++;
+			$unitFailures++;
 			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}
@@ -286,7 +366,7 @@ public abstract class TestCase implements Runnable {
 	}
 	public boolean assertInstanceOf(String $label, Class<?> $klass, Object $obj) {
 		if ($obj == null) {
-			$failures++;
+			$unitFailures++;
 			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, "null is never an instance of anything, and certainly not "+$klass+".")));
 			return false;
 		}
@@ -295,7 +375,7 @@ public abstract class TestCase implements Runnable {
 			if ($confirm) $log.debug(this.getClass(), messagePass($label, "\""+$obj.getClass().getCanonicalName()+"\" is an instance of \""+$klass.getCanonicalName()+"\""));
 			return true;
 		} catch (ClassCastException $e) {
-			$failures++;
+			$unitFailures++;
 			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $e.getMessage()+".")));
 			return false;
 		}
@@ -322,7 +402,7 @@ public abstract class TestCase implements Runnable {
 	}
 	public boolean assertEquals(String $label, int $expected, int $actual) {
 		if ($expected != $actual) {
-			$failures++;
+			$unitFailures++;
 			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
 			return false;
 		}

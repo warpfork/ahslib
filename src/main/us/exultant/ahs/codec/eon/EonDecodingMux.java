@@ -25,33 +25,37 @@ import java.util.*;
 /**
  * <p>
  * Use this class to implement polymorphism in codecs by enrolling multiple instantiable
- * classes that share a common interface in this "seed", along with their encoders and
- * decoders. The mux shifts the "MAGICWORD_CLASS" field to the "MAGICWORD_HINT" field upon
- * encoding, and places the common interface's class in the "MAGICWORD_CLASS" field; the
- * process is reversed in decoding -- this means that the mux'd instantiable classes
- * enrolled in the mux must not use the "MAGICWORD_HINT" data field themselves, but
- * otherwise any existing encoders and decoders should be usable transparently.
+ * classes that share a common interface in this mux, along with their encoders and
+ * decoders. Upon encoding, the mux shifts the "{@link Eon#MAGICWORD_CLASS}
+ * " field to the " {@link Eon#MAGICWORD_HINT}" field, and places the common interface's
+ * class in the "{@link Eon#MAGICWORD_CLASS}" field; the process is reversed in decoding.
+ * Note that this means that the mux'd instantiable classes enrolled in the mux must not
+ * use the "{@link Eon#MAGICWORD_HINT}" data field themselves, but otherwise any existing
+ * encoders and decoders should be usable transparently. To use the polymorphism, you use
+ * codec instances for encoding and decoding as normal, but must also explicitly call the
+ * {@link Codec#encode(Object, Class)} and {@link Codec#decode(Object, Class)} methods
+ * with the common interface (<tt>$FACE</tt>) as the target class &mdash; using
+ * {@link CodecImpl#encode(Object)} will not work, because it assumes you wish to encode
+ * as the most specific type known.
  * </p>
  * 
  * <p>
- * Calling the enroll(*) functions of this class also calls the putHook(*) methods on the
- * parent codec. Encoding and decoding hooks for the $FACE type are placed in the parent
- * codec at construction time.
+ * Calling the <tt>enroll(*)</tt> functions of this class also calls the
+ * <tt>putHook(*)</tt> methods on the parent codec. Encoding and decoding hooks for the
+ * <tt>$FACE</tt> type are placed in the parent codec at construction time.
  * </p>
  * 
  * <p>
  * Once this mux is configured, all references to it can be safely discarded -- it will be
- * used internally by the parent codec in a transparent fashion. Simply give the parent
- * codec instances for encoding and decoding as normal, but giving it the common interface
- * ($FACE) as the target class.
+ * used internally by the parent codec in a transparent fashion.
  * </p>
  * 
  * <p>
  * Be aware that the decoding process for a muxed object mutates the given EonObject as
- * opposed to cloning it (specifically, it sets the MAGICWORD_CLASS field).
+ * opposed to cloning it (specifically, it sets the {@link Eon#MAGICWORD_CLASS} field).
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class EonDecodingMux<$FACE> {
@@ -91,7 +95,13 @@ public class EonDecodingMux<$FACE> {
 		$parent.putHook($klass, $decoder);
 		$demux.put(Eon.getKlass($klass), $klass);
 	}
-
+	
+	/**
+	 * Enrolls <tt>$dencoder</tt> as both the Encoder and Decoder for objects of type $klass.  This affects both the state of this EonDecodingMux, and also immediately 
+	 * 
+	 * @param $klass
+	 * @param $dencoder
+	 */
 	public <$T extends $FACE> void enroll(Class<$T> $klass, final Dencoder<EonCodec,EonObject,$T> $dencoder) {
 		enroll($klass, $dencoder, $dencoder);
 	}

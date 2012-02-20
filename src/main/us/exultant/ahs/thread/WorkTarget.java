@@ -38,7 +38,7 @@ import java.util.concurrent.*;
  * WorkTarget into more than one WorkScheduler.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @param <$V>
  *                The type returned by {@link #call()}. (This can often be {@link Void} in
  *                the case of WorkTarget that are designed to be called repeatedly, since
@@ -56,14 +56,17 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * The return value of this method is used by {@link WorkScheduler} to determine
 	 * whether or not it is presently appropriate to consider scheduling this
 	 * WorkTarget to be powered by a thread. {@link WorkScheduler} checks this method
-	 * under one of two conditions: either when triggered (i.e. by a callback on a
-	 * {@link Pipe} that feeds work data for this target; this is the preferred
-	 * mechanism) or when polled (in which case this WorkTarget must have been
-	 * specially registered with the WorkScheduler for polling-based readiness checks;
-	 * this mechanism can be useful if work data is produced at such a high volume
-	 * that the reduced synchronization is a performance improvement, but the
-	 * event-based mechanism is generally preferred and will have better performance
-	 * when the system is at rest).
+	 * under two conditions: whenever it finishes a run of the work, and sometime
+	 * after an update is requested via the {@link WorkScheduler#update(WorkFuture)}
+	 * method. (Typically, updates are requested when triggered (i.e. by a callback on
+	 * a {@link Pipe} that feeds work data for this target; this is the preferred
+	 * mechanism); otherwise it may be done in polling fashion (this mechanism can be
+	 * useful if work data is produced at such a high volume that the reduced
+	 * synchronization is a performance improvement, but the event-based mechanism is
+	 * generally preferred and will have better performance when the system is at
+	 * rest. In either case it is necessary to make these arrangements after
+	 * scheduling a WorkTarget, since the WorkFuture returned from the scheduling
+	 * process is necessary.)
 	 * </p>
 	 * 
 	 * <p>
@@ -71,7 +74,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * exactly true under all circumstances due to the concurrent nature of the
 	 * question. For example, this WorkTarget may claim to be ready when asked by the
 	 * WorkScheduler, but then may turn out to not find work when it's actually
-	 * powered because some other WorkTarget has drained from the some Pipe that
+	 * powered because some other WorkTarget has drained from the same Pipe that
 	 * provides the flow of work input data to both WorkTarget.
 	 * </p>
 	 * 
@@ -150,17 +153,28 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	
 	/**
 	 * <p>
-	 * Implementers use this method to allow the WorkTarget's <code>run()</code>
-	 * method to know when to stop spinning.
+	 * Signals whether or not the WorkTarget may wish to be run again at some time in
+	 * the future, or if it considers itself done and not in need of further
+	 * scheduling.
 	 * </p>
 	 * 
 	 * <p>
-	 * Once this method returns true, it should never again return false.
+	 * Once this method returns true, it should never again return false. (In other
+	 * words, the property of doneness must be idempotent.)
 	 * </p>
 	 * 
-	 * @return false if the WorkScheduler should continue to call
-	 *         <code>run(int)</code> cyclically; true to when the cycle should exit at
-	 *         its earliest opportunity.
+	 * <p>
+	 * Note that due to the inherently concurrent nature of this method and scheduling
+	 * in general, a WorkTarget is not generally allowed to assume that its
+	 * {@link #call()} will never be invoked again after this {@code isDone()} method
+	 * returns true. A WorkScheduler will make its best effort to honor that (and if
+	 * the change to doneness happened during a run of the task, most implementations
+	 * will certainly succeed), but this should not be relied upon.
+	 * </p>
+	 * 
+	 * @return false if the WorkScheduler should continue to call continute to manage
+	 *         this task instance; true if the scheduler should drop the task and
+	 *         never again invoke the {@link #call()} method.
 	 */
 	public boolean isDone();
 	
@@ -228,7 +242,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * values between a billion and negative one billion and you'll be fine.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 * 
 	 */
 	public static class PriorityComparator implements Comparator<WorkTarget<?>> {
@@ -245,21 +259,14 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * Bridges the gap between {@link Runnable} and WorkTarget.
 	 * </p>
 	 * 
-	 * <p>
-	 * Implementation note: all of the methods of this class are synchronized, which
-	 * means if you ask if this WorkTarget is ready while it's being run, you might
-	 * well be waiting a while for an answer. This design choice was made on the
-	 * presumption that there's no rational reason to be asking those state questions
-	 * whilst the task is in progress.
-	 * </p>
-	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 */
-	public static final class RunnableWrapper implements WorkTarget<Void> {
+	public static class RunnableWrapper implements WorkTarget<Void> {
 		public RunnableWrapper(Runnable $wrap) { this($wrap,0,true); }
 		public RunnableWrapper(Runnable $wrap, boolean $once) { this($wrap,0,$once); }
 		public RunnableWrapper(Runnable $wrap, int $prio) { this($wrap,$prio,true); }
 		public RunnableWrapper(Runnable $wrap, int $prio, boolean $once) {
+			if ($wrap == null) throw new NullPointerException();
 			this.$once = $once;
 			this.$prio = $prio;
 			this.$wrap = $wrap;
@@ -269,7 +276,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		private final int		$prio;
 		private volatile Runnable	$wrap;	// flip this to null when it's done.
 		
-		public Void call() {
+		public final Void call() {
 			try {
 				if ($wrap == null) throw new IllegalStateException("This task can only be run once, and is already done!");
 				// yes, it's possible for $wrap to become null betweent the above check and the below call
@@ -287,11 +294,53 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		}
 		
 		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public boolean isReady() { return !isDone(); }
+		public final boolean isReady() { return !isDone(); }
 		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public boolean isDone() { return ($wrap == null); }
-		public int getPriority() { return $prio; }
+		public final boolean isDone() { return ($wrap == null); }
+		public final int getPriority() { return $prio; }
+	}
+	
+
+
+	/**
+	 * <p>
+	 * Bridges the gap between {@link Callable} and WorkTarget.
+	 * </p>
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 */
+	public static class CallableWrapper<$V> implements WorkTarget<$V> {
+		public CallableWrapper(Callable<$V> $wrap) { this($wrap,0,true); }
+		public CallableWrapper(Callable<$V> $wrap, boolean $once) { this($wrap,0,$once); }
+		public CallableWrapper(Callable<$V> $wrap, int $prio) { this($wrap,$prio,true); }
+		public CallableWrapper(Callable<$V> $wrap, int $prio, boolean $once) {
+			if ($wrap == null) throw new NullPointerException();
+			this.$once = $once;
+			this.$prio = $prio;
+			this.$wrap = $wrap;
+		}
+
+		private final boolean		$once;
+		private final int		$prio;
+		private volatile Callable<$V>	$wrap;	// flip this to null when it's done.
+		
+		public final $V call() throws Exception {
+			try {
+				if ($wrap == null) throw new IllegalStateException("This task can only be run once, and is already done!");
+				return $wrap.call();
+			} finally {
+				if ($once) $wrap = null;
+			}
+		}
+		
+		/** We have no clue whether or not the Callable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
+		public final boolean isReady() { return !isDone(); }
+		/** We have no clue whether or not the Callable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
+		public final boolean isDone() { return ($wrap == null); }
+		public final int getPriority() { return $prio; }
 	}
 	
 	//TODO:AHS:THREAD: a readymade WorkTarget implementation which oneshots itself in response to one or more Future becoming done.  this will tend to be what gets used whenever you might otherwise have wished for a continuation/park (and where other libraries are resorting to serious weaving).
+	//  the above is maybe not so necessary.  the idiom of having a completion listener schedule a new WorkTarget works quite well.
+	//  still, something that takes a WorkFuture when constructed and uses it's isDone to define its own isReady seems quite straightforward.  (the one-shot'ing part is maybe not so necessary.)  i mean, the other option actually leaves less useless work in a heap somewhere, but i don't really care; i think usually the code readability of being able to declare all your tasks at once at the same level is more important.
 }

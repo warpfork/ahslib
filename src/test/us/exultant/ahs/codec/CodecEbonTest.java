@@ -20,9 +20,10 @@
 package us.exultant.ahs.codec;
 
 import us.exultant.ahs.codec.ebon.*;
+import us.exultant.ahs.log.*;
 
 public class CodecEbonTest extends CodecEonTest {
-	public CodecEbonTest() {
-		super(new EbonCodec());
-	}
+	public static void main(String... $args) {				new CodecEbonTest().run();				}
+	public CodecEbonTest() {						super(new EbonCodec());					}
+	public CodecEbonTest(Logger $log, boolean $enableConfirmation) {	super(new EbonCodec(), $log, $enableConfirmation);	}
 }

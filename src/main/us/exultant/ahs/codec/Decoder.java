@@ -37,7 +37,7 @@ import us.exultant.ahs.core.*;
  * reentrant.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$TARG>
  *                The type of object to be produced by the decoding. A single complete
