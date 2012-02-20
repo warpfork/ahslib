@@ -19,28 +19,22 @@
 
 package us.exultant.ahs.terminal.gui;
 
-import us.exultant.ahs.terminal.Terminal.Color;
-import us.exultant.ahs.terminal.Window;
 import us.exultant.ahs.terminal.geom.*;
 import java.awt.*;
 
-public class Div implements Container {
-	private Shaper $shaper;
-	private Rectangle $bound;
-	private Margin $bordersize;
-	private Margin $paddingsize;
-	private Color $background;
-	private Color $bordercolor;
-	
-	private Box $mybox;
-	private Box $childrenBox;
-	
-	public void paint(Window $buffer) {
-		$mybox.paint($buffer);
-		$childrenBox.paint($buffer);
+public class ShaperMargin implements Shaper {
+	public ShaperMargin(Margin $margin) {
+		this.$margin = $margin;
 	}
 	
-	public void addChild(Component $x) {
-		$childrenBox.addChild($x);
+	private Margin	$margin;
+	
+	public Rectangle size(Dimension $d) {
+		return new Rectangle(
+				$margin.getLeft(),
+				$margin.getTop(),
+				(int) ($d.getWidth() - $margin.getLeft() - $margin.getRight()),
+				(int) ($d.getHeight() - $margin.getTop() - $margin.getBottom())
+		);
 	}
 }
