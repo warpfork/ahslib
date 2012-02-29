@@ -29,7 +29,7 @@ import java.util.regex.*;
  * produce a Map<String,String> that maps keys to values; if the GET contains the same key
  * multiple times, the map will contain the value set in the last instance.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class JscGetQueryGet extends JsCommand.Adapter<Map<String,String>> {

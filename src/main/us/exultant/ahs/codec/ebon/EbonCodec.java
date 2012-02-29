@@ -22,7 +22,10 @@ import us.exultant.ahs.core.*;
 import us.exultant.ahs.codec.eon.*;
 
 /**
- * @author hash
+ * Implements {@link EonCodec} with maps and arrays provided by {@link EonObject} and
+ * {@link EonArray}.
+ * 
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class EbonCodec extends EonCodec {
 	public static final EbonCodec X = new EbonCodec();

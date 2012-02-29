@@ -29,7 +29,7 @@ import java.io.*;
  * TranslationException. The same is true of virtually any kind of parsing error.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @see UnencodableException
  * 
  */

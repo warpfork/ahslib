@@ -7,14 +7,12 @@
 package us.exultant.ahs.scratch.jsap;
 
 /**
- * An exception indicating that a parameter has illegally been declared multiple
- * times.
- *
- * @see
- *  ahs.scratch.jsap.FlaggedOption#setAllowMultipleDeclarations(boolean)
+ * An exception indicating that a parameter has illegally been declared multiple times.
+ * 
+ * @see us.exultant.ahs.scratch.jsap.FlaggedOption#setAllowMultipleDeclarations(boolean)
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Flagged
- * @see ahs.scratch.jsap.Option
+ * @see us.exultant.ahs.scratch.jsap.Flagged
+ * @see us.exultant.ahs.scratch.jsap.Option
  */
 public class IllegalMultipleDeclarationException extends JSAPException {
 

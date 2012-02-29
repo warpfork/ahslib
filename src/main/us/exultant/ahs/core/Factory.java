@@ -49,7 +49,7 @@ package us.exultant.ahs.core;
  * otherwise thread-safe, do your fellow programmers a favor and document it as such.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  */

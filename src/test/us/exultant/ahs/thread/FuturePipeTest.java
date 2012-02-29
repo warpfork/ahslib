@@ -38,7 +38,7 @@ import java.util.concurrent.*;
  * </ul>
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class FuturePipeTest extends TestCase {

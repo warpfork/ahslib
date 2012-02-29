@@ -16,7 +16,7 @@ import java.lang.annotation.*;
  * proper use is recommended.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented

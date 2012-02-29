@@ -30,7 +30,7 @@ package us.exultant.ahs.util;
  * 
  * @author Jeffrey Rodriguez
  * @author Sandy Gao
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public final class Base64 {
 	

@@ -55,7 +55,7 @@ public class ReadHeadSocketChannelTest extends TestCase {
 			super.call();
 			
 			$sca0 = SocketChannel.open();
-			$sca0.connect($rhsc.getServerSocketChannel().getLocalAddress());
+			$sca0.connect($rhsc.getServerSocketChannel().socket().getLocalSocketAddress());
 			
 			SocketChannel $sca1 = $rhsc.read();	// this may block forever if something is wrong
 			

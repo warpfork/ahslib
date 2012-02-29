@@ -39,7 +39,7 @@ import java.lang.management.*;
  * making a lot of really dodgy assumptions and probably wouldn't be super useful anyway
  * so this class doesn't do it.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class Logger {

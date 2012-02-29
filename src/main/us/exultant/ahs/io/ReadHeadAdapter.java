@@ -31,7 +31,7 @@ import java.util.concurrent.*;
  * except it also allows the overriding of some special functions needed by the relatively
  * "low-level" code that operates directly with java nio.)
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  */

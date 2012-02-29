@@ -28,7 +28,7 @@ import java.util.*;
  * across java versions. Adds a bunch of convenience methods for primitive array copying,
  * concatenating, etc.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class Arr {

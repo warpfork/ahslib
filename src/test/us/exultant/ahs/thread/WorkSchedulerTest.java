@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.*;
  * </ul>
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public abstract class WorkSchedulerTest extends TestCase {

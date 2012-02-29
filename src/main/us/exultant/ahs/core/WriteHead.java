@@ -19,12 +19,13 @@
 
 package us.exultant.ahs.core;
 
+import us.exultant.ahs.anno.*;
 import java.util.*;
 
 /**
  * <p>
  * Provides an interface to make file, network, and internal pipe operations all
- * transparent; WriteHead is the complement of {@link ReadHead}.
+ * transparently; WriteHead is the complement of {@link ReadHead}.
  * </p>
  * 
  * <p>
@@ -50,7 +51,7 @@ import java.util.*;
  * be significant blocking for the disk access itself.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public interface WriteHead<$T> {
 	/**
@@ -62,6 +63,7 @@ public interface WriteHead<$T> {
 	 * @throws NullPointerException
 	 *                 if the chunk is null
 	 */
+	@ThreadSafe
 	public void write($T $chunk);
 	
 	/**
@@ -104,6 +106,7 @@ public interface WriteHead<$T> {
 	 * @throws NullPointerException
 	 *                 if any chunk in the collection is null
 	 */
+	@ThreadSafe
 	public void writeAll(Collection<? extends $T> $chunks);
 	
 	/**
@@ -120,11 +123,17 @@ public interface WriteHead<$T> {
 	 *         realisticness of "immediacy" in multithreading aside) call to write()
 	 *         will return immediately without blocking.
 	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean hasRoom();
 	
 	/**
+	 * Reports whether or not the WriteHead is closed to the entry of data.
+	 * 
 	 * @return true if the underlying stream is closed and writes are not possible.
 	 */
+	@Nullipotent
+	@ThreadSafe
 	public boolean isClosed();
 	
 	/**
@@ -153,5 +162,7 @@ public interface WriteHead<$T> {
 	 * closed WriteHead is illogical (but should not throw exceptions).
 	 * </p>
 	 */
+	@Idempotent
+	@ThreadSafe
 	public void close();
 }

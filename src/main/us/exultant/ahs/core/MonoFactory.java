@@ -19,6 +19,8 @@
 
 package us.exultant.ahs.core;
 
+import us.exultant.ahs.anno.*;
+
 /**
  * <p>
  * A MonoFactory produces a single object; if invoked repeatedly, it always returns the
@@ -43,9 +45,11 @@ package us.exultant.ahs.core;
  * more flexible, but tends to result in substantial boilerplate code.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  */
 public interface MonoFactory<$T> extends Factory<$T> {
+	@Idempotent
+	public $T make();
 }

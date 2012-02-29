@@ -29,7 +29,7 @@ import java.lang.annotation.*;
  * >wikipedia article</a> for examples and extended definition.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented

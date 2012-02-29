@@ -958,12 +958,16 @@ public class JsonArray implements EonArray {
 	 * no whitespace is added.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
+	 * <p>
+	 * Do not use a failable Writer. Write to a buffer first if you must deal with I/O
+	 * outside of the program.
 	 * 
-	 * @return The writer.
-	 * @throws JsonException
-	 * @throws UnencodableException 
+	 * @return the writer.
+	 * 
+	 * @throws MajorBug
+	 *                 if the Writer throws an IOException.
 	 */
-	public Writer write(Writer writer) throws JsonException, UnencodableException {
+	Writer write(Writer writer) {
 		try {
 			boolean b = false;
 			int len = length();
@@ -987,7 +991,8 @@ public class JsonArray implements EonArray {
 			writer.write(']');
 			return writer;
 		} catch (IOException e) {
-			throw new JsonException(e);
+			/* don't pass me a shitty Writer. */
+			throw new MajorBug("Unimaginably strange error while writing to an internal buffer.", e);
 		}
 	}
 }

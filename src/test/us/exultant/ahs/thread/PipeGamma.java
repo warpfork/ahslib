@@ -30,7 +30,7 @@ import java.util.concurrent.locks.*;
  * This is silly, todo, and will be silly even when it's done.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 // The biggest heresy of this class?
@@ -129,7 +129,7 @@ public class PipeGamma<$T> implements Flow<$T> {
 	/**
 	 * {@link PipeGamma}'s internal implementation of ReadHead.
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 *
 	 */
 	public final class Source implements ReadHead<$T> {

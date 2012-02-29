@@ -9,15 +9,13 @@ package us.exultant.ahs.scratch.jsap;
 import java.util.Properties;
 
 /**
- * A {@link ahs.scratch.jsap.StringParser} subclass that provides a means for setting/getting properties.
- * This
- * is intended to support StringParsers that might requires some configuration,
- * such
- * as DateStringParser (which needs a format String).
- *
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} subclass that provides a means for
+ * setting/getting properties. This is intended to support StringParsers that might
+ * requires some configuration, such as DateStringParser (which needs a format String).
+ * 
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.StringParser
- * @see ahs.scratch.jsap.stringparsers.DateStringParser
+ * @see us.exultant.ahs.scratch.jsap.StringParser
+ * @see us.exultant.ahs.scratch.jsap.stringparsers.DateStringParser
  */
 public abstract class PropertyStringParser extends StringParser {
 

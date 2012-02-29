@@ -35,7 +35,7 @@ import java.util.*;
  * <li>Fuctions don't do anything piecemeal, they just give you the answer you wanted and
  * don't make you worry about it.
  * <li>For local filesystem operations.
- * <li>Zero threading, nonblocking, or anything interesting &mdash just dead-simple stuff.
+ * <li>Zero threading, nonblocking, or anything interesting &mdash; just dead-simple stuff.
  * <li>Includes all the little edge cases that often throw a novice coder, such as closing
  * streams even if their creation threw exceptions (which if neglected can deplete the
  * range of file descriptors the OS is willing to allocate), etc.
@@ -51,7 +51,7 @@ import java.util.*;
  * by Java novices.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class IOForge {
@@ -139,12 +139,12 @@ public class IOForge {
 		}
 	}
 	
-	/** Read an entire input stream into an array of UTF-8 strings. Closes the input stream when done, even if IOException. */
+	/** Read an entire input stream into a UTF-8 string. Closes the input stream when done, even if IOException. */
 	public static String readString(InputStream $ins) throws IOException {
 		return readString($ins, Strings.UTF_8);
 	}
 	
-	/** Read an entire input stream into an array of strings.  Closes the input stream when done, even if IOException. */
+	/** Read an entire input stream into a string.  Closes the input stream when done, even if IOException. */
 	public static String readString(InputStream $ins, Charset $cs) throws IOException {
 		try {
 			char[] $buf = new char[2048];

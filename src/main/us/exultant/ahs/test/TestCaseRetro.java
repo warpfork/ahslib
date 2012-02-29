@@ -54,7 +54,7 @@ import us.exultant.ahs.util.*;
  * message when the assertion passes correctly.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @deprecated This system is being replaced by {@link TestCase}, in which the concrete subclasses
  *             provide a list of runnable units instead of simply overriding the entire
  *             runTests method, which will allow the abstract TestCase system to take more

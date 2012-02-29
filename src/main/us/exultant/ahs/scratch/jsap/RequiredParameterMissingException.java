@@ -12,7 +12,7 @@ package us.exultant.ahs.scratch.jsap;
  *
  * @see FlaggedOption#setAllowMultipleDeclarations(boolean)
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Option#required()
+ * @see us.exultant.ahs.scratch.jsap.Option#required()
  */
 public class RequiredParameterMissingException extends JSAPException {
 

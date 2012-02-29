@@ -45,7 +45,7 @@ import org.bouncycastle.crypto.params.*;
  * savings in some applications.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 // so really, the reason i did separate subclasses for enc and dec is so that i wouldn't have to deal with the issue of a cipher initialized to the same key but a different mode.  i'm okay with throwing a few bytes of memory at that.

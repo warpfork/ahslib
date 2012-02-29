@@ -44,7 +44,7 @@ import java.util.*;
  * can be a source of a similiar scale of randomness), then adopt that idea now.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public final class TestData {

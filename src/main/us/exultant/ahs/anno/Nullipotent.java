@@ -16,7 +16,7 @@ import java.lang.annotation.*;
  * same arguments.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented

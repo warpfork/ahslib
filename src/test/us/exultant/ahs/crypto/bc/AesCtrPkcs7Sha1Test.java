@@ -69,7 +69,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 	
 	private class TestAnything extends TestCase.Unit { 
 		public Object call() {
-			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
 					$kc1,
@@ -87,7 +87,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 		}
 		
 		public Object call() {
-			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
 					$kcws,
@@ -105,7 +105,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 		}
 		
 		public Object call() {
-			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ksws,
 					$kc1,
@@ -118,7 +118,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 	
 	private class TestInvalidMacKey extends TestCase.Unit {
 		public Object call() {
-			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
 					$kc1,
@@ -134,7 +134,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 
 	private class TestCiphertextConsistency extends TestCase.Unit {
 		public Object call() {
-			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
 					$kc1,
@@ -159,7 +159,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 
 	private class TestKeyReuse extends TestCase.Unit {
 		public Object call() {
-			AesCtrPkcs7Sha1 $sys = new AesCtrPkcs7Sha1();
+			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph1 = $sys.encrypt(
 					$ks1,
 					$kc1,
