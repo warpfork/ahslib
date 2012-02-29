@@ -23,14 +23,30 @@ import us.exultant.ahs.core.*;
 import java.util.*;
 
 /**
+ * <p>
  * Given a set of {@link WorkFuture} entered into the {@link WriteHead} sink of this
  * {@link Flow}, the source {@link ReadHead} will return the same WorkFutures once they
- * are completed, and in the (approximate) order of completion.
+ * are completed, and in the (approximate) order of completion. This makes it possible to
+ * nonblockingly (or blockingly) wait for the first future in a set to be done, or for the
+ * whole set to be done, or to just perform an operation for each one that's done the
+ * order of whichever is done first (which could be done by putting listeners on each
+ * future, but this allows you to do it all in one thread).
+ * </p>
  * 
+ * <p>
+ * If you want a WorkFuture that will represent the completion of all of a set of
+ * WorkFutures (i.e. so that you can use the completion listener to fire once when all the
+ * set of tasks is done), consider using {@link AggregateWorkFuture}.
+ * </p>
+ * 
+ * <h3>Why doesn't this work with {@link java.util.concurrent.Future}?</h3>
+ * 
+ * <p>
  * Unfortunately, this could not be provided for Future as well as for WorkFuture, because
  * there is no ability to detect the completion of a Future in a nonblocking way without
  * resorting to polling (this of course was the entire reason for the WorkFuture interface
  * to begin with).
+ * </p>
  */
 //this is obscenely similar to ExecutorCompletionService.
 //note however that our semantics for close again come in handy here: 

@@ -23,6 +23,12 @@ import us.exultant.ahs.core.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * Facade class with a default scheduler and quick methods for scheduling tasks.
+ * 
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
+ *
+ */
 public class WorkManager {
 	public static <$T> Future<Void> scheduleOnePerCore(Factory<WorkTarget<$T>> $wtf) {
 		return scheduleOnePerCore($wtf, getDefaultScheduler());
@@ -43,9 +49,6 @@ public class WorkManager {
 	
 	
 	
-	//PLAN:AHS:THREAD: i'm really not sure what i'm going to do about defaults for this stuff.
-	//	core problem 1: not every program might want the same kind of WorkScheduler.  And while they can start their own, then we start spawning more threads than cores.  Not the end of the world (especially if the entire application ignores the default one, since then those threads are never run anyway), but less than ideal.
-	//	core problem 2: some programs might want to tweak performance settings -- changing the balance of thread allocation between priority bins, for example.  And those changes being global?  Urgh.
 	/**
 	 * <p>
 	 * Gets a "default" WorkScheduler that is a singleton to the VM.
