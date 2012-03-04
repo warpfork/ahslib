@@ -256,7 +256,15 @@ public interface WorkTarget<$V> extends Callable<$V> {
 
 	/**
 	 * <p>
-	 * Bridges the gap between {@link Runnable} and WorkTarget.
+	 * Bridges the gap between {@link Runnable} and WorkTarget. The work is ready any
+	 * time that it's not done.
+	 * </p>
+	 * 
+	 * <p>
+	 * If constructed in run-once mode, the WorkTarget will run exactly once when
+	 * scheduled with a {@link WorkScheduler}; otherwise if run-once is false the work
+	 * will always be ready and will never become done (to stop it, the
+	 * {@link WorkFuture} must be cancelled or it must throw an exception).
 	 * </p>
 	 * 
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
@@ -300,11 +308,19 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		public final int getPriority() { return $prio; }
 	}
 	
-
-
+	
+	
 	/**
 	 * <p>
-	 * Bridges the gap between {@link Callable} and WorkTarget.
+	 * Bridges the gap between {@link Callable} and WorkTarget. The work is ready any
+	 * time that it's not done.
+	 * </p>
+	 * 
+	 * <p>
+	 * If constructed in run-once mode, the WorkTarget will run exactly once when
+	 * scheduled with a {@link WorkScheduler}; otherwise if run-once is false the work
+	 * will always be ready and will never become done (to stop it, the
+	 * {@link WorkFuture} must be cancelled or it must throw an exception).
 	 * </p>
 	 * 
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
