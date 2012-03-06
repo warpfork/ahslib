@@ -55,8 +55,8 @@ public class FuturePipeTest extends TestCase {
 	
 	
 	
-	public static final WorkTarget<Void> makeNoopWork() {
-		return new WorkTarget.RunnableWrapper(new Runnable() { public void run() {} });
+	public static final WorkTarget.TriggerableAdapter<Void> makeNoopWork() {
+		return new WorkTarget.RunnableWrapper(new Runnable() { public void run() {} }, false, true);
 	}
 	
 	/** One WorkFuture is added a FuturePipe, and the Pipe closed. The work is scheduled with a delay to take place after the pipe closure. */
@@ -64,12 +64,15 @@ public class FuturePipeTest extends TestCase {
 		public Object call() throws InterruptedException, ExecutionException {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();	// this type boundary here is fantastically powerful abstraction and very important.
 			
-			WorkFuture<Void> $wf = WorkManager.getDefaultScheduler().schedule(makeNoopWork(), ScheduleParams.makeDelayed(3));
+			WorkTarget.TriggerableAdapter<Void> $wt = makeNoopWork();
+			WorkFuture<Void> $wf = WorkManager.getDefaultScheduler().schedule($wt, ScheduleParams.makeDelayed(1));
 			$wfp.sink().write($wf);
 			$wfp.sink().close();
 			assertFalse($wfp.source().hasNext());
 			assertTrue($wfp.sink().isClosed());
 			assertFalse($wfp.source().isClosed());
+			
+			$wt.trigger();	//FIXME: you need to update the workfuture too :(  which, yeah, really really quite sucks., to need both pointers.  but there's no way around it without making workfuture specially aware of worktargettriggerable, which is clearly wrong.
 			
 			$wfp.source().setListener(new Listener<ReadHead<WorkFuture<Void>>>() {
 				/*
@@ -82,7 +85,9 @@ public class FuturePipeTest extends TestCase {
 				 * Also, that last one will occur once per read that is on a now-exhausted pipe... which means it's going to happen once for our read, and once for the readall we do after it.
 				 */
 				public void hear(ReadHead<WorkFuture<Void>> $x) {
-					$log.trace(this, "event", new Exception());
+					$log.trace(this, "event"
+							//, new Exception()
+					);
 				}
 			});
 			
@@ -96,6 +101,7 @@ public class FuturePipeTest extends TestCase {
 	}
 	
 	/** Same as {@link TestBasic}, but the work is scheduled without delay so it can (and probably will) take place before the WorkFuture is written into the FuturePipe, or at approximately the same time. */
+	// actually this is maybe not so necessary... the 3ms delay actually turns out to be pretty darn chaotic already.
 	private class TestBasicConcurrent extends TestCase.Unit {
 		private boolean	$win	= false;
 		

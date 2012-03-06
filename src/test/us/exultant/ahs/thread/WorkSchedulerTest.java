@@ -96,7 +96,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		
 		public Object call() throws InterruptedException, ExecutionException {
 			Work $w = new Work();
-			Future<?> $f = $ws.schedule(new WorkTarget.RunnableWrapper($w, 0, true), ScheduleParams.NOW);
+			Future<?> $f = $ws.schedule(new WorkTarget.RunnableWrapper($w), ScheduleParams.NOW);
 			
 			$f.get();
 			
@@ -122,7 +122,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public Object call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			final Work $wt = new Work();
-			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt, 0, true), ScheduleParams.NOW);
+			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt), ScheduleParams.NOW);
 			
 			$wf.addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $lol) {
@@ -158,7 +158,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public Object call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			final Work $wt = new Work();
-			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt, 0, true), ScheduleParams.NOW);
+			final WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper($wt), ScheduleParams.NOW);
 			
 			$wf.get();
 			
@@ -366,14 +366,14 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public Object call() throws InterruptedException, ExecutionException {
 			final int space = 100;
 			WorkFuture<?>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
-			$wf[3] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 03, true), ScheduleParams.makeDelayed(4*space));
-			$wf[4] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -9, true), ScheduleParams.makeDelayed(5*space));
-			$wf[5] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 07, true), ScheduleParams.makeDelayed(6*space));
-			$wf[0] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 00, true), ScheduleParams.makeDelayed(1*space));
-			$wf[1] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 40, true), ScheduleParams.makeDelayed(2*space));
-			$wf[2] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 17, true), ScheduleParams.makeDelayed(3*space));
-			$wf[6] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 30, true), ScheduleParams.makeDelayed(7*space));
-			$wf[7] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -6, true), ScheduleParams.makeDelayed(8*space));
+			$wf[3] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 03), ScheduleParams.makeDelayed(4*space));
+			$wf[4] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -9), ScheduleParams.makeDelayed(5*space));
+			$wf[5] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 07), ScheduleParams.makeDelayed(6*space));
+			$wf[0] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 00), ScheduleParams.makeDelayed(1*space));
+			$wf[1] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 40), ScheduleParams.makeDelayed(2*space));
+			$wf[2] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 17), ScheduleParams.makeDelayed(3*space));
+			$wf[6] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 30), ScheduleParams.makeDelayed(7*space));
+			$wf[7] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -6), ScheduleParams.makeDelayed(8*space));
 			$log.trace(this, "work scheduler starting...");
 			$ws.start();
 			$log.trace(this, "work scheduler started.");
@@ -531,7 +531,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				public void run() {
 					$log.trace("PIPE SIZE: "+$pipe.size()+"\nSCHEDULER STATUS:\n" + $bs.getStatus(true));
 				}
-			}, 100000, false), ScheduleParams.makeFixedDelay(100));
+			}, true, false, 100000), ScheduleParams.makeFixedDelay(100));
 			
 			$ws.schedule(new WorkTarget.RunnableWrapper(new Runnable() { public void run() { TestNonblockingManyWorkSingleConcurrentSource.super.feedPipe(); } }), ScheduleParams.NOW);	// that was an incredibly satisfying line to write
 		}
@@ -555,8 +555,8 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private WorkScheduler $ws = makeScheduler(1).start();
 		
 		public Object call() throws InterruptedException, ExecutionException {
-			WorkFuture<Void> $wf_high = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 90000, true), ScheduleParams.NOW);
-			WorkFuture<Void> $wf_low = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 10, true), ScheduleParams.NOW);
+			WorkFuture<Void> $wf_high = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 90000), ScheduleParams.NOW);
+			WorkFuture<Void> $wf_low = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 10), ScheduleParams.NOW);
 			$ws.start();
 			
 			$wf_high.get();
