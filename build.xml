@@ -17,6 +17,7 @@
 	
 	<echo>Ant version:       ${ant.version}</echo>
 	<echo>Ant jvm version:   ${ant.java.version}</echo>
+	<property file="build.properties"/>
 	<import file="build-exultant.xml"/> 
 	
 	
