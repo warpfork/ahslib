@@ -20,6 +20,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
@@ -49,30 +50,40 @@ public class FuturePipeTest extends TestCase {
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
-		$tests.add(new TestBasicConcurrent());
+		$tests.add(new TestConcurrent());
+		//$tests.add(new TestOrdering());
 		return $tests;
 	}
 	
 	
 	
-	public static final WorkTarget.TriggerableAdapter<Void> makeNoopWork() {
-		return new WorkTarget.RunnableWrapper(new Runnable() { public void run() {} }, false, true);
+	public static final WorkTarget.TriggerableAdapter<Void> makeNoopWork(boolean $alreadyReady) {
+		return new WorkTarget.RunnableWrapper(new Runnable() { public void run() {} }, $alreadyReady, true);
 	}
 	
-	/** One WorkFuture is added a FuturePipe, and the Pipe closed. The work is scheduled with a delay to take place after the pipe closure. */
+	
+	
+	/**
+	 * One WorkFuture is added a FuturePipe, and the Pipe closed. The work is then
+	 * made ready, and after running becomes finished.
+	 */
 	private class TestBasic extends TestCase.Unit {
+		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
 		public Object call() throws InterruptedException, ExecutionException {
-			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();	// this type boundary here is fantastically powerful abstraction and very important.
+			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
+			$ws.start();
 			
-			WorkTarget.TriggerableAdapter<Void> $wt = makeNoopWork();
-			WorkFuture<Void> $wf = WorkManager.getDefaultScheduler().schedule($wt, ScheduleParams.makeDelayed(1));
+			WorkTarget.TriggerableAdapter<Void> $wt = makeNoopWork(false);
+			WorkFuture<Void> $wf = $ws.schedule($wt, ScheduleParams.NOW);
 			$wfp.sink().write($wf);
 			$wfp.sink().close();
 			assertFalse($wfp.source().hasNext());
 			assertTrue($wfp.sink().isClosed());
 			assertFalse($wfp.source().isClosed());
+			breakIfFailed();
 			
-			$wt.trigger();	//FIXME: you need to update the workfuture too :(  which, yeah, really really quite sucks., to need both pointers.  but there's no way around it without making workfuture specially aware of worktargettriggerable, which is clearly wrong.
+			$wt.trigger();
+			$wf.update();
 			
 			$wfp.source().setListener(new Listener<ReadHead<WorkFuture<Void>>>() {
 				/*
@@ -93,18 +104,76 @@ public class FuturePipeTest extends TestCase {
 			
 			$wfp.source().read();
 			assertTrue($wf.isDone());
+			breakIfFailed();
 			assertEquals(0, $wfp.source().readAll().size());
-			assertTrue($wfp.source().isClosed());	// actually yeah, this is allowed to come in AFTER the last read.  which is a little surprising.  but on the other hand, wouldn't it be even more surprising if you got close events BEFORE the last read?  either way, the point is moot: from a technical level, i CANT emit the closure before the unblocking of the final read without an outrageous amount of effort, since if i recycle the standard pipe abstraction the unblocking is done by writing, which obviously you aren't allowed to do something closed because of how that makes zero sense everywhere else.
+			assertTrue($wfp.source().isClosed());
 			assertFalse($wfp.source().hasNext());
+			$ws.stop(false);
 			return null;
 		}
 	}
 	
-	/** Same as {@link TestBasic}, but the work is scheduled without delay so it can (and probably will) take place before the WorkFuture is written into the FuturePipe, or at approximately the same time. */
-	// actually this is maybe not so necessary... the 3ms delay actually turns out to be pretty darn chaotic already.
-	private class TestBasicConcurrent extends TestCase.Unit {
-		private boolean	$win	= false;
-		
+	
+	
+	/**
+	 * Several WorkFuture are added to a FuturePipe (some of which go off quite
+	 * immediately, some of which go off with delays), and the Pipe closed at some
+	 * point where there will probably be work finishing on either side of the closure.
+	 */
+	private class TestConcurrent extends TestCase.Unit {
+		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
+		static final int N = 1000;
+		static final int D0 = 700;
+		static final int D1 = N - D0;
+		public Object call() throws InterruptedException, ExecutionException {
+			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
+			
+			@SuppressWarnings("unchecked")
+			WorkTarget<Void>[] $wts = Arr.newInstance(WorkTarget.class, N);
+			@SuppressWarnings("unchecked")
+			WorkFuture<Void>[] $wfs = Arr.newInstance(WorkFuture.class, N);
+			
+			for (int $i = 0; $i < N; $i++)
+				$wts[$i] = makeNoopWork(true);
+			for (int $i = 0; $i < D0; $i++)
+				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.NOW);
+			for (int $i = D0; $i < N; $i++)
+				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.makeDelayed(1));
+			for (int $i = 0; $i < N; $i++)
+				$wfp.sink().write($wfs[$i]);
+			assertFalse($wfp.source().hasNext());
+			assertFalse($wfp.sink().isClosed());
+			assertFalse($wfp.source().isClosed());
+			breakIfFailed();
+			
+			$ws.start();
+			$wfp.sink().close();
+			assertTrue($wfp.sink().isClosed());
+			breakIfFailed();
+			
+			for (int $i = 0; $i < N; $i++) {
+				WorkFuture<Void> $wf = $wfp.source().read();
+				assertTrue($wf.isDone());
+			}
+			assertEquals(0, $wfp.source().readAll().size());
+			assertTrue($wfp.source().isClosed());
+			assertFalse($wfp.source().hasNext());
+			$ws.stop(false);
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * Several WorkFuture are added to a FuturePipe (with different priorities). They
+	 * must come out of the FuturePipe in the order which they were completed
+	 * (assuming that the scheduler completed them as their priority ordering
+	 * dictates; the scheduler is not started until after all work is added to
+	 * facilitate clarity in that).
+	 */
+	private class TestOrdering extends TestCase.Unit {
+		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
 		public Object call() throws InterruptedException, ExecutionException {
 			return null;
 		}
