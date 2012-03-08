@@ -53,7 +53,7 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 		this.$pip.sink().writeAll($futures);
 	}
 	
-	private Flow<WorkFuture<$T>> $pip;
+	private FuturePipe<$T> $pip;
 	/**
 	 * Generally speaking, if you're going to change this, you should synchronize on
 	 * {@link #$pip} first. However, if you're only reading, and you're checking for
@@ -148,28 +148,56 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	
 	/**
 	 * Attempts to cancel execution of all of the individual tasks aggregated by this
-	 * object. This method then waits for the completion of all the aggregated tasks,
-	 * and when this is done, finally attempts to transition this WorkTarget to
-	 * cancelled. Only then does it return. This means that by the time this method
-	 * returns, all aggregated tasks are no longer runnable; however, it's quite
-	 * possible for concurrent finishing of the aggregated tasks to mean that this
-	 * AggregateWorkFuture becomes {@link WorkFuture.State#FINISHED} instead of
-	 * {@link WorkFuture.State#CANCELLED} even if this method call did cause the
+	 * object that are not yet completed. This method then waits for the completion of
+	 * all the aggregated tasks, and when this is done, finally attempts to transition
+	 * this WorkTarget to cancelled. Only then does it return. This means that by the
+	 * time this method returns, all aggregated tasks are no longer runnable; however,
+	 * it's quite possible for concurrent finishing of the aggregated tasks to mean
+	 * that this AggregateWorkFuture becomes {@link WorkFuture.State#FINISHED} instead
+	 * of {@link WorkFuture.State#CANCELLED} even if this method call did cause the
 	 * cancellation of the majority of child tasks.
 	 */
-	public boolean cancel(boolean $notApplicable) {
-		//TODO cancel all the things
-		//TODO wait for them
-		synchronized ($pip) {
+	public boolean cancel(boolean $mayInterruptIfRunning) {
+		Set<WorkFuture<$T>> $helds;
+		synchronized ($pip.$held) {
+			$helds = new HashSet<WorkFuture<$T>>($pip.$held);
+		}
+		for (WorkFuture<$T> $held : $helds)
+			$held.cancel($mayInterruptIfRunning);
+		for (WorkFuture<$T> $held : $helds)
+			try {
+				$held.get();
+			} catch (ExecutionException $e) { /* I don't care how you ended. */
+			} catch (InterruptedException $e) { /* Seriously I don't. */ }
+		synchronized ($pip) {	// this is really less than ideal.  like, it's as likely as not to end as FINISHED instead of CANCELLED.  not the intended effect.  maybe we should do the transition instantly but then do the waiting?  no, that doesn't seem right either.  hm.
 			if ($state != State.WAITING) return false; 
 			$state = State.CANCELLED;
 		}
 		hearDone();
-		return $state == State.CANCELLED;
+		return true;
 	}
 	
+
+	/**
+	 * <p>
+	 * Invokes update for all of the individual tasks aggregated by this object that
+	 * are not yet completed.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note that if you have kept a the full set of WorkFuture that were aggregated
+	 * around elsewhere and you know that they all came from the same
+	 * {@link WorkScheduler}, it may be slightly more efficient to use that
+	 * WorkScheduler's {@link WorkScheduler#update(Collection) mass update} method.
+	 * </p>
+	 */
 	public void update() {
-		//TODO update all the things
+		Set<WorkFuture<$T>> $helds;
+		synchronized ($pip.$held) {
+			$helds = new HashSet<WorkFuture<$T>>($pip.$held);
+		}
+		for (WorkFuture<$T> $held : $helds)
+			$held.update();
 	}
 	
 	public void addCompletionListener(Listener<WorkFuture<?>> $completionListener) {

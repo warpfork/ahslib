@@ -69,7 +69,8 @@ public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
 	private final WriteHead<WorkFuture<$T>> $inbound = new Sink();
 	private volatile boolean $allowMore = true;
 	private final Pipe<WorkFuture<$T>> $outbound = new Pipe<WorkFuture<$T>>();
-	private final Set<WorkFuture<$T>> $held = new HashSet<WorkFuture<$T>>();
+	/** This is package-visible so we can use it in AggregateWorkFuture.  Synchronize at all times. */
+	final Set<WorkFuture<$T>> $held = new HashSet<WorkFuture<$T>>();
 	
 	private final class Sink implements WriteHead<WorkFuture<$T>> {
 		private Sink() {} // this should be a singleton per instance of the enclosing class
