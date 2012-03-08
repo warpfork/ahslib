@@ -24,7 +24,6 @@ import us.exultant.ahs.util.*;
 import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
-import java.util.concurrent.*;
 
 /**
  * <p>
@@ -51,7 +50,7 @@ public class FuturePipeTest extends TestCase {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
 		$tests.add(new TestConcurrent());
-		//$tests.add(new TestOrdering());
+		$tests.add(new TestOrdering());
 		return $tests;
 	}
 	
@@ -166,18 +165,44 @@ public class FuturePipeTest extends TestCase {
 	
 	
 	/**
-	 * Several WorkFuture are added to a FuturePipe (with different priorities). They
-	 * must come out of the FuturePipe in the order which they were completed
-	 * (assuming that the scheduler completed them as their priority ordering
-	 * dictates; the scheduler is not started until after all work is added to
-	 * facilitate clarity in that).
+	 * Several WorkFuture are added to a FuturePipe, then triggered in an order other
+	 * than the order in which they were written to the pipe. They must come out of
+	 * the FuturePipe in the order which they were completed.
+	 * 
+	 * The scheduler used is constructed with only one thread; this reduces the amount
+	 * of guesswork in near-simultaneous finishes that chaotic thread scheduling by
+	 * the OS can otherwise cause (since the indirection of the completion listener in
+	 * the guts of a FuturePipe, really strict ordering on things that finish at
+	 * nearly the same time is not enforced).
 	 */
 	private class TestOrdering extends TestCase.Unit {
-		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
+		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(1);
 		public Object call() {
+			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
+			
+			WorkTarget.TriggerableAdapter<Void> $wt1 = makeNoopWork(false);
+			WorkTarget.TriggerableAdapter<Void> $wt2 = makeNoopWork(false);
+			WorkTarget.TriggerableAdapter<Void> $wt3 = makeNoopWork(false);
+			WorkFuture<Void> $wf1 = $ws.schedule($wt1, ScheduleParams.NOW);
+			WorkFuture<Void> $wf2 = $ws.schedule($wt2, ScheduleParams.NOW);
+			WorkFuture<Void> $wf3 = $ws.schedule($wt3, ScheduleParams.NOW);
+			$wfp.sink().write($wf2);
+			$wfp.sink().write($wf3);
+			$wfp.sink().write($wf1);
+			$wfp.sink().close();
+			
+			$ws.start();
+			$wt1.trigger(); $wf1.update();
+			X.chill(2);	// even with a single-thread scheduler, we still need these delays to overcome the fact that the scheduler batches updates.
+			$wt2.trigger(); $wf2.update();
+			X.chill(2);
+			$wt3.trigger(); $wf3.update();
+			$ws.stop(false);
+			
+			assertEquals($wf1, $wfp.source().read());
+			assertEquals($wf2, $wfp.source().read());
+			assertEquals($wf3, $wfp.source().read());
 			return null;
 		}
 	}
-	
-	
 }
