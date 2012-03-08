@@ -69,7 +69,7 @@ public class FuturePipeTest extends TestCase {
 	 */
 	private class TestBasic extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
-		public Object call() throws InterruptedException, ExecutionException {
+		public Object call() {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			$ws.start();
 			
@@ -77,9 +77,9 @@ public class FuturePipeTest extends TestCase {
 			WorkFuture<Void> $wf = $ws.schedule($wt, ScheduleParams.NOW);
 			$wfp.sink().write($wf);
 			$wfp.sink().close();
-			assertFalse($wfp.source().hasNext());
-			assertTrue($wfp.sink().isClosed());
-			assertFalse($wfp.source().isClosed());
+			assertFalse("FuturePipe is has no readable elements at start", $wfp.source().hasNext());
+			assertTrue("FuturePipe became closed for writing when asked", $wfp.sink().isClosed());
+			assertFalse("FuturePipe is still open for reading", $wfp.source().isClosed());
 			breakIfFailed();
 			
 			$wt.trigger();
@@ -103,11 +103,11 @@ public class FuturePipeTest extends TestCase {
 			});
 			
 			$wfp.source().read();
-			assertTrue($wf.isDone());
+			assertTrue("WorkFuture read from FuturePipe was done", $wf.isDone());
 			breakIfFailed();
-			assertEquals(0, $wfp.source().readAll().size());
-			assertTrue($wfp.source().isClosed());
-			assertFalse($wfp.source().hasNext());
+			assertEquals("No unexpected additional items read from FuturePipe", 0, $wfp.source().readAll().size());
+			assertFalse("FuturePipe is empty when expected", $wfp.source().hasNext());
+			assertTrue("FuturePipe became closed for reading when empty", $wfp.source().isClosed());
 			$ws.stop(false);
 			return null;
 		}
@@ -125,7 +125,7 @@ public class FuturePipeTest extends TestCase {
 		static final int N = 1000;
 		static final int D0 = 700;
 		static final int D1 = N - D0;
-		public Object call() throws InterruptedException, ExecutionException {
+		public Object call() {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			
 			@SuppressWarnings("unchecked")
@@ -141,23 +141,23 @@ public class FuturePipeTest extends TestCase {
 				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.makeDelayed(1));
 			for (int $i = 0; $i < N; $i++)
 				$wfp.sink().write($wfs[$i]);
-			assertFalse($wfp.source().hasNext());
-			assertFalse($wfp.sink().isClosed());
-			assertFalse($wfp.source().isClosed());
+			assertFalse("FuturePipe is has no readable elements at start", $wfp.source().hasNext());
+			assertFalse("FuturePipe is still open for writing", $wfp.sink().isClosed());
+			assertFalse("FuturePipe is still open for reading", $wfp.source().isClosed());
 			breakIfFailed();
 			
 			$ws.start();
 			$wfp.sink().close();
-			assertTrue($wfp.sink().isClosed());
+			assertTrue("FuturePipe became closed for writing when asked", $wfp.sink().isClosed());
 			breakIfFailed();
 			
 			for (int $i = 0; $i < N; $i++) {
 				WorkFuture<Void> $wf = $wfp.source().read();
-				assertTrue($wf.isDone());
+				assertTrue("WorkFuture read from FuturePipe was done", $wf.isDone());
 			}
-			assertEquals(0, $wfp.source().readAll().size());
-			assertTrue($wfp.source().isClosed());
-			assertFalse($wfp.source().hasNext());
+			assertEquals("No unexpected additional items read from FuturePipe",0, $wfp.source().readAll().size());
+			assertFalse("FuturePipe is empty when expected", $wfp.source().hasNext());
+			assertTrue("FuturePipe became closed for reading when empty", $wfp.source().isClosed());
 			$ws.stop(false);
 			return null;
 		}
@@ -174,7 +174,7 @@ public class FuturePipeTest extends TestCase {
 	 */
 	private class TestOrdering extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
-		public Object call() throws InterruptedException, ExecutionException {
+		public Object call() {
 			return null;
 		}
 	}
