@@ -28,7 +28,7 @@ import java.util.concurrent.*;
  * <p>
  * A {@link WorkFuture} that represents a set of WorkFutures. This makes it possible to
  * wait for all of the collected WorkFutures to complete, or use the completion listener
- * to fire once when all the set of tasks is done, for example.
+ * to fire once when all the tasks of a set are done.
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
@@ -54,6 +54,13 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	}
 	
 	private Flow<WorkFuture<$T>> $pip;
+	/**
+	 * Generally speaking, if you're going to change this, you should synchronize on
+	 * {@link #$pip} first. However, if you're only reading, and you're checking for
+	 * {@link WorkFuture.State#CANCELLED} or {@link WorkFuture.State#FINISHED}, you
+	 * can do that without any synchronization since this field is volatile and those
+	 * transitions are permanent.
+	 */
 	private volatile WorkFuture.State $state;
 	/**
 	 * A list of {@link Listener} to be called as soon as possible after this task
@@ -65,9 +72,7 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	private final List<Listener<WorkFuture<?>>>	$completionListeners;
 	
 	public WorkFuture.State getState() {
-		synchronized ($pip) {
-			return $state;
-		}
+		return $state;
 	}
 	
 	public ScheduleParams getScheduleParams() {
@@ -75,21 +80,32 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	}
 	
 	public boolean isCancelled() {
-		synchronized ($pip) {
-			return getState() == State.CANCELLED;
-		}
+		return getState() == State.CANCELLED;
 	}
 	
 	public boolean isDone() {
-		synchronized ($pip) {
-			switch (getState()) {
-				case FINISHED: return true;
-				case CANCELLED: return true;
-				default: return false;
-			}
+		switch (getState()) {
+			case FINISHED: return true;
+			case CANCELLED: return true;
+			default: return false;
 		}
 	}
 	
+	/**
+	 * Returns when all of the aggregated WorkFutures have either finished or been
+	 * cancelled (or if this wait itself is interrupted).
+	 * 
+	 * @throws InterruptedException
+	 *                 if this wait is interrupted (note, NOT if any of the aggregated
+	 *                 futures were interrupted)
+	 * @throws CancellationException
+	 *                 if this AggregateWorkFuture object was cancelled (note, NOT
+	 *                 merely if any of the aggregated futures were cancelled; also,
+	 *                 while cancellation of this AggregateWorkFuture means that the
+	 *                 cancellation event was passed on to the aggregated futures, it
+	 *                 may not have taken effect on all of them because they may have
+	 *                 already finished.)
+	 */
 	public Void get() throws InterruptedException, CancellationException {
 		synchronized ($pip) {
 			while (!isDone())
@@ -98,7 +114,24 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 		if (isCancelled()) throw new CancellationException();
 		return null;
 	}
-	
+
+	/**
+	 * Returns when all of the aggregated WorkFutures have either finished or been
+	 * cancelled; or if this wait itself is interrupted or times out.
+	 * 
+	 * @throws InterruptedException
+	 *                 if this wait is interrupted (note, NOT if any of the aggregated
+	 *                 futures were interrupted)
+	 * @throws CancellationException
+	 *                 if this AggregateWorkFuture object was cancelled (note, NOT
+	 *                 merely if any of the aggregated futures were cancelled; also,
+	 *                 while cancellation of this AggregateWorkFuture means that the
+	 *                 cancellation event was passed on to the aggregated futures, it
+	 *                 may not have taken effect on all of them because they may have
+	 *                 already finished.)
+	 * @throws TimeoutException
+	 *                 if the wait timed out
+	 */
 	public Void get(long $timeout, TimeUnit $unit) throws InterruptedException, TimeoutException, CancellationException {
 		final long $target = $unit.toMillis($timeout);
 		long $left = $target-X.time();
@@ -113,18 +146,30 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 		throw new TimeoutException();
 	}
 	
+	/**
+	 * Attempts to cancel execution of all of the individual tasks aggregated by this
+	 * object. This method then waits for the completion of all the aggregated tasks,
+	 * and when this is done, finally attempts to transition this WorkTarget to
+	 * cancelled. Only then does it return. This means that by the time this method
+	 * returns, all aggregated tasks are no longer runnable; however, it's quite
+	 * possible for concurrent finishing of the aggregated tasks to mean that this
+	 * AggregateWorkFuture becomes {@link WorkFuture.State#FINISHED} instead of
+	 * {@link WorkFuture.State#CANCELLED} even if this method call did cause the
+	 * cancellation of the majority of child tasks.
+	 */
 	public boolean cancel(boolean $notApplicable) {
+		//TODO cancel all the things
+		//TODO wait for them
 		synchronized ($pip) {
 			if ($state != State.WAITING) return false; 
 			$state = State.CANCELLED;
 		}
 		hearDone();
-		//XXX:AHS:THREAD: there's no way to punt the work targets out of the pipe to be gc'd without dropping the whole AWF.
-		return true;
+		return $state == State.CANCELLED;
 	}
 	
 	public void update() {
-		/* no-op */
+		//TODO update all the things
 	}
 	
 	public void addCompletionListener(Listener<WorkFuture<?>> $completionListener) {
@@ -134,7 +179,7 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 		}
 	}
 	
-	/** Called exactly once.  Called AFTER the CAS to completion has already been completed. */
+	/** Called exactly once.  Called AFTER the transition to completion has already been completed. */
 	private void hearDone() {
 		synchronized ($completionListeners) {
 			for (Listener<WorkFuture<?>> $x : $completionListeners)
