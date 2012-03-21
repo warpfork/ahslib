@@ -328,9 +328,10 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		final Iterator<WorkFutureImpl<?>> $itr = $updatereq.iterator();
 		while ($itr.hasNext()) {
 			WorkFutureImpl<?> $wf = $itr.next(); $itr.remove();
-			if ($wf.$sync.scheduler_shiftToScheduled()) {	//FIXME AHH HAH!  if something is told to finish while its running, the finish fails and ends up as an updatereq............erm, where was i going with that?  to fail, you'd need the final updatereq to come in and get eaten by another thread BEFORE the working thread does the cas from running to waiting and yet AFTER the working thread checks if that work is still not done.  no such moment exists.  though that does definitely explain why that thing about removing from unready being necessary is a brok.
-				$unready.remove($wf);	// this may be a no-op.  why?  because the CAS from RUNNING to WAITING happens inside the scheduler_power method, and it has to happen before the addition of work to the unready pile.  this is another one of those things we could fix, but only by refactoring actions outside of that scheduler_power method so that we can lock them.	//FIXME:AHS:THREAD: this is actually a little troubling because it can leave people in the unready heap forever if they concurrently finish or cancel while in the scheduled heap after we put them there too fast.
-				$scheduled.add($wf);
+			if ($wf.$sync.scheduler_shiftToScheduled()) {
+				if ($unready.remove($wf))
+					$scheduled.add($wf);
+				else throw new MajorBug("if a piece of work is being shifted from unready state to scheduled, it should have already been in the unready set!");
 			} else {
 				if ($wf.$work.isDone())	{
 					boolean $causedFinish = $wf.$sync.tryFinish(false, null, null);
