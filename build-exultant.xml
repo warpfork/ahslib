@@ -36,6 +36,8 @@
 	<target name="exusInitId">
 		<tstamp>
 			<format property="builddate" pattern="yyyy/MM/dd HH:mm:ss Z" timezone="America/Los_Angeles"/>
+			<format property="timemark"  pattern="yyyyMMddHHmmssSSS"     timezone="America/Los_Angeles"/>
+			<!-- there's no way to get a unix timestamp in ant without shelling out to either shell or js or custom tasks.  disgusting. -->
 		</tstamp>
 		<exec executable="git" outputproperty="git-version">
 			<arg value="log"/>
