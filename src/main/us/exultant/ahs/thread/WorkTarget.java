@@ -305,14 +305,15 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		public final $V call() throws Exception {
 			if ($done) throw new IllegalStateException("This task is already done!");
 			if (!$ready) return null;
+			$V $v = run();
 			if ($once) done();
-			return run();	// actually, this turned out to be more linear than i thought.  maybe we don't actually need that other method.
+			return $v;
 		}
 		protected abstract $V run() throws Exception;
 		
-		/** @inheritDocs */
+		/** returns true any time {@link #trigger()} has been called and {@link #isDone()} is still false. */
 		public final boolean isReady() { return !isDone() && $ready; }
-		/** @inheritDocs */
+		/** returns true when either {@link #done()} has been called or the task was run-once and has been run. */
 		public final boolean isDone() { return $done; }
 		/** @inheritDocs */
 		public final int getPriority() { return $prio; }
