@@ -355,8 +355,10 @@ public interface WorkTarget<$V> extends Callable<$V> {
 			$prio = $priority;
 		}
 		
-		private final ReadHead<$IN>	$src;
-		private final WriteHead<$OUT>	$sink;
+		/** Direct access to this field is not typically necessary or recommended, but is allowed in case for example a subclass should wish to close the stream. */ 
+		protected final ReadHead<$IN>	$src;
+		/** Direct access to this field is not typically necessary or recommended, but is allowed in case for example a subclass should wish to close the stream. */
+		protected final WriteHead<$OUT>	$sink;
 		private final int		$prio;
 		
 		/**
