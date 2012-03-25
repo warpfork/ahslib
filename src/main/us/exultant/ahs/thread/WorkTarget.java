@@ -102,7 +102,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * performing its work, and this result may be different with every invocation.
 	 * Typically this result is most convenient to use for tasks that are only run
 	 * once; for tasks that may be run repeatedly, it is often more convenient to use
-	 * a {@link Pipe.Sink} to gather output and set the generic return type to
+	 * a {@link Pipe.Sink} to gather output and leave the generic return type
 	 * {@link Void}.
 	 * </p>
 	 * 
@@ -110,8 +110,9 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * Calling this method after {@link #isDone()} returns true is allowed to have
 	 * undefined results (i.e., may return any value, or null, or throw an exception),
 	 * but it MUST return immediately. (When submitted to a {@link WorkScheduler}, the
-	 * {@link WorkFuture#get()} method of the returned {@link WorkFuture} can be used
-	 * to consistently access the final result of the work.)
+	 * {@link WorkFuture#get()} method of the {@link WorkFuture} returned from
+	 * {@link WorkScheduler#schedule(WorkTarget, ScheduleParams)} can be used to
+	 * consistently access the final result of the work.)
 	 * </p>
 	 * 
 	 * <p>
@@ -134,15 +135,16 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * it possible to consistently access the "final" result of a WorkTarget that has
 	 * become done. However, they also add a few special rules:
 	 * <ul>
-	 * <li>Exceptions thrown from this {@link #call()} method cause the WorkScheduler
-	 * to stop handling this WorkTarget, and the WorkFuture will always thrown that
-	 * exception (wrapped in an {@link ExecutionException}) from
-	 * {@link WorkFuture#get()}.
+	 * <li>Exceptions thrown from this {@link #call()} method cause the WorkFuture to
+	 * become {@link WorkFuture.State#FINISHED} and the WorkScheduler to stop handling
+	 * this WorkTarget. {@link WorkFuture#get()} will always throw that exception
+	 * (wrapped in an {@link ExecutionException}).
 	 * <li>Whenever this {@link #call()} method returns <tt>null</tt>, that return is
-	 * ignored &mdash; if the WorkTarget becomes finished before any other invocations
-	 * of <tt>call()</tt>, then the {@link WorkFuture#get()} method will return the
-	 * most recent non-null return from the <tt>call()</tt> method. (It is still
-	 * possible for {@link WorkFuture#get()} to return <tt>null</tt> if
+	 * ignored for purposes of choosing the final return result from
+	 * {@link WorkFuture#get()} &mdash; if the WorkTarget becomes finished before any
+	 * other invocations of <tt>call()</tt>, then the {@link WorkFuture#get()} method
+	 * will return the most recent non-null return from the <tt>call()</tt> method.
+	 * (It is still possible for {@link WorkFuture#get()} to return <tt>null</tt> if
 	 * <tt>call()</tt> only ever returns null.)
 	 * <li>{@link WorkFuture#get()} will throw a {@link CancellationException} if
 	 * {@link WorkFuture#cancel(boolean)} was called before this WorkTarget became
