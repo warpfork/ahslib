@@ -264,7 +264,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * Tasks that would otherwise be expressed as {@link Callable} or {@link Runnable}
 	 * are likely to be easily expressed using this adapater; tasks that deal with
 	 * streams of events are probably better expressed using a
-	 * {@link WorkTargetFlowingAdapter}.
+	 * {@link WorkTarget.FlowingAdapter}.
 	 * </p>
 	 * 
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
@@ -315,6 +315,54 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		public final boolean isReady() { return !isDone() && $ready; }
 		/** returns true when either {@link #done()} has been called or the task was run-once and has been run. */
 		public final boolean isDone() { return $done; }
+		/** @inheritDocs */
+		public final int getPriority() { return $prio; }
+	}
+	
+	
+	
+	/**
+	 * <p>
+	 * Implements most of the guts for the readiness and doneness functions for tasks
+	 * that deal with streams of data via {@link ReadHead} and {@link WriteHead} .
+	 * Tasks that are more of a one-shot thing or feel like a callback are probably
+	 * better expressed using a {@link WorkTarget.TriggerableAdapter}.
+	 * </p>
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
+	public static abstract class FlowingAdapter<$IN, $OUT> implements WorkTarget<Void> {
+		public FlowingAdapter(ReadHead<$IN> $workSource, WriteHead<$OUT> $workSink, int $priority) {
+			$src = $workSource;
+			$sink = $workSink;
+			$prio = $priority;
+		}
+		
+		private final ReadHead<$IN>	$src;
+		private final WriteHead<$OUT>	$sink;
+		private final int		$prio;
+		
+		/**
+		 * This method attempts to read some data for working on, then if it is
+		 * available, passes control to the {@link #run(Object)} method which you
+		 * must define.
+		 */
+		public final Void call() throws Exception {
+			if (isDone()) throw new IllegalStateException("This task is already done!");
+			$IN $a = $src.readNow();
+			if ($a == null) return null;
+			$OUT $b = run($a);
+			if ($b == null) return null;
+			$sink.write($b);
+			return null;
+		}
+		protected abstract $OUT run($IN $chunk) throws Exception;
+		
+		/** @inheritDocs */
+		public final boolean isReady() { return !$src.hasNext(); }
+		/** @inheritDocs */
+		public final boolean isDone() { return $src.isExhausted(); }
 		/** @inheritDocs */
 		public final int getPriority() { return $prio; }
 	}
