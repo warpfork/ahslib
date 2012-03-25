@@ -165,4 +165,20 @@ public interface WriteHead<$T> {
 	@Idempotent
 	@ThreadSafe
 	public void close();
+	
+	
+	
+	/** WriteHead that acts like <tt>/dev/null</tt> (black-holes all information given to it). */
+	public static class NoopAdapter<$T> implements WriteHead<$T> {
+		/** Ignores you. */
+		public void write($T $chunk) {}
+		/** Ignores you. */
+		public void writeAll(Collection<? extends $T> $chunks) {}
+		/** Ignores you.  @return true. */
+		public boolean hasRoom() { return true; }
+		/** Ignores you.  @return false. */
+		public boolean isClosed() { return false; }
+		/** Ignores you. */
+		public void close() {};
+	}
 }

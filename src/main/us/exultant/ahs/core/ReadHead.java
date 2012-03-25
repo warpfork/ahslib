@@ -363,4 +363,29 @@ public interface ReadHead<$T> {
 	@Nullipotent
 	@ThreadSafe
 	public boolean isExhausted();
+	
+	
+	
+	/** ReadHead that acts like <tt>/dev/zero</tt> (can always be read from, always returns null). */
+	public static class NoopAdapter<$T> implements ReadHead<$T> {
+		public void setListener(Listener<ReadHead<$T>> $el) {}
+		/** Ignores you.  Returns immediately.  @return null. */
+		public $T read() { return null;	}
+		/** Ignores you.  Returns immediately.  @return null. */
+		public $T readNow() { return null; }
+		/** Ignores you.  Returns immediately.  @return null. */
+		public $T readSoon(long $timeout, TimeUnit $unit) { return null; }
+		/** Ignores you.  @return true. */
+		public boolean hasNext() { return true; }
+		/** Ignores you.  <i>Returns immediately</i> &mdash; this is not faithful to the contract regarding closure, because that would mean anyone who calls it never returns.  @return an empty (and unwritable!) list. */
+		public List<$T> readAll() { return Collections.emptyList(); }
+		/** Ignores you.  Returns immediately.  @return an empty (and unwritable!) list. */
+		public List<$T> readAllNow() { return Collections.emptyList(); }
+		/** Ignores you.  @return false. */
+		public boolean isClosed() { return false; }
+		/** Ignores you. */
+		public void close() {}
+		/** Ignores you.  @return false. */
+		public boolean isExhausted() { return false; }
+	}
 }
