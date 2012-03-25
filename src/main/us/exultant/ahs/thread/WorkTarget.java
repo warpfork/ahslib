@@ -335,7 +335,21 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * 
 	 */
 	public static abstract class FlowingAdapter<$IN, $OUT> implements WorkTarget<Void> {
+		/**
+		 * @param $workSource
+		 *                a ReadHead to get data for working on. The availablity
+		 *                and exhaustion of this object define the readiness and
+		 *                the doneness of this WorkTarget.
+		 * @param $workSink
+		 *                a WriteHead to push the results of work into. May be
+		 *                null, which behaves exactly like
+		 *                {@link us.exultant.ahs.core.WriteHead.NoopAdapter}.
+		 * @param $priority
+		 *                a fixed priority for {@link #getPriority()} to report.
+		 */
 		public FlowingAdapter(ReadHead<$IN> $workSource, WriteHead<$OUT> $workSink, int $priority) {
+			if ($workSource == null) throw new NullPointerException();
+			if ($workSink == null) $workSink = new WriteHead.NoopAdapter<$OUT>();
 			$src = $workSource;
 			$sink = $workSink;
 			$prio = $priority;
