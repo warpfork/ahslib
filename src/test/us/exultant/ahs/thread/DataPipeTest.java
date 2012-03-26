@@ -24,10 +24,10 @@ import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 
-public class PipeGammaTest extends TestCase {
-	public static void main(String... $args) {			new PipeGammaTest().run();				}
-	public PipeGammaTest() {						super(new Logger(Logger.LEVEL_DEBUG), true);	}
-	public PipeGammaTest(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
+public class DataPipeTest extends TestCase {
+	public static void main(String... $args) {			new DataPipeTest().run();			}
+	public DataPipeTest() {						super(new Logger(Logger.LEVEL_TRACE), true);	}
+	public DataPipeTest(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
@@ -39,6 +39,7 @@ public class PipeGammaTest extends TestCase {
 		$tests.add(new TestBasicClose_ReadAfterCloseReturns());
 		$tests.add(new TestConcurrent_ReadBlockBeforeWrite());
 		$tests.add(new TestConcurrent_ReadWriteBlocking());
+		$tests.add(new TestConcurrent_ReadPauseyWriteBlocking());
 		$tests.add(new TestConcurrent_Close());
 		return $tests;
 	}
@@ -47,16 +48,16 @@ public class PipeGammaTest extends TestCase {
 	/** Just tests mixed read and writes in a single thread. */
 	private class TestBasic extends TestCase.Unit {
 		public Object call() {
-			Pipe<String> $pipe = new Pipe<String>();
-			$pipe.SINK.write(TD.s1);
-			$pipe.SINK.write(TD.s2);
+			Pipe<String> $pipe = new DataPipe<String>();
+			$pipe.sink().write(TD.s1);
+			$pipe.sink().write(TD.s2);
 			assertEquals(2, $pipe.size());
 			breakIfFailed();
-			assertEquals(TD.s1, $pipe.SRC.read());
-			$pipe.SINK.write(TD.s3);
+			assertEquals(TD.s1, $pipe.source().read());
+			$pipe.sink().write(TD.s3);
 			assertEquals(2, $pipe.size());
-			assertEquals(TD.s2, $pipe.SRC.read());
-			assertEquals(TD.s3, $pipe.SRC.read());
+			assertEquals(TD.s2, $pipe.source().read());
+			assertEquals(TD.s3, $pipe.source().read());
 			assertEquals(0, $pipe.size());
 			return null;
 		}
@@ -65,12 +66,12 @@ public class PipeGammaTest extends TestCase {
 	/** Tests the group writing of collected chunks. */
 	private class TestBasic_WriteAll extends TestCase.Unit {
 		public Object call() {
-			Pipe<String> $pipe = new Pipe<String>();
-			$pipe.SINK.write(TD.s1);
-			$pipe.SINK.writeAll(Arr.asList(TD.s2,TD.s2,TD.s3));
+			Pipe<String> $pipe = new DataPipe<String>();
+			$pipe.sink().write(TD.s1);
+			$pipe.sink().writeAll(Arr.asList(TD.s2,TD.s2,TD.s3));
 			assertEquals(4, $pipe.size());
 			breakIfFailed();
-			List<String> $arr = $pipe.SRC.readAllNow();
+			List<String> $arr = $pipe.source().readAllNow();
 			assertEquals(0, $pipe.size());
 			assertEquals(TD.s1, $arr.get(0));
 			assertEquals(TD.s2, $arr.get(1));
@@ -82,7 +83,7 @@ public class PipeGammaTest extends TestCase {
 	
 	/** Tests the consistency after a group write throws an exception from the middle of the operation. */
 	private class TestBasic_WriteAllPartial {
-		Pipe<String> $pipe = new Pipe<String>();
+		Pipe<String> $pipe = new DataPipe<String>();
 		
 		/** Tests that yes, an exception is thrown. */
 		private class Part1 extends TestCase.Unit {
@@ -91,8 +92,8 @@ public class PipeGammaTest extends TestCase {
 				return NullPointerException.class;
 			}
 			public Object call() {
-				$pipe.SINK.write(TD.s1);
-				$pipe.SINK.writeAll(Arr.asList(TD.s2,null,TD.s3));
+				$pipe.sink().write(TD.s1);
+				$pipe.sink().writeAll(Arr.asList(TD.s2,null,TD.s3));
 				return null;
 			}
 		}
@@ -102,7 +103,7 @@ public class PipeGammaTest extends TestCase {
 			public Object call() {
 				assertEquals(2, $pipe.size());
 				breakIfFailed();
-				List<String> $arr = $pipe.SRC.readAllNow();
+				List<String> $arr = $pipe.source().readAllNow();
 				assertEquals(0, $pipe.size());
 				assertEquals(TD.s1, $arr.get(0));
 				assertEquals(TD.s2, $arr.get(1));
@@ -118,36 +119,36 @@ public class PipeGammaTest extends TestCase {
 			return IllegalStateException.class;
 		}
 		public Object call() {
-			Pipe<String> $pipe = new Pipe<String>();
-			$pipe.SINK.write(TD.s1);
-			$pipe.SINK.write(TD.s2);
-			assertEquals(TD.s1, $pipe.SRC.read());
-			$pipe.SINK.close();
-			$pipe.SINK.write(TD.s3);	// this should throw
+			Pipe<String> $pipe = new DataPipe<String>();
+			$pipe.sink().write(TD.s1);
+			$pipe.sink().write(TD.s2);
+			assertEquals(TD.s1, $pipe.source().read());
+			$pipe.sink().close();
+			$pipe.sink().write(TD.s3);	// this should throw
 			return null;
 		}
 	}
 	
 	private class TestBasicClose_ReadAfterCloseReturns extends TestCase.Unit {
 		public Object call() {
-			Pipe<String> $pipe = new Pipe<String>();
-			$pipe.SINK.write(TD.s1);
-			$pipe.SINK.write(TD.s2);
+			Pipe<String> $pipe = new DataPipe<String>();
+			$pipe.sink().write(TD.s1);
+			$pipe.sink().write(TD.s2);
 			assertEquals(2, $pipe.size());
-			assertEquals(TD.s1, $pipe.SRC.read());
-			$pipe.SINK.close();
-			assertEquals(TD.s2, $pipe.SRC.read());
+			assertEquals(TD.s1, $pipe.source().read());
+			$pipe.sink().close();
+			assertEquals(TD.s2, $pipe.source().read());
 			assertEquals(0, $pipe.size());
-			assertEquals(null, $pipe.SRC.readNow());
+			assertEquals(null, $pipe.source().readNow());
 			breakIfFailed();	// we'd rather not block on this next call if we already know there's something wrong.
-			assertEquals(null, $pipe.SRC.read());		// this may block forever if something's broken
-			assertEquals(0, $pipe.SRC.readAll().size());	// this may block forever if something's broken
+			assertEquals(null, $pipe.source().read());		// this may block forever if something's broken
+			assertEquals(0, $pipe.source().readAll().size());	// this may block forever if something's broken
 			return null;
 		}
 	}
 	
 	private class TestConcurrent_ReadBlockBeforeWrite extends TestCase.Unit {
-		Pipe<String> $pipe = new Pipe<String>();
+		Pipe<String> $pipe = new DataPipe<String>();
 		volatile boolean $won = false;
 		
 		public Object call() {
@@ -155,19 +156,44 @@ public class PipeGammaTest extends TestCase {
 					$pipe.source().read();
 					$won = true;
 			}}.start();
-			$pipe.SINK.write(TD.s1);
+			$pipe.sink().write(TD.s1);
 			while (!$won) X.chill(5);
 			// honestly, just making it out of here alive is test enough.
 			return null;
 		}	
 	}
 	
-	private class TestConcurrent_ReadWriteBlocking extends TestCase.Unit {
-		Pipe<String> $pipe = new Pipe<String>();
-		ConcurrentCounter<String> $counter = ConcurrentCounter.make(Arr.asList(TD.s1, TD.s2, TD.s3));
-		final int n = 100000000;
+	private class TestConcurrent_ReadWriteBlockingGeneral extends TestCase.Unit {
+		/**
+		 * @param $msgsPerThread
+		 *                you'll end up with ($msgsPerThread*$threadPairsToSpawn)
+		 *                messages being passed
+		 * @param $threadPairsToSpawn
+		 *                you'll end up with ($threadPairsToSpawn*2) threads; half
+		 *                of them writers and half of them readers.
+		 * @param $writesBetweenDelay
+		 *                if >0, a one millisecond wait will be performed by the
+		 *                writing threads after every $writesBetweenDelay
+		 *                messages.
+		 */
+		public TestConcurrent_ReadWriteBlockingGeneral(int $msgsPerThread, int $threadPairsToSpawn, int $writesBetweenDelay) {
+			this.$msgsPerThread = $msgsPerThread;
+			this.$threadPairsToSpawn = $threadPairsToSpawn;
+			this.$writesBetweenDelay = $writesBetweenDelay;
+			List<String> $words = new ArrayList<String>($threadPairsToSpawn);
+			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
+				$words.add("w"+$i);
+			this.$counter = ConcurrentCounter.make($words);
+		}
 		
-		// VAGUE PERFORMANCE OBSERVATIONS (at n=1000000):
+		final Pipe<String> $pipe = new DataPipe<String>();
+		final ConcurrentCounter<String> $counter;
+		final int $msgsPerThread;
+		final int $threadPairsToSpawn;
+		final int $writesBetweenDelay;
+		
+		// VAGUE PERFORMANCE OBSERVATIONS (at $msgsPerThread=1000000, $threadPairsToSpawn=2):
+		// first of all, note that these are really, really vague.  i made no attempt to factor out the impact of that event counter.
 		//  with the modern generation of flippable-semaphore-based pipes:
 		//   about (min;432k; max:663k; ave:541k)/sec on a 2.7ghz+4core+ubuntu11.04; about 95% of all cores utilized (~5% kernel, ~90% userspace).
 		//   performance remains in that range when increasing n another 100x, as well, if you're wondering.
@@ -176,29 +202,30 @@ public class PipeGammaTest extends TestCase {
 		//   about (min:23k;  max:35k;  ave:27k)/sec  on a 2.7ghz+4core+ubuntu10.10; only about 50% of 2 cores utilized (20% userspace, 30% kernel). 
 		
 		public Object call() {
+			Runnable[] $tasks = new Runnable[$threadPairsToSpawn*2];
+			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
+				$tasks[$i] = new Reader();
+			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
+				$tasks[$threadPairsToSpawn+$i] = new Writer("w"+$i);
+			
 			long $start = X.time();
-			Runnable[] $tasks = new Runnable[4];
-			$tasks[0] = new Reader();
-			$tasks[1] = new Reader();
-			$tasks[2] = new Writer(TD.s1);
-			$tasks[3] = new Writer(TD.s2);
 			ThreadUtil.doAll($tasks);
-			assertEquals(n, $counter.getCount(TD.s1));
-			assertEquals(n, $counter.getCount(TD.s2));
-			assertEquals(0, $counter.getCount(TD.s3));
 			long $time = X.time() - $start;
-			$log.info("performance", ((n/1000.0)/($time/1000.0))+"k/sec");
+			
+			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
+				assertEquals($msgsPerThread, $counter.getCount("w"+$i));
+			$log.info("performance", (($msgsPerThread/1000.0)/($time/1000.0))+"k/sec");
 			return null;
 		}
 		
-
 		private class Writer implements Runnable {
 			public Writer(String $str) { this.$str = $str; }
 			private String $str;
 			public void run() {
-				for (int $i = 0; $i < n; $i++) {
-					$pipe.SINK.write($str);
-					$log.trace(this, "wrote \""+$str+"\", pipe size now "+$pipe.size());
+				for (int $i = 0; $i < $msgsPerThread; $i++) {
+					$pipe.sink().write($str);
+					if ($log.TRACE) $log.trace(this, "wrote \""+$str+"\", pipe size now "+$pipe.size());
+					if ($writesBetweenDelay > 0 && $i % $writesBetweenDelay == 0) X.chill(1);
 				}
 				$log.trace(this, "writing thread done.");
 			}
@@ -206,21 +233,39 @@ public class PipeGammaTest extends TestCase {
 		private class Reader implements Runnable {
 			public Reader() {}
 			public void run() {
-				for (int $i = 0; $i < n; $i++) {
-					String $lol = $pipe.SRC.read();
-					$log.trace(this, "read \""+$lol+"\", pipe size now "+$pipe.size());
+				for (int $i = 0; $i < $msgsPerThread; $i++) {
+					String $lol = $pipe.source().read();
+					if ($log.TRACE) $log.trace(this, "read \""+$lol+"\", pipe size now "+$pipe.size());
 					$counter.hear($lol);
 				}
 				$log.trace(this, "reading thread done.");
 			}
 		}
 	}
-
+	
+	
+	
+	private class TestConcurrent_ReadWriteBlocking extends TestConcurrent_ReadWriteBlockingGeneral {
+		public TestConcurrent_ReadWriteBlocking() {
+			super(100, 2, 0);
+		}
+	}
+	
+	
+	
+	private class TestConcurrent_ReadPauseyWriteBlocking extends TestConcurrent_ReadWriteBlockingGeneral {
+		public TestConcurrent_ReadPauseyWriteBlocking() {
+			super(100, 2, 10);
+		}
+	}
+	
+	
+	
 	private class TestConcurrent_Close extends TestCase.Unit {
-		Pipe<String> $pipe = new Pipe<String>();
+		Pipe<String> $pipe = new DataPipe<String>();
 		ConcurrentCounter<String> $counter = ConcurrentCounter.make(Arr.asList(TD.s1));
-		final int n = 10000000;
-		final int n2 = 500;
+		final int n = 10000;
+		final int n2 = 100;
 		
 		public Object call() {
 			Runnable[] $tasks = new Runnable[4];
@@ -239,21 +284,21 @@ public class PipeGammaTest extends TestCase {
 			private String $str;
 			public void run() {
 				for (int $i = 0; $i < (2*n)+n2; $i++)
-					$pipe.SINK.write($str);
-				$pipe.close();
+					$pipe.sink().write($str);
+				$pipe.sink().close();
 			}
 		}
 		private class Reader implements Runnable {
 			public Reader() {}
 			public void run() {
 				for (int $i = 0; $i < n; $i++)
-					$counter.hear($pipe.SRC.read());
+					$counter.hear($pipe.source().read());
 			}
 		}
 		private class FinalReader implements Runnable {
 			public FinalReader() {}
 			public void run() {
-				for (String $s : $pipe.SRC.readAll())
+				for (String $s : $pipe.source().readAll())
 					$counter.hear($s);
 			}
 		}

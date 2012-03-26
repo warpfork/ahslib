@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.*;
  * <p>
  * {@code DEPENDS: }
  * <ul>
- * <li>{@link PipeTest}
+ * <li>{@link DataPipeTest}
  * </ul>
  * </p>
  * 
@@ -315,7 +315,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	private class TestFinishWhileRunning extends TestCase.Unit {
 		private final WorkScheduler $ws = makeScheduler(0).start();
-		private final Pipe<String> $pipe = new Pipe<String>();
+		private final Pipe<String> $pipe = new DataPipe<String>();
 		
 		//XXX:AHS:THREAD: this really not a very smart test i think.  we should have one thread just constantly trying to finish a work target that's counting to 10.
 		public Object call() throws InterruptedException, ExecutionException {
@@ -456,7 +456,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public final int HIGH = 1000;
 		public final int WTC = 32;
 		
-		protected final Pipe<Integer> $pipe = new Pipe<Integer>();
+		protected final Pipe<Integer> $pipe = new DataPipe<Integer>();
 		protected final Work[] $wt = new Work[WTC];
 		@SuppressWarnings("unchecked")	// impossible to not suck in java.
 		protected final WorkFuture<Integer>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
@@ -493,15 +493,15 @@ public abstract class WorkSchedulerTest extends TestCase {
 			public Work(int $name) { this.$name = $name; }
 			private final int $name;
 			public Integer call() {
-				Integer $move = $pipe.SRC.readNow();
+				Integer $move = $pipe.source().readNow();
 				$log.trace(this, "WT"+$name+" pulled "+$move);
 				return $move;
 			}
 			public boolean isReady() {		// note that these actually CAN NOT be synchronized.  if they are, deadlock can occur in schedulers.
-				return $pipe.SRC.hasNext();
+				return $pipe.source().hasNext();
 			}
 			public boolean isDone() {		// note that these actually CAN NOT be synchronized.  if they are, deadlock can occur in schedulers.
-				return $pipe.SRC.isClosed() && !$pipe.SRC.hasNext();
+				return $pipe.source().isClosed() && !$pipe.source().hasNext();
 			}
 			public int getPriority() {
 				return 0;
@@ -513,9 +513,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 		protected void feedPipe() {
 			$log.trace(this, "feed started");
 			for (int $i = 1; $i <= HIGH; $i++)
-				$pipe.SINK.write($i);
+				$pipe.sink().write($i);
 			$log.trace(this, "feed complete");
-			$pipe.SINK.close();
+			$pipe.sink().close();
 			$log.trace(this, "feed closed");
 		}
 		protected void configurePipe() {}
@@ -523,7 +523,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	
-	/** Same as {@link TestNonblockingManyWorkSingleSource}, but the input pipe will be closed from the sink thread when the source is already empty (resulting in a (probably) concurrent finish for the WorkTargets). */
+	/** Same as {@link TestNonblockingManyWorkSingleSource}, but the input pipe will be closed from the sink() thread when the source is already empty (resulting in a (probably) concurrent finish for the WorkTargets). */
 	private class TestNonblockingManyWorkSingleConcurrentSource extends TestNonblockingManyWorkSingleSource {
 		protected void feedPipe() {
 			final WorkSchedulerFlexiblePriority $bs = (WorkSchedulerFlexiblePriority) $ws;
@@ -538,7 +538,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		
 		protected void configurePipe() {
 			// the earlier test didn't actually need to set the pipe listener because all the writes were done before any reading started, and so all of the work was always ready as long as it wasn't done.  now we're in an entirely different situation.
-			$pipe.SRC.setListener(new Listener<ReadHead<Integer>>() {
+			$pipe.source().setListener(new Listener<ReadHead<Integer>>() {
 				public void hear(ReadHead<Integer> $rh) {
 					for (WorkFuture<Integer> $x : $wf)
 						$ws.update($x);
