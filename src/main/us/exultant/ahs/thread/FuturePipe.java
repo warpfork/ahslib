@@ -55,7 +55,7 @@ import java.util.*;
 //    the FuturePipe supplies a thread-safe closing operation that deals with that problem and thus broadens the range of applications significantly.
 //      in particular, think of a series of futures which can't all be loaded into a scheduler at once for some reason (maybe they can programmatically generate more of their own type, for example); a person can still use a FuturePipe to deal with this, whereas an ExecutorCompletionService may stumble quite seriously.
 //perhaps most importantly, ECS is kinda ridiculous in that you can't use it to watch something for completion unless you schedule it with that very ECS.  that's EXTREMELY limiting, and implies splitting things into different thread pools depending on what kind of notifications you require out of them (which, hello, is completely contrary to the whole point of POOLS of threads), and just generally sucks.
-public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
+public class FuturePipe<$T> implements Pipe<WorkFuture<$T>> {
 	public ReadHead<WorkFuture<$T>> source() {
 		return $outbound.source();
 	}
@@ -64,11 +64,13 @@ public class FuturePipe<$T> implements Flow<WorkFuture<$T>> {
 		return $inbound;
 	}
 	
-	//public int size() {	// i don't actually know how i'd answer this!  the size of people done, or the size of people not yet done, or the sum not-yet-done and done-but-not-read, or...?
+	public int size() {
+		return $outbound.size();
+	}
 	
 	private final WriteHead<WorkFuture<$T>> $inbound = new Sink();
 	private volatile boolean $allowMore = true;
-	private final Pipe<WorkFuture<$T>> $outbound = new Pipe<WorkFuture<$T>>();
+	private final Pipe<WorkFuture<$T>> $outbound = new DataPipe<WorkFuture<$T>>();
 	/** This is package-visible so we can use it in AggregateWorkFuture.  Synchronize at all times. */
 	final Set<WorkFuture<$T>> $held = new HashSet<WorkFuture<$T>>();
 	

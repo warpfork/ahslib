@@ -102,8 +102,8 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * performing its work, and this result may be different with every invocation.
 	 * Typically this result is most convenient to use for tasks that are only run
 	 * once; for tasks that may be run repeatedly, it is often more convenient to use
-	 * a {@link Pipe.Sink} to gather output and leave the generic return type
-	 * {@link Void}.
+	 * a {@link WriteHead} to gather output into a {@link DataPipe} and leave the
+	 * generic return type {@link Void}.
 	 * </p>
 	 * 
 	 * <p>
