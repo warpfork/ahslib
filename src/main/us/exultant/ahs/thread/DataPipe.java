@@ -227,10 +227,10 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				List<$T> $v = new ArrayList<$T>($p);
 				for (int $i = 0; $i < $p; $i++)
 					$v.add($queue.poll());
-				checkForFinale();	//FIXME:AHS:THREAD: can call the listener.  should be outside the lock.
 				return $v;
 			} finally {
 				unlockWrite();
+				checkForFinale();
 			}
 		}
 		
