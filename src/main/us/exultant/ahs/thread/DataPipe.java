@@ -50,7 +50,7 @@ import java.util.concurrent.locks.*;
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
-public class DataPipe<$T> implements Pipe<$T> {
+public final class DataPipe<$T> implements Pipe<$T> {
 	/**
 	 * Constructs a new, open, active, empty, usable Pipe.
 	 */
