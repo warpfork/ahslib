@@ -27,7 +27,7 @@ import us.exultant.ahs.scratch.applet.DomContact.Exposure;
  * invisible before adding it); adds the gebi, gebt, newe, and newt functions to the
  * world; and finally attempts to set the focus on to id:main.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class JscTagBasics extends JsCommand.Adapter<Object> {

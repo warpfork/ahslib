@@ -9,7 +9,7 @@ package us.exultant.ahs.scratch.jsap;
  * An exception indicating that a unknown flag has been specified.
  *
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Flagged
+ * @see us.exultant.ahs.scratch.jsap.Flagged
  */
 public class UnknownFlagException extends JSAPException {
 

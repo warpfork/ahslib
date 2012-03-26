@@ -14,8 +14,8 @@ package us.exultant.ahs.scratch.jsap;
  * options, as they are never declared.
  * 
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.Flagged
- * @see ahs.scratch.jsap.Option
+ * @see us.exultant.ahs.scratch.jsap.Flagged
+ * @see us.exultant.ahs.scratch.jsap.Option
  */
 public class FlaggedOption extends Option implements Flagged {
 	
@@ -312,7 +312,7 @@ public class FlaggedOption extends Option implements Flagged {
 	 * @param stringParser
 	 *                the StringParser to which this Option's parse() method should
 	 *                delegate.
-	 * @see ahs.scratch.jsap.StringParser
+	 * @see us.exultant.ahs.scratch.jsap.StringParser
 	 * @return the modified FlaggedOption
 	 */
 	public FlaggedOption setStringParser(StringParser stringParser) {

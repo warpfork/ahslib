@@ -55,7 +55,7 @@ import java.lang.annotation.*;
  * that is technically inaccurate as "re-entrant" has its own specific meaning.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented

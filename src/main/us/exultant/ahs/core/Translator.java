@@ -25,7 +25,7 @@ public interface Translator<$FROM, $TO> {
 	/**
 	 * Implements a no-op translator.
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 *
 	 * @param <$T>
 	 */

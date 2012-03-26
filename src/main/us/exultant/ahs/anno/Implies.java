@@ -7,7 +7,7 @@ import java.lang.annotation.*;
  * {@link Deterministic}ness implying (or in alternate words, being a stronger property
  * than) {@link Nullipotent}cy is an example of this.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented

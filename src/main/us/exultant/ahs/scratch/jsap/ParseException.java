@@ -7,12 +7,12 @@
 package us.exultant.ahs.scratch.jsap;
 
 /**
- * A JSAPException subclass notifying the application of a parse error.
- * Additional information
- * in the form of an exception may be encapsulated in this object, as in other
+ * A JSAPException subclass notifying the application of a parse error. Additional
+ * information in the form of an exception may be encapsulated in this object, as in other
  * JSAPExceptions.
+ * 
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.JSAPException
+ * @see us.exultant.ahs.scratch.jsap.JSAPException
  */
 public class ParseException extends JSAPException {
 

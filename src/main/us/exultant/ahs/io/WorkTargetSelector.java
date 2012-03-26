@@ -33,7 +33,7 @@ import java.util.*;
  * reasonable way to do this..
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 // in a perfect world, i'd like to be able to treat connection acceptance or whathaveyou has a separate priority than readability or whathaveyou.
@@ -100,8 +100,8 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 		$selector = $selectr;
 		$priority = $workPriority;
 		$timeout = $selectionTimeout;
-		$pipe = new Pipe<Event>();
-		$pipe.SRC.setListener(new Listener<ReadHead<Event>>() {
+		$pipe = new DataPipe<Event>();
+		$pipe.source().setListener(new Listener<ReadHead<Event>>() {
 			public void hear(ReadHead<Event> $eh) {
 				$selector.wakeup();
 			}
@@ -198,7 +198,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	}
 	
 	private void callRegistrationProcessing() {
-		List<Event> $evts = $pipe.SRC.readAllNow();
+		List<Event> $evts = $pipe.source().readAllNow();
 		for (Event $evt : $evts) {
 			if ($evt instanceof Event_Reg) {
 				SelectionKey $k = $evt.$chan.keyFor($selector);
@@ -293,7 +293,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void registerRead(SelectableChannel $ch, Listener<SelectableChannel> $p) {
-		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_READ));
+		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_READ));
 	}
 	
 	/**
@@ -312,7 +312,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void registerWrite(SelectableChannel $ch, Listener<SelectableChannel> $p) {
-		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_WRITE));
+		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_WRITE));
 	}
 	
 	/**
@@ -329,7 +329,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void registerAccept(ServerSocketChannel $ch, Listener<SelectableChannel> $p) {
-		$pipe.SINK.write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
+		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
 	}
 	
 	/**
@@ -340,7 +340,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterRead(SelectableChannel $ch) {
-		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_READ));
+		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_READ));
 	}
 	
 	/**
@@ -351,7 +351,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterWrite(SelectableChannel $ch) {
-		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_WRITE));
+		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_WRITE));
 	}
 	
 	/**
@@ -363,7 +363,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterRead(Listener<SelectableChannel> $p) {
-		$pipe.SINK.write(new Event_Dereg($p, SelectionKey.OP_READ));
+		$pipe.sink().write(new Event_Dereg($p, SelectionKey.OP_READ));
 	}
 	
 	/**
@@ -375,7 +375,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterWrite(Listener<SelectableChannel> $p) {
-		$pipe.SINK.write(new Event_Dereg($p, SelectionKey.OP_WRITE));
+		$pipe.sink().write(new Event_Dereg($p, SelectionKey.OP_WRITE));
 	}
 	
 	/**
@@ -387,7 +387,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterAccept(ServerSocketChannel $ch) {
-		$pipe.SINK.write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
+		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
 	}
 	
 	/**
@@ -398,7 +398,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	@Idempotent
 	@ThreadSafe
 	public void cancel(SelectableChannel $ch) {
-		$pipe.SINK.write(new Event_Cancel($ch));
+		$pipe.sink().write(new Event_Cancel($ch));
 	}
 	
 	

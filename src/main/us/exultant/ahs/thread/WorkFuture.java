@@ -39,7 +39,7 @@ import java.util.concurrent.*;
  * WorkFuture.)
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$V>
  */
@@ -68,6 +68,37 @@ public interface WorkFuture<$V> extends Future<$V> {
 	@Nullipotent
 	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, ExecutionException, TimeoutException, CancellationException;
 	
+	/**
+	 * <p>
+	 * Attempts to cancel execution of this task. This attempt will fail if the task
+	 * has already completed, has already been cancelled, or could not be cancelled
+	 * for some other reason. If successful, and this task has not started when cancel
+	 * is called, this task should never run. If the task has already started, then
+	 * the mayInterruptIfRunning parameter determines whether the thread executing
+	 * this task should be interrupted in an attempt to stop the task.
+	 * </p>
+	 * 
+	 * <p>
+	 * After this method returns, subsequent calls to {@link #isDone()} will always
+	 * return true. Subsequent calls to {@link #isCancelled()} will always return true
+	 * if this method returned true.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note there is a subtle different in the meaning of the return of this method
+	 * compared to {@link Future#cancel(boolean)}: if the task becomes cancelled, but
+	 * it is not this thread that causes that transition, this interface should return
+	 * false (whereas {@link Future#cancel(boolean)} would return true). This means
+	 * for example that if several threads attempt to cancel a task concurrently, only
+	 * one of them should get a true return.
+	 * </p>
+	 * 
+	 * @param $mayInterruptIfRunning
+	 *                true if the thread executing this task should be interrupted;
+	 *                otherwise, in-progress tasks are allowed to complete
+	 * @returns whether or not this thread was responsible for cancelling
+	 * 
+	 */
 	@ThreadSafe
 	@Idempotent
 	public boolean cancel(boolean $mayInterruptIfRunning);
@@ -154,7 +185,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * whether it be a return value or an exception &mdash; is now available
 		 * for immediate return via the {@link WorkFuture#get()} method. An
 		 * exception thrown from the {@link WorkTarget#call()} method will also
-		 * result in this Future becoming FINISHED, but the
+		 * result in this Future becoming FINISHED, though in that case the
 		 * {@link WorkTarget#isDone()} method may still return false.
 		 */// Actually, when I say "immediately", I mean that relatively.  the sync call in get() might still actually block for a tiny bit -- but we're talking about a handful of machine operations while the work thread finishes setting the return value after admitting completion and before releasing the locks for the last time.
 		FINISHED,

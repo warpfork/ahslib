@@ -171,5 +171,13 @@ public interface WorkScheduler {
 	//   that would get quite pear shaped though.  i mean, a normal Future?  fine.  take the thread that calls get() first.  a WorkFuture?  there's no one to send the event in anything like realtime.
 	//      well.  i guess it's really no different than a WorkFuture you got from a WorkScheduler that hasn't been started yet.
 	//          lolurdumb.  we just have to make a different kind of WorkFuture that we very carefully finish manually with the last thread of the stopping scheduler.  also i think we'd tell you to go fuck yourself if you tried to cancel.
-	//TODO:AHS:THREAD it might be appropriate to cancel all tasks that were incomplete by the time we finish stopping.  (which is a bit of a pain; we should maybe even use all the threads for that, but that gives every single listener involved a chance to pretty much halt the whole damn stopping!)
+	//TODO:AHS:THREAD: it might be appropriate to cancel all tasks that were incomplete by the time we finish stopping.  (which is a bit of a pain; we should maybe even use all the threads for that, but that gives every single listener involved a chance to pretty much halt the whole damn stopping!)
+	//TODO:AHS:THREAD: um, also... waiting for a stop without calling for one, we want that, yes?  Oh lord, the whole scheduler should be a future, shouldn't it  O.o
+	//TODO:AHS:THREAD: there are actually several different intensity of stopping demands i can see potentially wanting:
+	//       - eventual finish - when all tasks ever entered are done.  we're not saying you have to stop accepting until then, though (so currently running tasks can generate more tasks, and we can essentially wait for them without actually having to know about them).
+	//       - close and finish all - don't accept new tasks, but finish everything, even the ones that require clocked waiting.
+	//       - close and finish current - don't accept new tasks, but finish everything unless it requires clocked waiting (cancel those).
+	//		one has to wonder a bit here as well... some clock tasks never expire.  loggers are typical of this.  should we have a wait-for-serious-tasks-but-ignore-the-stupid-ones mode somehow?  how on earth would you implement that or declare the stupidity of a task?
+	//       - close and finish aggressively - threads should not pick up any new work when they finish their current.  everything in queues should be cancelled.
+	//       - close and finish ragingly - interrupt all current tasks as well.
 }

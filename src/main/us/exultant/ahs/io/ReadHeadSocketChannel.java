@@ -39,7 +39,7 @@ import java.nio.channels.*;
  * WorkTargetSelector appropriate).
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
@@ -113,7 +113,7 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 			handleException($e);
 		}
 		$ps.cancel($ssc);
-		$pipe.close();
+		$pipe.source().close();
 	}
 	
 	
@@ -148,13 +148,13 @@ public class ReadHeadSocketChannel extends ReadHeadAdapter<SocketChannel> {
 				SocketChannel $chunk = TranslatorServerChannelToSocket.INSTANCE.translate($ssc);
 				/* if selector again signalled more data came in here, $ready became true again.  (if we'd set $ready false after nom'ing, we'd have room for a race condition where we empty the source but new data comes in right after that and yet right before we false'd $ready.) */
 				if ($chunk == null) return null;
-				$pipe.SINK.write($chunk);
+				$pipe.sink().write($chunk);
 				$ready = true;	/* if we didn't find the work source already emptied out, we pessimistically assume that there's more to do. */
 				return $chunk;
 			} catch (TranslationException $e) {
 				handleException($e);
 			} finally {
-				if (!$ssc.isOpen()) $pipe.SRC.close();
+				if (!$ssc.isOpen()) $pipe.source().close();
 			}
 			return null;
 		}

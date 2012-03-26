@@ -24,6 +24,18 @@ import us.exultant.ahs.codec.eon.*;
 import java.io.*;
 import java.util.*;
 
+/**
+ * This is a very fast binary protocol implementing {@link EonObject}. Fields are either
+ * fixed-lenth (i.e. booleans, doubles, integers, and longs), or length prefixes the field
+ * as a binary integer (i.e. strings and byte arrays); {@link EbonObject} and
+ * {@link EbonArray} can be nested. Key lengths for every field are stored as a short (2
+ * bytes), so keys may not exceed 65536 bytes in length. No type coersion is allowed by
+ * any of the methods that return stored values; when serialized, type is stored as one
+ * byte for each field.  Strings are stored in the UTF-8 charset.
+ * 
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
+ * 
+ */
 public class EbonArray implements EonArray {
 	public EbonArray() {
 		$arr = new ArrayList<Object>();
@@ -247,7 +259,7 @@ public class EbonArray implements EonArray {
 		Bah $bah = new Bah(128);
 		DataOutputStream $dou = new DataOutputStream($bah);
 		serialize($dou);
-		return $bah.getByteArray();
+		return ($bah.size() == $bah.getByteArray().length) ? $bah.getByteArray() : $bah.toByteArray();
 	}
 	
 	/**
@@ -314,22 +326,23 @@ public class EbonArray implements EonArray {
 		deserialize($din);
 	}
 	
-	public void deserialize(DataInputStream $din) throws EbonException {
+	void deserialize(DataInputStream $din) throws EbonException {
 		try {
 			final int $arrl = $din.readInt();
-			int $len;	// temp bucket
-			byte[] $bats;	// temp bucket
-			byte $switch;	// temp bucket
-			Object $win;	// self explanitory
+			int $len;		// temp bucket
+			byte[] $bats = null;	// temp bucket
+			byte $switch;		// temp bucket
+			Object $win;		// self explanitory
+			if ($arrl < 0) throw new EbonException("Invalid format; arrays cannot have negative length.");
 			for (int $i = 0; $i < $arrl; $i++) {
 				$switch = $din.readByte();
 				switch ($switch) {
 					case '[':
 						$len = $din.readInt();
-						if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a field to be longer than remaining data.");
-						$bats = new byte[$len];
-						$din.read($bats);
-						$win = $bats;
+						if ($len > $din.available()) throw new EOFException("Invalid format; Length header specified a field to be longer than remaining data.");
+						byte[] $newbats = new byte[$len];	/* This is kind of awkward, but I'm betting that the inlining is easier this way than allocating $win as a byte[] directly and then having to cast for the read call. */
+						$din.read($newbats);
+						$win = $newbats;
 						break;
 					case 'b':
 						$win = $din.readBoolean();
@@ -345,10 +358,10 @@ public class EbonArray implements EonArray {
 						break;
 					case 's':
 						$len = $din.readInt();
-						if ($len > $din.available()) throw new EbonException("Invalid format; Length header specified a field to be longer than remaining data.");
-						$bats = new byte[$len];
-						$din.read($bats);
-						$win = new String($bats, Strings.UTF_8);	//XXX:AHS:EFFIC: it would be nice if there was a factory for strings that would let me read from DataInputStream directly without that intermediate byte array copy.
+						if ($len > $din.available()) throw new EOFException("Invalid format; Length header specified a field to be longer than remaining data.");
+						if ($bats == null || $bats.length < $len) $bats = new byte[$len];
+						$din.read($bats, 0, $len);	/* it would be nice if there was a factory for strings that would let me read from DataInputStream directly without this intermediate byte array copy, but this is as close as we can get.  reusing the $bats array whenever possible does save us a lot of the garbage, anyway. */
+						$win = new String($bats, 0, $len, Strings.UTF_8);
 						break;
 					case 'o':
 						$win = new EbonObject();
@@ -370,5 +383,9 @@ public class EbonArray implements EonArray {
 			// we can't really get io exceptions from reading from an internal buffer we just declared...
 			throw new EbonException($e);
 		}
+	}
+
+	public String toString() {
+		return "EbonArray[$arr=" + this.$arr + "]";
 	}
 }

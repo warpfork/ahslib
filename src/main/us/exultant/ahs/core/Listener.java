@@ -39,7 +39,7 @@ package us.exultant.ahs.core;
  * potential for this synchronization to have a large performance impact.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$M>
  *                the message/event type

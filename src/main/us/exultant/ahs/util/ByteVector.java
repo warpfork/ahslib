@@ -25,7 +25,7 @@ import java.util.*;
 /**
  * This never wraps; always clones.  Also, exposes -- hard.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  *
  */
 public class ByteVector implements Comparable<ByteVector> {

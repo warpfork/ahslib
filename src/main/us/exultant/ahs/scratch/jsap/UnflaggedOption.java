@@ -19,8 +19,8 @@ package us.exultant.ahs.scratch.jsap;
  * accepts a single destination file,
  * and the second is "greedy," consuming the remaining unflagged options.
  * @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
- * @see ahs.scratch.jsap.FlaggedOption
- * @see ahs.scratch.jsap.Option
+ * @see us.exultant.ahs.scratch.jsap.FlaggedOption
+ * @see us.exultant.ahs.scratch.jsap.Option
  */
 public final class UnflaggedOption extends Option {
 
@@ -202,7 +202,7 @@ public final class UnflaggedOption extends Option {
      * should delegate.
      * @param stringParser the StringParser to which this Option's parse()
      * method should delegate.
-     * @see ahs.scratch.jsap.StringParser
+     * @see us.exultant.ahs.scratch.jsap.StringParser
      * @return the modified UnflaggedOption
      */
     public UnflaggedOption setStringParser(StringParser stringParser) {

@@ -26,7 +26,7 @@ import java.util.*;
 
 public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 	protected WriteHeadAdapter() {
-		$pipe = new Pipe<$T>();
+		$pipe = new DataPipe<$T>();
 		$eh = null;
 	}
 	
@@ -38,19 +38,19 @@ public abstract class WriteHeadAdapter<$T> implements WriteHead<$T> {
 	}
 	
 	public void write($T $chunk) {
-		$pipe.SINK.write($chunk);
+		$pipe.sink().write($chunk);
 	}
 	
 	public void writeAll(Collection<? extends $T> $chunks) {
-		$pipe.SINK.writeAll($chunks);
+		$pipe.sink().writeAll($chunks);
 	}
 	
 	public boolean hasRoom() {
-		return $pipe.SINK.hasRoom();
+		return $pipe.sink().hasRoom();
 	}
 	
 	public boolean isClosed() {
-		return $pipe.SINK.isClosed();
+		return $pipe.sink().isClosed();
 	}
 	
 	public abstract void close();	// is abstract because you probably want to close any underlying channels, then have the pump close the pipe close itself when appropriate.

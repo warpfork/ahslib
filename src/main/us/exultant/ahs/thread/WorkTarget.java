@@ -20,6 +20,7 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.anno.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -38,7 +39,7 @@ import java.util.concurrent.*;
  * WorkTarget into more than one WorkScheduler.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @param <$V>
  *                The type returned by {@link #call()}. (This can often be {@link Void} in
  *                the case of WorkTarget that are designed to be called repeatedly, since
@@ -101,16 +102,17 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * performing its work, and this result may be different with every invocation.
 	 * Typically this result is most convenient to use for tasks that are only run
 	 * once; for tasks that may be run repeatedly, it is often more convenient to use
-	 * a {@link Pipe.Sink} to gather output and set the generic return type to
-	 * {@link Void}.
+	 * a {@link WriteHead} to gather output into a {@link DataPipe} and leave the
+	 * generic return type {@link Void}.
 	 * </p>
 	 * 
 	 * <p>
 	 * Calling this method after {@link #isDone()} returns true is allowed to have
 	 * undefined results (i.e., may return any value, or null, or throw an exception),
 	 * but it MUST return immediately. (When submitted to a {@link WorkScheduler}, the
-	 * {@link WorkFuture#get()} method of the returned {@link WorkFuture} can be used
-	 * to consistently access the final result of the work.)
+	 * {@link WorkFuture#get()} method of the {@link WorkFuture} returned from
+	 * {@link WorkScheduler#schedule(WorkTarget, ScheduleParams)} can be used to
+	 * consistently access the final result of the work.)
 	 * </p>
 	 * 
 	 * <p>
@@ -133,15 +135,16 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * it possible to consistently access the "final" result of a WorkTarget that has
 	 * become done. However, they also add a few special rules:
 	 * <ul>
-	 * <li>Exceptions thrown from this {@link #call()} method cause the WorkScheduler
-	 * to stop handling this WorkTarget, and the WorkFuture will always thrown that
-	 * exception (wrapped in an {@link ExecutionException}) from
-	 * {@link WorkFuture#get()}.
+	 * <li>Exceptions thrown from this {@link #call()} method cause the WorkFuture to
+	 * become {@link WorkFuture.State#FINISHED} and the WorkScheduler to stop handling
+	 * this WorkTarget. {@link WorkFuture#get()} will always throw that exception
+	 * (wrapped in an {@link ExecutionException}).
 	 * <li>Whenever this {@link #call()} method returns <tt>null</tt>, that return is
-	 * ignored &mdash; if the WorkTarget becomes finished before any other invocations
-	 * of <tt>call()</tt>, then the {@link WorkFuture#get()} method will return the
-	 * most recent non-null return from the <tt>call()</tt> method. (It is still
-	 * possible for {@link WorkFuture#get()} to return <tt>null</tt> if
+	 * ignored for purposes of choosing the final return result from
+	 * {@link WorkFuture#get()} &mdash; if the WorkTarget becomes finished before any
+	 * other invocations of <tt>call()</tt>, then the {@link WorkFuture#get()} method
+	 * will return the most recent non-null return from the <tt>call()</tt> method.
+	 * (It is still possible for {@link WorkFuture#get()} to return <tt>null</tt> if
 	 * <tt>call()</tt> only ever returns null.)
 	 * <li>{@link WorkFuture#get()} will throw a {@link CancellationException} if
 	 * {@link WorkFuture#cancel(boolean)} was called before this WorkTarget became
@@ -197,7 +200,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * <p>
 	 * This priority may change over time (this could be useful for example in a
 	 * program which has several work buffers and always wishes to service the fullest
-	 * one, or similar the least recently served one); WorkScheduler who obey the
+	 * one, or similarly the least recently served one); WorkScheduler who obey the
 	 * priority hint will do their best to respond to this in a timely manner every
 	 * time they are told to update their relationship with this WorkTarget via an
 	 * invocation of the {@link WorkScheduler#update(WorkFuture)} method.
@@ -242,7 +245,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * values between a billion and negative one billion and you'll be fine.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 * 
 	 */
 	public static class PriorityComparator implements Comparator<WorkTarget<?>> {
@@ -252,89 +255,203 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		}
 	}
 	
-
-
+	
+	
 	/**
 	 * <p>
-	 * Bridges the gap between {@link Runnable} and WorkTarget.
+	 * Implements most of the guts for the readiness and doneness functions for common
+	 * tasks. The task may start as unready, and become ready when a triggering
+	 * function is called, at which point it is ready until it is done. The task may
+	 * optionally be defined as run-once. The priority is fixed at construction time.
+	 * Tasks that would otherwise be expressed as {@link Callable} or {@link Runnable}
+	 * are likely to be easily expressed using this adapater; tasks that deal with
+	 * streams of events are probably better expressed using a
+	 * {@link WorkTarget.FlowingAdapter}.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
 	 */
-	public static class RunnableWrapper implements WorkTarget<Void> {
-		public RunnableWrapper(Runnable $wrap) { this($wrap,0,true); }
-		public RunnableWrapper(Runnable $wrap, boolean $once) { this($wrap,0,$once); }
-		public RunnableWrapper(Runnable $wrap, int $prio) { this($wrap,$prio,true); }
-		public RunnableWrapper(Runnable $wrap, int $prio, boolean $once) {
-			if ($wrap == null) throw new NullPointerException();
-			this.$once = $once;
-			this.$prio = $prio;
-			this.$wrap = $wrap;
+	public static abstract class TriggerableAdapter<$V> implements WorkTarget<$V> {
+		public TriggerableAdapter(boolean $startReady, boolean $runOnce, int $priority) {
+			$once = $runOnce;
+			$ready = $startReady;
+			$prio = $priority;
+			$done = false;
 		}
 		
 		private final boolean		$once;
 		private final int		$prio;
-		private volatile Runnable	$wrap;	// flip this to null when it's done.
+		private volatile boolean	$ready;
+		private volatile boolean	$done;
 		
-		public final Void call() {
-			try {
-				if ($wrap == null) throw new IllegalStateException("This task can only be run once, and is already done!");
-				// yes, it's possible for $wrap to become null betweent the above check and the below call
-				//   and yes, that'll throw a NullPointerException.
-				// That's acceptable within the contract of WorkTarget!
-				//   1. We're returning immediately without doing work since we're done (with an unchecked exception, but nonetheless.)
-				//   2. We're allowed to return either null or throw an exception; either is legit.
-				//   3. The NullPointerException only even comes up if more than one thread calls this method at the same time.
-				//        We aren't sync'd against that -- which is fine because the contract says that's not our responsibility.
-				$wrap.run();
-			} finally {
-				if ($once) $wrap = null;
-			}
-			return null;
+		@Idempotent
+		@ThreadSafe
+		public void trigger() {
+			$ready = true;
 		}
 		
-		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public final boolean isReady() { return !isDone(); }
-		/** We have no clue whether or not the runnable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public final boolean isDone() { return ($wrap == null); }
+		/**
+		 * Call this to cause the work target to become done &mdash; after calling
+		 * this, the {@link WorkScheduler} will attempt to transition the state of
+		 * the associated {@link WorkFuture} to {@link WorkFuture.State#FINISHED}.
+		 * Resultingly, the {@link #run()} method will never be called again.
+		 */
+		@Idempotent
+		protected final void done() { $done = true; }
+		
+		/**
+		 * This method does the readiness and run-once checks, then passes control
+		 * to the {@link #run()} method which you must define.
+		 */
+		public final $V call() throws Exception {
+			if ($done) throw new IllegalStateException("This task is already done!");
+			if (!$ready) return null;
+			$V $v = run();
+			if ($once) done();
+			return $v;
+		}
+		protected abstract $V run() throws Exception;
+		
+		/** returns true any time {@link #trigger()} has been called and {@link #isDone()} is still false. */
+		public final boolean isReady() { return !isDone() && $ready; }
+		/** returns true when either {@link #done()} has been called or the task was run-once and has been run. */
+		public final boolean isDone() { return $done; }
+		/** @inheritDocs */
 		public final int getPriority() { return $prio; }
 	}
 	
-
-
+	
+	
 	/**
 	 * <p>
-	 * Bridges the gap between {@link Callable} and WorkTarget.
+	 * Implements most of the guts for the readiness and doneness functions for tasks
+	 * that deal with streams of data via {@link ReadHead} and {@link WriteHead} .
+	 * Tasks that are more of a one-shot thing or feel like a callback are probably
+	 * better expressed using a {@link WorkTarget.TriggerableAdapter}.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
 	 */
-	public static class CallableWrapper<$V> implements WorkTarget<$V> {
-		public CallableWrapper(Callable<$V> $wrap) { this($wrap,0); }
-		public CallableWrapper(Callable<$V> $wrap, int $prio) {
+	public static abstract class FlowingAdapter<$IN, $OUT> implements WorkTarget<Void> {
+		/**
+		 * @param $workSource
+		 *                a ReadHead to get data for working on. The availablity
+		 *                and exhaustion of this object define the readiness and
+		 *                the doneness of this WorkTarget.
+		 * @param $workSink
+		 *                a WriteHead to push the results of work into. May be
+		 *                null, which behaves exactly like
+		 *                {@link us.exultant.ahs.core.WriteHead.NoopAdapter}.
+		 * @param $priority
+		 *                a fixed priority for {@link #getPriority()} to report.
+		 */
+		public FlowingAdapter(ReadHead<$IN> $workSource, WriteHead<$OUT> $workSink, int $priority) {
+			if ($workSource == null) throw new NullPointerException();
+			if ($workSink == null) $workSink = new WriteHead.NoopAdapter<$OUT>();
+			$src = $workSource;
+			$sink = $workSink;
+			$prio = $priority;
+		}
+		
+		/** Direct access to this field is not typically necessary or recommended, but is allowed in case for example a subclass should wish to close the stream. */ 
+		protected final ReadHead<$IN>	$src;
+		/** Direct access to this field is not typically necessary or recommended, but is allowed in case for example a subclass should wish to close the stream. */
+		protected final WriteHead<$OUT>	$sink;
+		private final int		$prio;
+		
+		/**
+		 * This method attempts to read some data for working on, then if it is
+		 * available, passes control to the {@link #run(Object)} method which you
+		 * must define.
+		 */
+		public final Void call() throws Exception {
+			if (isDone()) throw new IllegalStateException("This task is already done!");
+			$IN $a = $src.readNow();
+			if ($a == null) return null;
+			$OUT $b = run($a);
+			if ($b == null) return null;
+			$sink.write($b);
+			return null;
+		}
+		protected abstract $OUT run($IN $chunk) throws Exception;
+		
+		/** @inheritDocs */
+		public final boolean isReady() { return !$src.hasNext(); }
+		/** @inheritDocs */
+		public final boolean isDone() { return $src.isExhausted(); }
+		/** @inheritDocs */
+		public final int getPriority() { return $prio; }
+	}
+	
+	
+	
+	/**
+	 * <p>
+	 * Bridges the gap between {@link Runnable} and WorkTarget. The work is ready any
+	 * time that it's not done.
+	 * </p>
+	 * 
+	 * <p>
+	 * If constructed in run-once mode, the WorkTarget will run exactly once when
+	 * scheduled with a {@link WorkScheduler}; otherwise if run-once is false the work
+	 * will always be ready and will never become done (to stop it, the
+	 * {@link WorkFuture} must be cancelled or it must throw an exception).
+	 * </p>
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 */
+	public static class RunnableWrapper extends TriggerableAdapter<Void> {
+		public RunnableWrapper(Runnable $wrap) { this($wrap,true,true,0); }
+		public RunnableWrapper(Runnable $wrap, boolean $startReady, boolean $runOnce) { this($wrap,$startReady,$runOnce,0); }
+		public RunnableWrapper(Runnable $wrap, int $priority) { this($wrap,true,true,$priority); }
+		public RunnableWrapper(Runnable $wrap, boolean $startReady, boolean $runOnce, int $priority) {
+			super($startReady, $runOnce, $priority);
 			if ($wrap == null) throw new NullPointerException();
-			this.$prio = $prio;
 			this.$wrap = $wrap;
 		}
 		
-		private final int		$prio;
-		private volatile Callable<$V>	$wrap;	// flip this to null when it's done.
+		private final Runnable	$wrap;
 		
-		public final $V call() throws Exception {
-			try {
-				if ($wrap == null) throw new IllegalStateException("This task can only be run once, and is already done!");
-				return $wrap.call();
-			} finally {
-				$wrap = null;
-			}
+		protected Void run() {
+			$wrap.run();
+			return null;
 		}
-		
-		/** We have no clue whether or not the Callable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public final boolean isReady() { return !isDone(); }
-		/** We have no clue whether or not the Callable has work to do, so unless it was a one-time task that has been finished, we have no choice but to assume it does. */
-		public final boolean isDone() { return ($wrap == null); }
-		public final int getPriority() { return $prio; }
 	}
 	
-	//TODO:AHS:THREAD: a readymade WorkTarget implementation which oneshots itself in response to one or more Future becoming done.  this will tend to be what gets used whenever you might otherwise have wished for a continuation/park (and where other libraries are resorting to serious weaving).
+	
+	
+	/**
+	 * <p>
+	 * Bridges the gap between {@link Callable} and WorkTarget. The work is ready any
+	 * time that it's not done.
+	 * </p>
+	 * 
+	 * <p>
+	 * If constructed in run-once mode, the WorkTarget will run exactly once when
+	 * scheduled with a {@link WorkScheduler}; otherwise if run-once is false the work
+	 * will always be ready and will never become done (to stop it, the
+	 * {@link WorkFuture} must be cancelled or it must throw an exception).
+	 * </p>
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 */
+	public static class CallableWrapper<$V> extends TriggerableAdapter<$V> {
+		public CallableWrapper(Callable<$V> $wrap) { this($wrap,true,true,0); }
+		public CallableWrapper(Callable<$V> $wrap, boolean $startReady, boolean $runOnce) { this($wrap,$startReady,$runOnce,0); }
+		public CallableWrapper(Callable<$V> $wrap, int $priority) { this($wrap,true,true,$priority); }
+		public CallableWrapper(Callable<$V> $wrap, boolean $startReady, boolean $runOnce, int $priority) {
+			super($startReady, $runOnce, $priority);
+			if ($wrap == null) throw new NullPointerException();
+			this.$wrap = $wrap;
+		}
+		
+		private final Callable<$V>	$wrap;
+		
+		protected $V run() throws Exception {
+			$wrap.call();
+			return null;
+		}
+	}
 }

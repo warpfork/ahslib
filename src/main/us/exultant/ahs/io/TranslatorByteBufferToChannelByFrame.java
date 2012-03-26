@@ -41,7 +41,7 @@ import java.nio.channels.*;
  * it is presumed that the base channel has already been set to a nonblocking mode.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public abstract class TranslatorByteBufferToChannelByFrame implements Translator<ByteBuffer,TranslatorByteBufferToChannelByFrame.Completor> {
@@ -67,7 +67,7 @@ public abstract class TranslatorByteBufferToChannelByFrame implements Translator
 	 * incomplete writes).)
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 */
 	public static class Nonblocking extends TranslatorByteBufferToChannelByFrame {
 		public Nonblocking(WritableByteChannel $base) {
@@ -100,7 +100,7 @@ public abstract class TranslatorByteBufferToChannelByFrame implements Translator
 	 * purpose if threads are involved.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 */
 	public static class Blocking extends TranslatorByteBufferToChannelByFrame {
 		public Blocking(WritableByteChannel $base) {
@@ -157,7 +157,7 @@ public abstract class TranslatorByteBufferToChannelByFrame implements Translator
 	 * exact same way as a fully functional completor).
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 */
 	public static class Completor {
 		private Completor(WritableByteChannel $chan, ByteBuffer $blob) {

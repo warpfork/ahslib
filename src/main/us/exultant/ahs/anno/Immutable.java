@@ -42,7 +42,7 @@ import java.util.*;
  * is technically feasible to violate the concept using reflection.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented
