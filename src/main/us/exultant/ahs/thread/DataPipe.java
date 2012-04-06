@@ -164,14 +164,14 @@ public final class DataPipe<$T> implements Pipe<$T> {
 		 */
 		public void setListener(Listener<ReadHead<$T>> $el) {
 			DataPipe.this.$el = $el;
-
+			
 			// it's possible that there wasn't a listener before this, and we need to make sure we fire an event now in case there aren't any more writes forthcoming for a while (if indeed ever).
 			// this can be "spurious", since it doesn't actually come as news of a write, but it's terribly important not to ignore this.
 			boolean $mustSpur = false;
 			lockWrite();
 			if (SRC.hasNext()) $mustSpur = true;
 			unlockWrite();	/* we prefer to release locks before we let the listener go on a tear, just as a matter of best/simplest practice. */
-			if ($mustSpur) invokeListener();
+			if ($mustSpur) invokeListener(DataPipe.this.$el);
 		}
 		
 		public $T read() {
@@ -258,7 +258,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 			X.notifyAll($gate); // trigger the return of any final readAll calls
 			
 			// give our listener a chance to notice our closure.
-			invokeListener();
+			invokeListener($el);
 		}
 		
 		private void waitForClose() {
@@ -299,7 +299,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				$mustSpur = true;	/* just by virtue of we didn't throw exception before now */
 			} finally {
 				unlockWrite();
-				if ($mustSpur) invokeListener();
+				if ($mustSpur) invokeListener($el);
 			}
 		}
 		
@@ -339,7 +339,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 			} finally {
 				if ($writes > 0) $gate.release($writes);
 				unlockWrite();
-				if ($writes > 0) invokeListener();
+				if ($writes > 0) invokeListener($el);
 			}
 		}
 		
@@ -385,8 +385,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 		$lock.unlock();
 	}
 	
-	private final void invokeListener() {
-		Listener<ReadHead<$T>> $dated_el = $el;
+	private final void invokeListener(Listener<ReadHead<$T>> $dated_el) {
 		if ($dated_el != null) 
 			try {
 				$dated_el.hear(SRC);
@@ -401,16 +400,10 @@ public final class DataPipe<$T> implements Pipe<$T> {
 	private void checkForFinale() {
 		if ($gate.isPermanentlyEmpty()) {
 			// give our listener a chance to notice our final drain.
-			invokeListener();
-			//... i don't think we want every read after closure and emptiness to make an event, in case someone's too stupid to realize that that event means they're supposed to stop reading.
-			// then again, we're all consenting adults here, and i don't believe i can do that without a cas here or vastly more locking than i can abide by.
-			// anyway!  point is that if there are two permits left in a closed pipe and two people acquire before either of them gets to that hasNext, this event's gonna get fired twice.
-			//FIXME:AHS:THREAD: this turns out to be a really shitty policy in practice, because if your first response to an event is to try to readAllNow (normal, right?  even seems like you should be able to do that *before checking isExhausted*) you'll get straight into a loop.
-			//   well, if you do it in a listener you're fucked, anyway.  i guess if you do it in a work target you're probably safe, because you'll just get another spurious event, and you'll never get a next run because the scheduler itself will check termination and find it for you.
-			//   hmm.  !isExhausted() { readallnow; doshit; } seems to work out pretty fine to fix the listener issue, i guess.  that's.... a long way from obvious, though.
-			//     on the other hand, you really should know better to do anything serious in a listener, and generally i'd say that reading from a pipe at all counts for that.  you should just spawn or trigger a workTarget for that.
-			//     actually?  having a boolean idempotent field here in the pipe that's used to keep from sending exhaustion events more than once could actually be worked out to be a non-expense in every listener call, so that's the superior option here.
-			//        wait.  can we just set the listener to null?  that would kinda do the trick.  and it works fine unless you keep setting the listener again after the pipe is closed and empty, which would obviously make you a nutcase beyond help.
+			// set our listener to null at the same time.  this prevents possibly awkward loops if one tries to readAllNow() in a listener before checking isExhausted().
+			Listener<ReadHead<$T>> $del = $el;
+			$el = null;	/* we can't do this set after invoking the listener because it could potentially cause the whole loop we're trying to block here. */
+			invokeListener($del);
 		}
 	}
 }
