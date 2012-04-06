@@ -392,7 +392,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				$dated_el.hear(SRC);
 			} catch (Throwable $t) {
 				/* listeners aren't allowed to throw these! */
-				X.saye("utterly unreasonable exception occurred!"+$t);	//FIXME:AHS:THREAD: this is not a good way to deal with this situation.  But what is?  A global oh-shit event handler is outrageous.  Some universal and annoying-to-configure logger?  Also not seeming ideal (although with SLF4J markers?  closer).
+				throw new MajorBug("utterly unreasonable exception occurred!",$t);
 			}
 	}
 	
