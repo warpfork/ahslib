@@ -37,7 +37,10 @@ import java.util.concurrent.*;
 public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	public AggregateWorkFuture(Collection<WorkFuture<$T>> $futures) {
 		this.$pip = new FuturePipe<$T>();
+		this.$state = WorkFuture.State.WAITING;	// i have to admit neither RUNNING nor WAITING (and certainly not SCHEDULED) makes any sense here.  I should just pick one of them as the correct resopnse for any future that isn't directly powered or scheduled.
 		this.$completionListeners = new ArrayList<Listener<WorkFuture<?>>>(1);
+		this.$pip.sink().writeAll($futures);
+		this.$pip.sink().close();
 		this.$pip.source().setListener(new Listener<ReadHead<WorkFuture<$T>>>() {
 			public void hear(ReadHead<WorkFuture<$T>> $rh) {
 				synchronized ($pip) {
@@ -50,7 +53,6 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 				hearDone();
 			}
 		});
-		this.$pip.sink().writeAll($futures);
 	}
 	
 	private FuturePipe<$T> $pip;
@@ -133,12 +135,12 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	 *                 if the wait timed out
 	 */
 	public Void get(long $timeout, TimeUnit $unit) throws InterruptedException, TimeoutException, CancellationException {
-		final long $target = $unit.toMillis($timeout);
-		long $left = $target-X.time();
+		$timeout = $unit.toMillis($timeout);
+		final long $target = X.time() + $timeout;
 		synchronized ($pip) {
-			while (!isDone() && $left > 0) {
-				$pip.wait($left);
-				$left = $target-X.time();
+			while (!isDone() && $timeout > 0) {
+				$pip.wait($timeout);
+				$timeout = $target-X.time();
 			}
 		}
 		if (isCancelled()) throw new CancellationException();
