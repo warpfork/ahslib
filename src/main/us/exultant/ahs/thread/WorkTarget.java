@@ -287,8 +287,10 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		
 		@Idempotent
 		@ThreadSafe
-		public void trigger() {
+		@ChainableInvocation
+		public TriggerableAdapter<$V> trigger() {
 			$ready = true;
+			return this;
 		}
 		
 		/**
