@@ -177,6 +177,7 @@ public interface WorkScheduler {
 	//       - eventual finish - when all tasks ever entered are done.  we're not saying you have to stop accepting until then, though (so currently running tasks can generate more tasks, and we can essentially wait for them without actually having to know about them).
 	//       - close and finish all - don't accept new tasks, but finish everything, even the ones that require clocked waiting.
 	//       - close and finish current - don't accept new tasks, but finish everything unless it requires clocked waiting (cancel those).
+	//		one has to wonder a bit here as well... some clock tasks never expire.  loggers are typical of this.  should we have a wait-for-serious-tasks-but-ignore-the-stupid-ones mode somehow?  how on earth would you implement that or declare the stupidity of a task?
 	//       - close and finish aggressively - threads should not pick up any new work when they finish their current.  everything in queues should be cancelled.
 	//       - close and finish ragingly - interrupt all current tasks as well.
 }

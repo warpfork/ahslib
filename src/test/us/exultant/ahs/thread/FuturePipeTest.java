@@ -20,10 +20,10 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
-import java.util.concurrent.*;
 
 /**
  * <p>
@@ -49,27 +49,40 @@ public class FuturePipeTest extends TestCase {
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
-		$tests.add(new TestBasicConcurrent());
+		$tests.add(new TestConcurrent());
+		$tests.add(new TestOrdering());
 		return $tests;
 	}
 	
 	
 	
-	public static final WorkTarget<Void> makeNoopWork() {
-		return new WorkTarget.RunnableWrapper(new Runnable() { public void run() {} });
+	public static final WorkTarget.TriggerableAdapter<Void> makeNoopWork(boolean $alreadyReady) {
+		return new WorkTarget.RunnableWrapper(new Runnable() { public void run() {} }, $alreadyReady, true);
 	}
 	
-	/** One WorkFuture is added a FuturePipe, and the Pipe closed. The work is scheduled with a delay to take place after the pipe closure. */
+	
+	
+	/**
+	 * One WorkFuture is added a FuturePipe, and the Pipe closed. The work is then
+	 * made ready, and after running becomes finished.
+	 */
 	private class TestBasic extends TestCase.Unit {
-		public Object call() throws InterruptedException, ExecutionException {
-			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();	// this type boundary here is fantastically powerful abstraction and very important.
+		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
+		public Object call() {
+			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
+			$ws.start();
 			
-			WorkFuture<Void> $wf = WorkManager.getDefaultScheduler().schedule(makeNoopWork(), ScheduleParams.makeDelayed(3));
+			WorkTarget.TriggerableAdapter<Void> $wt = makeNoopWork(false);
+			WorkFuture<Void> $wf = $ws.schedule($wt, ScheduleParams.NOW);
 			$wfp.sink().write($wf);
 			$wfp.sink().close();
-			assertFalse($wfp.source().hasNext());
-			assertTrue($wfp.sink().isClosed());
-			assertFalse($wfp.source().isClosed());
+			assertFalse("FuturePipe is has no readable elements at start", $wfp.source().hasNext());
+			assertTrue("FuturePipe became closed for writing when asked", $wfp.sink().isClosed());
+			assertFalse("FuturePipe is still open for reading", $wfp.source().isClosed());
+			breakIfFailed();
+			
+			$wt.trigger();
+			$wf.update();
 			
 			$wfp.source().setListener(new Listener<ReadHead<WorkFuture<Void>>>() {
 				/*
@@ -82,27 +95,115 @@ public class FuturePipeTest extends TestCase {
 				 * Also, that last one will occur once per read that is on a now-exhausted pipe... which means it's going to happen once for our read, and once for the readall we do after it.
 				 */
 				public void hear(ReadHead<WorkFuture<Void>> $x) {
-					$log.trace(this, "event", new Exception());
+					$log.trace(this, "event"
+							//, new Exception()
+					);
 				}
 			});
 			
 			$wfp.source().read();
-			assertTrue($wf.isDone());
-			assertEquals(0, $wfp.source().readAll().size());
-			assertTrue($wfp.source().isClosed());	// actually yeah, this is allowed to come in AFTER the last read.  which is a little surprising.  but on the other hand, wouldn't it be even more surprising if you got close events BEFORE the last read?  either way, the point is moot: from a technical level, i CANT emit the closure before the unblocking of the final read without an outrageous amount of effort, since if i recycle the standard pipe abstraction the unblocking is done by writing, which obviously you aren't allowed to do something closed because of how that makes zero sense everywhere else.
-			assertFalse($wfp.source().hasNext());
-			return null;
-		}
-	}
-	
-	/** Same as {@link TestBasic}, but the work is scheduled without delay so it can (and probably will) take place before the WorkFuture is written into the FuturePipe, or at approximately the same time. */
-	private class TestBasicConcurrent extends TestCase.Unit {
-		private boolean	$win	= false;
-		
-		public Object call() throws InterruptedException, ExecutionException {
+			assertTrue("WorkFuture read from FuturePipe was done", $wf.isDone());
+			breakIfFailed();
+			assertEquals("No unexpected additional items read from FuturePipe", 0, $wfp.source().readAll().size());
+			assertFalse("FuturePipe is empty when expected", $wfp.source().hasNext());
+			assertTrue("FuturePipe became closed for reading when empty", $wfp.source().isClosed());
+			$ws.stop(false);
 			return null;
 		}
 	}
 	
 	
+	
+	/**
+	 * Several WorkFuture are added to a FuturePipe (some of which go off quite
+	 * immediately, some of which go off with delays), and the Pipe closed at some
+	 * point where there will probably be work finishing on either side of the closure.
+	 */
+	private class TestConcurrent extends TestCase.Unit {
+		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
+		static final int N = 1000;
+		static final int D0 = 700;
+		static final int D1 = N - D0;
+		public Object call() {
+			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
+			
+			@SuppressWarnings("unchecked")
+			WorkTarget<Void>[] $wts = Arr.newInstance(WorkTarget.class, N);
+			@SuppressWarnings("unchecked")
+			WorkFuture<Void>[] $wfs = Arr.newInstance(WorkFuture.class, N);
+			
+			for (int $i = 0; $i < N; $i++)
+				$wts[$i] = makeNoopWork(true);
+			for (int $i = 0; $i < D0; $i++)
+				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.NOW);
+			for (int $i = D0; $i < N; $i++)
+				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.makeDelayed(1));
+			for (int $i = 0; $i < N; $i++)
+				$wfp.sink().write($wfs[$i]);
+			assertFalse("FuturePipe is has no readable elements at start", $wfp.source().hasNext());
+			assertFalse("FuturePipe is still open for writing", $wfp.sink().isClosed());
+			assertFalse("FuturePipe is still open for reading", $wfp.source().isClosed());
+			breakIfFailed();
+			
+			$ws.start();
+			$wfp.sink().close();
+			assertTrue("FuturePipe became closed for writing when asked", $wfp.sink().isClosed());
+			breakIfFailed();
+			
+			for (int $i = 0; $i < N; $i++) {
+				WorkFuture<Void> $wf = $wfp.source().read();
+				assertTrue("WorkFuture read from FuturePipe was done", $wf.isDone());
+			}
+			assertEquals("No unexpected additional items read from FuturePipe", 0, $wfp.source().readAll().size());
+			assertFalse("FuturePipe is empty when expected", $wfp.source().hasNext());
+			assertTrue("FuturePipe became closed for reading when empty", $wfp.source().isClosed());
+			$ws.stop(false);
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * Several WorkFuture are added to a FuturePipe, then triggered in an order other
+	 * than the order in which they were written to the pipe. They must come out of
+	 * the FuturePipe in the order which they were completed.
+	 * 
+	 * The scheduler used is constructed with only one thread; this reduces the amount
+	 * of guesswork in near-simultaneous finishes that chaotic thread scheduling by
+	 * the OS can otherwise cause (since the indirection of the completion listener in
+	 * the guts of a FuturePipe, really strict ordering on things that finish at
+	 * nearly the same time is not enforced).
+	 */
+	private class TestOrdering extends TestCase.Unit {
+		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(1);
+		public Object call() {
+			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
+			
+			WorkTarget.TriggerableAdapter<Void> $wt1 = makeNoopWork(false);
+			WorkTarget.TriggerableAdapter<Void> $wt2 = makeNoopWork(false);
+			WorkTarget.TriggerableAdapter<Void> $wt3 = makeNoopWork(false);
+			WorkFuture<Void> $wf1 = $ws.schedule($wt1, ScheduleParams.NOW);
+			WorkFuture<Void> $wf2 = $ws.schedule($wt2, ScheduleParams.NOW);
+			WorkFuture<Void> $wf3 = $ws.schedule($wt3, ScheduleParams.NOW);
+			$wfp.sink().write($wf2);
+			$wfp.sink().write($wf3);
+			$wfp.sink().write($wf1);
+			$wfp.sink().close();
+			
+			$ws.start();
+			$wt1.trigger(); $wf1.update();
+			X.chill(2);	// even with a single-thread scheduler, we still need these delays to overcome the fact that the scheduler batches updates.
+			$wt2.trigger(); $wf2.update();
+			X.chill(2);
+			$wt3.trigger(); $wf3.update();
+			$ws.stop(false);
+			
+			assertEquals("1st done, 1st out", $wf1, $wfp.source().read());
+			assertEquals("2nd done, 2nd out", $wf2, $wfp.source().read());
+			assertEquals("3rd done, 3rd out", $wf3, $wfp.source().read());
+			
+			return null;
+		}
+	}
 }
