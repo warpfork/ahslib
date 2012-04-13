@@ -28,9 +28,9 @@ import java.nio.channels.*;
 /**
  * <p>
  * This 'writes' by actually 'translating' bytes onto a communication channel. It follows
- * the dead-simple "babble" protocol: when given a series of arbitrary blobs, the bytes
- * that end up in the channel look like a series of 4-byte signed integer lengths,
- * followed by that blob of the size specified by the int.
+ * the common and dead-simple "frame" protocol: when given a series of arbitrary blobs,
+ * the bytes that end up in the channel look like a series of 4-byte signed integer
+ * lengths, followed by a blob of the size specified by the int.
  * </p>
  * 
  * <p>
@@ -47,7 +47,7 @@ import java.nio.channels.*;
 public abstract class TranslatorByteBufferToChannelByFrame implements Translator<ByteBuffer,TranslatorByteBufferToChannelByFrame.Completor> {
 	protected TranslatorByteBufferToChannelByFrame(WritableByteChannel $base) {
 		this.$base = $base;
-	}	
+	}
 	
 	final WritableByteChannel	$base;
 	
