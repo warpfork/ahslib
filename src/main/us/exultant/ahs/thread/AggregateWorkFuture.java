@@ -172,8 +172,12 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 			} catch (ExecutionException $e) { /* I don't care how you ended. */
 			} catch (InterruptedException $e) { /* Seriously I don't. */ }
 		synchronized ($pip) {	// this is really less than ideal.  like, it's as likely as not to end as FINISHED instead of CANCELLED.  not the intended effect.  maybe we should do the transition instantly but then do the waiting?  no, that doesn't seem right either.  hm.
-			if ($state != State.WAITING) return false;
-			$state = State.CANCELLED;
+			try {
+				if ($state != State.WAITING) return false;
+				$state = State.CANCELLED;
+			} finally {
+				$pip.notify();
+			}
 		}
 		hearDone();
 		return true;
