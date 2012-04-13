@@ -193,7 +193,7 @@ public class AggregateWorkFutureTest extends TestCase {
 	
 	
 	
-	//TODO:AHS:THREAD:TEST: one for completion listen
+	//TODO:AHS:THREAD:TEST: one for completion listener	// though this is borderline redundant with merely testing return from the get() method, i feel.
 	
 	
 	
