@@ -57,7 +57,7 @@ package us.exultant.ahs.core;
  * @param <$M>
  *                the message/event type
  */
-public interface Listener<$M> {
+public interface Listener<$M> extends java.util.EventListener {
 	/**
 	 * Hear (and respond to) the given event/message.
 	 * 
