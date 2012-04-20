@@ -19,6 +19,7 @@
 
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
@@ -77,6 +78,7 @@ public class AggregateWorkFutureTest extends TestCase {
 	 */
 	private class TestBasic extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
+		private final CountDownLatch $success = new CountDownLatch(1);
 		public Object call() throws TimeoutException, CancellationException, InterruptedException {
 			CountDownLatch $latch = new CountDownLatch(1);
 			StickableWorkTarget $wt = new StickableWorkTarget($latch, 0);
@@ -85,18 +87,33 @@ public class AggregateWorkFutureTest extends TestCase {
 			Collection<WorkFuture<Void>> $wfc = new ArrayList<WorkFuture<Void>>();
 			$wfc.add($wf);
 			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>($wfc);
+			$awf.addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $wf) {
+					$success.countDown();
+				}
+			});
 			
+			// shouldn't be done before the scheduler even starts, obviously
 			assertFalse($awf.isDone());
+			
+			// merely starting the scheduler shouldn't cause doneness
 			$ws.start();
 			X.chill(2);
 			assertFalse($awf.isDone());
+			
+			// triggering the tasks and getting them scheduled shouldn't cause doneness
 			$wt.trigger();
 			$wf.update();
 			X.chill(2);
 			assertFalse($awf.isDone());
+			
+			// okay, now we let the tasks return... this should cause prompt doneness.
 			$latch.countDown();
 			$awf.get(2, TimeUnit.MILLISECONDS);
 			assertTrue($awf.isDone());
+			
+			// and the completion listner should also have been called.  it can be momentarily after isDone returns true, though.
+			$success.await(1, TimeUnit.MILLISECONDS);
 			
 			$ws.stop(false);
 			return null;
@@ -193,7 +210,6 @@ public class AggregateWorkFutureTest extends TestCase {
 	
 	
 	
-	//TODO:AHS:THREAD:TEST: one for completion listener	// though this is borderline redundant with merely testing return from the get() method, i feel.
 	
 	
 	
