@@ -224,10 +224,14 @@ public final class DataPipe<$T> implements Pipe<$T> {
 			lockWrite();
 			try {
 				int $p = $gate.drainPermits();
-				List<$T> $v = new ArrayList<$T>($p);
-				for (int $i = 0; $i < $p; $i++)
-					$v.add($queue.poll());
-				return $v;
+				if ($p == 0) {
+					return Collections.emptyList();
+				} else {
+					List<$T> $v = new ArrayList<$T>($p);
+					for (int $i = 0; $i < $p; $i++)
+						$v.add($queue.poll());
+					return $v;
+				}
 			} finally {
 				unlockWrite();
 				checkForFinale();
