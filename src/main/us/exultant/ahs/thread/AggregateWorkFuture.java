@@ -202,7 +202,7 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 		synchronized ($pip.$held) {
 			$helds = new HashSet<WorkFuture<$T>>($pip.$held);
 		}
-		//XXX:AHS:THREAD: i'm really not sure how i feel about this copy.  avoiding holding that sync?  great.  but wasting all that memory in a possibly tight loop is bad.  and really... a monitor in a tight loop?  that's shiver enough.  that monitor was originally intended to be grabbed only when something was finishing and thus not be a bottleneck.  perhaps we should just make a single copy of the whole collection and keep that readonly?
+		//XXX:AHS:THREAD: i'm really not sure how i feel about this copy.  avoiding holding that sync?  great.  but wasting all that memory in a possibly tight loop is bad.  and really... a monitor in a tight loop?  that's shiver enough.  that monitor was originally intended to be grabbed only when something was finishing and thus not be a bottleneck.  perhaps we should just make a single copy of the whole collection and keep that readonly?  the beef I have with that though is that it holds on to the WorkFutures until the entire aggregate is done, and that's something I didn't really want to do for GC purposes.
 		for (WorkFuture<$T> $held : $helds)
 			$held.update();
 	}
