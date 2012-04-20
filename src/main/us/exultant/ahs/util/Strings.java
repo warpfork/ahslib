@@ -185,10 +185,18 @@ public class Strings {
 	}
 	
 	/**
-	 * Front-zero buff a number, and return it as a string. (Effectively,
-	 * <code>padLeftToWidth(String.valueOf($n), "0", $desiredWidth)</code>.)
+	 * Buff a number with leading zeros, and return it as a string. (Effectively,
+	 * <code>padLeftToWidth(String.valueOf($n), '0', $desiredWidth)</code>.)
 	 */
 	public static String frontZeroBuff(int $n, int $desiredWidth) {
+		return padLeftToWidth(String.valueOf($n), '0', $desiredWidth);
+	}
+	
+	/**
+	 * Buff a number with leading zeros, and return it as a string. (Effectively,
+	 * <code>padLeftToWidth(String.valueOf($n), '0', $desiredWidth)</code>.)
+	 */
+	public static String frontZeroBuff(long $n, int $desiredWidth) {
 		return padLeftToWidth(String.valueOf($n), '0', $desiredWidth);
 	}
 	

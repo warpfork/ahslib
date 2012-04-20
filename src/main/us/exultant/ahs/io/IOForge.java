@@ -34,8 +34,8 @@ import java.util.*;
  * <ul>
  * <li>Fuctions don't do anything piecemeal, they just give you the answer you wanted and
  * don't make you worry about it.
- * <li>For local filesystem operations.
- * <li>Zero threading, nonblocking, or anything interesting &mdash; just dead-simple stuff.
+ * <li>Zero threading, nonblocking, or anything interesting &mdash; just dead-simple
+ * stuff.
  * <li>Includes all the little edge cases that often throw a novice coder, such as closing
  * streams even if their creation threw exceptions (which if neglected can deplete the
  * range of file descriptors the OS is willing to allocate), etc.
@@ -51,6 +51,10 @@ import java.util.*;
  * by Java novices.
  * </p>
  * 
+ * note: the difference between methods that read a "resource" and a read a "file" is
+ * small. The former uses a classloader's concept of resolving paths; the latter looks
+ * only in the exact path you give.
+ * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
@@ -59,6 +63,8 @@ public class IOForge {
 	public static final OutputStream silentOutputStream = new OutputStreamDiscard();
 	/** This PrintStream is simply an effective /dev/null in portable java. */
 	public static final PrintStream silentPrintStream = new PrintStream(new OutputStreamDiscard());
+	
+	private static final int CHUNK_SIZE = 8192;
 	
 	
 	/** Read an entire file into an array as raw bytes. */
@@ -127,7 +133,7 @@ public class IOForge {
 	/** Read an input stream into an array as raw bytes.  Closes the input stream when done, even if IOException. */
 	public static byte[] readRaw(InputStream $ins) throws IOException {
 		try {
-			byte[] $buf = new byte[2048];
+			byte[] $buf = new byte[CHUNK_SIZE];
 			int $k;
 			ByteArrayOutputStream $bs = new ByteArrayOutputStream();
 			while (($k = $ins.read($buf)) != -1) {
@@ -147,7 +153,7 @@ public class IOForge {
 	/** Read an entire input stream into a string.  Closes the input stream when done, even if IOException. */
 	public static String readString(InputStream $ins, Charset $cs) throws IOException {
 		try {
-			char[] $buf = new char[2048];
+			char[] $buf = new char[CHUNK_SIZE];
 			int $k;
 			StringBuffer $sb = new StringBuffer();
 			InputStreamReader $isr = new InputStreamReader($ins, $cs);
@@ -267,8 +273,71 @@ public class IOForge {
 	}
 	
 	/**
+	 * Creates an {@link InputStream} that when read will return the bytes of the
+	 * given string in utf-8 encoding.
+	 * 
+	 * @param $str
+	 * @return an input stream that will read off the bytes of the string in utf-8
+	 *         encoding
+	 */
+	public static InputStream convertStringToInputStream(String $str) {
+		return convertStringToInputStream($str, Strings.UTF_8);
+	}
+	
+	public static InputStream convertStringToInputStream(String $str, Charset $cs) {
+		return new ByteArrayInputStream($str.getBytes($cs));
+	}
+	
+	/**
 	 * <p>
-	 * Simple method to save information from http to the local filesystem.
+	 * Shifts data from an {@link InputStream} to an {@link OutputStream}. The
+	 * operation is performed in buffered chunks and continues until the input stream
+	 * is closed or the output stream rejects writes. Both streams are closed after
+	 * completion.
+	 * </p>
+	 * 
+	 * <p>
+	 * Useful for in situations like moving the data from a URL connection to a file
+	 * output, or redirection stdout of a forked process to our own stdout.
+	 * </p>
+	 * 
+	 * @param $src
+	 * @param $sink
+	 * @throws IOException
+	 *                 if problems reading bytes from the source, writing bytes to the
+	 *                 sink, or closing either stream.
+	 */
+	public static void shift(InputStream $src, OutputStream $sink) throws IOException {
+		try {
+			byte[] $buf = new byte[CHUNK_SIZE];
+			int $k;
+			int $p = 0;
+			while (($k = $src.read($buf)) != -1) {
+				$sink.write($buf,0,$k);
+				$p += $k;
+			}
+		} finally {
+			// i'm unsure how i feel about having these here.  they almost always have to be repeated by the caller anyway (i.e. you still need a giant try/finally to close the input stream if you fail to open the output stream after you've already opened the input. 
+			try {
+				$src.close();
+			} finally {
+				$sink.close();
+			}
+		}
+	}
+
+	public static void shift(String $src, OutputStream $sink) throws IOException {
+		shift($src, Strings.UTF_8, $sink);
+	}
+	
+	public static void shift(String $src, Charset $cs, OutputStream $sink) throws IOException {
+		$sink.write($src.getBytes($cs));
+	}
+	
+	/**
+	 * <p>
+	 * Simple method to save information from http to the local filesystem. Binary
+	 * safe.
 	 * </p>
 	 * 
 	 * <p>
@@ -284,33 +353,53 @@ public class IOForge {
 	 *                Local file to store to.
 	 * @throws IOException
 	 */
-	public static void saveFile(URL $request, File $dest) throws IOException {
+	public static void saveUrlToFile(URL $request, File $dest) throws IOException {
 		InputStream $in = null;
 		OutputStream $out = null;
 		try {
 			URLConnection $conn = $request.openConnection();
 			$conn.connect();
-			$in = $conn.getInputStream();
-			if ($conn instanceof HttpURLConnection) {
-				int code = ((HttpURLConnection) $conn).getResponseCode();
-				if (code / 100 != 2) throw new IOException("Could not connect to '" + $request + "' via HTTP; gave error code " + code + ".");
-			}
-			
-			$in = new BufferedInputStream($in);
+			$in = new BufferedInputStream($conn.getInputStream());
+			checkErrorCode($conn);
 			$out = new BufferedOutputStream(new FileOutputStream($dest));
-			byte[] $buf = new byte[2048];
-			int $k;
-			int $p = 0;
-			while (($k = $in.read($buf)) != -1) {
-				$out.write($buf,0,$k);
-				$p += $k;
-			}
+			shift($in, $out);
 		} finally {
 			try {
 				if ($in != null) $in.close();
 			} finally {
 				if ($out != null) $out.close();
 			}
+		}
+	}
+	
+	public static String readUrlAsString(URL $request) throws IOException {
+		InputStream $in = null;
+		try {
+			URLConnection $conn = $request.openConnection();
+			$in = $conn.getInputStream();
+			checkErrorCode($conn);
+			return readString($in);
+		} finally {
+			if ($in != null) $in.close();
+		}
+	}
+	
+	public static byte[] readUrlRaw(URL $request) throws IOException {
+		InputStream $in = null;
+		try {
+			URLConnection $conn = $request.openConnection();
+			$in = $conn.getInputStream();
+			checkErrorCode($conn);
+			return readRaw($in);
+		} finally {
+			if ($in != null) $in.close();
+		}
+	}
+	
+	private static void checkErrorCode(URLConnection $conn) throws IOException {
+		if ($conn instanceof HttpURLConnection) {
+			int code = ((HttpURLConnection) $conn).getResponseCode();
+			if (code / 100 != 2) throw new IOException("Could not connect to '" + $conn.getURL() + "' via HTTP; gave error code " + code + ".");
 		}
 	}
 }

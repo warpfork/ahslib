@@ -412,6 +412,23 @@ public abstract class TestCase implements Runnable {
 	
 	
 	////////////////
+	//  LONG
+	////////////////
+	public boolean assertEquals(long $expected, long $actual) {
+		return assertEquals(null, $expected, $actual);
+	}
+	public boolean assertEquals(String $label, long $expected, long $actual) {
+		if ($expected != $actual) {
+			$unitFailures++;
+			$log.warn(this.getClass(), new AssertionFailed(messageFail($label, $expected, $actual)));
+			return false;
+		}
+		if ($confirm) $log.debug(this.getClass(), messagePass($label, $expected, $actual));
+		return true;
+	}
+	
+	
+	////////////////
 	//  BYTE
 	////////////////
 	public boolean assertEquals(byte[] $expected, byte[] $actual) {
