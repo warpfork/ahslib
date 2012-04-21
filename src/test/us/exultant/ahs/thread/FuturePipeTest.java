@@ -154,7 +154,7 @@ public class FuturePipeTest extends TestCase {
 				WorkFuture<Void> $wf = $wfp.source().read();
 				assertTrue("WorkFuture read from FuturePipe was done", $wf.isDone());
 			}
-			assertEquals("No unexpected additional items read from FuturePipe",0, $wfp.source().readAll().size());
+			assertEquals("No unexpected additional items read from FuturePipe", 0, $wfp.source().readAll().size());
 			assertFalse("FuturePipe is empty when expected", $wfp.source().hasNext());
 			assertTrue("FuturePipe became closed for reading when empty", $wfp.source().isClosed());
 			$ws.stop(false);
@@ -199,9 +199,10 @@ public class FuturePipeTest extends TestCase {
 			$wt3.trigger(); $wf3.update();
 			$ws.stop(false);
 			
-			assertEquals($wf1, $wfp.source().read());
-			assertEquals($wf2, $wfp.source().read());
-			assertEquals($wf3, $wfp.source().read());
+			assertEquals("1st done, 1st out", $wf1, $wfp.source().read());
+			assertEquals("2nd done, 2nd out", $wf2, $wfp.source().read());
+			assertEquals("3rd done, 3rd out", $wf3, $wfp.source().read());
+			
 			return null;
 		}
 	}

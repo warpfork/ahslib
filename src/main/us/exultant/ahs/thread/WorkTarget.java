@@ -287,8 +287,10 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		
 		@Idempotent
 		@ThreadSafe
-		public void trigger() {
+		@ChainableInvocation
+		public TriggerableAdapter<$V> trigger() {
 			$ready = true;
+			return this;
 		}
 		
 		/**
@@ -367,7 +369,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		 * must define.
 		 */
 		public final Void call() throws Exception {
-			if (isDone()) throw new IllegalStateException("This task is already done!");
+			if (isDone()) return null;
 			$IN $a = $src.readNow();
 			if ($a == null) return null;
 			$OUT $b = run($a);

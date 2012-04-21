@@ -81,15 +81,21 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * <p>
 	 * After this method returns, subsequent calls to {@link #isDone()} will always
 	 * return true. Subsequent calls to {@link #isCancelled()} will always return true
-	 * if this method returned true.
+	 * if this method returned true (they may also return true if this method returned
+	 * false; this depends on whether this method returned false because another
+	 * thread performed cancellation concurrently, or because the task finished
+	 * concurrently).
 	 * </p>
 	 * 
 	 * <p>
-	 * Note there is a subtle different in the meaning of the return of this method
-	 * compared to {@link Future#cancel(boolean)}: if the task becomes cancelled, but
-	 * it is not this thread that causes that transition, this interface should return
-	 * false (whereas {@link Future#cancel(boolean)} would return true). This means
-	 * for example that if several threads attempt to cancel a task concurrently, only
+	 * Note: the documentation of {@link Future#cancel(boolean)} is potentially
+	 * misleading. It states that the method should return "<tt>false</tt> if the task
+	 * could not be cancelled, typically because it has already completed normally;
+	 * <tt>true</tt> otherwise" &mdash; this use of "normally" would seem to imply
+	 * that if another thread called cancel concurrently, both should return true.
+	 * This is in fact NOT what the canonical implementation of
+	 * {@link FutureTask#cancel(boolean)} does; that implementation acts identially to
+	 * this one in that if several threads attempt to cancel a task concurrently, only
 	 * one of them should get a true return.
 	 * </p>
 	 * 

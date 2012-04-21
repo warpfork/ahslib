@@ -24,13 +24,26 @@ package us.exultant.ahs.core;
  * Generic interface for listeners (whether for events or messages).
  * </p>
  * 
+ * <h3>exceptions</h3>
  * <p>
- * It is advised in most situations that classes should actually contain a nested class
- * that implements this Listener interface; this allows messages of different types to be
- * routed through one object without name collisions or bad encapsulation breaks (or
- * revealing more functions than necessary on the base class).
+ * <b>Listeners are strongly expected NOT to throw unchecked exceptions from their
+ * {@link #hear(Object)} method!</b> Listeners can often be decoupled from the systems
+ * that actually generate the reason for the listener to have been invoked (i.e. via pipes
+ * or event busses, or they may be issued by concurrency control systems, etc), and so
+ * throwing exceptions will rarely if ever actually be able to propagate out to a system
+ * which could reasonably be considered responsible.
  * </p>
  * 
+ * <h3>usage patterns</h3>
+ * <p>
+ * If a class wishes to handle multiple different types of events, a good pattern for this
+ * is for that class to contain a number of nested classes which each implements this
+ * Listener interface. This practice allows messages of different types to be routed
+ * through one object without name collisions or bad encapsulation breaks (or revealing
+ * more functions than necessary on the base class).
+ * </p>
+ * 
+ * <h3>concurrency</h3>
  * <p>
  * Listeners may be presumed to be reentrant or otherwise <b>thread-safe</b> whenever
  * applied in the threading module of the AHS library! If a Listener cannot be safely
@@ -44,7 +57,7 @@ package us.exultant.ahs.core;
  * @param <$M>
  *                the message/event type
  */
-public interface Listener<$M> {
+public interface Listener<$M> extends java.util.EventListener {
 	/**
 	 * Hear (and respond to) the given event/message.
 	 * 

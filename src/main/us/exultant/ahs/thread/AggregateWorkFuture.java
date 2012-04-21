@@ -37,7 +37,10 @@ import java.util.concurrent.*;
 public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	public AggregateWorkFuture(Collection<WorkFuture<$T>> $futures) {
 		this.$pip = new FuturePipe<$T>();
+		this.$state = WorkFuture.State.WAITING;	// i have to admit neither RUNNING nor WAITING (and certainly not SCHEDULED) makes any sense here.  I should just pick one of them as the correct resopnse for any future that isn't directly powered or scheduled.
 		this.$completionListeners = new ArrayList<Listener<WorkFuture<?>>>(1);
+		this.$pip.sink().writeAll($futures);
+		this.$pip.sink().close();
 		this.$pip.source().setListener(new Listener<ReadHead<WorkFuture<$T>>>() {
 			public void hear(ReadHead<WorkFuture<$T>> $rh) {
 				synchronized ($pip) {
@@ -50,7 +53,6 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 				hearDone();
 			}
 		});
-		this.$pip.sink().writeAll($futures);
 	}
 	
 	private FuturePipe<$T> $pip;
@@ -133,12 +135,12 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	 *                 if the wait timed out
 	 */
 	public Void get(long $timeout, TimeUnit $unit) throws InterruptedException, TimeoutException, CancellationException {
-		final long $target = $unit.toMillis($timeout);
-		long $left = $target-X.time();
+		$timeout = $unit.toMillis($timeout);
+		final long $target = X.time() + $timeout;
 		synchronized ($pip) {
-			while (!isDone() && $left > 0) {
-				$pip.wait($left);
-				$left = $target-X.time();
+			while (!isDone() && $timeout > 0) {
+				$pip.wait($timeout);
+				$timeout = $target-X.time();
 			}
 		}
 		if (isCancelled()) throw new CancellationException();
@@ -170,8 +172,12 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 			} catch (ExecutionException $e) { /* I don't care how you ended. */
 			} catch (InterruptedException $e) { /* Seriously I don't. */ }
 		synchronized ($pip) {	// this is really less than ideal.  like, it's as likely as not to end as FINISHED instead of CANCELLED.  not the intended effect.  maybe we should do the transition instantly but then do the waiting?  no, that doesn't seem right either.  hm.
-			if ($state != State.WAITING) return false;
-			$state = State.CANCELLED;
+			try {
+				if ($state != State.WAITING) return false;
+				$state = State.CANCELLED;
+			} finally {
+				$pip.notify();
+			}
 		}
 		hearDone();
 		return true;
@@ -196,6 +202,7 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 		synchronized ($pip.$held) {
 			$helds = new HashSet<WorkFuture<$T>>($pip.$held);
 		}
+		//XXX:AHS:THREAD: i'm really not sure how i feel about this copy.  avoiding holding that sync?  great.  but wasting all that memory in a possibly tight loop is bad.  and really... a monitor in a tight loop?  that's shiver enough.  that monitor was originally intended to be grabbed only when something was finishing and thus not be a bottleneck.  perhaps we should just make a single copy of the whole collection and keep that readonly?  the beef I have with that though is that it holds on to the WorkFutures until the entire aggregate is done, and that's something I didn't really want to do for GC purposes.
 		for (WorkFuture<$T> $held : $helds)
 			$held.update();
 	}
