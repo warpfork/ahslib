@@ -38,7 +38,7 @@ import java.util.*;
  */
 // in a perfect world, i'd like to be able to treat connection acceptance or whathaveyou has a separate priority than readability or whathaveyou.
 //   unfortunately the only way i can see to do that is by having completely separate selectors and taking it upon yourself to register things to them by category.  and eat your moar threads.
-public class WorkTargetSelector implements WorkTarget<Void> {
+public class SelectionSignaller implements WorkTarget<Void> {
 	/**
 	 * Creates a new system default Selector back-end. Selects run with a timeout of 1
 	 * millisecond; the WorkTarget's priority is zero.
@@ -49,7 +49,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * 100% of a core, nor will it completely choke up a pool), but for a most optimal
 	 * system you might wish to consider other settings.
 	 */
-	public WorkTargetSelector() {
+	public SelectionSignaller() {
 		this(1);
 	}
 	
@@ -64,7 +64,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 *                own personal thread, you may set this timeout to be arbitrarily
 	 *                high.
 	 */
-	public WorkTargetSelector(int $selectionTimeout) {
+	public SelectionSignaller(int $selectionTimeout) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
 	}
 	
@@ -80,7 +80,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 *                high.
 	 * @param $workPriority
 	 */
-	public WorkTargetSelector(int $selectionTimeout, int $workPriority) {
+	public SelectionSignaller(int $selectionTimeout, int $workPriority) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
 	}
 	
@@ -96,7 +96,7 @@ public class WorkTargetSelector implements WorkTarget<Void> {
 	 * Constructs a new WorkTargetSelector with your choice of back-end Selector,
 	 * timeouts on selects, and priority for the WorkTarget.
 	 */
-	public WorkTargetSelector(Selector $selectr, int $selectionTimeout, int $workPriority) {
+	public SelectionSignaller(Selector $selectr, int $selectionTimeout, int $workPriority) {
 		$selector = $selectr;
 		$priority = $workPriority;
 		$timeout = $selectionTimeout;
