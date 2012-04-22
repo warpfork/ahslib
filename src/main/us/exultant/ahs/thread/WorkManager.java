@@ -38,7 +38,7 @@ public class WorkManager {
 		List<WorkFuture<$T>> $fa = new ArrayList<WorkFuture<$T>>($n);
 		for (int $i = 0; $i < $n; $i++)
 			$fa.add($ws.schedule($wtf.make(), ScheduleParams.NOW));	// i assume it wouldn't often make sense to schedule the same task at the same time on multiple cores if it's clock-based
-		return null;	//FIXME:AHS:THREAD: return an aggregate future
+		return new AggregateWorkFuture<$T>($fa);
 	}
 	
 	
