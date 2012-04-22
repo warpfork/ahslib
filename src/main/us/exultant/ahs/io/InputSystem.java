@@ -25,7 +25,7 @@ public class InputSystem<$T> {
 	
 	
 	
-	public ReadHead<$T> getReadHead() {
+	public ReadHead<$T> getReadHead() {	// bad.  you're doing an inversion already if you do this where you assume we'll have a pipe internal to the InputSystem.  And there's no reason for that.  And it inevitably begins to itch because then you end up having to duplicate so many interfaces over time for configurability... it's just bad, don't do it.
 		return null;
 	}
 	
