@@ -28,9 +28,9 @@ import java.util.*;
  * it &mdash; so, we're stuck with an {@link #isReady()} method that helplessly always
  * returns true, and fundamentally no way to disbatch events relating to the core
  * selector's readiness. So, all in all, you may still actually need to just run this
- * system in its own personal thread &mdash creating a
+ * system in its own personal thread (creating a
  * {@link WorkSchedulerFlexiblePriority} instance with a thread pool of size one is a
- * reasonable way to do this..
+ * reasonable way to do this).
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
