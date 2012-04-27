@@ -30,9 +30,29 @@ import java.util.concurrent.*;
  *
  */
 public class WorkManager {
+	/**
+	 * Uses a {@link Factory} to produce one {@link WorkTarget} instance per core on
+	 * the machine and schedules them with the {@link #getDefaultScheduler() default
+	 * scheduler}, and returns an {@link AggregateWorkFuture} that allows you to track
+	 * their overall progress.
+	 * 
+	 * @param $wtf
+	 * @return an {@link AggregateWorkFuture}
+	 */
 	public static <$T> Future<Void> scheduleOnePerCore(Factory<WorkTarget<$T>> $wtf) {
 		return scheduleOnePerCore($wtf, getDefaultScheduler());
 	}
+	
+	/**
+	 * Uses a {@link Factory} to produce one {@link WorkTarget} instance per core on
+	 * the machine and schedules them with the {@link WorkScheduler} provided, and
+	 * returns an {@link AggregateWorkFuture} that allows you to track their overall
+	 * progress.
+	 * 
+	 * @param $wtf
+	 * @param $ws
+	 * @return an {@link AggregateWorkFuture}
+	 */
 	public static <$T> Future<Void> scheduleOnePerCore(final Factory<WorkTarget<$T>> $wtf, final WorkScheduler $ws) {
 		final int $n = Runtime.getRuntime().availableProcessors();
 		List<WorkFuture<$T>> $fa = new ArrayList<WorkFuture<$T>>($n);
