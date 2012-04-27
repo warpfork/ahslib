@@ -20,6 +20,7 @@
 package us.exultant.ahs.io;
 
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.io.adapt.*;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.*;
