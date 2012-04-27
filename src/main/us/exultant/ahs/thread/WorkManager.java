@@ -30,15 +30,35 @@ import java.util.concurrent.*;
  *
  */
 public class WorkManager {
+	/**
+	 * Uses a {@link Factory} to produce one {@link WorkTarget} instance per core on
+	 * the machine and schedules them with the {@link #getDefaultScheduler() default
+	 * scheduler}, and returns an {@link AggregateWorkFuture} that allows you to track
+	 * their overall progress.
+	 * 
+	 * @param $wtf
+	 * @return an {@link AggregateWorkFuture}
+	 */
 	public static <$T> Future<Void> scheduleOnePerCore(Factory<WorkTarget<$T>> $wtf) {
 		return scheduleOnePerCore($wtf, getDefaultScheduler());
 	}
+	
+	/**
+	 * Uses a {@link Factory} to produce one {@link WorkTarget} instance per core on
+	 * the machine and schedules them with the {@link WorkScheduler} provided, and
+	 * returns an {@link AggregateWorkFuture} that allows you to track their overall
+	 * progress.
+	 * 
+	 * @param $wtf
+	 * @param $ws
+	 * @return an {@link AggregateWorkFuture}
+	 */
 	public static <$T> Future<Void> scheduleOnePerCore(final Factory<WorkTarget<$T>> $wtf, final WorkScheduler $ws) {
 		final int $n = Runtime.getRuntime().availableProcessors();
 		List<WorkFuture<$T>> $fa = new ArrayList<WorkFuture<$T>>($n);
 		for (int $i = 0; $i < $n; $i++)
 			$fa.add($ws.schedule($wtf.make(), ScheduleParams.NOW));	// i assume it wouldn't often make sense to schedule the same task at the same time on multiple cores if it's clock-based
-		return null;	//FIXME:AHS:THREAD: return an aggregate future
+		return new AggregateWorkFuture<$T>($fa);
 	}
 	
 	
@@ -46,6 +66,38 @@ public class WorkManager {
 	// factory methods for wrappers can also go in this class.
 	
 	
+	
+	/**
+	 * <p>
+	 * This factory method produces a {@link Listener} which upon being called will
+	 * invoke {@link WorkFuture#update()} on the given {@link WorkFuture}.
+	 * </p>
+	 * 
+	 * <p>
+	 * Typically, you'll want to invoke this with the
+	 * <code>WorkManager.&lt;$TYPE&gt;updater($workFuture)</code> syntax in order to
+	 * get a Listener of the appropriate generic type for your requirements.
+	 * </p>
+	 * 
+	 * @param $wf
+	 *                the WorkFuture instance to invoke {@link WorkFuture#update()}
+	 *                upon
+	 * @return a new Listener
+	 */
+	public static <$T> Listener<$T> updater(WorkFuture<?> $wf) {
+		return new WorkFutureUpdater<$T>($wf);
+	}
+	private final static class WorkFutureUpdater<$T> implements Listener<$T> {
+		public WorkFutureUpdater(WorkFuture<?> $wf) {
+			this.$wf = $wf;
+		}
+		
+		private final WorkFuture<?>	$wf;
+		
+		public final void hear($T $x) {
+			$wf.update();
+		}
+	}
 	
 	
 	
