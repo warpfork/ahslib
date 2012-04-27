@@ -67,6 +67,38 @@ public class WorkManager {
 	
 	
 	
+	/**
+	 * <p>
+	 * This factory method produces a {@link Listener} which upon being called will
+	 * invoke {@link WorkFuture#update()} on the given {@link WorkFuture}.
+	 * </p>
+	 * 
+	 * <p>
+	 * Typically, you'll want to invoke this with the
+	 * <code>WorkManager.&lt;$TYPE&gt;updater($workFuture)</code> syntax in order to
+	 * get a Listener of the appropriate generic type for your requirements.
+	 * </p>
+	 * 
+	 * @param $wf
+	 *                the WorkFuture instance to invoke {@link WorkFuture#update()}
+	 *                upon
+	 * @return a new Listener
+	 */
+	public static <$T> Listener<$T> updater(WorkFuture<?> $wf) {
+		return new WorkFutureUpdater<$T>($wf);
+	}
+	private final static class WorkFutureUpdater<$T> implements Listener<$T> {
+		public WorkFutureUpdater(WorkFuture<?> $wf) {
+			this.$wf = $wf;
+		}
+		
+		private final WorkFuture<?>	$wf;
+		
+		public final void hear($T $x) {
+			$wf.update();
+		}
+	}
+	
 	
 	
 	/**
