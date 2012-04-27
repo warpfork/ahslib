@@ -42,13 +42,13 @@ public class OutputSystem {
 		return makeWriteSystem(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $source, $sink, $translator);
 	}
 	public static <$T extends SelectableChannel & WritableByteChannel> OutputSystem makeWriteSystem(final WorkScheduler $scheduler, final SelectionSignaller $selector, final ReadHead<ByteBuffer> $source, final $T $sink, final ChannelWriter $translator) {
-		final WorkTarget<Void> $wt = new WriterChannelWorker<$T>($selector, $source, $sink, $translator);
+		final WriterChannelWorker<$T> $wt = new WriterChannelWorker<$T>($selector, $source, $sink, $translator);
 		final WorkFuture<Void> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
 		$source.setListener(new Listener<ReadHead<ByteBuffer>>() {
 			// this listener is to register write interest as necessary when the pipe becomes nonempty.
 			//TODO:AHS:IO: this will work of course, but it's not good.  better behavior is: try to write, then do this if it fails to get through.
 			public void hear(ReadHead<ByteBuffer> $esto) {
-				$selector.registerWrite($sink, WorkManager.<SelectableChannel>updater($wf));
+				$selector.registerWrite($sink, $wt.new Updater($wf));
 			}
 		});
 		return null;
@@ -73,7 +73,16 @@ public class OutputSystem {
 		 * If the last run wasn't able to push all the bytes in its message chunk
 		 * onto the wire, that buffer is here. Otherwise is null.
 		 */
-		private ByteBuffer			$last;
+		private volatile ByteBuffer		$last;
+		/**
+		 * Used to tell if we're ready to run or not. This is turned on by the
+		 * listener we give for write interest when we have a $last chunk that
+		 * didn't get finished writing. You can only turn this off after finishing
+		 * writing a chunk and thus unregistering write interest (registering
+		 * write interest again shall only take place if you get partial on
+		 * another chunk in a future call).
+		 */
+		private volatile boolean		$signal;
 		/**
 		 * Count of bytes actually written to wire (assuming the ChannelWritter
 		 * reports to us accurately). This becomes foobar'd and an underestimate
@@ -86,7 +95,12 @@ public class OutputSystem {
 				$last = $source.readNow();
 				if ($last == null) return null;
 			}
-			doWrite();
+			
+			for (int $i = 0; $i < 3; $i++) {
+				doWrite();
+				if ($last.remaining() == 0) break;
+			}
+			//fuck: to register write here, we... essentially have to have a pointer to our own workfuture.  which is... a bit tough.
 			
 			if ($last.remaining() == 0) {
 				$last = null;
@@ -115,20 +129,21 @@ public class OutputSystem {
 			}
 		}
 		
-		/**
-		 * This method is quite strange. We'd like to be able to query the
-		 * selection ky to see if we can write at all, except of course for
-		 * performance reasons we don't even register write interest until we know
-		 * we have to wait for a kernal buffer to open. Returning true based
-		 * instead on presense of a chunk buffer to finish or the source having
-		 * another chunk will get us killed by the
-		 * immediately-reschedule-if-ready-after-run rule of WorkSchedulers
-		 * because we'd never hit waiting mode when we did schedule ourselves with
-		 * the selector. So this one is... delicate.
-		 */// maybe this isn't so bad.  no one has any business asking this and getting a sensible answer if you're in the middle of running, and if last is set when you're not running then clearly we are blocking for a signal.  oh, but the signal still has to be what wakes us up, so the listener we register with the selectionsignaller would actually have to call us back to make us admit we're ready, THEN tell the scheduler to ask us?  sheesh.  indirect.  but not wrong.  quite reasonable, really.
 		public boolean isReady() {
-			//TODO:AHS:IO: wheeee
-			return true;
+			return ($last == null) ? $source.hasNext() : $signal;
+		}
+		
+		private final class Updater implements Listener<SelectableChannel> {
+			public Updater(WorkFuture<?> $wf) {
+				this.$wf = $wf;
+			}
+			
+			private final WorkFuture<?>	$wf;
+			
+			public final void hear(SelectableChannel $x) {
+				$signal = true;
+				$wf.update();
+			}
 		}
 		
 		public int getPriority() {
@@ -136,7 +151,7 @@ public class OutputSystem {
 		}
 		
 		public boolean isDone() {
-			return $source.isExhausted();
+			return $source.isExhausted() && ($last == null);
 		}
 	}
 }
