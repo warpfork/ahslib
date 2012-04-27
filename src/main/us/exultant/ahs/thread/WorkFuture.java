@@ -26,22 +26,31 @@ import java.util.concurrent.*;
 
 /**
  * <p>
- * Produced internally by some WorkScheduler implementations for bookkeeping and return to
- * the function that scheduled a task.
+ * A WorkFuture is a system that allows the user to run an asynchronous task and at their
+ * option either wait (blockingly) for it to complete, or register a listener to be
+ * notified when the task becomes complete (following a more nonblocking/event-based
+ * design pattern).
  * </p>
  * 
  * <p>
- * Note that there is (currently) no hardcoded rule that a WorkTarget instance may only be
- * submitted once to a single WorkScheduler and thus have exactly one paired WorkFuture
- * object... but it's the only case the system is designed for, so sane results are not
- * guaranteed if one does otherwise. (This is also stated in the documentation of
- * WorkScheduler that talks about the relationship between WorkScheduler, WorkTarget, and
- * WorkFuture.)
+ * The most common appearance of a WorkFuture is cooperation with the
+ * {@link WorkScheduler}, which produces a WorkFuture when a {@link WorkTarget} is
+ * {@link WorkScheduler#schedule(WorkTarget, ScheduleParams) scheduled} with it.
+ * WorkFuture can also represent other kinds of delayed system; for example
+ * {@link WorkScheduler#stop(boolean) stopping a WorkScheduler} is another action you can
+ * either wait for the completion of or request a callback from.
+ * </p>
+ * 
+ * <p>
+ * For waiting for or getting notifications of a group of WorkFutures, use
+ * {@link AggregateWorkFuture}.
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$V>
+ *                the type of data that will be returned from the {@link #get()} method
+ *                when the work this future represents becomes done.
  */
 public interface WorkFuture<$V> extends Future<$V> {
 	@ThreadSafe
