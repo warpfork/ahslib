@@ -146,6 +146,7 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 		if (isCancelled()) throw new CancellationException();
 		if (isDone()) return null;
 		throw new TimeoutException();
+		// about returning lists: yeah, really cool idea... except for the whole exception thing and how you couldn't represent that.  well, unless you made a new struct for that.  which is an option, and kind of a cool one i suppose.  though once you crossed that line, it would seem almost strange for workfuture.get to itself not return such a struct instead of throwing execution exceptions.  and... that... yeah that's a big do not want i think.  i dunno, i suppose the heterogenous option wouldn't be too bad; after all, how often do you really want to *return* an exception instead of throwing one?  that would be just darn weird of you to do, and i think i'd be alright just documenting that as a "don't do it if you want AWF.get() to make sense".
 	}
 	
 	/**
