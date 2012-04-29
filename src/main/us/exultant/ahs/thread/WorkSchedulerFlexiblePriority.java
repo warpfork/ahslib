@@ -228,6 +228,9 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			// run the work we pulled out.
 			boolean $mayRunAgain = $chosen.$sync.scheduler_power();
 			
+			// clear the interrupt status of the current thread.  assuming that the interrupt was intended for the work we were in the middle of moments ago, it is no longer valid now that we've exited that work's execution, and it would in inappropriate for it to disrupt the next work or our scheduling.
+			Thread.currentThread().interrupted();
+			
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {
 				$lock.lock();
