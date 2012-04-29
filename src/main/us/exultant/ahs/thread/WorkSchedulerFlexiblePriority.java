@@ -389,13 +389,16 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		$lock.lock();
 		try {
 			String $moar = null;
+			int $runningCount = 0;
 			if ($allOfIt) {
 				StringBuilder $sb = new StringBuilder();
 				
 				$sb.append("\n\t\tRUNNING:");
 				if ($running.size() > 0)
-					for (Map.Entry<Thread,Object> $thing : $running.entrySet())
+					for (Map.Entry<Thread,Object> $thing : $running.entrySet()) {
 						$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
+						$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
+					}
 				else
 					$sb.append("\n\t\t\t--- none ---");
 				
@@ -428,9 +431,12 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 					$sb.append("\n\t\t\t--- none ---");
 				
 				$moar = $sb.toString();
+			} else {
+				for (Map.Entry<Thread,Object> $thing : $running.entrySet())
+					$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
 			}
 			return 
-			"running: "   + Strings.padLeftToWidth($running.size()+"", 5)   + "    " +
+			"running: "   + Strings.padLeftToWidth($runningCount+"", 5)     + "    " +
 			"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
 			"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
 			"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
