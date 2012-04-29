@@ -152,11 +152,29 @@ public interface WorkFuture<$V> extends Future<$V> {
 	
 	
 	
+	/**
+	 * <p>
+	 * Enumerates all possible states a piece of work may be in.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note! While the documentation for each of these states may be defined in terms
+	 * of some function of a {@link WorkTarget}, it is critical to understand that
+	 * when a {@link WorkFuture} reports its <tt>State</tt>, it is only reporting the
+	 * last observed state. This is typically set by a {@link WorkScheduler} and thus
+	 * matches the scheduler's understanding of where the work is at.
+	 * </p>
+	 */
 	public static enum State {
 		/**
-		 * the work has not identified itself as having things to do immediately,
-		 * so it will not be scheduled.
+		 * <p>
+		 * A piece of work that is <tt>WAITING</tt> has not identified itself as
+		 * having things to do immediately, will not be scheduled by a
+		 * {@link WorkScheduler}. It may transition to {@link #SCHEDULED},
+		 * {@link #CANCELLED}, or {@link #FINISHED}.
+		 * </p>
 		 * 
+		 * <p>
 		 * Note! This is <b>independent</b> of whether or not
 		 * {@link WorkTarget#isReady()} returns true at any given time! The
 		 * contract of the {@link WorkTarget#isReady()} method allows it to toggle
@@ -164,21 +182,37 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * state enum refers only to what the {@link WorkScheduler} has most
 		 * recently noticed (typically during invocation of the
 		 * {@link WorkScheduler#update(WorkFuture)} method).
+		 * </p>
+		 * 
+		 * <p>
+		 * For some kinds of {@link WorkFuture} that do not directly represent a
+		 * {@link WorkTarget} scheduled with a {@link WorkScheduler} (such as an
+		 * {@link AggregateWorkFuture} for example), this is the default state:
+		 * {@link #SCHEDULED} and {@link #RUNNING} may never occur.
+		 * </p>
 		 */
 		WAITING,	// this actually has to be ordinal zero due to the silliness in AQS
 		/**
-		 * The {@link WorkScheduler} has found the WorkTarget of this Future to
-		 * be ready, and has queued it for execution. The WorkFuture will be
+		 * <p>
+		 * A piece of work that is <tt>SCHEDULED</tt> has been found by its
+		 * {@link WorkScheduler} to be ready, and the scheduler has queued it for
+		 * execution. It may transition to {@link #WAITING}, {@link #RUNNING},
+		 * {@link #CANCELLED}, or {@link #FINISHED} &mdash; the WorkFuture will be
 		 * shifted to {@link #RUNNING} when it reaches the top of the
 		 * WorkScheduler's queue of {@link #SCHEDULED} work (unless at that time
 		 * {@link WorkTarget#isReady()} is no longer true, in which case this
 		 * WorkFuture will be shifted back to {@link #WAITING}).
+		 * </p>
 		 */
 		SCHEDULED,
 		/**
-		 * The {@link WorkScheduler} that produced this WorkFuture has put a
-		 * thread onto the job and it has stack frames in the execution of the
-		 * work.
+		 * <p>
+		 * A piece of work that is <tt>RUNNING</tt> now has a {@link Thread}
+		 * assigned to it, that thread has stack frames in the execution of the
+		 * work. It may transition to {@link #WAITING}, {@link #CANCELLING}, or
+		 * {@link #FINISHED} &mdash; note that a direct transition to
+		 * {@link #CANCELLED} is not allowed here.
+		 * </p>
 		 */
 		RUNNING,
 		///**
@@ -193,24 +227,110 @@ public interface WorkFuture<$V> extends Future<$V> {
 		// */
 		//PARKED,
 		/**
-		 * The {@link WorkTarget#isDone()} method returned true after the last
-		 * time a thread acting on behalf of this Future's {@link WorkScheduler}
-		 * pushed the WorkTarget; the WorkTarget will no longer be scheduled for
-		 * future activation, and the final result of the execution &mdash;
-		 * whether it be a return value or an exception &mdash; is now available
-		 * for immediate return via the {@link WorkFuture#get()} method. An
-		 * exception thrown from the {@link WorkTarget#call()} method will also
-		 * result in this Future becoming FINISHED, though in that case the
-		 * {@link WorkTarget#isDone()} method may still return false.
-		 */// Actually, when I say "immediately", I mean that relatively.  the sync call in get() might still actually block for a tiny bit -- but we're talking about a handful of machine operations while the work thread finishes setting the return value after admitting completion and before releasing the locks for the last time.
+		 * <p>
+		 * A piece of work that is <tt>FINISHED</tt> will no longer be scheduled
+		 * for execution, and the final result of the execution &mdash; whether it
+		 * be a return value or an exception &mdash; is now available for prompt
+		 * return via the {@link WorkFuture#get()} method. <tt>FINISHED</tt> is a
+		 * final and {@link Idempotent} transition &mdash; once it happens, it is
+		 * permanent. A <tt>FINISHED</tt> also guarantees that there is no thread
+		 * active within the work.
+		 * </p>
+		 * 
+		 * <p>
+		 * A piece of work that is <tt>FINISHED</tt> became so in one of two ways:
+		 * it either became finished "normally" via the
+		 * {@link WorkTarget#isDone()} method returning true when the
+		 * {@link WorkScheduler} examined it (which may be either when a run was
+		 * finished, or when when the Scheduler responded to a request to
+		 * {@link WorkScheduler#update(WorkFuture) update} the work), or it became
+		 * finished when a run caused an exception to be thrown from the
+		 * {@link WorkTarget#call()} method.
+		 * </p>
+		 * 
+		 * <p>
+		 * A clarification of how promptly is "prompt" in the above paragraphs. It
+		 * is of course a relative term; the exact order of operations is as
+		 * follows:
+		 * <ol>
+		 * <li>the return value is set for the final time
+		 * <li>the transition of State occurs
+		 * <li>the system that blocks {@link WorkFuture#get()} is released
+		 * <li>completion listeners are called
+		 * </ol>
+		 * Thus, the sync call in {@link WorkFuture#get()} might still actually
+		 * block for a tiny bit in the moments after it becomes <tt>FINISHED</tt>
+		 * &mdash; but we're talking about a handful of machine operations after
+		 * the state transition and before releasing the locks for the last time,
+		 * and there are no blocking nor error prone operations in that range.
+		 * </p>
+		 */
 		FINISHED,
 		/**
-		 * The work was cancelled via the {@link WorkFuture#cancel(boolean)}
-		 * method before it could become {@link #FINISHED}. The work may have
-		 * previously been {@link #RUNNING}, but will now no longer be scheduled
-		 * for future activations. Since the cancellation was the result of an
-		 * external operation rather than of the WorkTarget's own volition, the
-		 * WorkTarget's {@link WorkTarget#isDone()} method may still return false.
+		 * <p>
+		 * A piece of work that is <tt>CANCELLING</tt> was previously in the
+		 * {@link #RUNNING} state, but was {@link WorkFuture#cancel(boolean)
+		 * cancelled} from another thread. The thread that was assigned to running
+		 * the work still has stack frames in the execution of the work; that
+		 * thread is expected to notice this status as soon as possible and is
+		 * responsible for transitioning to {@link #CANCELLED} (no other
+		 * transitions are valid).
+		 * </p>
+		 * 
+		 * <p>
+		 * In theory, the period of time between a running work becoming
+		 * CANCELLING and then becoming CANCELLED is hoped to be infinitesimal. In
+		 * reality of course things are never so simple. It is the responsibility
+		 * of the running thread to check for CANCELLING status and return
+		 * promptly, but of course it is not reasonable to insert such a check
+		 * between every single line of code within the work, nor is there any way
+		 * to automatically do so. Typically, it is considered good enough if the
+		 * work is defined in such a way that if the interrupt status of the
+		 * thread is set (as it is by calling {@link WorkFuture#cancel(boolean)}
+		 * with an argument of <tt>true</tt>) then the work will abort any
+		 * blocking or waiting operations and return immediately. It is
+		 * unforunately possible for a working thread to fail entirely to respond
+		 * to <tt>CANCELLING</tt>, if for example it is caught in an infinite
+		 * loop; such disastrous circumstances cannot be averted by any amount of
+		 * library design and are the responsibility of the work's programmer to
+		 * avoid.
+		 * </p>
+		 * 
+		 * <p>
+		 * For some kinds of {@link WorkFuture} that do not directly represent a
+		 * {@link WorkTarget} scheduled with a {@link WorkScheduler} (such as an
+		 * {@link AggregateWorkFuture} for example), this may be a valid
+		 * transition directly from {@link #WAITING} state, it may be a somewhat
+		 * more prolonged state, and it may have different semantics regarding
+		 * where a thread is. See the documentation of
+		 * {@link AggregateWorkFuture#cancel(boolean)} for an example of this; the
+		 * semantics are slightly different, but should be essentially
+		 * unsurprising.
+		 * </p>
+		 */
+		CANCELLING,
+		/**
+		 * <p>
+		 * A piece of work that is <tt>CANCELLED</tt> was
+		 * {@link WorkFuture#cancel(boolean) cancelled} at some point before it
+		 * could become {@link #FINISHED}. Cancelling is considered a very serious
+		 * operation and as such <tt>CANCELLED</tt> is a valid transition from
+		 * almost any point in the lifecycle except {@link #FINISHED} (
+		 * {@link #RUNNING} though running also has special rules); the
+		 * <tt>CANCELLED</tt> state itself is a final and {@link Idempotent}
+		 * transition &mdash; once it happens, it is permanent. Like work that is
+		 * {@link #FINISHED}, work that is <tt>CANCELLED</tt> will never again be
+		 * scheduled for execution and it is guaranteed that there is no thread
+		 * active within the work.
+		 * </p>
+		 * 
+		 * <p>
+		 * Note that since the cancellation was the result of an external
+		 * operation rather than of the WorkTarget's own volition, the
+		 * WorkTarget's {@link WorkTarget#isDone()} method may still return
+		 * <tt>false</tt>, even though the matching WorkFuture's
+		 * {@link WorkTarget#isDone()} method will now return <tt>true</tt>.
+		 * </p>
 		 */
 		CANCELLED;
 		
