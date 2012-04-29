@@ -387,9 +387,9 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	public String getStatus(boolean $allOfIt) {
 		$lock.lock();
+		String $moar = null;
+		int $runningCount = 0;
 		try {
-			String $moar = null;
-			int $runningCount = 0;
 			if ($allOfIt) {
 				StringBuilder $sb = new StringBuilder();
 				
@@ -435,16 +435,16 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				for (Map.Entry<Thread,Object> $thing : $running.entrySet())
 					$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
 			}
-			return 
-			"running: "   + Strings.padLeftToWidth($runningCount+"", 5)     + "    " +
-			"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
-			"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
-			"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
-			"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5) +
-			(($allOfIt)?$moar:"");
 		} finally {
 			$lock.unlock();
 		}
+		return 
+		"running: "   + Strings.padLeftToWidth($runningCount+"", 5)     + "    " +
+		"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
+		"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
+		"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
+		"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5) +
+		(($allOfIt)?$moar:"");
 	}
 	
 	
