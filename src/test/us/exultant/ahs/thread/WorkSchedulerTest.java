@@ -360,11 +360,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private volatile boolean $clear = false;
 		public Object call() throws InterruptedException, ExecutionException, TimeoutException {
 			WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper(new Work()), ScheduleParams.NOW);
-			X.chill(2);
+			while ($wf.getState() != WorkFuture.State.RUNNING) X.chill(1);
 			$wf.cancel(false);
 			assertEquals("work became cancelling state", WorkFuture.State.CANCELLING, $wf.getState());
 			try {
-				$wf.get(55, TimeUnit.MILLISECONDS);
+				$wf.get(35, TimeUnit.MILLISECONDS);
 				throw new AssertionFailed("should have gotten CancellationException");
 			} catch (CancellationException $e) { /* good! */ }
 			assertTrue("thread is clear of the work", $clear);
@@ -372,7 +372,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$ws.stop(false);
 			return null;
 		}
-		private class Work implements Runnable { public void run() { X.chill(50); $clear = true; } }
+		private class Work implements Runnable { public void run() { X.chill(30); $clear = true; } }
 	}
 	
 	
