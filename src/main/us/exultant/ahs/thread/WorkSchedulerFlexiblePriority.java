@@ -380,7 +380,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			if ($key == null) return Long.MAX_VALUE;	// the caller should just wait indefinitely for notification of new tasks entering the system, because we're empty.
 			if (!$key.$sync.scheduler_shiftToScheduled()) return $key.getScheduleParams().getDelay();
 			$delayed.poll();	// get it outta there
-			$scheduled.add($key);	
+			$scheduled.add($key);
 		}
 	}
 	
