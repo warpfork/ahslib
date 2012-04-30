@@ -72,6 +72,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		$tests.add(new TestNonblockingLeaderFollower());
 		$tests.add(new TestScheduleSingleDelayMany());
 		$tests.add(new TestFinishWhileRunning());
+		$tests.add(new TestCancelWhileRunning());
 		$tests.add(new TestScheduleFixedRate());
 		$tests.add(new TestNonblockingManyWorkSingleSource());
 		$tests.add(new TestNonblockingManyWorkSingleConcurrentSource());
@@ -309,10 +310,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	
-	// TestCancelWhileRunning
-	
-	
-	
 	private class TestFinishWhileRunning extends TestCase.Unit {
 		private final WorkScheduler $ws = makeScheduler(0).start();
 		private final Pipe<String> $pipe = new DataPipe<String>();
@@ -354,6 +351,28 @@ public abstract class WorkSchedulerTest extends TestCase {
 				return 0;
 			}
 		}
+	}
+	
+	
+	
+	private class TestCancelWhileRunning extends TestCase.Unit {
+		private WorkScheduler $ws = makeScheduler(0).start();
+		private volatile boolean $clear = false;
+		public Object call() throws InterruptedException, ExecutionException, TimeoutException {
+			WorkFuture<Void> $wf = $ws.schedule(new WorkTarget.RunnableWrapper(new Work()), ScheduleParams.NOW);
+			X.chill(2);
+			$wf.cancel(false);
+			assertEquals("work became cancelling state", WorkFuture.State.CANCELLING, $wf.getState());
+			try {
+				$wf.get(55, TimeUnit.MILLISECONDS);
+				throw new AssertionFailed("should have gotten CancellationException");
+			} catch (CancellationException $e) { /* good! */ }
+			assertTrue("thread is clear of the work", $clear);
+			assertEquals("work reached cancelled state", WorkFuture.State.CANCELLED, $wf.getState());
+			$ws.stop(false);
+			return null;
+		}
+		private class Work implements Runnable { public void run() { X.chill(50); $clear = true; } }
 	}
 	
 	
