@@ -257,17 +257,18 @@ public class AggregateWorkFutureTest extends TestCase {
 			//  that strong/interrupting cancel should make them return now even though they were blocking on a latch we haven't released yet.
 			$awf.cancel(true);
 			
-			// since the last thing to complete is due to cancellation, there's no doubt that the aggregate should feel cancelled as well.
-			//  and it should be able to return immediately since the cancel method doesn't return until done.
-			assertEquals(WorkFuture.State.CANCELLED, $awf.getState());
+			// we can't really check for the $awf or the $wfs[*] to become CANCELLING here because that just happens too fast.
+			
+			// when the awf is done, it should be as cancelled.  and it ought to be prompt since we used interrupts. 
 			try {
-				$awf.get(0, TimeUnit.MILLISECONDS);
+				$awf.get(2, TimeUnit.MILLISECONDS);
 				throw new TestCase.AssertionFailed("this task should throw a CancellationException!");
 			} catch (CancellationException $e) {
 				/* good! */
 			}	// TODO!!!! must test that cancellation in one thread causes return from one already blocking on get!
 			assertTrue($awf.isDone());
-
+			assertTrue($awf.isCancelled());
+			
 			// and the completion listner should also have been called.  it can be momentarily after isDone returns true, though.
 			$success.await(1, TimeUnit.MILLISECONDS);
 			
@@ -276,7 +277,7 @@ public class AggregateWorkFutureTest extends TestCase {
 				assertEquals(WorkFuture.State.FINISHED, $wfs[$i].getState());
 			
 			// the ones who were cancelled before they finished should look cancelled
-			for (int $i = 0; $i < $tasks; $i+=2)
+			for (int $i = 1; $i < $tasks; $i+=2)
 				assertEquals(WorkFuture.State.CANCELLED, $wfs[$i].getState());
 			
 			$ws.stop(false);
