@@ -552,11 +552,11 @@ public abstract class WorkSchedulerTest extends TestCase {
 	/** Test that when two tasks of different priority are scheduled, the higher priority goes first.
 	 *  A scheduler with a thread pool size of one is used. */
 	private class TestPrioritizedDuo extends TestCase.Unit {
-		private WorkScheduler $ws = makeScheduler(1).start();
+		private WorkScheduler $ws = makeScheduler(1);
 		
 		public Object call() throws InterruptedException, ExecutionException {
-			WorkFuture<Void> $wf_high = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 90000), ScheduleParams.NOW);
 			WorkFuture<Void> $wf_low = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 10), ScheduleParams.NOW);
+			WorkFuture<Void> $wf_high = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 90000), ScheduleParams.NOW);
 			$ws.start();
 			
 			$wf_high.get();
