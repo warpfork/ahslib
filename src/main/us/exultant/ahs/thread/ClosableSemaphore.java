@@ -22,6 +22,23 @@ package us.exultant.ahs.thread;
 import us.exultant.ahs.anno.*;
 import java.util.concurrent.locks.*;
 
+/**
+ * <p>
+ * A CloseableSemaphore behaves largely like a usual
+ * {@link java.util.concurrent.Semaphore}, with one major distinction: it is possible to
+ * permanently <i>close</i> the semaphore &mdash; this means all future attempts to
+ * release permits will fail, and that once all the currently available permits have been
+ * acquired, all attempts to acquire permits that would normally have blocked will now
+ * return instantly.
+ * </p>
+ * 
+ * <p>
+ * This class is used to implement {@link DataPipe}.
+ * </p>
+ * 
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
+ * 
+ */
 public class ClosableSemaphore extends FlippableSemaphore {
 	/**
 	 * Creates a {@code ClosableSemaphore} with zero permits with the nonfair fairness
