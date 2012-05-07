@@ -87,7 +87,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	/** Number of milliseconds which we'll consider as "<b>a</b>cceptably <b>o</b>ver<b>d</b>ue". */
 	// I'd really like to be able to set this lower, and in many practical use cases, you can.  However, I've observed that my computer will get very, very lazy about timestamps when it's under heavy load, and will in fact start returning them at only 10ms granularity!  So, I'm stuck with an AOD of anything less than 11 being quite unreasonable.
-	private static final int	AOD	= 11;
+	private final int TSCALE = 50;
 	
 	
 	
@@ -142,7 +142,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$wf.get();
 			
 			X.chill(5);	// some delay can be required here, because the get() method must be able to return without blocking before listeners are called.
-			assertEquals(1, $completionCalls.intValue());
+			assertEquals(1, $completionCalls.intValue());	//TODO:AHS:THREAD: fix this to use a countdownlatch
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
@@ -364,7 +364,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$wf.cancel(false);
 			assertEquals("work became cancelling state", WorkFuture.State.CANCELLING, $wf.getState());
 			try {
-				$wf.get(35, TimeUnit.MILLISECONDS);
+				$wf.get(TSCALE*4, TimeUnit.MILLISECONDS);	// it will still take the full amount of time since we didn't send an interrupt
 				throw new AssertionFailed("should have gotten CancellationException");
 			} catch (CancellationException $e) { /* good! */ }
 			assertTrue("thread is clear of the work", $clear);
@@ -372,7 +372,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$ws.stop(false);
 			return null;
 		}
-		private class Work implements Runnable { public void run() { X.chill(30); $clear = true; } }
+		private class Work implements Runnable { public void run() { X.chill(TSCALE*3); $clear = true; } }
 	}
 	
 	
@@ -383,7 +383,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public final int WTC = 8;
 		
 		public Object call() throws InterruptedException, ExecutionException {
-			final int space = 100;
+			final int space = TSCALE*4;
 			WorkFuture<?>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
 			$wf[3] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 03), ScheduleParams.makeDelayed(4*space));
 			$wf[4] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -9), ScheduleParams.makeDelayed(5*space));
@@ -402,7 +402,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				$wf[$i-1].get();
 				long $timeTaken = X.time() - $startTime;
 				$log.trace(this, "task with "+$i*space+"ms delay finished");
-				assertTrue("task less than "+AOD+"ms overdue ($timeTaken="+$timeTaken+")", $timeTaken-AOD < $i*100);
+				assertTrue("task less than "+TSCALE+"ms overdue ($timeTaken="+$timeTaken+")", $timeTaken-TSCALE < $i*space);
 				assertFalse($wf[$i].isDone());
 			}
 			
@@ -425,16 +425,16 @@ public abstract class WorkSchedulerTest extends TestCase {
 		
 		public Object call() throws InterruptedException, ExecutionException {
 			Work $wt = new Work();
-			final int initialDelay = 100;
-			final int repeatDelay = 25;
+			final int initialDelay = TSCALE*10;
+			final int repeatDelay = TSCALE*4;
 			WorkFuture<Integer> $wf = $ws.schedule($wt, ScheduleParams.makeFixedRate(initialDelay, repeatDelay));
 			
 			long $startTime = X.time();
 			long $targetTime = $startTime + initialDelay;
-			X.chillUntil($targetTime+AOD);
+			X.chillUntil($targetTime+TSCALE);
 			assertEquals("check amount of work completed after initial delay", 9, $wt.x);
 			for (int $i = 8; $i >= 0; $i--) {
-				X.chillUntil(($targetTime += repeatDelay)+AOD);
+				X.chillUntil(($targetTime += repeatDelay)+TSCALE);
 				assertEquals("check amount of work completed after repeating delay", $i, $wt.x);
 			}
 			assertEquals(0, $wf.get().intValue());
@@ -579,7 +579,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$ws.start();
 			
 			$wf_high.get();
-			X.chill(50-AOD);
+			X.chill(TSCALE*4);
 			assertFalse($wf_low.isDone());
 			$wf_low.get();
 
@@ -587,7 +587,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			return null;
 		}
 		
-		private class Work implements Runnable { public void run() { X.chill(50); } }
+		private class Work implements Runnable { public void run() { X.chill(TSCALE*5); } }
 	}
 	
 	
