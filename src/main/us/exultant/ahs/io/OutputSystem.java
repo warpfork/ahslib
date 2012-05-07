@@ -51,7 +51,7 @@ public class OutputSystem {
 		return makeWriteSystem(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $source, $sink, $translator);
 	}
 	public static <$T extends SelectableChannel & WritableByteChannel> OutputSystem makeWriteSystem(final WorkScheduler $scheduler, final SelectionSignaller $selector, final ReadHead<ByteBuffer> $source, final $T $sink, final ChannelWriter $translator) {
-		final WriterChannelWorker<$T> $wt = new WriterChannelWorker<$T>($selector, $source, $sink, $translator);
+		final ChannelWritingWorker<$T> $wt = new ChannelWritingWorker<$T>($selector, $source, $sink, $translator);
 		final WorkFuture<Void> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
 		$wt.install($wf);
 		return null;
@@ -59,8 +59,8 @@ public class OutputSystem {
 	
 	
 	
-	private static class WriterChannelWorker<Chan extends SelectableChannel & WritableByteChannel> implements WorkTarget<Void> {	// we'll have to have different implemenations of this class, one for selectable one for not.  hide this with factory methods of course.  but doing typecast checks while running would be poor.
-		public WriterChannelWorker(SelectionSignaller $selector, ReadHead<ByteBuffer> $source, Chan $sink, ChannelWriter $translator) {
+	private static class ChannelWritingWorker<Chan extends SelectableChannel & WritableByteChannel> implements WorkTarget<Void> {	// we'll have to have different implemenations of this class, one for selectable one for not.  hide this with factory methods of course.  but doing typecast checks while running would be poor.
+		public ChannelWritingWorker(SelectionSignaller $selector, ReadHead<ByteBuffer> $source, Chan $sink, ChannelWriter $translator) {
 			this.$source = $source;
 			this.$channel = $sink;
 			this.$trans = $translator;
