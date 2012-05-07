@@ -228,6 +228,9 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			// run the work we pulled out.
 			boolean $mayRunAgain = $chosen.$sync.scheduler_power();
 			
+			// clear the interrupt status of the current thread.  assuming that the interrupt was intended for the work we were in the middle of moments ago, it is no longer valid now that we've exited that work's execution, and it would in inappropriate for it to disrupt the next work or our scheduling.
+			Thread.currentThread().interrupted();
+			
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {
 				$lock.lock();
@@ -377,7 +380,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			if ($key == null) return Long.MAX_VALUE;	// the caller should just wait indefinitely for notification of new tasks entering the system, because we're empty.
 			if (!$key.$sync.scheduler_shiftToScheduled()) return $key.getScheduleParams().getDelay();
 			$delayed.poll();	// get it outta there
-			$scheduled.add($key);	
+			$scheduled.add($key);
 		}
 	}
 	
@@ -387,15 +390,18 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	
 	public String getStatus(boolean $allOfIt) {
 		$lock.lock();
+		String $moar = null;
+		int $runningCount = 0;
 		try {
-			String $moar = null;
 			if ($allOfIt) {
 				StringBuilder $sb = new StringBuilder();
 				
 				$sb.append("\n\t\tRUNNING:");
 				if ($running.size() > 0)
-					for (Map.Entry<Thread,Object> $thing : $running.entrySet())
+					for (Map.Entry<Thread,Object> $thing : $running.entrySet()) {
 						$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
+						$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
+					}
 				else
 					$sb.append("\n\t\t\t--- none ---");
 				
@@ -428,17 +434,20 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 					$sb.append("\n\t\t\t--- none ---");
 				
 				$moar = $sb.toString();
+			} else {
+				for (Map.Entry<Thread,Object> $thing : $running.entrySet())
+					$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
 			}
-			return 
-			"running: "   + Strings.padLeftToWidth($running.size()+"", 5)   + "    " +
-			"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
-			"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
-			"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
-			"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5) +
-			(($allOfIt)?$moar:"");
 		} finally {
 			$lock.unlock();
 		}
+		return 
+		"running: "   + Strings.padLeftToWidth($runningCount+"", 5)     + "    " +
+		"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
+		"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
+		"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
+		"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5) +
+		(($allOfIt)?$moar:"");
 	}
 	
 	

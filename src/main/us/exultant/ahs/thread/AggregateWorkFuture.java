@@ -37,7 +37,7 @@ import java.util.concurrent.*;
 public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	public AggregateWorkFuture(Collection<WorkFuture<$T>> $futures) {
 		this.$pip = new FuturePipe<$T>();
-		this.$state = WorkFuture.State.WAITING;	// i have to admit neither RUNNING nor WAITING (and certainly not SCHEDULED) makes any sense here.  I should just pick one of them as the correct resopnse for any future that isn't directly powered or scheduled.
+		this.$state = WorkFuture.State.WAITING;
 		this.$completionListeners = new ArrayList<Listener<WorkFuture<?>>>(1);
 		this.$pip.sink().writeAll($futures);
 		this.$pip.sink().close();
@@ -46,8 +46,12 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 				synchronized ($pip) {
 					$pip.source().readAllNow();
 					if (!$pip.source().isExhausted()) return;
-					if ($state != State.WAITING) return;
-					$state = State.FINISHED;
+					switch ($state) {
+						case WAITING: $state = State.FINISHED; break;
+						case CANCELLING: $state = State.CANCELLED; break;
+						case FINISHED: case CANCELLED: return;
+						case RUNNING: case SCHEDULED: throw new MajorBug();
+					}
 					X.notifyAll($pip);
 				}
 				hearDone();
@@ -146,40 +150,58 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 		if (isCancelled()) throw new CancellationException();
 		if (isDone()) return null;
 		throw new TimeoutException();
+		// about returning lists: yeah, really cool idea... except for the whole exception thing and how you couldn't represent that.  well, unless you made a new struct for that.  which is an option, and kind of a cool one i suppose.  though once you crossed that line, it would seem almost strange for workfuture.get to itself not return such a struct instead of throwing execution exceptions.  and... that... yeah that's a big do not want i think.  i dunno, i suppose the heterogenous option wouldn't be too bad; after all, how often do you really want to *return* an exception instead of throwing one?  that would be just darn weird of you to do, and i think i'd be alright just documenting that as a "don't do it if you want AWF.get() to make sense".
 	}
 	
 	/**
+	 * <p>
 	 * Attempts to cancel execution of all of the individual tasks aggregated by this
-	 * object that are not yet completed. This method then waits for the completion of
-	 * all the aggregated tasks, and when this is done, finally attempts to transition
-	 * this WorkTarget to cancelled. Only then does it return. This means that by the
-	 * time this method returns, all aggregated tasks are no longer runnable; however,
-	 * it's quite possible for concurrent finishing of the aggregated tasks to mean
-	 * that this AggregateWorkFuture becomes {@link WorkFuture.State#FINISHED} instead
-	 * of {@link WorkFuture.State#CANCELLED} even if this method call did cause the
-	 * cancellation of the majority of child tasks.
+	 * object that are not yet completed. This WorkFuture immediately transitions to
+	 * the {@link WorkFuture.State#CANCELLING} state; it will transition to the
+	 * {@link WorkFuture.State#CANCELLED} state when all of its aggregated WorkFutures
+	 * are themselves either {@link WorkFuture.State#CANCELLED} or
+	 * {@link WorkFuture.State#FINISHED}; in this way the invarient that the
+	 * <tt>get()</tt> method here shouldn't return until the <tt>get()</tt> method can
+	 * return immediately on every member is unbroken.
+	 * </p>
+	 * 
+	 * <p>
+	 * This method returns after issuing all cancels to aggregated tasks, but does not
+	 * wait for all tasks to acknowledge the cancel or otherwise become complete. This
+	 * means that by the time this method returns, all aggregated tasks are no longer
+	 * schedulable by a WorkScheduler; however, if they were running at the time the
+	 * cancellation was issued it's quite possible that they have not yet returned. To
+	 * wait for all tasks to be completed and to have no threads with stack frames in
+	 * their {@link WorkTarget#call()} method, simply use
+	 * {@link AggregateWorkFuture#get()} or
+	 * {@link AggregateWorkFuture#addCompletionListener(Listener)} in the usual ways.
+	 * </p>
+	 * 
+	 * <p>
+	 * Calling this method after this AggregateWorkFuture has become
+	 * <tt>CANCELLED</tt> or <tt>FINISHED</tt> is ignored and returns false. Calling
+	 * it repeatedly when it has already become <tt>CANCELLING</tt> has no effect on
+	 * the state, but will still relay cancel events on to all incomplete futures.
+	 * (This in turn is typically useless, with the exception that it does allow you
+	 * to send thread interrupts in a second call after declining to do so in a
+	 * previous call.)
+	 * </p>
 	 */
 	public boolean cancel(boolean $mayInterruptIfRunning) {
+		synchronized ($pip) {
+			switch ($state) {
+				case WAITING: $state = State.CANCELLING; break;
+				case CANCELLING: break;
+				case FINISHED: case CANCELLED: return false;
+				case RUNNING: case SCHEDULED: throw new MajorBug();
+			}
+		}
 		Set<WorkFuture<$T>> $helds;
 		synchronized ($pip.$held) {
 			$helds = new HashSet<WorkFuture<$T>>($pip.$held);
 		}
 		for (WorkFuture<$T> $held : $helds)
 			$held.cancel($mayInterruptIfRunning);
-		for (WorkFuture<$T> $held : $helds)
-			try {
-				$held.get();
-			} catch (ExecutionException $e) { /* I don't care how you ended. */
-			} catch (InterruptedException $e) { /* Seriously I don't. */ }
-		synchronized ($pip) {	// this is really less than ideal.  like, it's as likely as not to end as FINISHED instead of CANCELLED.  not the intended effect.  maybe we should do the transition instantly but then do the waiting?  no, that doesn't seem right either.  hm.
-			try {
-				if ($state != State.WAITING) return false;
-				$state = State.CANCELLED;
-			} finally {
-				$pip.notify();
-			}
-		}
-		hearDone();
 		return true;
 	}
 	
