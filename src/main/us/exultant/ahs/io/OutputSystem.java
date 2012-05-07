@@ -53,20 +53,14 @@ public class OutputSystem {
 	public static <$T extends SelectableChannel & WritableByteChannel> OutputSystem makeWriteSystem(final WorkScheduler $scheduler, final SelectionSignaller $selector, final ReadHead<ByteBuffer> $source, final $T $sink, final ChannelWriter $translator) {
 		final WriterChannelWorker<$T> $wt = new WriterChannelWorker<$T>($selector, $source, $sink, $translator);
 		final WorkFuture<Void> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
-		$source.setListener(new Listener<ReadHead<ByteBuffer>>() {
-			// this listener is to register write interest as necessary when the pipe becomes nonempty.
-			//TODO:AHS:IO: this will work of course, but it's not good.  better behavior is: try to write, then do this if it fails to get through.
-			public void hear(ReadHead<ByteBuffer> $esto) {
-				$selector.registerWrite($sink, $wt.new Updater($wf));
-			}
-		});
+		$wt.install($wf);
 		return null;
 	}
 	
 	
 	
-	private static class WriterChannelWorker<T extends SelectableChannel & WritableByteChannel> implements WorkTarget<Void> {	// we'll have to have different implemenations of this class, one for selectable one for not.  hide this with factory methods of course.  but doing typecast checks while running would be poor.
-		public WriterChannelWorker(SelectionSignaller $selector, ReadHead<ByteBuffer> $source, T $sink, ChannelWriter $translator) {
+	private static class WriterChannelWorker<Chan extends SelectableChannel & WritableByteChannel> implements WorkTarget<Void> {	// we'll have to have different implemenations of this class, one for selectable one for not.  hide this with factory methods of course.  but doing typecast checks while running would be poor.
+		public WriterChannelWorker(SelectionSignaller $selector, ReadHead<ByteBuffer> $source, Chan $sink, ChannelWriter $translator) {
 			this.$source = $source;
 			this.$channel = $sink;
 			this.$trans = $translator;
@@ -74,15 +68,24 @@ public class OutputSystem {
 			this.$last = null;
 		}
 		
-		private final ReadHead<ByteBuffer>	$source;
-		private final T				$channel;
-		private final ChannelWriter		$trans;
-		private final SelectionSignaller	$selector;
+		private void install(WorkFuture<Void> $selfFuture) {
+			$selectedListener = new Updater($selfFuture);
+			// it's possible that there was a call() before this install(), which may (improbably) have gotten stuck.  check for that.  incredibly improbably, this could also end up redundant, but that's fine.
+			ByteBuffer $dated_last = $last;
+			if ($dated_last != null && $dated_last.remaining() == 0)
+				$selector.registerWrite($channel, $selectedListener);
+		}
+		
+		private final ReadHead<ByteBuffer>		$source;
+		private final Chan				$channel;
+		private final ChannelWriter			$trans;
+		private final SelectionSignaller		$selector;
+		private volatile Listener<SelectableChannel>	$selectedListener;	// we cannot make this final no matter what, but we COULD remove the need for volatile at least if we implemented the precall/install pattern at a grand level.
 		/**
 		 * If the last run wasn't able to push all the bytes in its message chunk
 		 * onto the wire, that buffer is here. Otherwise is null.
 		 */
-		private volatile ByteBuffer		$last;
+		private volatile ByteBuffer			$last;
 		/**
 		 * Used to tell if we're ready to run or not. This is turned on by the
 		 * listener we give for write interest when we have a $last chunk that
@@ -91,13 +94,13 @@ public class OutputSystem {
 		 * write interest again shall only take place if you get partial on
 		 * another chunk in a future call).
 		 */
-		private volatile boolean		$signal;
+		private volatile boolean			$signal;
 		/**
-		 * Count of bytes actually written to wire (assuming the ChannelWritter
+		 * Count of bytes actually written to wire (assuming the ChannelWriter
 		 * reports to us accurately). This becomes foobar'd and an underestimate
 		 * if there's an IOException during a write, of course.
 		 */
-		private long				$bytesWritten;
+		private long					$bytesWritten;
 		
 		public Void call() throws IOException {
 			if ($last == null) {
@@ -109,12 +112,15 @@ public class OutputSystem {
 				doWrite();
 				if ($last.remaining() == 0) break;
 			}
-			//fuck: to register write here, we... essentially have to have a pointer to our own workfuture.  which is... a bit tough.
 			
 			if ($last.remaining() == 0) {
+				// clean finish, no one blocked or nothing
 				$last = null;
-				if (!$source.hasNext())
-					$selector.deregisterWrite($channel);
+				$selector.deregisterWrite($channel);	/* this request is queued, and the selector is capable of being in the middle of signally process that's going to leave our $signal set again even right after this next line where we unset it.  this is still fine.  that possibility is impossible to prevent, but the absolute worst it can ever cause is a spurious call of this WT, which quickly exits again and clears the $signal. */
+				$signal = false;
+			} else {
+				// we didn't get to write the whole chunk.  we need to set up a callback to schedule us again when the selection system says it's ready to accept more writing.
+				if ($selectedListener != null) $selector.registerWrite($channel, $selectedListener);
 			}
 			
 			return null;
@@ -143,12 +149,8 @@ public class OutputSystem {
 		}
 		
 		private final class Updater implements Listener<SelectableChannel> {
-			public Updater(WorkFuture<?> $wf) {
-				this.$wf = $wf;
-			}
-			
-			private final WorkFuture<?>	$wf;
-			
+			public Updater(WorkFuture<?> $wf) { this.$wf = $wf; }
+			private final WorkFuture<?> $wf;
 			public final void hear(SelectableChannel $x) {
 				$signal = true;
 				$wf.update();
