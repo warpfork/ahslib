@@ -14,6 +14,7 @@ import java.nio.channels.*;
 //    well, in DataPipe it's obviously a bit trivialized.  a network system can obviously have the network fail before the program is dying, and knowing how far along in the queue of messages it is could be relevant.
 //      then again, if the system breaks it becomes Done and exceptionally, and one could just drain the pipe of things not yet done with.  so i guess it really is mostly a question of what would make someone want to wait for a write to complete before moving on with their lives.
 //  i guess the thing that makes me unsure how much minding this is worth is that if you're on the network, you never know if the far side got your message unless they respond anyway.  and if you're on a local filesystem, doing it synchronously typically isn't really a source of major butthurt.
+//    and yes, tcp has acking, sure.  but how much does that really tell you?  it tells you that the message got as far as kernel buffers on the other end.  it doesn't tell you that the application has even recieved it or become aware of it, much less done anything with that data or "committed" anything.
 
 /**
  * <p>
