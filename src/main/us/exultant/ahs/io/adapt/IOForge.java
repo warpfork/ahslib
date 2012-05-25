@@ -17,10 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package us.exultant.ahs.io;
+package us.exultant.ahs.io.adapt;
 
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.io.adapt.*;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.*;

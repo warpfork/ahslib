@@ -19,7 +19,6 @@
 
 package us.exultant.ahs.io.adapt;
 
-import us.exultant.ahs.io.*;
 import java.io.*;
 
 /**
