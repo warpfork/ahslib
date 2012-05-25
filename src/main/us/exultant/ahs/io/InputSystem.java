@@ -2,34 +2,52 @@ package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.thread.*;
+import java.nio.channels.*;
 
-public class InputSystem<$T> {
-	// three kinds of base chunking:
-	//   - file (er, whole?)
-	//   - frames
-	//   - http
-	//   - lines
-	//   - of course this has to be extensible, but those are the obvious minimal needed ones
-	//  does this mean we'll have an interface called BaseChunker?  yus
-	
-	// conceal the WorkTarget completely.
-	// the WorkFuture can be exposed (cancellation is a valid desire) but should pretty much never be used.
-	//    er, actually rethink this.  you could cancel or become done if the readhead is closed.
-	
-	// we'll take the Scheduler as an argument, but 99% of the time we can use a default global scheduler.
-	// same with the Selector.
-	
-	// about the base input (file vs network) uh... yeah good luck with that.  i'll try to do it all with channels i guess.
-	//   a more exotic thing you could keep in mind is keyboard or mouse events.
-	//      actually that's kind of a crappy idea.  those would be ridiculous things to throw this heavyweight of a solution at.  make them look like a readhead?  sure, great.  but what on earth would you need to involve a worktarget and a scheduler for when all you really need is for the source listener to stack something in a datapipe?
-	
-	
-	
-	public ReadHead<$T> getReadHead() {	// bad.  you're doing an inversion already if you do this where you assume we'll have a pipe internal to the InputSystem.  And there's no reason for that.  And it inevitably begins to itch because then you end up having to duplicate so many interfaces over time for configurability... it's just bad, don't do it.
-		return null;
+public class InputSystem<$MSG> {
+	public static <$MSG> InputSystem<$MSG> setup(WriteHead<$MSG> $sink, ReadableByteChannel $source, ChannelReader<$MSG> $framer) {
+		return setup(WorkManager.getDefaultScheduler(), $sink, $source, $framer);
+	}
+	public static <$MSG> InputSystem<$MSG> setup(WorkScheduler $scheduler, WriteHead<$MSG> $sink, ReadableByteChannel $source, ChannelReader<$MSG> $framer) {
+		return null;	//TODO:AHS:IO: behavior for filesystem or other crap that doesn't match the SelectableChannel interface
 	}
 	
-	public WorkFuture<Void> getWorkFuture() {
-		return null;
+	public static <$MSG, $CHAN extends SelectableChannel & ReadableByteChannel> InputSystem<$MSG> setup(WriteHead<$MSG> $sink, $CHAN $source, ChannelReader<$MSG> $framer) {
+		return setup(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $sink, $source, $framer);
+	}
+	public static <$MSG, $CHAN extends SelectableChannel & ReadableByteChannel> InputSystem<$MSG> setup(WorkScheduler $scheduler, SelectionSignaller $selector, WriteHead<$MSG> $sink, $CHAN $source, ChannelReader<$MSG> $framer) {
+		final InputSystem_WorkerChannelSelectable<$MSG, $CHAN> $wt = new InputSystem_WorkerChannelSelectable<$MSG, $CHAN>($selector, $sink, $source, $framer);
+		final WorkFuture<$MSG> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
+		$wt.install($wf);
+		return new InputSystem<$MSG>($scheduler, $sink, $framer, $wt, $wf);
+	}
+	
+	
+	
+	private InputSystem(WorkScheduler $scheduler, WriteHead<$MSG> $sink, ChannelReader<$MSG> $framer, WorkTarget<$MSG> $worker, WorkFuture<$MSG> $future) {
+		this.$framer = $framer;
+		this.$sink = $sink;
+		this.$worker = $worker;
+		this.$future = $future;
+		this.$scheduler = $scheduler;
+	}
+
+	/** System parameter. */
+	private final ChannelReader<$MSG>	$framer;
+
+	/** System parameter.  Where we push our freshly read messages into. */
+	private final WriteHead<$MSG>		$sink;
+	
+	/** Always made by factory methods based on the channel type we get. */
+	private final WorkTarget<$MSG>		$worker;	//XXX:AHS:IO: actually not sure why we'd ever need this pointer.
+	
+	/** Always made by factory methods, since we often have things to do that are closely bound to the initial scheduling. */
+	private final WorkFuture<$MSG>		$future;
+
+	/** System parameter.  Usually defaults to {@link WorkManager#getDefaultScheduler()}. */
+	private final WorkScheduler		$scheduler;
+	
+	public WorkFuture<$MSG> getWorkFuture() {
+		return this.$future;
 	}
 }
