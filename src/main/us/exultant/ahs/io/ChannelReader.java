@@ -21,7 +21,8 @@ import java.nio.channels.*;
 public interface ChannelReader<$MSG> {
 	/**
 	 * <p>
-	 * Reads a message from a byte channel based on its concept of a message frame.
+	 * Reads a message from a byte channel based on this reader's concept of a message
+	 * frame.
 	 * </p>
 	 * 
 	 * <p>
@@ -45,7 +46,7 @@ public interface ChannelReader<$MSG> {
 	
 	
 	
-	//public static class ClearFramer implements ChannelReader<$MSG> {}
+	//public static class NoopFramer implements ChannelReader<$MSG> {}
 
 	
 	

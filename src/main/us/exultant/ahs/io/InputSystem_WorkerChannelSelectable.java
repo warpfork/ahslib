@@ -38,7 +38,7 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 			if ($msg != null) $sink.write($msg);
 			return $msg;
 		} catch (TranslationException $e) {
-			throw $e;	
+			throw $e;
 		} catch (IOException $e) {
 			close();
 			throw $e;

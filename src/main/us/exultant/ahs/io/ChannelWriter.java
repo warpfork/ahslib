@@ -95,7 +95,7 @@ public interface ChannelWriter<$MSG> {
 			if ($blob.remaining() == 0) {
 				$blob = null;
 				return true;
-			} else return false; 
+			} else return false;
 		}
 	}
 	

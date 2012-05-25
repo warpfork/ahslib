@@ -16,6 +16,7 @@ public class InputSystem<$MSG> {
 		return setup(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $sink, $source, $framer);
 	}
 	public static <$MSG, $CHAN extends SelectableChannel & ReadableByteChannel> InputSystem<$MSG> setup(WorkScheduler $scheduler, SelectionSignaller $selector, WriteHead<$MSG> $sink, $CHAN $source, ChannelReader<$MSG> $framer) {
+		if ($source.isBlocking()) throw new IllegalArgumentException("channel must be in nonblocking mode");
 		final InputSystem_WorkerChannelSelectable<$MSG, $CHAN> $wt = new InputSystem_WorkerChannelSelectable<$MSG, $CHAN>($selector, $sink, $source, $framer);
 		final WorkFuture<$MSG> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
 		$wt.install($wf);
