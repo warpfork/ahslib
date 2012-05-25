@@ -311,7 +311,7 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 		 */
 		State scheduler_shiftPostRun() {
 			if ($work.isDone()) {
-				tryFinish(true, null, null);
+				tryFinish(true, null, null);	//XXX:AHS:THREAD: is this strictly necessary?  i think all it gives us is a direct transition from RUNNING to FINISHED without bouncing through WAITING, but honestly i don't know if there's any good reason to care about such a thing.  not that isDone() is usually expensive, but, you know, still.
 				return getWFState();	/* finished or canceled */
 			} else if (shiftToScheduled(State.RUNNING.ordinal())) {
 				return State.SCHEDULED;	/* scheduled.  a cancel could come, but after this it's the post-cancel update that bears the burden of releasing pointers. */
