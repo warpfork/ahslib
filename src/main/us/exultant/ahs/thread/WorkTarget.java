@@ -369,7 +369,6 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		 * must define.
 		 */
 		public final Void call() throws Exception {
-			if (isDone()) return null;
 			$IN $a = $src.readNow();
 			if ($a == null) return null;
 			$OUT $b = run($a);
@@ -380,7 +379,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		protected abstract $OUT run($IN $chunk) throws Exception;
 		
 		/** @inheritDocs */
-		public final boolean isReady() { return !$src.hasNext(); }
+		public final boolean isReady() { return $src.hasNext(); }
 		/** @inheritDocs */
 		public final boolean isDone() { return $src.isExhausted(); }
 		/** @inheritDocs */

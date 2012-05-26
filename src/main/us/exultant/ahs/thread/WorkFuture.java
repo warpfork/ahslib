@@ -53,26 +53,126 @@ import java.util.concurrent.*;
  *                when the work this future represents becomes done.
  */
 public interface WorkFuture<$V> extends Future<$V> {
+	/**
+	 * Returns the instantaneous {@link State} of this work.
+	 * 
+	 * @return the state
+	 */
 	@ThreadSafe
 	@Nullipotent
 	public State getState();
 	
+	/**
+	 * Returns the {@link ScheduleParams} that were used when scheduling this
+	 * WorkFuture.
+	 * 
+	 * @return the {@link ScheduleParams} that were used when scheduling this
+	 *         WorkFuture.
+	 */
 	@ThreadSafe
 	@Nullipotent
 	public ScheduleParams getScheduleParams();
 	
+	/**
+	 * <p>
+	 * Checks whether or not this work is cancelled.
+	 * </p>
+	 * 
+	 * <p>
+	 * After this method returns true, subsequent calls to both {@link #isCancelled()}
+	 * and {@link #isDone()} will always return true.
+	 * </p>
+	 * 
+	 * @returns true if {@link #getState()} == {@link State#CANCELLED}, false
+	 *          otherwise.
+	 */
 	@ThreadSafe
 	@Nullipotent
 	public boolean isCancelled();
 	
+	/**
+	 * <p>
+	 * Checks whether or not this work is completed. Specifically, whether the state
+	 * of this work is {@link State#FINISHED} or {@link State#CANCELLED}.
+	 * </p>
+	 * 
+	 * <p>
+	 * After this method returns true, subsequent calls to {@link #isDone()} will
+	 * always return true; subsequent calls to {@link #get()} and
+	 * {@link #get(long, TimeUnit)} will return instantly; and
+	 * </p>
+	 * 
+	 * @returns true if {@link #getState()} is {@link State#CANCELLED} or
+	 *          {@link State#FINISHED}, false otherwise.
+	 */
 	@ThreadSafe
 	@Nullipotent
 	public boolean isDone();
 	
+	/**
+	 * <p>
+	 * Gets the result of the work, blocking if the work is not yet complete or
+	 * cancelled. If the work is already complete or cancelled, the method will return
+	 * immediately without blocking or locking.
+	 * </p>
+	 * 
+	 * <p>
+	 * Once this method returns anything at all (or throws an ExecutionException or
+	 * CancellationException), it will always return (or throw) exactly that object.
+	 * </p>
+	 * 
+	 * <p>
+	 * When this method returns (except by InterruptedException), it is guaranteed
+	 * that no thread is running the work. While this sounds obvious, it is worth
+	 * noting that it also applies if the work was cancelled: if a thread was running
+	 * the work when the cancel occurred then this method will wait for that thread to
+	 * leave the work. 
+	 * </p>
+	 * 
+	 * @return the result of the work. (In the case that there is a {@link WorkTarget}
+	 *         associated with this WorkFuture, see the contract of
+	 *         {@link WorkTarget#call()} for more information about what this means
+	 *         when the work is run multiple times.)
+	 * @throws InterruptedException
+	 *                 if this thread (the waiting thread) was interrupted while
+	 *                 waiting for the work to complete. In this case, the work may
+	 *                 not yet be done and retrying is acceptable.
+	 * @throws ExecutionException
+	 *                 if the work finished abnormally by throwing an exception. (Note
+	 *                 that in this case, if there is a {@link WorkTarget} associated
+	 *                 with this WorkFuture, it is possible that
+	 *                 {@link WorkTarget#isDone()} will return {@code false} even
+	 *                 though this {@link WorkFuture#isDone()} now returns
+	 *                 {@code true}.
+	 * @throws CancellationException
+	 *                 if the work was cancelled (i.e. {@link #isCancelled()} is
+	 *                 true).
+	 */
 	@ThreadSafe
 	@Nullipotent
 	public $V get() throws InterruptedException, ExecutionException, CancellationException;
 	
+	/**
+	 * <p>
+	 * Exactly as per {@link #get()}, except one may limit the amount of time for one
+	 * is willing to wait for a result.
+	 * </p>
+	 * 
+	 * @param $timeout
+	 *                the maximum time to wait
+	 * @param $unit
+	 *                the time unit of the timeout argument
+	 * @return exactly as per {@link #get()}
+	 * @throws InterruptedException
+	 *                 exactly as per {@link #get()}
+	 * @throws ExecutionException
+	 *                 exactly as per {@link #get()}
+	 * @throws TimeoutException
+	 *                 if the timeout specified by the arguments elapsed before the
+	 *                 work finished.
+	 * @throws CancellationException
+	 *                 exactly as per {@link #get()}
+	 */
 	@ThreadSafe
 	@Nullipotent
 	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, ExecutionException, TimeoutException, CancellationException;
@@ -80,20 +180,24 @@ public interface WorkFuture<$V> extends Future<$V> {
 	/**
 	 * <p>
 	 * Attempts to cancel execution of this task. This attempt will fail if the task
-	 * has already completed, has already been cancelled, or could not be cancelled
-	 * for some other reason. If successful, and this task has not started when cancel
-	 * is called, this task should never run. If the task has already started, then
-	 * the mayInterruptIfRunning parameter determines whether the thread executing
-	 * this task should be interrupted in an attempt to stop the task.
+	 * has already completed or has already been cancelled (more specifically, if the
+	 * state of this future is {@link State#FINISHED}, {@link State#CANCELLING}, or
+	 * {@link State#CANCELLED}). If this task is cancelled before if has ever started,
+	 * this task will never run. If this task has already started and is
+	 * {@link State#RUNNING}, then the {@code $mayInterruptIfRunning} parameter
+	 * determines whether the thread executing this task should be
+	 * {@link Thread#interrupt() interrupted} in an attempt to stop the task.
 	 * </p>
 	 * 
 	 * <p>
-	 * After this method returns, subsequent calls to {@link #isDone()} will always
-	 * return true. Subsequent calls to {@link #isCancelled()} will always return true
-	 * if this method returned true (they may also return true if this method returned
-	 * false; this depends on whether this method returned false because another
-	 * thread performed cancellation concurrently, or because the task finished
-	 * concurrently).
+	 * Using this method to request cancellation of work is a non-blocking operation;
+	 * this method will always return immediately. If the method returned true, then
+	 * the state of this future is now either {@link State#CANCELLING} or
+	 * {@link State#CANCELLED}. In order to wait for the work to be completely halted
+	 * (i.e. no threads running the work) and {@link State#CANCELLED}, use the
+	 * blocking {@link #get()} method, as it will not return until any thread that may
+	 * have been running this work has exited the {@link WorkTarget#call()} method or
+	 * the relevant equivalent.
 	 * </p>
 	 * 
 	 * <p>
@@ -103,7 +207,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * <tt>true</tt> otherwise" &mdash; this use of "normally" would seem to imply
 	 * that if another thread called cancel concurrently, both should return true.
 	 * This is in fact NOT what the canonical implementation of
-	 * {@link FutureTask#cancel(boolean)} does; that implementation acts identially to
+	 * {@link FutureTask#cancel(boolean)} does; that implementation acts identically to
 	 * this one in that if several threads attempt to cancel a task concurrently, only
 	 * one of them should get a true return.
 	 * </p>
@@ -111,7 +215,9 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * @param $mayInterruptIfRunning
 	 *                true if the thread executing this task should be interrupted;
 	 *                otherwise, in-progress tasks are allowed to complete
-	 * @returns whether or not this thread was responsible for cancelling
+	 * @returns whether or not this thread was responsible for cancelling (i.e. if
+	 *          many threads are competing to trigger a transition to cancelling,
+	 *          exactly one of them will get a true return).
 	 * 
 	 */
 	@ThreadSafe
@@ -289,7 +395,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * thread is set (as it is by calling {@link WorkFuture#cancel(boolean)}
 		 * with an argument of <tt>true</tt>) then the work will abort any
 		 * blocking or waiting operations and return immediately. It is
-		 * unforunately possible for a working thread to fail entirely to respond
+		 * unfortunately possible for a working thread to fail entirely to respond
 		 * to <tt>CANCELLING</tt>, if for example it is caught in an infinite
 		 * loop; such disastrous circumstances cannot be averted by any amount of
 		 * library design and are the responsibility of the work's programmer to
@@ -316,7 +422,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * could become {@link #FINISHED}. Cancelling is considered a very serious
 		 * operation and as such <tt>CANCELLED</tt> is a valid transition from
 		 * almost any point in the lifecycle except {@link #FINISHED} (
-		 * {@link #RUNNING} though running also has special rules); the
+		 * though {@link #RUNNING} also has special rules); the
 		 * <tt>CANCELLED</tt> state itself is a final and {@link Idempotent}
 		 * transition &mdash; once it happens, it is permanent. Like work that is
 		 * {@link #FINISHED}, work that is <tt>CANCELLED</tt> will never again be

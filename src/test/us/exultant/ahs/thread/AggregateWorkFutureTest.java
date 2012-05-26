@@ -48,6 +48,8 @@ public class AggregateWorkFutureTest extends TestCase {
 	public AggregateWorkFutureTest() {						super(new Logger(Logger.LEVEL_TRACE), true);	}
 	public AggregateWorkFutureTest(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
 	
+	private final int TSCALE = 25;
+	
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
@@ -103,20 +105,20 @@ public class AggregateWorkFutureTest extends TestCase {
 			
 			// merely starting the scheduler shouldn't cause doneness
 			$ws.start();
-			X.chill(2);
+			X.chill(TSCALE);
 			assertFalse($awf.isDone());
 			assertEquals(1,$success.getCount());
 			
 			// triggering the task and getting it scheduled shouldn't cause doneness
 			$wt.trigger();
 			$wf.update();
-			X.chill(2);
+			X.chill(TSCALE);
 			assertFalse($awf.isDone());
 			assertEquals(1,$success.getCount());
 			
 			// okay, now we let the task return... this should cause prompt doneness.
 			$latch.countDown();
-			$wf.get(2, TimeUnit.MILLISECONDS);
+			$wf.get(TSCALE, TimeUnit.MILLISECONDS);
 			$awf.get();
 			assertTrue($awf.isDone());
 			
@@ -162,13 +164,13 @@ public class AggregateWorkFutureTest extends TestCase {
 			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>(Arr.asList($wfs));
 			
 			// nothing should be able to finish because they weren't ready when we scheduled them.
-			X.chill(2);
+			X.chill(TSCALE);
 			assertFalse($wfs[0].isDone());
 			assertFalse($wfs[1].isDone());
 			
 			// and now things should finish promptly.  both of them.
 			$awf.update();
-			$awf.get(2, TimeUnit.MILLISECONDS);
+			$awf.get(TSCALE, TimeUnit.MILLISECONDS);
 			assertTrue($awf.isDone());
 			assertTrue($wfs[0].isDone());
 			assertTrue($wfs[1].isDone());
@@ -205,13 +207,13 @@ public class AggregateWorkFutureTest extends TestCase {
 			});
 			
 			// half of the tasks being done shouldn't cause doneness 
-			X.chill(2);
+			X.chill(TSCALE);
 			assertFalse($awf.isDone());
 			assertEquals(1,$success.getCount());
 			
 			// letting the other half finish should cause doneness
 			$latch.countDown();
-			$awf.get(2, TimeUnit.MILLISECONDS);
+			$awf.get(TSCALE, TimeUnit.MILLISECONDS);
 			assertTrue($awf.isDone());
 			
 			// and the completion listner should also have been called.  it can be momentarily after isDone returns true, though.
@@ -249,7 +251,7 @@ public class AggregateWorkFutureTest extends TestCase {
 			});
 			
 			// half of the tasks being done shouldn't cause doneness 
-			X.chill(2);
+			X.chill(TSCALE);
 			assertFalse($awf.isDone());
 			assertEquals(1,$success.getCount());
 			
@@ -261,7 +263,7 @@ public class AggregateWorkFutureTest extends TestCase {
 			
 			// when the awf is done, it should be as cancelled.  and it ought to be prompt since we used interrupts. 
 			try {
-				$awf.get(2, TimeUnit.MILLISECONDS);
+				$awf.get(TSCALE, TimeUnit.MILLISECONDS);
 				throw new TestCase.AssertionFailed("this task should throw a CancellationException!");
 			} catch (CancellationException $e) {
 				/* good! */
