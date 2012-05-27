@@ -90,10 +90,10 @@
 	</macrodef>
 	
 	<macrodef name="exusJavacStrict"><!-- compiles exactly the specified set of classes and no more no less.  useful for libraries and modularization enforcement. -->
-		<attribute name="tree" default="main"/>	<!-- subdirectory of src to look under; i.e., "main"|"test" -->
-		<attribute name="module" default=""/>	<!-- what subdirectory of build to put out under -->
-		<attribute name="classes" default="**"/><!-- use this to select only some classes; i.e., "us/exultant/ahs/core/**, us/exultant/ahs/util/**" -->
-		<attribute name="depends" default=""/>	<!-- paths to other modules in build needed, or jars (if not already compiled, classfiles end up in build!); i.e., "build/main/core : lib/junit.jar"  -->
+		<attribute name="tree" default="main"/>		<!-- subdirectory of src to look under; i.e., "main"|"test" -->
+		<attribute name="module" default="@{tree}"/>	<!-- what subdirectory of build to put out under -->
+		<attribute name="classes" default="**"/>	<!-- use this to select only some classes; i.e., "us/exultant/ahs/core/**, us/exultant/ahs/util/**" -->
+		<attribute name="depends" default=""/>		<!-- paths to other modules in build needed, or jars (if not already compiled, classfiles end up in build!); i.e., "build/main/core : lib/junit.jar"  -->
 		<sequential>
 			<mkdir dir="${build}/@{module}"/>
 			<javac
@@ -116,10 +116,10 @@
 	</macrodef>
 	
 	<macrodef name="exusJavac"><!-- compiles whatever it has to; this lets you specify you/ahs/d/work/gsr main class and let the rest figure itself out.  useful for applications because of the size minimalization. -->
-		<attribute name="tree" default="main"/>	<!-- subdirectory of src to look under; i.e., "main"|"test" -->
-		<attribute name="module" default=""/>	<!-- what subdirectory of build to put out under -->
-		<attribute name="classes" default="**"/><!-- use this to select only some classes; i.e., "us/exultant/ahs/core/**, us/exultant/ahs/util/**" -->
-		<attribute name="depends" default=""/>	<!-- paths to other modules in build needed, or jars (if not already compiled, classfiles end up in build!); i.e., "build/main/core : lib/junit.jar"  -->
+		<attribute name="tree" default="main"/>		<!-- subdirectory of src to look under; i.e., "main"|"test" -->
+		<attribute name="module" default="@{tree}"/>	<!-- what subdirectory of build to put out under -->
+		<attribute name="classes" default="**"/>	<!-- use this to select only some classes; i.e., "us/exultant/ahs/core/**, us/exultant/ahs/util/**" -->
+		<attribute name="depends" default=""/>		<!-- paths to other modules in build needed, or jars (if not already compiled, classfiles end up in build!); i.e., "build/main/core : lib/junit.jar"  -->
 		<sequential>
 			<mkdir dir="build/@{module}"/>
 			<javac
