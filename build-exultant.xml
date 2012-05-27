@@ -5,6 +5,8 @@
 	<property name="lib" value="lib"/>
 	<property name="dat" value="dat"/>
 	<property name="inc" value="inc"/>
+	<property name="res" value="res"/>
+	<property name="pre" value="pre"/>
 	<property name="build" value="build.tmp"/>
 	<property name="dist" value="dist"/>
 	<property name="doc" value="docs"/>
@@ -14,9 +16,11 @@
 		<mkdir dir="${src}"/>
 		<mkdir dir="${src}/main"/>
 		<mkdir dir="${src}/test"/>
-		<mkdir dir="${lib}"/>
-		<mkdir dir="${dat}"/>
-		<mkdir dir="${inc}"/>
+		<mkdir dir="${lib}"/>		<!-- things required for compilation.  may or may not end up in the tar, depending on the type of project.	-->
+		<mkdir dir="${dat}"/>		<!-- actually, tends not to be used except at runtime.								-->
+		<mkdir dir="${inc}"/>		<!-- place for stuff that gets rolled into the tar								-->
+		<mkdir dir="${res}"/>		<!-- place for stuff that gets rolled into the jar								-->
+		<mkdir dir="${pre}"/>		<!-- place for stuff with special behaviors; typically some kind of template file or the like			-->
 		<!-- uncomment these if your project has platform specific components that should be shipped
 		<mkdir dir="${inc}/universal"/>
 		<mkdir dir="${inc}/linux"/>
