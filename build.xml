@@ -78,6 +78,7 @@
 		<jar jarfile="${dist}/ahslib-core.jar" basedir="${build}/main/core">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -94,6 +95,7 @@
 		<jar jarfile="${dist}/ahslib-codec.jar" basedir="${build}/main/codec">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -110,6 +112,7 @@
 		<jar jarfile="${dist}/ahslib-codec-json.jar" basedir="${build}/main/codec-json">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -126,6 +129,7 @@
 		<jar jarfile="${dist}/ahslib-codec-ebon.jar" basedir="${build}/main/codec-ebon">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -142,6 +146,7 @@
 		<jar jarfile="${dist}/ahslib-codec-pre.jar" basedir="${build}/main/codec-pre">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -158,6 +163,7 @@
 		<jar jarfile="${dist}/ahslib-log.jar" basedir="${build}/main/log">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -174,6 +180,7 @@
 		<jar jarfile="${dist}/ahslib-test.jar" basedir="${build}/main/test">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -189,6 +196,7 @@
 		<jar jarfile="${dist}/ahslib-test-junit.jar" basedir="${build}/main/test-junit">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -205,6 +213,7 @@
 		<jar jarfile="${dist}/ahslib-thread.jar" basedir="${build}/main/thread">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -221,6 +230,7 @@
 		<jar jarfile="${dist}/ahslib-io.jar" basedir="${build}/main/io">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -237,6 +247,7 @@
 		<jar jarfile="${dist}/ahslib-crypto.jar" basedir="${build}/main/crypto">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -253,6 +264,7 @@
 		<jar jarfile="${dist}/ahslib-scratch.jar" basedir="${build}/main/scratch">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -285,6 +297,7 @@
 			<fileset dir="${build}/main/crypto"/>
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Git-Commit" value="${git-version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
 			</manifest>
 		</jar>
@@ -297,9 +310,9 @@
 	</target>
 	
 	
-	<target name="dox" depends="init" description="generate javadoc">
+	<target name="docs" depends="init" description="generate javadoc">
 		<javadoc
-			destdir="${dox}/javadoc"
+			destdir="${doc}/api"
 			author="true"
 			version="true"
 			use="true"

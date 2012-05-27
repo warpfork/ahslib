@@ -7,7 +7,7 @@
 	<property name="inc" value="inc"/>
 	<property name="build" value="build.tmp"/>
 	<property name="dist" value="dist"/>
-	<property name="dox" value="dox"/>
+	<property name="doc" value="docs"/>
 	<property name="jvers" value="1.6"/>
 	
 	<target name="exusInit" depends="exusInitId">
@@ -17,6 +17,7 @@
 		<mkdir dir="${lib}"/>
 		<mkdir dir="${dat}"/>
 		<mkdir dir="${inc}"/>
+		<!-- uncomment these if your project has platform specific components that should be shipped
 		<mkdir dir="${inc}/universal"/>
 		<mkdir dir="${inc}/linux"/>
 		<mkdir dir="${inc}/linux32"/>
@@ -25,8 +26,9 @@
 		<mkdir dir="${inc}/win32"/>
 		<mkdir dir="${inc}/win64"/>
 		<mkdir dir="${inc}/macosx"/>
-		<mkdir dir="${dox}"/>
-		<mkdir dir="${dox}/javadoc"/>
+		-->
+		<mkdir dir="${doc}"/>
+		<mkdir dir="${doc}/api"/>
 		<mkdir dir="${build}"/>
 		<mkdir dir="${build}/main"/>
 		<mkdir dir="${build}/test"/>
@@ -35,9 +37,8 @@
 	
 	<target name="exusInitId">
 		<tstamp>
-			<format property="builddate" pattern="yyyy/MM/dd HH:mm:ss Z" timezone="America/Los_Angeles"/>
-			<format property="timemark"  pattern="yyyyMMddHHmmssSSS"     timezone="America/Los_Angeles"/>
-			<!-- there's no way to get a unix timestamp in ant without shelling out to either shell or js or custom tasks.  disgusting. -->
+			<format property="builddate" pattern="yyyy/MM/dd HH:mm:ss Z" timezone="GMT+0"/>
+			<format property="timemark"  pattern="yyyyMMddHHmmssSSS"     timezone="GMT+0"/>
 		</tstamp>
 		<exec executable="git" outputproperty="git-version">
 			<arg value="log"/>
@@ -72,6 +73,14 @@
 			
 			<copy todir="${dist}/@{arch}">
 				<fileset dir="${inc}/@{arch}"/>
+			</copy>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="exusInc">
+		<sequential>
+			<copy todir="${dist}">
+				<fileset dir="${inc}"/>
 			</copy>
 		</sequential>
 	</macrodef>
