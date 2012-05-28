@@ -70,7 +70,7 @@
 	<target name="compile-core" depends="init">
 		<exusJavacStrict
 			module="main/core"
-			classes="us/exultant/ahs/core/**, us/exultant/ahs/util/**, us/exultant/ahs/anno/**"
+			classes="us/exultant/ahs/core/**, us/exultant/ahs/util/**, us/exultant/ahs/anno/**, us/exultant/ahs/iob/**"
 			depends=""
 		/>
 	</target>
