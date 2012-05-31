@@ -371,6 +371,13 @@ public abstract class TestCase implements Runnable {
 		public void breakCase(String $message) throws AssertionFatal {
 			throw new AssertionFatal("breaking case: "+$message);
 		}
+
+		public void breakUnit(Throwable $message) throws AssertionFailed {
+			throw new AssertionFailed("breaking: "+$message);
+		}
+		public void breakCase(Throwable $message) throws AssertionFatal {
+			throw new AssertionFatal("breaking case: "+$message);
+		}
 		
 		public String getName() {
 			String[] $arrg = Primitives.Patterns.DOT.split(getClass().getCanonicalName());
