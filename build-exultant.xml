@@ -115,7 +115,7 @@
 		</sequential>
 	</macrodef>
 	
-	<macrodef name="exusJavac"><!-- compiles whatever it has to; this lets you specify you/ahs/d/work/gsr main class and let the rest figure itself out.  useful for applications because of the size minimalization. -->
+	<macrodef name="exusJavac"><!-- compiles whatever it has to; this lets you specify your main class and let the rest figure itself out.  useful for applications because of the size minimalization. -->
 		<attribute name="tree" default="main"/>		<!-- subdirectory of src to look under; i.e., "main"|"test" -->
 		<attribute name="module" default="@{tree}"/>	<!-- what subdirectory of build to put out under -->
 		<attribute name="classes" default="**"/>	<!-- use this to select only some classes; i.e., "us/exultant/ahs/core/**, us/exultant/ahs/util/**" -->
