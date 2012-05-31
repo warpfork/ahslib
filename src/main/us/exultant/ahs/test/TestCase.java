@@ -294,7 +294,7 @@ public abstract class TestCase implements Runnable {
 	 * <p>
 	 * Called when the entire test case is aborted (i.e. a unit throws an unexpected
 	 * exception or AssertionFatal). Default behavior is printing
-	 * {@link #exitMessage()} to stdout followed byis forceful termination of the
+	 * {@link #exitMessage()} to stdout followed by forceful termination of the
 	 * program via {@link System#exit(int)} with an exit code of 5.
 	 * </p>
 	 * 
@@ -332,7 +332,7 @@ public abstract class TestCase implements Runnable {
 	/**
 	 * <p>
 	 * Each Unit in a TestCase contains a coherent set of assertions (or just one
-	 * assertion) preceeded by code to set up the test. The class name of an instance
+	 * assertion) preceded by code to set up the test. The class name of an instance
 	 * of Unit is used when logging the successful passing of a Unit and so use of
 	 * anonymous subclasses of Unit is not advised.
 	 * </p>
