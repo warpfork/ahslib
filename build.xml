@@ -34,7 +34,6 @@
 			compile-codec-pre,
 			compile-log,
 			compile-test,
-			compile-test-junit,
 			compile-thread,
 			compile-io,
 			compile-scratch"
@@ -49,7 +48,6 @@
 			dist-codec-pre,
 			dist-log,
 			dist-test,
-			dist-test-junit,
 			dist-thread,
 			dist-io,
 			dist-complete,
@@ -63,7 +61,7 @@
 			tree="test"
 			module="test"
 			classes="us/exultant/ahs/test/*"
-			depends="${lib}/junit.jar : ${dist}/ahslib-complete.jar"
+			depends="${lib}/slf4j-api-1.6.4.jar : ${dist}/ahslib-complete.jar"
 		/>
 	</target>
 	
@@ -185,22 +183,6 @@
 			</manifest>
 		</jar>
 	</target>
-	<target name="compile-test-junit" depends="compile-test">
-		<exusJavacStrict
-			module="main/test-junit"
-			classes="us/exultant/ahs/test/junit/**"
-			depends="${build}/main/core : ${build}/main/log : ${lib}/junit.jar"
-		/>
-	</target>
-	<target name="dist-test-junit" depends="compile-test-junit">
-		<jar jarfile="${dist}/ahslib-test-junit.jar" basedir="${build}/main/test-junit">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
-	</target>
 	
 	<target name="compile-thread" depends="compile-core">
 		<exusJavacStrict
@@ -278,7 +260,6 @@
 			compile-codec-pre,
 			compile-log,
 			compile-test,
-			compile-test-junit,
 			compile-thread,
 			compile-io,
 			compile-crypto
@@ -291,7 +272,6 @@
 			<fileset dir="${build}/main/codec-pre"/>
 			<fileset dir="${build}/main/log"/>
 			<fileset dir="${build}/main/test"/>
-			<fileset dir="${build}/main/test-junit"/>
 			<fileset dir="${build}/main/thread"/>
 			<fileset dir="${build}/main/io"/>
 			<fileset dir="${build}/main/crypto"/>
