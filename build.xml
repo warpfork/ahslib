@@ -32,7 +32,6 @@
 			compile-codec-json,
 			compile-codec-ebon,
 			compile-codec-pre,
-			compile-log,
 			compile-test,
 			compile-thread,
 			compile-io,
@@ -46,7 +45,6 @@
 			dist-codec-json,
 			dist-codec-ebon,
 			dist-codec-pre,
-			dist-log,
 			dist-test,
 			dist-thread,
 			dist-io,
@@ -150,24 +148,7 @@
 		</jar>
 	</target>
 	
-	<target name="compile-log" depends="compile-core">
-		<exusJavacStrict
-			module="main/log"
-			classes="us/exultant/ahs/log/**"
-			depends="${build}/main/core"
-		/>
-	</target>
-	<target name="dist-log" depends="compile-log">
-		<jar jarfile="${dist}/ahslib-log.jar" basedir="${build}/main/log">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
-	</target>
-	
-	<target name="compile-test" depends="compile-log">
+	<target name="compile-test">
 		<exusJavacStrict
 			module="main/test"
 			classes="us/exultant/ahs/test/*.java"
@@ -258,7 +239,6 @@
 			compile-codec-json,
 			compile-codec-ebon,
 			compile-codec-pre,
-			compile-log,
 			compile-test,
 			compile-thread,
 			compile-io,
@@ -270,7 +250,6 @@
 			<fileset dir="${build}/main/codec-json"/>
 			<fileset dir="${build}/main/codec-ebon"/>
 			<fileset dir="${build}/main/codec-pre"/>
-			<fileset dir="${build}/main/log"/>
 			<fileset dir="${build}/main/test"/>
 			<fileset dir="${build}/main/thread"/>
 			<fileset dir="${build}/main/io"/>
@@ -309,7 +288,6 @@
 			<group title="Codec (JSON)"			packages="us.exultant.ahs.codec.json*"/>
 			<group title="Codec (EBON)"			packages="us.exultant.ahs.codec.ebon*"/>
 			<group title="Codec (Premade En/Decoders)"	packages="us.exultant.ahs.codec.eon.pre*"/>
-			<group title="Logging"				packages="us.exultant.ahs.log*"/>
 			<group title="Unit Testing"			packages="us.exultant.ahs.test*"/>
 			<group title="IO"				packages="us.exultant.ahs.io*"/>
 			<group title="Crypto"				packages="us.exultant.ahs.crypto*"/>
