@@ -19,22 +19,11 @@
 
 package us.exultant.ahs.util;
 
-import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 
 public class InternTest extends TestCase {
-	public static void main(String... $args) {
-		new InternTest().run();
-	}
-	
-	public InternTest() {
-		super(new Logger(Logger.LEVEL_DEBUG), true);
-	}
-	
-	public InternTest(Logger $log, boolean $enableConfirmation) {
-		super($log, $enableConfirmation);
-	}
+	public static void main(String... $args) { new InternTest().run(); }
 	
 	public List<Unit> getUnits() {
 		return Arr.asList(

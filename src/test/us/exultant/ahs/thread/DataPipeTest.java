@@ -20,14 +20,12 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 
 public class DataPipeTest extends TestCase {
-	public static void main(String... $args) {			new DataPipeTest().run();			}
-	public DataPipeTest() {						super(new Logger(Logger.LEVEL_TRACE), true);	}
-	public DataPipeTest(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
+	public static void main(String... $args) { new DataPipeTest().run(); }
+	
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
@@ -52,7 +50,7 @@ public class DataPipeTest extends TestCase {
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().write(TD.s2);
 			assertEquals(2, $pipe.size());
-			breakIfFailed();
+			breakUnitIfFailed();
 			assertEquals(TD.s1, $pipe.source().read());
 			$pipe.sink().write(TD.s3);
 			assertEquals(2, $pipe.size());
@@ -70,7 +68,7 @@ public class DataPipeTest extends TestCase {
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().writeAll(Arr.asList(TD.s2,TD.s2,TD.s3));
 			assertEquals(4, $pipe.size());
-			breakIfFailed();
+			breakUnitIfFailed();
 			List<String> $arr = $pipe.source().readAllNow();
 			assertEquals(0, $pipe.size());
 			assertEquals(TD.s1, $arr.get(0));
@@ -102,7 +100,7 @@ public class DataPipeTest extends TestCase {
 		private class Part2 extends TestCase.Unit {
 			public Object call() {
 				assertEquals(2, $pipe.size());
-				breakIfFailed();
+				breakUnitIfFailed();
 				List<String> $arr = $pipe.source().readAllNow();
 				assertEquals(0, $pipe.size());
 				assertEquals(TD.s1, $arr.get(0));
@@ -140,7 +138,7 @@ public class DataPipeTest extends TestCase {
 			assertEquals(TD.s2, $pipe.source().read());
 			assertEquals(0, $pipe.size());
 			assertEquals(null, $pipe.source().readNow());
-			breakIfFailed();	// we'd rather not block on this next call if we already know there's something wrong.
+			breakUnitIfFailed();	// we'd rather not block on this next call if we already know there's something wrong.
 			assertEquals(null, $pipe.source().read());		// this may block forever if something's broken
 			assertEquals(0, $pipe.source().readAll().size());	// this may block forever if something's broken
 			return null;
@@ -224,10 +222,10 @@ public class DataPipeTest extends TestCase {
 			public void run() {
 				for (int $i = 0; $i < $msgsPerThread; $i++) {
 					$pipe.sink().write($str);
-					if ($log.TRACE) $log.trace(this, "wrote \""+$str+"\", pipe size now "+$pipe.size());
+					if ($log.isTraceEnabled()) $log.trace("wrote \""+$str+"\", pipe size now "+$pipe.size());
 					if ($writesBetweenDelay > 0 && $i % $writesBetweenDelay == 0) X.chill(1);
 				}
-				$log.trace(this, "writing thread done.");
+				$log.trace("writing thread done.");
 			}
 		}
 		private class Reader implements Runnable {
@@ -235,10 +233,10 @@ public class DataPipeTest extends TestCase {
 			public void run() {
 				for (int $i = 0; $i < $msgsPerThread; $i++) {
 					String $lol = $pipe.source().read();
-					if ($log.TRACE) $log.trace(this, "read \""+$lol+"\", pipe size now "+$pipe.size());
+					if ($log.isTraceEnabled()) $log.trace("read \""+$lol+"\", pipe size now "+$pipe.size());
 					$counter.hear($lol);
 				}
-				$log.trace(this, "reading thread done.");
+				$log.trace("reading thread done.");
 			}
 		}
 	}

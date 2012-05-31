@@ -21,7 +21,6 @@ package us.exultant.ahs.codec;
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.codec.eon.*;
-import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 
@@ -50,11 +49,7 @@ import java.util.*;
  */
 abstract class CodecEonTest extends TestCase {
 	public CodecEonTest(EonCodec $seed) {
-		this($seed, new Logger(Logger.LEVEL_TRACE), true);
-	}
-	
-	public CodecEonTest(EonCodec $seed, Logger $log, boolean $enableConfirmation) {
-		super($log, $enableConfirmation);
+		super();
 		this.$seed = $seed;
 	}
 	
@@ -91,7 +86,7 @@ abstract class CodecEonTest extends TestCase {
 			
 			TobjTrivial $x1 = new TobjTrivial();
 			EonObject $c = $codec.encode($x1);
-			$log.trace(this, str($c));
+			$log.trace(str($c));
 			TobjTrivial $x2 = $codec.decode($c, TobjTrivial.class);
 			
 			assertEquals($x1, $x2);
@@ -109,7 +104,7 @@ abstract class CodecEonTest extends TestCase {
 			
 			TobjTrivial $x1 = new TobjTrivial();
 			byte[] $c = $codec.serialize($x1);
-			$log.trace(this, Strings.semireadable($c));
+			$log.trace(Strings.semireadable($c));
 			TobjTrivial $x2 = $codec.deserialize($c, TobjTrivial.class);
 			
 			assertEquals($x1, $x2);

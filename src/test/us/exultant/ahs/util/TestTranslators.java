@@ -1,15 +1,13 @@
 package us.exultant.ahs.util;
 
 import us.exultant.ahs.core.*;
-import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.nio.*;
 import java.util.*;
 
 public class TestTranslators extends TestCase {
-	public static void main(String... $args) {				new TestTranslators().run();			}
-	public TestTranslators() {						super(new Logger(Logger.LEVEL_TRACE), true);	}
-	public TestTranslators(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
+	public static void main(String... $args) { new TestTranslators().run(); }
+	
 	public List<Unit> getUnits() {
 		return Arr.<Unit>asList(
 				new TestHexConsistency(),

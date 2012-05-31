@@ -20,38 +20,86 @@
 package us.exultant.ahs.test;
 
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.test.junit.*;
+import java.io.*;
+import java.util.*;
 
-public class WaitTest extends JUnitTestCase {
-	public void doLoop(final int $pause, final int $times, final int $error) {
-		long $start = X.time();
-		for (int $i = 0; $i < $times; $i++)
-			X.chill($pause);
-		assertEquals($start+($pause*$times), X.time(), $error);
+public class WaitTest extends TestCase {
+	public static void main() { new SanityTest().run(); }
+	
+	public List<Unit> getUnits() {
+		List<Unit> $tests = new ArrayList<Unit>();
+		$tests.add(new TestA());
+		$tests.add(new TestA2());
+		$tests.add(new TestA3());
+		$tests.add(new TestB());
+		$tests.add(new TestB10());
+		$tests.add(new TestC());
+		return $tests;
 	}
 	
-	public void testA() {
-		doLoop(50,10,10);
+	
+	
+	private abstract class LoopedWaitTemplate extends TestCase.Unit {
+		public void wait(final int $pause_ms, final int $loop_times, final int $error_margin) {
+			long $start = X.time();
+			for (int $i = 0; $i < $loop_times; $i++)
+				X.chill($pause_ms);
+			assertEquals($start+($pause_ms*$loop_times), X.time(), $error_margin);	//FIXME:AHS:TEST: TestUnit needs margin-of-error convenience methods.
+		}
 	}
 	
-	public void testA2() {
-		doLoop(50,10,3);
+	
+	
+	private class TestA extends LoopedWaitTemplate {
+		public Object call() {
+			wait(50,10,10);
+			return null;
+		}
 	}
 	
-	public void testA3() {
-		doLoop(50,10,1);
+	
+	
+	private class TestA2 extends LoopedWaitTemplate {
+		public Object call() {
+			wait(50,10,3);
+			return null;
+		}
 	}
 	
-	public void testB() {
-		doLoop(20,20,2);
+	
+	
+	private class TestA3 extends LoopedWaitTemplate {
+		public Object call() {
+			wait(50,10,1);
+			return null;
+		}
 	}
 	
-	public void testB10() {
-		for (int $i = 0; $i < 10; $i++)
-			doLoop(20,20,2);
+	
+	
+	private class TestB extends LoopedWaitTemplate {
+		public Object call() {
+			wait(20,20,2);
+			return null;
+		}
 	}
 	
-	public void testC() {
-		doLoop(500,10,5);
+	
+	
+	private class TestB10 extends LoopedWaitTemplate {
+		public Object call() {
+			for (int $i = 0; $i < 10; $i++)
+				wait(20,20,2);
+			return null;
+		}
+	}
+	
+	
+	
+	private class TestC extends LoopedWaitTemplate {
+		public Object call() {
+			wait(500,10,5);
+			return null;
+		}
 	}
 }

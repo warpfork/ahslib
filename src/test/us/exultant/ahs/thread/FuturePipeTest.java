@@ -21,7 +21,6 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 
@@ -42,9 +41,7 @@ import java.util.*;
  * 
  */
 public class FuturePipeTest extends TestCase {
-	public static void main(String... $args) {				new FuturePipeTest().run();			}
-	public FuturePipeTest() {						super(new Logger(Logger.LEVEL_TRACE), true);	}
-	public FuturePipeTest(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
+	public static void main(String... $args) { new FuturePipeTest().run(); }
 	
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
@@ -79,7 +76,7 @@ public class FuturePipeTest extends TestCase {
 			assertFalse("FuturePipe is has no readable elements at start", $wfp.source().hasNext());
 			assertTrue("FuturePipe became closed for writing when asked", $wfp.sink().isClosed());
 			assertFalse("FuturePipe is still open for reading", $wfp.source().isClosed());
-			breakIfFailed();
+			breakUnitIfFailed();
 			
 			$wt.trigger();
 			$wf.update();
@@ -95,7 +92,7 @@ public class FuturePipeTest extends TestCase {
 				 * Also, that last one will occur once per read that is on a now-exhausted pipe... which means it's going to happen once for our read, and once for the readall we do after it.
 				 */
 				public void hear(ReadHead<WorkFuture<Void>> $x) {
-					$log.trace(this, "event"
+					$log.trace("event"
 							//, new Exception()
 					);
 				}
@@ -103,7 +100,7 @@ public class FuturePipeTest extends TestCase {
 			
 			$wfp.source().read();
 			assertTrue("WorkFuture read from FuturePipe was done", $wf.isDone());
-			breakIfFailed();
+			breakUnitIfFailed();
 			assertEquals("No unexpected additional items read from FuturePipe", 0, $wfp.source().readAll().size());
 			assertFalse("FuturePipe is empty when expected", $wfp.source().hasNext());
 			assertTrue("FuturePipe became closed for reading when empty", $wfp.source().isClosed());
@@ -143,12 +140,12 @@ public class FuturePipeTest extends TestCase {
 			assertFalse("FuturePipe is has no readable elements at start", $wfp.source().hasNext());
 			assertFalse("FuturePipe is still open for writing", $wfp.sink().isClosed());
 			assertFalse("FuturePipe is still open for reading", $wfp.source().isClosed());
-			breakIfFailed();
+			breakUnitIfFailed();
 			
 			$ws.start();
 			$wfp.sink().close();
 			assertTrue("FuturePipe became closed for writing when asked", $wfp.sink().isClosed());
-			breakIfFailed();
+			breakUnitIfFailed();
 			
 			for (int $i = 0; $i < N; $i++) {
 				WorkFuture<Void> $wf = $wfp.source().read();
