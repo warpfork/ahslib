@@ -173,7 +173,7 @@
 		<exusJavacStrict
 			module="main/test"
 			classes="us/exultant/ahs/test/*.java"
-			depends="${build}/main/core : ${build}/main/log"
+			depends="${build}/main/core : ${lib}/slf4j-api-1.6.4.jar"
 		/>
 	</target>
 	<target name="dist-test" depends="compile-test">
