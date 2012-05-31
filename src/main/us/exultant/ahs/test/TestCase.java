@@ -90,6 +90,7 @@ import org.slf4j.*;
  * <li>Invoke {@link Unit#breakCaseIfFailed()}. Regardless of any assertions made so far,
  * Unit will now stop executing and be reported as failed, AND all other Units will also
  * not be run!
+ * </ul>
  * </p>
  * 
  * <p>
@@ -101,11 +102,11 @@ import org.slf4j.*;
  * 
  * <p>
  * At the end of test running, the vm will exit (i.e. {@link System#exit(int)} will be
- * invoked) with the codes described above. A forceful exit like this is performed rather
- * than merely returning and letting the calling code decide what to do because in tests
- * with systems that spawn threads I've found this behavior to be more pleasant and
- * reliable. You may override this if you like; see the notes under the Customizing
- * section.
+ * invoked) with the codes described in the Reporting section below. A forceful exit like
+ * this is performed rather than merely returning and letting the calling code decide what
+ * to do because in tests with systems that spawn threads I've found this behavior to be
+ * more pleasant and reliable. You may override this if you like; see the notes under the
+ * Customizing section.
  * </p>
  * 
  * 
