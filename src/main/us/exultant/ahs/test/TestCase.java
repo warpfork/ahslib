@@ -429,6 +429,18 @@ public abstract class TestCase implements Runnable {
 		else
 			return "assertion \"" + $label + "\" passed -- " + $message;
 	}
+	static String messageFail(String $label, Object $expected, Object $actual, Object $margin) {
+		if ($label == null)
+			return "assertion failed -- expected " + $expected + "(+/- " + $margin + ") != " + $actual + " actual.";
+		else
+			return "assertion \"" + $label + "\" failed -- expected " + $expected + "(+/- " + $margin + ") != " + $actual + " actual.";
+	}
+	static String messagePass(String $label, Object $expected, Object $actual, Object $margin) {
+		if ($label == null)
+			return "assertion passed -- expected " + $expected + "(+/- " + $margin + ") ~= " + $actual + " actual.";
+		else
+			return "assertion \"" + $label + "\" passed -- expected " + $expected + "(+/- " + $margin + ") ~= " + $actual + " actual.";
+	}
 	// note that failure messages get wrapped in exceptions and then given to the logger (with a constant message of "assertion failed")
 	//  whereas success messages get passed to the logger as actual messages (with no exception attached).
 	//   this... might be a poor inconsistency, since i could see wanting to be able to report line numbers of successes outloud as well. 
@@ -569,6 +581,18 @@ public abstract class TestCase implements Runnable {
 		$log.debug(messagePass($label, $expected, $actual));
 		return true;
 	}
+	public boolean assertEquals(int $expected, int $actual, int $margin) {
+		return assertEquals(null, $expected, $actual, $margin);
+	}
+	public boolean assertEquals(String $label, int $expected, int $actual, int $margin) {
+		if (Math.abs($expected - $actual) <= $margin) {
+			$unitFailures++;
+			$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
+			return false;
+		}
+		$log.debug(messagePass($label, $expected, $actual, $margin));
+		return true;
+	}
 	
 	
 	////////////////
@@ -586,6 +610,76 @@ public abstract class TestCase implements Runnable {
 		$log.debug(messagePass($label, $expected, $actual));
 		return true;
 	}
+	public boolean assertEquals(long $expected, long $actual, long $margin) {
+		return assertEquals(null, $expected, $actual, $margin);
+	}
+	public boolean assertEquals(String $label, long $expected, long $actual, long $margin) {
+		if (Math.abs($expected - $actual) <= $margin) {
+			$unitFailures++;
+			$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
+			return false;
+		}
+		$log.debug(messagePass($label, $expected, $actual, $margin));
+		return true;
+	}
+	
+	
+	////////////////
+	//  DOUBLE
+	////////////////
+	public boolean assertEquals(double $expected, double $actual) {
+		return assertEquals(null, $expected, $actual);
+	}
+	public boolean assertEquals(String $label, double $expected, double $actual) {
+		if ($expected != $actual) {
+			$unitFailures++;
+			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+			return false;
+		}
+		$log.debug(messagePass($label, $expected, $actual));
+		return true;
+	}
+	public boolean assertEquals(double $expected, double $actual, double $margin) {
+		return assertEquals(null, $expected, $actual, $margin);
+	}
+	public boolean assertEquals(String $label, double $expected, double $actual, double $margin) {
+		if (Math.abs($expected - $actual) <= $margin) {
+			$unitFailures++;
+			$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
+			return false;
+		}
+		$log.debug(messagePass($label, $expected, $actual, $margin));
+		return true;
+	}
+	
+	
+	////////////////
+	//  FLOAT
+	////////////////
+	public boolean assertEquals(float $expected, float $actual) {
+		return assertEquals(null, $expected, $actual);
+	}
+	public boolean assertEquals(String $label, float $expected, float $actual) {
+		if ($expected != $actual) {
+			$unitFailures++;
+			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+			return false;
+		}
+		$log.debug(messagePass($label, $expected, $actual));
+		return true;
+	}
+	public boolean assertEquals(float $expected, float $actual, float $margin) {
+		return assertEquals(null, $expected, $actual, $margin);
+	}
+	public boolean assertEquals(String $label, float $expected, float $actual, float $margin) {
+		if (Math.abs($expected - $actual) <= $margin) {
+			$unitFailures++;
+			$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
+			return false;
+		}
+		$log.debug(messagePass($label, $expected, $actual, $margin));
+		return true;
+	}
 	
 	
 	////////////////
@@ -597,6 +691,7 @@ public abstract class TestCase implements Runnable {
 	public boolean assertEquals(String $label, byte[] $expected, byte[] $actual) {
 		return assertEquals($label, Strings.toHex($expected), Strings.toHex($actual));
 	}
+	
 	
 	////////////////
 	//  CHAR
