@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package us.exultant.ahs.io;
+package us.exultant.ahs.iob;
 
 import us.exultant.ahs.util.*;
 import java.io.*;
@@ -45,15 +45,19 @@ import java.util.*;
  * </p>
  * 
  * <p>
- * If you're looking for higher-powered APIs that do network stuff or high-performance
- * nonblocking operations, you'll want to look elsewhere in the IO package. These
- * functions are mostly just intended to be great for rapid application development or use
- * by Java novices.
+ * If you're looking for higher-powered APIs that do more powerful network stuff,
+ * high-performance nonblocking operations, or better lend themselves to protocol
+ * composition, you'll want to look to the {@link us.exultant.ahs.io} package. These
+ * functions are mostly just intended to be great for rapid application development,
+ * really small volumes of data where setting up a bigger infrastructure isn't worth the
+ * time, or for use by Java novices who don't want to get into the more powerful APIs yet.
  * </p>
  * 
+ * <p>
  * note: the difference between methods that read a "resource" and a read a "file" is
  * small. The former uses a classloader's concept of resolving paths; the latter looks
  * only in the exact path you give.
+ * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
@@ -359,8 +363,8 @@ public class IOForge {
 		try {
 			URLConnection $conn = $request.openConnection();
 			$conn.connect();
-			$in = new BufferedInputStream($conn.getInputStream());
 			checkErrorCode($conn);
+			$in = new BufferedInputStream($conn.getInputStream());
 			$out = new BufferedOutputStream(new FileOutputStream($dest));
 			shift($in, $out);
 		} finally {

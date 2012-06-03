@@ -21,7 +21,6 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -44,9 +43,7 @@ import java.util.concurrent.*;
  * 
  */
 public class AggregateWorkFutureTest extends TestCase {
-	public static void main(String... $args) {					new AggregateWorkFutureTest().run();		}
-	public AggregateWorkFutureTest() {						super(new Logger(Logger.LEVEL_TRACE), true);	}
-	public AggregateWorkFutureTest(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
+	public static void main(String... $args) { new AggregateWorkFutureTest().run(); }
 	
 	private final int TSCALE = 25;
 	
@@ -264,7 +261,7 @@ public class AggregateWorkFutureTest extends TestCase {
 			// when the awf is done, it should be as cancelled.  and it ought to be prompt since we used interrupts. 
 			try {
 				$awf.get(TSCALE, TimeUnit.MILLISECONDS);
-				throw new TestCase.AssertionFailed("this task should throw a CancellationException!");
+				breakUnit("this task should throw a CancellationException!");
 			} catch (CancellationException $e) {
 				/* good! */
 			}	// TODO!!!! must test that cancellation in one thread causes return from one already blocking on get!
