@@ -25,12 +25,10 @@
 
 package us.exultant.ahs.thread;
 
-import sun.misc.*;
-import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
-import java.util.concurrent.locks.Lock;
 
 /**
  * This is a fork of the {@link AbstractQueuedSynchronizer} from the 1.7 java standard
@@ -283,23 +281,6 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 */
 	protected final void setState(int newState) {
 		state = newState;
-	}
-	
-	/**
-	 * Atomically sets synchronization state to the given updated value if the current
-	 * state value equals the expected value. This operation has memory semantics of a
-	 * <tt>volatile</tt> read and write.
-	 * 
-	 * @param expect
-	 *                the expected value
-	 * @param update
-	 *                the new value
-	 * @return true if successful. False return indicates that the actual value was
-	 *         not equal to the expected value.
-	 */
-	protected final boolean compareAndSetState(int expect, int update) {
-		// See below for intrinsics setup to support this
-		return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
 	}
 	
 	// Queuing utilities
@@ -1913,68 +1894,136 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 	}
 	
-	/**
-	 * Setup to support compareAndSet. We need to natively implement this here: For
-	 * the sake of permitting future enhancements, we cannot explicitly subclass
-	 * AtomicInteger, which would be efficient and useful otherwise. So, as the lesser
-	 * of evils, we natively implement using hotspot intrinsics API. And while we are
-	 * at it, we do the same for other CASable fields (which could otherwise be done
-	 * with atomic field updaters).
-	 */
-	private static final Unsafe	unsafe;
-	static {
-		try {
-			Field field = Unsafe.class.getDeclaredField("theUnsafe");
-			field.setAccessible(true);
-			unsafe = (Unsafe) field.get(null);
-		} catch (Exception e) {
-			throw new Error("I'm sorry, but I really need this.", e);
-		}
-	}
-	private static final long	stateOffset;
-	private static final long	headOffset;
-	private static final long	tailOffset;
-	private static final long	waitStatusOffset;
-	private static final long	nextOffset;
+//	/**
+//	 * Setup to support compareAndSet. We need to natively implement this here: For
+//	 * the sake of permitting future enhancements, we cannot explicitly subclass
+//	 * AtomicInteger, which would be efficient and useful otherwise. So, as the lesser
+//	 * of evils, we natively implement using hotspot intrinsics API. And while we are
+//	 * at it, we do the same for other CASable fields (which could otherwise be done
+//	 * with atomic field updaters).
+//	 */
+//	private static final Unsafe	unsafe;
+//	static {
+//		try {
+//			Field field = Unsafe.class.getDeclaredField("theUnsafe");
+//			field.setAccessible(true);
+//			unsafe = (Unsafe) field.get(null);
+//		} catch (Exception e) {
+//			throw new Error("I'm sorry, but I really need this.", e);
+//		}
+//	}
+//	private static final long	stateOffset;
+//	private static final long	headOffset;
+//	private static final long	tailOffset;
+//	private static final long	waitStatusOffset;
+//	private static final long	nextOffset;
+//	
+//	static {
+//		try {
+//			stateOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("state"));
+//			headOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("head"));
+//			tailOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("tail"));
+//			waitStatusOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("waitStatus"));
+//			nextOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("next"));
+//			
+//		} catch (Exception ex) {
+//			throw new Error(ex);
+//		}
+//	}
+//	
+//	/**
+//	 * Atomically sets synchronization state to the given updated value if the current
+//	 * state value equals the expected value. This operation has memory semantics of a
+//	 * <tt>volatile</tt> read and write.
+//	 * 
+//	 * @param expect
+//	 *                the expected value
+//	 * @param update
+//	 *                the new value
+//	 * @return true if successful. False return indicates that the actual value was
+//	 *         not equal to the expected value.
+//	 */
+//	protected final boolean compareAndSetState(int expect, int update) {
+//		// See below for intrinsics setup to support this
+//		return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
+//	}
+//	
+//	/**
+//	 * CAS head field. Used only by enq.
+//	 */
+//	private final boolean compareAndSetHead(Node update) {
+//		return unsafe.compareAndSwapObject(this, headOffset, null, update);
+//	}
+//	
+//	/**
+//	 * CAS tail field. Used only by enq.
+//	 */
+//	private final boolean compareAndSetTail(Node expect, Node update) {
+//		return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+//	}
+//	
+//	/**
+//	 * CAS waitStatus field of a node.
+//	 */
+//	private static final boolean compareAndSetWaitStatus(Node node, int expect, int update) {
+//		return unsafe.compareAndSwapInt(node, waitStatusOffset, expect, update);
+//	}
+//	
+//	/**
+//	 * CAS next field of a node.
+//	 */
+//	private static final boolean compareAndSetNext(Node node, Node expect, Node update) {
+//		return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
+//	}
 	
-	static {
-		try {
-			stateOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("state"));
-			headOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("head"));
-			tailOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("tail"));
-			waitStatusOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("waitStatus"));
-			nextOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("next"));
-			
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
+	private static final AtomicIntegerFieldUpdater<AQS> stateUpdater = AtomicIntegerFieldUpdater.newUpdater(AQS.class, "state");
+	private static final AtomicReferenceFieldUpdater<AQS,Node> headUpdater = AtomicReferenceFieldUpdater.newUpdater(AQS.class, Node.class, "head");
+	private static final AtomicReferenceFieldUpdater<AQS,Node> tailUpdater = AtomicReferenceFieldUpdater.newUpdater(AQS.class, Node.class, "tail");
+	private static final AtomicIntegerFieldUpdater<Node> waitStatusUpdater = AtomicIntegerFieldUpdater.newUpdater(Node.class, "waitStatus");
+	private static final AtomicReferenceFieldUpdater<Node,Node> nextUpdater = AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "next");
+	
+	/**
+	 * Atomically sets synchronization state to the given updated value if the current
+	 * state value equals the expected value. This operation has memory semantics of a
+	 * <tt>volatile</tt> read and write.
+	 * 
+	 * @param expect
+	 *                the expected value
+	 * @param update
+	 *                the new value
+	 * @return true if successful. False return indicates that the actual value was
+	 *         not equal to the expected value.
+	 */
+	protected final boolean compareAndSetState(int expect, int update) {
+		// See below for intrinsics setup to support this
+		return stateUpdater.compareAndSet(this, expect, update);
 	}
 	
 	/**
 	 * CAS head field. Used only by enq.
 	 */
 	private final boolean compareAndSetHead(Node update) {
-		return unsafe.compareAndSwapObject(this, headOffset, null, update);
+		return headUpdater.compareAndSet(this, null, update);
 	}
 	
 	/**
 	 * CAS tail field. Used only by enq.
 	 */
 	private final boolean compareAndSetTail(Node expect, Node update) {
-		return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+		return tailUpdater.compareAndSet(this, expect, update);
 	}
 	
 	/**
 	 * CAS waitStatus field of a node.
 	 */
 	private static final boolean compareAndSetWaitStatus(Node node, int expect, int update) {
-		return unsafe.compareAndSwapInt(node, waitStatusOffset, expect, update);
+		return waitStatusUpdater.compareAndSet(node, expect, update);
 	}
 	
 	/**
 	 * CAS next field of a node.
 	 */
 	private static final boolean compareAndSetNext(Node node, Node expect, Node update) {
-		return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
+		return nextUpdater.compareAndSet(node, expect, update);
 	}
 }
