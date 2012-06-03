@@ -40,7 +40,6 @@ public class SanityTest extends TestCase {
 		$tests.add(new TestGenericUpsubAntefiling());
 		$tests.add(new TestEvalOrderInNestedCalls());
 		$tests.add(new TestArgsOverriding());
-		
 		return $tests;
 	}
 	
