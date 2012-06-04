@@ -1976,12 +1976,47 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 //		return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
 //	}
 	
-	private static final AtomicIntegerFieldUpdater<AQS> stateUpdater = AtomicIntegerFieldUpdater.newUpdater(AQS.class, "state");
-	private static final AtomicReferenceFieldUpdater<AQS,Node> headUpdater = AtomicReferenceFieldUpdater.newUpdater(AQS.class, Node.class, "head");
-	private static final AtomicReferenceFieldUpdater<AQS,Node> tailUpdater = AtomicReferenceFieldUpdater.newUpdater(AQS.class, Node.class, "tail");
-	private static final AtomicIntegerFieldUpdater<Node> waitStatusUpdater = AtomicIntegerFieldUpdater.newUpdater(Node.class, "waitStatus");
-	private static final AtomicReferenceFieldUpdater<Node,Node> nextUpdater = AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "next");
-	
+	/*
+	 * NOTES ABOUT THIS JAZZ AND SECURITY MANAGERS
+	 * 
+	 * AtomicReferenceFieldUpdater and similar classes fail spectacularly to work as desired under situations where classloaders get involved.
+	 * In particular, this can and will ruin your day when working with applets.
+	 * See this mail archive for a discussion: http://mail.openjdk.java.net/pipermail/security-dev/2010-April/001831.html
+	 * Conclusion seems to have been that this behavior is indeed buggy, but it's two years later and I still don't see it as fixed in the latest jdk releases, so we're going to have to work around.
+	 * 
+	 * Also, contrary to what one might have momentarily hoped from reading the above mail archive, even making all the members in question 'public' does not in fact help.
+	 * 
+	 * So, what we're stuck with is this: try to use ARFU; if it explodes... fall all the way back to synchronized blocks :(
+	 * 
+	 * Back-of-the-envelope performance analysis suggests that:
+	 * - the "if-suck" branching compiles away nicely enough that the high-performance version is not measurably encumbered.
+	 * - the synchronized block fallback performs about 40% slower than the ARFU version.  Which is bad, but not world-rending.  This observation made with two threads reading and two threads writing to a DataPipe built with AQS; I wouldn't be surprised to hear it's worse with more threads.
+	 * 
+	 */
+
+	static {
+		boolean suck = true;
+		try {
+			AtomicReferenceFieldUpdater<ArfuTest,ArfuTest> arfu = AtomicReferenceFieldUpdater.newUpdater(ArfuTest.class, ArfuTest.class, "test");
+			ArfuTest tmp = new ArfuTest();
+			arfu.set(tmp, tmp);
+			if (tmp.test == tmp) suck = false;
+		} catch (Throwable t) { /* suck = true. */ }
+		SUCK = suck;
+		stateUpdater = (suck) ? null : AtomicIntegerFieldUpdater.newUpdater(AQS.class, "state");
+		headUpdater = (suck) ? null : AtomicReferenceFieldUpdater.newUpdater(AQS.class, Node.class, "head");
+		tailUpdater = (suck) ? null : AtomicReferenceFieldUpdater.newUpdater(AQS.class, Node.class, "tail");
+		waitStatusUpdater = (suck) ? null : AtomicIntegerFieldUpdater.newUpdater(Node.class, "waitStatus");
+		nextUpdater = (suck) ? null : AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "next");
+	}
+	private static final boolean SUCK;
+	private static final class ArfuTest { volatile ArfuTest test; }
+	private static final AtomicIntegerFieldUpdater<AQS> stateUpdater;
+	private static final AtomicReferenceFieldUpdater<AQS,Node> headUpdater;
+	private static final AtomicReferenceFieldUpdater<AQS,Node> tailUpdater;
+	private static final AtomicIntegerFieldUpdater<Node> waitStatusUpdater;
+	private static final AtomicReferenceFieldUpdater<Node,Node> nextUpdater;
+
 	/**
 	 * Atomically sets synchronization state to the given updated value if the current
 	 * state value equals the expected value. This operation has memory semantics of a
@@ -1995,7 +2030,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 *         not equal to the expected value.
 	 */
 	protected final boolean compareAndSetState(int expect, int update) {
-		// See below for intrinsics setup to support this
+		if (SUCK)
+			synchronized (this) {
+				if (state != expect) return false;
+				state = update;
+				return true;
+			}
 		return stateUpdater.compareAndSet(this, expect, update);
 	}
 	
@@ -2003,6 +2043,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * CAS head field. Used only by enq.
 	 */
 	private final boolean compareAndSetHead(Node update) {
+		if (SUCK)
+			synchronized (this) {
+				if (head != null) return false;
+				head = update;
+				return true;
+			}
 		return headUpdater.compareAndSet(this, null, update);
 	}
 	
@@ -2010,6 +2056,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * CAS tail field. Used only by enq.
 	 */
 	private final boolean compareAndSetTail(Node expect, Node update) {
+		if (SUCK)
+			synchronized (this) {
+				if (tail != expect) return false;
+				tail = update;
+				return true;
+			}
 		return tailUpdater.compareAndSet(this, expect, update);
 	}
 	
@@ -2017,6 +2069,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * CAS waitStatus field of a node.
 	 */
 	private static final boolean compareAndSetWaitStatus(Node node, int expect, int update) {
+		if (SUCK)
+			synchronized (node) {
+				if (node.waitStatus != expect) return false;
+				node.waitStatus = update;
+				return true;
+			}
 		return waitStatusUpdater.compareAndSet(node, expect, update);
 	}
 	
@@ -2024,6 +2082,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * CAS next field of a node.
 	 */
 	private static final boolean compareAndSetNext(Node node, Node expect, Node update) {
+		if (SUCK)
+			synchronized (node) {
+				if (node.next != expect) return false;
+				node.next = update;
+				return true;
+			}
 		return nextUpdater.compareAndSet(node, expect, update);
 	}
 }
