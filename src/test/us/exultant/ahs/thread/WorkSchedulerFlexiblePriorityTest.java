@@ -19,8 +19,6 @@
 
 package us.exultant.ahs.thread;
 
-import us.exultant.ahs.log.*;
-
 public class WorkSchedulerFlexiblePriorityTest extends WorkSchedulerTest {
 	public static void main(String... $args) {
 		try {
@@ -32,10 +30,6 @@ public class WorkSchedulerFlexiblePriorityTest extends WorkSchedulerTest {
 	
 	public WorkSchedulerFlexiblePriorityTest() {
 		super();
-	}
-	
-	public WorkSchedulerFlexiblePriorityTest(Logger $log, boolean $enableConfirmation) {
-		super($log, $enableConfirmation);
 	}
 	
 	protected WorkScheduler makeScheduler(int $threads) {

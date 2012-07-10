@@ -21,15 +21,16 @@ package us.exultant.ahs.codec;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.codec.json.*;
-import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 
 public class CodecJsonTest extends CodecEonTest {
-	public static void main(String... $args) {				new CodecJsonTest().run();				}
-	public CodecJsonTest() {						super(new JsonCodec());					}
-	public CodecJsonTest(Logger $log, boolean $enableConfirmation) {	super(new JsonCodec(), $log, $enableConfirmation);	}
-
+	public static void main(String... $args) { new CodecJsonTest().run(); }
+	
+	public CodecJsonTest() {
+		super(new JsonCodec());
+	}
+	
 	public List<Unit> getUnits() {
 		List<Unit> $tests = super.getUnits();
 		$tests.add(new TestBasicSerialMatch());

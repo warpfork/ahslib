@@ -383,6 +383,7 @@ public class Strings {
 	
 	public static final byte[] fromHex(String $hex) { return decHex($hex); }
 	public static final byte[] decHex(String $hex) {
+		if ($hex == null) return null;
 	        byte[] $bah = new byte[$hex.length() / 2];
 		for (int $i = 0; $i < $hex.length(); $i += 2) {
 			int $j = Integer.parseInt($hex.substring($i, $i + 2), 16);
@@ -393,6 +394,7 @@ public class Strings {
 	
 	public static final String toHex(byte[] $bah) { return encHex($bah); }
 	public static final String encHex(byte[] $bah) {
+		if ($bah == null) return null;
 		char[] $chars = new char[2 * $bah.length];
 		for (int $i = 0; $i < $bah.length; ++$i) {	// could probably save cpu at the cost of a 4 bytes of memory by just having two counters, since it would remove the need to multiply
 			$chars[2 * $i] = HEX_CHARS[($bah[$i] & 0xF0) >>> 4];
