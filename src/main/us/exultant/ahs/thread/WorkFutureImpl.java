@@ -198,19 +198,29 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 		
 		
 		boolean cancel(boolean $mayInterruptIfRunning) {
+			boolean $running;
 			for (;;) {
 				int $s = getState();
 				if ($s == State.FINISHED.ordinal()) return false;
 				if ($s == State.CANCELLED.ordinal()) return false;
-				if (compareAndSetState($s, State.CANCELLED.ordinal())) break;
+				if ($s == State.RUNNING.ordinal()) {
+					$running = true;
+					if (compareAndSetState($s, State.CANCELLING.ordinal())) break;
+				} else {
+					$running = false;
+					if (compareAndSetState($s, State.CANCELLED.ordinal())) break;
+				}
 			}
-			if ($mayInterruptIfRunning) {
-				Thread $r = $runner;
-				if ($r != null) $r.interrupt();
+			if ($running) {
+				if ($mayInterruptIfRunning) {
+					Thread $r = $runner;
+					if ($r != null) $r.interrupt();
+				}
+			} else {
+				releaseShared(0);
+				update();
+				hearDone();
 			}
-			releaseShared(0);
-			update();
-			hearDone();
 			return true;
 		}
 		
@@ -284,6 +294,7 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 					return false;
 				}
 			} else {
+				assert getState() == State.CANCELLING.ordinal();
 				/* there was a concurrent cancel or finish.  (note that this will result in null'ing $runner via tryReleaseShared(int).) */
 				releaseShared(0);
 				return false;
@@ -300,15 +311,17 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 		 */
 		State scheduler_shiftPostRun() {
 			if ($work.isDone()) {
-				tryFinish(true, null, null);
+				tryFinish(true, null, null);	//XXX:AHS:THREAD: is this strictly necessary?  i think all it gives us is a direct transition from RUNNING to FINISHED without bouncing through WAITING, but honestly i don't know if there's any good reason to care about such a thing.  not that isDone() is usually expensive, but, you know, still.
 				return getWFState();	/* finished or canceled */
 			} else if (shiftToScheduled(State.RUNNING.ordinal())) {
 				return State.SCHEDULED;	/* scheduled.  a cancel could come, but after this it's the post-cancel update that bears the burden of releasing pointers. */
 			} else if (compareAndSetState(State.RUNNING.ordinal(), State.WAITING.ordinal())) {
 				if ($work.isDone()) tryFinish(false, null, null);	/* we have to do this AGAIN, yes.  we have to do it after the transition to waiting, or else another thread can do a final notify between the tryfinish at the top of this function and the one here. */
 				return getWFState();
+			} else {
+				compareAndSetState(State.CANCELLING.ordinal(), State.CANCELLED.ordinal());
+				return getWFState();
 			}
-			return getWFState();	/* cancelled or finished concurrently sometime during the run or our post-processing leading up to now. */
 		}
 		
 		/**
@@ -335,6 +348,13 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 				if ($s == State.CANCELLED.ordinal()) {
 					releaseShared(0);	// aggressively release to set runner to null, in case we are racing with a cancel request that will try to interrupt runner
 					return false;		// we're letting the cancel go though (though trying to dodge any interrupts the cancellation might have requested).
+				}
+				if ($s == State.CANCELLING.ordinal()) {
+					if (!$iAmTheRunner) return false;
+					compareAndSetState($s, State.CANCELLED.ordinal());
+					releaseShared(0);
+					hearDone();
+					return true;
 				}
 				if ($s == State.RUNNING.ordinal())
 					if ($iAmTheRunner);	// it's kay, we can continue to the finishing since this is our job.

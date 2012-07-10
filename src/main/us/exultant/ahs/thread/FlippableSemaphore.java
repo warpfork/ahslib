@@ -29,18 +29,24 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
+ * <p>
  * This is a Semaphore that, in addition to the normal concepts of permits, also keeps a
  * single bit of additonal state which can be read atomically along with the permit count.
+ * </p>
  * 
+ * <p>
  * Additionally, the interface of this semaphore allows even blocking acquistions to fail,
  * even without interrupts. Under the default behavior, this will never occur, but
  * subclasses are allowed to decide they will not service requests and return false from
  * an acquisition attempt.
+ * </p>
  * 
+ * <p>
  * It also supports subclassing to specify different behaviors for acquisition attempts
  * based on the current state (so for example one could make a subclass that blocks all
  * attempts to acquire as long as the semaphore is not flipped, or that instantly returns
  * all acquistions as soon as the semaphore is flipped, etc).
+ * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 

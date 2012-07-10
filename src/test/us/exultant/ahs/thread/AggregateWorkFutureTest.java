@@ -19,6 +19,7 @@
 
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
@@ -47,11 +48,15 @@ public class AggregateWorkFutureTest extends TestCase {
 	public AggregateWorkFutureTest() {						super(new Logger(Logger.LEVEL_TRACE), true);	}
 	public AggregateWorkFutureTest(Logger $log, boolean $enableConfirmation) {	super($log, $enableConfirmation);		}
 	
+	private final int TSCALE = 25;
+	
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
 		$tests.add(new TestBasic());
 		$tests.add(new TestBasic());
+		$tests.add(new TestUpdate());
+		$tests.add(new TestCancellation());
 		$tests.add(new TestManyLongTasks());
 		return $tests;
 	}
@@ -73,11 +78,14 @@ public class AggregateWorkFutureTest extends TestCase {
 	
 	
 	/**
-	 * Test just one piece of work being put into the aggregate, starting without the aggregate finishing, and finishing with the aggregate finishing.
+	 * Test just one piece of work being put into the aggregate, starting without the
+	 * aggregate finishing, and finishing leaving the aggregate finished and the
+	 * completion listener of the aggregate being fired.
 	 */
 	private class TestBasic extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
-		public Object call() throws TimeoutException, CancellationException, InterruptedException {
+		private final CountDownLatch $success = new CountDownLatch(1);
+		public Object call() throws TimeoutException, CancellationException, ExecutionException, InterruptedException {
 			CountDownLatch $latch = new CountDownLatch(1);
 			StickableWorkTarget $wt = new StickableWorkTarget($latch, 0);
 			WorkFuture<Void> $wf = $ws.schedule($wt, ScheduleParams.NOW);
@@ -85,18 +93,37 @@ public class AggregateWorkFutureTest extends TestCase {
 			Collection<WorkFuture<Void>> $wfc = new ArrayList<WorkFuture<Void>>();
 			$wfc.add($wf);
 			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>($wfc);
+			$awf.addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $wf) {
+					$success.countDown();
+				}
+			});
 			
+			// shouldn't be done before the scheduler even starts, obviously
 			assertFalse($awf.isDone());
+			assertEquals(1L,$success.getCount());
+			
+			// merely starting the scheduler shouldn't cause doneness
 			$ws.start();
-			X.chill(2);
+			X.chill(TSCALE);
 			assertFalse($awf.isDone());
+			assertEquals(1,$success.getCount());
+			
+			// triggering the task and getting it scheduled shouldn't cause doneness
 			$wt.trigger();
 			$wf.update();
-			X.chill(2);
+			X.chill(TSCALE);
 			assertFalse($awf.isDone());
+			assertEquals(1,$success.getCount());
+			
+			// okay, now we let the task return... this should cause prompt doneness.
 			$latch.countDown();
-			$awf.get(2, TimeUnit.MILLISECONDS);
+			$wf.get(TSCALE, TimeUnit.MILLISECONDS);
+			$awf.get();
 			assertTrue($awf.isDone());
+			
+			// and the completion listner should also have been called.  it can be momentarily after isDone returns true, though.
+			$success.await(1, TimeUnit.MILLISECONDS);
 			
 			$ws.stop(false);
 			return null;
@@ -122,7 +149,8 @@ public class AggregateWorkFutureTest extends TestCase {
 	
 	
 	/**
-	 * 
+	 * Test just two pieces of work being put into the aggregate, being updated
+	 * correctly in one move via the aggregate, and finishing.
 	 */
 	private class TestUpdate extends TestTemplate {
 		public TestUpdate() { super(2); }
@@ -131,16 +159,18 @@ public class AggregateWorkFutureTest extends TestCase {
 				$wts[$i] = new StickableWorkTarget(null, 0);
 			for (int $i = 0; $i < $tasks; $i++)
 				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.NOW);
+			for (int $i = 0; $i < $tasks; $i++)
+				$wts[$i].trigger();
 			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>(Arr.asList($wfs));
 			
 			// nothing should be able to finish because they weren't ready when we scheduled them.
-			X.chill(2);
+			X.chill(TSCALE);
 			assertFalse($wfs[0].isDone());
 			assertFalse($wfs[1].isDone());
 			
 			// and now things should finish promptly.  both of them.
 			$awf.update();
-			$awf.get(2, TimeUnit.MILLISECONDS);
+			$awf.get(TSCALE, TimeUnit.MILLISECONDS);
 			assertTrue($awf.isDone());
 			assertTrue($wfs[0].isDone());
 			assertTrue($wfs[1].isDone());
@@ -153,34 +183,41 @@ public class AggregateWorkFutureTest extends TestCase {
 	
 	
 	/**
-	 * 
+	 * Like {@link TestBasic} but with more tasks, half of them finishing immeidately
+	 * and the other half being long lived.
 	 */
 	private class TestManyLongTasks extends TestTemplate {
+		private final CountDownLatch $success = new CountDownLatch(1);
 		public TestManyLongTasks() { super(10); }
 		public Object call() throws TimeoutException, CancellationException, InterruptedException {
-			for (int $i = 0; $i < $tasks; $i++)
-				$wts[$i] = new StickableWorkTarget($latch, 0);
 			for (int $i = 0; $i < $tasks; $i+=2)
+				$wts[$i] = new StickableWorkTarget(null, 0);
+			for (int $i = 1; $i < $tasks; $i+=2)
+				$wts[$i] = new StickableWorkTarget($latch, 0);
+			for (int $i = 0; $i < $tasks; $i++)
 				$wts[$i].trigger();
 			for (int $i = 0; $i < $tasks; $i++)
 				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.NOW);
 			
 			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>(Arr.asList($wfs));
-			X.chill(2);
-			assertFalse($awf.isDone());
+			$awf.addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $wf) {
+					$success.countDown();
+				}
+			});
 			
-			for (int $i = 1; $i < $tasks; $i+=2)
-				$wts[$i].trigger();
-			X.chill(2);
+			// half of the tasks being done shouldn't cause doneness 
+			X.chill(TSCALE);
 			assertFalse($awf.isDone());
+			assertEquals(1,$success.getCount());
 			
-			$awf.update();
-			X.chill(2);
-			assertFalse($awf.isDone());
-			
+			// letting the other half finish should cause doneness
 			$latch.countDown();
-
-			$awf.get(2, TimeUnit.MILLISECONDS);
+			$awf.get(TSCALE, TimeUnit.MILLISECONDS);
+			assertTrue($awf.isDone());
+			
+			// and the completion listner should also have been called.  it can be momentarily after isDone returns true, though.
+			$success.await(1, TimeUnit.MILLISECONDS);
 			
 			$ws.stop(false);
 			return null;
@@ -189,11 +226,66 @@ public class AggregateWorkFutureTest extends TestCase {
 	
 	
 	
-	//TODO:AHS:THREAD:TEST: one for cancellation
-	
-	
-	
-	//TODO:AHS:THREAD:TEST: one for completion listener	// though this is borderline redundant with merely testing return from the get() method, i feel.
+	/**
+	 * Like {@link TestManyLongTasks}, except those tasks that are long lived are
+	 * cancelled before they are allowed to return normally.
+	 */
+	private class TestCancellation extends TestTemplate {
+		private final CountDownLatch $success = new CountDownLatch(1);
+		public TestCancellation() { super(10); }
+		public Object call() throws TimeoutException, CancellationException, InterruptedException {
+			for (int $i = 0; $i < $tasks; $i+=2)
+				$wts[$i] = new StickableWorkTarget(null, 0);
+			for (int $i = 1; $i < $tasks; $i+=2)
+				$wts[$i] = new StickableWorkTarget($latch, 0);
+			for (int $i = 0; $i < $tasks; $i++)
+				$wts[$i].trigger();
+			for (int $i = 0; $i < $tasks; $i++)
+				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.NOW);
+			
+			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>(Arr.asList($wfs));
+			$awf.addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $wf) {
+					$success.countDown();
+				}
+			});
+			
+			// half of the tasks being done shouldn't cause doneness 
+			X.chill(TSCALE);
+			assertFalse($awf.isDone());
+			assertEquals(1,$success.getCount());
+			
+			// then cancel the rest...
+			//  that strong/interrupting cancel should make them return now even though they were blocking on a latch we haven't released yet.
+			$awf.cancel(true);
+			
+			// we can't really check for the $awf or the $wfs[*] to become CANCELLING here because that just happens too fast.
+			
+			// when the awf is done, it should be as cancelled.  and it ought to be prompt since we used interrupts. 
+			try {
+				$awf.get(TSCALE, TimeUnit.MILLISECONDS);
+				throw new TestCase.AssertionFailed("this task should throw a CancellationException!");
+			} catch (CancellationException $e) {
+				/* good! */
+			}	// TODO!!!! must test that cancellation in one thread causes return from one already blocking on get!
+			assertTrue($awf.isDone());
+			assertTrue($awf.isCancelled());
+			
+			// and the completion listner should also have been called.  it can be momentarily after isDone returns true, though.
+			$success.await(1, TimeUnit.MILLISECONDS);
+			
+			// the ones who were finished already when the cancel came in should look fine
+			for (int $i = 0; $i < $tasks; $i+=2)
+				assertEquals(WorkFuture.State.FINISHED, $wfs[$i].getState());
+			
+			// the ones who were cancelled before they finished should look cancelled
+			for (int $i = 1; $i < $tasks; $i+=2)
+				assertEquals(WorkFuture.State.CANCELLED, $wfs[$i].getState());
+			
+			$ws.stop(false);
+			return null;
+		}
+	}
 	
 	
 	

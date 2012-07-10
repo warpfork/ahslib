@@ -36,10 +36,11 @@ package us.exultant.ahs.core;
  * 
  * <h3>usage patterns</h3>
  * <p>
- * It is advised in most situations that classes should actually contain a nested class
- * that implements this Listener interface; this allows messages of different types to be
- * routed through one object without name collisions or bad encapsulation breaks (or
- * revealing more functions than necessary on the base class).
+ * If a class wishes to handle multiple different types of events, a good pattern for this
+ * is for that class to contain a number of nested classes which each implements this
+ * Listener interface. This practice allows messages of different types to be routed
+ * through one object without name collisions or bad encapsulation breaks (or revealing
+ * more functions than necessary on the base class).
  * </p>
  * 
  * <h3>concurrency</h3>
@@ -56,7 +57,7 @@ package us.exultant.ahs.core;
  * @param <$M>
  *                the message/event type
  */
-public interface Listener<$M> {
+public interface Listener<$M> extends java.util.EventListener {
 	/**
 	 * Hear (and respond to) the given event/message.
 	 * 
