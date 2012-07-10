@@ -31,7 +31,7 @@ import java.util.concurrent.*;
  * except it also allows the overriding of some special functions needed by the relatively
  * "low-level" code that operates directly with java nio.)
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  */
@@ -39,7 +39,7 @@ import java.util.concurrent.*;
 //   
 public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	protected ReadHeadAdapter() {
-		$pipe = new Pipe<$T>();
+		$pipe = new DataPipe<$T>();
 		$eh = null;
 	}
 	
@@ -51,35 +51,35 @@ public abstract class ReadHeadAdapter<$T> implements ReadHead<$T> {
 	}
 	
 	public void setListener(Listener<ReadHead<$T>> $el) {
-		$pipe.SRC.setListener($el);
+		$pipe.source().setListener($el);
 	}
 	
 	public $T read() {
-		return $pipe.SRC.read();
+		return $pipe.source().read();
 	}
 	
 	public $T readNow() {
-		return $pipe.SRC.readNow();
+		return $pipe.source().readNow();
 	}
 	
 	public $T readSoon(long $timeout, TimeUnit $unit) {
-		return $pipe.SRC.readNow();
+		return $pipe.source().readNow();
 	}
 	
 	public boolean hasNext() {
-		return $pipe.SRC.hasNext();
+		return $pipe.source().hasNext();
 	}
 	
 	public List<$T> readAll() {
-		return $pipe.SRC.readAll();
+		return $pipe.source().readAll();
 	}
 	
 	public List<$T> readAllNow() {
-		return $pipe.SRC.readAllNow();
+		return $pipe.source().readAllNow();
 	}
 	
 	public boolean isClosed() {
-		return $pipe.SRC.isClosed();
+		return $pipe.source().isClosed();
 	}
 	
 	public abstract void close();	// is abstract because you probably want to close any underlying channels, then have the pump close the pipe close itself when appropriate.

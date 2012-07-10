@@ -15,17 +15,9 @@ package us.exultant.ahs.codec.json;
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.codec.eon.*;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.io.*;
+import java.lang.reflect.*;
+import java.util.*;
 
 /**
  * A JsonObject is an unordered collection of name/value pairs. Its external form is a
@@ -156,7 +148,7 @@ public class JsonObject implements EonObject {
 	 * Construct an empty JsonObject.
 	 */
 	public JsonObject() {
-		this.map = new HashMap<String, Object>();
+		this.map = new LinkedHashMap<String, Object>();
 	}
 	
 	
@@ -250,7 +242,7 @@ public class JsonObject implements EonObject {
 	 *                JsonObject.
 	 */
 	public JsonObject(Map<String, Object> map) {
-		this.map = (map == null) ? new HashMap<String, Object>() : map;
+		this.map = (map == null) ? new LinkedHashMap<String, Object>() : map;
 	}
 	
 	/**
@@ -1651,12 +1643,16 @@ public class JsonObject implements EonObject {
 	 * no whitespace is added.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
+	 * <p>
+	 * Do not use a failable Writer. Write to a buffer first if you must deal with I/O
+	 * outside of the program.
 	 * 
-	 * @return The writer.
-	 * @throws JsonException
-	 * @throws UnencodableException 
+	 * @return the writer.
+	 * 
+	 * @throws MajorBug
+	 *                 if the Writer throws an IOException.
 	 */
-	public Writer write(Writer writer) throws JsonException, UnencodableException {
+	Writer write(Writer writer) {
 		try {
 			boolean b = false;
 			Iterator<String> keys = keys();
@@ -1682,7 +1678,8 @@ public class JsonObject implements EonObject {
 			writer.write('}');
 			return writer;
 		} catch (IOException e) {
-			throw new JsonException(e);
+			/* don't pass me a shitty Writer. */
+			throw new MajorBug("Unimaginably strange error while writing to an internal buffer.", e);
 		}
 	}
 

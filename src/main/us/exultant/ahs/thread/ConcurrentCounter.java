@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.*;
  * strain of equality checks.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public abstract class ConcurrentCounter<$T> implements Listener<$T> {

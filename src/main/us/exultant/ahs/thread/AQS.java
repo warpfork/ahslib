@@ -38,7 +38,7 @@ import java.util.concurrent.locks.Lock;
  * between internal calls, making more specialized functionality possible in subclasses;
  * otherwise, all of the core functionality is essentially the same.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @author Doug Lea
  */
 public abstract class AQS extends AbstractOwnableSynchronizer {
@@ -1207,7 +1207,6 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * might look like this:
 	 * 
 	 * <pre>
-	 * {@code
 	 * protected boolean tryAcquire(int arg) {
 	 *   if (isHeldExclusively()) {
 	 *     // A reentrant acquire; increment hold count
@@ -1217,7 +1216,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 *   } else {
 	 *     // try to acquire normally
 	 *   }
-	 * }}
+	 * }
 	 * </pre>
 	 * 
 	 * @return {@code true} if there is a queued thread preceding the current thread,
@@ -1395,8 +1394,6 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * Transfers node, if necessary, to sync queue after a cancelled wait. Returns
 	 * true if thread was cancelled before being signalled.
 	 * 
-	 * @param current
-	 *                the waiting thread
 	 * @param node
 	 *                its node
 	 * @return true if cancelled before the node was signalled

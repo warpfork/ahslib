@@ -42,7 +42,7 @@ import java.util.*;
  * Right.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  *                The type of object which will be provided.

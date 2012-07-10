@@ -32,7 +32,7 @@ import java.io.*;
  * as how it really truly does nothing at all.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public final class OutputStreamDiscard extends OutputStream {

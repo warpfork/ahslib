@@ -1,27 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ant-project>
 <project name="ExultantBuildCommon" basedir=".">
+	<property name="src" value="src"/>
+	<property name="lib" value="lib"/>
+	<property name="dat" value="dat"/>
+	<property name="inc" value="inc"/>
+	<property name="build" value="build.tmp"/>
+	<property name="dist" value="dist"/>
+	<property name="dox" value="dox"/>
+	<property name="jvers" value="1.6"/>
+	
 	<target name="exusInit" depends="exusInitId">
-		<mkdir dir="src"/>
-		<mkdir dir="src/main"/>
-		<mkdir dir="src/test"/>
-		<mkdir dir="lib"/>
-		<mkdir dir="dat"/>
-		<mkdir dir="inc/universal"/>
-		<mkdir dir="inc/linux"/>
-		<mkdir dir="inc/linux32"/>
-		<mkdir dir="inc/linux64"/>
-		<mkdir dir="inc/win"/>
-		<mkdir dir="inc/win32"/>
-		<mkdir dir="inc/win64"/>
-		<mkdir dir="inc/macosx"/>
-		<mkdir dir="dox/javadoc"/>
-		<mkdir dir="build"/>
-		<mkdir dir="dist"/>
+		<mkdir dir="${src}"/>
+		<mkdir dir="${src}/main"/>
+		<mkdir dir="${src}/test"/>
+		<mkdir dir="${lib}"/>
+		<mkdir dir="${dat}"/>
+		<mkdir dir="${inc}"/>
+		<mkdir dir="${inc}/universal"/>
+		<mkdir dir="${inc}/linux"/>
+		<mkdir dir="${inc}/linux32"/>
+		<mkdir dir="${inc}/linux64"/>
+		<mkdir dir="${inc}/win"/>
+		<mkdir dir="${inc}/win32"/>
+		<mkdir dir="${inc}/win64"/>
+		<mkdir dir="${inc}/macosx"/>
+		<mkdir dir="${dox}"/>
+		<mkdir dir="${dox}/javadoc"/>
+		<mkdir dir="${build}"/>
+		<mkdir dir="${build}/main"/>
+		<mkdir dir="${build}/test"/>
+		<mkdir dir="${dist}"/>
 	</target>
 	
 	<target name="exusInitId">
 		<tstamp>
 			<format property="builddate" pattern="yyyy/MM/dd HH:mm:ss Z" timezone="America/Los_Angeles"/>
+			<format property="timemark"  pattern="yyyyMMddHHmmssSSS"     timezone="America/Los_Angeles"/>
+			<!-- there's no way to get a unix timestamp in ant without shelling out to either shell or js or custom tasks.  disgusting. -->
 		</tstamp>
 		<exec executable="git" outputproperty="git-version">
 			<arg value="log"/>
@@ -40,22 +56,22 @@
 		<attribute name="arch"/><!-- i.e., "linux64" -->
 		<!-- for mac: fuck it, just set the same string twice. -->
 		<sequential>
-			<mkdir dir="dist/@{arch}"/>
-			<mkdir dir="inc/@{arch}"/>
-			<mkdir dir="inc/@{os}"/>
+			<mkdir dir="${dist}/@{arch}"/>
+			<mkdir dir="${inc}/@{arch}"/>
+			<mkdir dir="${inc}/@{os}"/>
 			
-			<copy todir="dist/@{arch}">
-				<fileset dir="inc/universal"/>
+			<copy todir="${dist}/@{arch}">
+				<fileset dir="${inc}/universal"/>
 			</copy>
 			
 			<!--<if><equals arg1="@{os}" arg2=""/><else>-->
-			<copy todir="dist/@{arch}">
-				<fileset dir="inc/@{os}"/>
+			<copy todir="${dist}/@{arch}">
+				<fileset dir="${inc}/@{os}"/>
 			</copy>
 			<!--</else></if>-->
 			
-			<copy todir="dist/@{arch}">
-				<fileset dir="inc/@{arch}"/>
+			<copy todir="${dist}/@{arch}">
+				<fileset dir="${inc}/@{arch}"/>
 			</copy>
 		</sequential>
 	</macrodef>
@@ -66,10 +82,10 @@
 		<attribute name="classes" default="**"/><!-- use this to select only some classes; i.e., "us/exultant/ahs/core/**, us/exultant/ahs/util/**" -->
 		<attribute name="depends" default=""/>	<!-- paths to other modules in build needed, or jars (if not already compiled, classfiles end up in build!); i.e., "build/main/core : lib/junit.jar"  -->
 		<sequential>
-			<mkdir dir="build/@{module}"/>
+			<mkdir dir="${build}/@{module}"/>
 			<javac
-				srcdir="src/@{tree}"
-				destdir="build/@{module}"
+				srcdir="${src}/@{tree}"
+				destdir="${build}/@{module}"
 				sourcepath=""
 				includes="@{classes}"
 				excludes="**/krap/**"
@@ -77,8 +93,8 @@
 				debug="on"
 				deprecation="on"
 				optimize="on"
-				source="1.6"
-				target="1.6"
+				source="${jvers}"
+				target="${jvers}"
 				includeantruntime="false"
 				><!-- verbose="on" listfiles="on" -->
 				<compilerarg value="-Xlint:unchecked"/>
@@ -86,7 +102,7 @@
 		</sequential>
 	</macrodef>
 	
-	<macrodef name="exusJavac"><!-- compiles whatever it has to; this lets you specify your main class and let the rest figure itself out.  useful for applications because of the size minimalization. -->
+	<macrodef name="exusJavac"><!-- compiles whatever it has to; this lets you specify you/ahs/d/work/gsr main class and let the rest figure itself out.  useful for applications because of the size minimalization. -->
 		<attribute name="tree" default="main"/>	<!-- subdirectory of src to look under; i.e., "main"|"test" -->
 		<attribute name="module" default=""/>	<!-- what subdirectory of build to put out under -->
 		<attribute name="classes" default="**"/><!-- use this to select only some classes; i.e., "us/exultant/ahs/core/**, us/exultant/ahs/util/**" -->
@@ -94,16 +110,16 @@
 		<sequential>
 			<mkdir dir="build/@{module}"/>
 			<javac
-				srcdir="src/@{tree}"
-				destdir="build/@{module}"
+				srcdir="${src}/@{tree}"
+				destdir="${build}/@{module}"
 				includes="@{classes}"
 				excludes="**/krap/**"
 				classpath="@{depends}"
 				debug="on"
 				deprecation="on"
 				optimize="on"
-				source="1.6"
-				target="1.6"
+				source="${jvers}"
+				target="${jvers}"
 				includeantruntime="false"
 				><!-- verbose="on" listfiles="on" -->
 				<!-- dropping the javac sourcepath="" specification is really the only difference between this and strict. -->

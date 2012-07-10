@@ -112,7 +112,7 @@ import java.util.*;
  * threads with zero synchronization overhead.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$T>
  */

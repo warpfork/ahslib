@@ -9,7 +9,7 @@ import java.lang.annotation.*;
  * breaking abstraction, and the designer of that interface is politely asking you to
  * behave like an adult instead wasting time making the interface childproof.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 @Documented

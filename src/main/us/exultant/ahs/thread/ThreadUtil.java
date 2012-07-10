@@ -27,7 +27,7 @@ import java.util.*;
  * convenience does not mix with efficiency or good design &mdash; these methods are
  * intended only for rapid prototyping or testing purposes.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public abstract class ThreadUtil {

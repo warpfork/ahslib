@@ -6,9 +6,10 @@
 
 package us.exultant.ahs.scratch.jsap;
 
-/** An exception thrown when an argument that requires a conversion
- * (e.g., an integer) has no associated value, but it is retrieved
- * by means of a type-specified method (e.g., {@link ahs.scratch.jsap.JSAPResult#getInt(String)}).
+/**
+ * An exception thrown when an argument that requires a conversion (e.g., an integer) has
+ * no associated value, but it is retrieved by means of a type-specified method (e.g.,
+ * {@link us.exultant.ahs.scratch.jsap.JSAPResult#getInt(String)}).
  * 
  * @author Sebastiano Vigna
  */

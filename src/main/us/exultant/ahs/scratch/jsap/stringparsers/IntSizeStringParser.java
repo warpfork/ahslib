@@ -9,8 +9,10 @@ package us.exultant.ahs.scratch.jsap.stringparsers;
 import us.exultant.ahs.scratch.jsap.ParseException;
 import us.exultant.ahs.scratch.jsap.StringParser;
 
-/** A {@link ahs.scratch.jsap.StringParser} that works like {@link LongSizeStringParser}, but
- * additionally checks that the result is not larger than {@link Integer#MAX_VALUE}.
+/**
+ * A {@link us.exultant.ahs.scratch.jsap.StringParser} that works like
+ * {@link LongSizeStringParser}, but additionally checks that the result is not larger
+ * than {@link Integer#MAX_VALUE}.
  * 
  * @author Sebastiano Vigna
  */
@@ -23,12 +25,13 @@ public class IntSizeStringParser extends StringParser {
 	private IntSizeStringParser() {}
 	
 	
-	/** Returns the only instance of an {@link IntSizeStringParser}.
+	/**
+	 * Returns the only instance of an {@link IntSizeStringParser}.
 	 * 
-	 * <p>Convenient access to the only instance returned by
-	 * this method is available through
-	 * {@link ahs.scratch.jsap.JSAP#INTSIZE_PARSER}.
-	 *  
+	 * <p>
+	 * Convenient access to the only instance returned by this method is available
+	 * through {@link us.exultant.ahs.scratch.jsap.JSAP#INTSIZE_PARSER}.
+	 * 
 	 * @return the only instance of an {@link IntSizeStringParser}.
 	 */
 	public static IntSizeStringParser getParser() {

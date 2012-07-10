@@ -42,7 +42,7 @@ import java.util.concurrent.locks.*;
  * standard java Semaphore (such as timeouts).
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @deprecated {@link FlippableSemaphore} is better, faster, and more flexible than this
  *             for all purposes.
  */

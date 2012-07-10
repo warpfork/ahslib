@@ -20,14 +20,16 @@
 package us.exultant.ahs.util;
 
 import java.nio.*;
-import java.nio.charset.Charset;
+import java.nio.charset.*;
 import java.util.*;
 
 public class Strings {
 	public static final Charset	UTF_8		= Charset.forName("UTF-8");
 	public static final Charset	ASCII		= Charset.forName("ASCII");
 	public static final char[]	HEX_CHARS	= new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-
+	
+	
+	
 //////////////////////////////////////////////////////////////// TRANSLATION FUCTIONS
 	// some of this functionality is already readily available, but these differ in that default charset always means utf-8
 	
@@ -183,10 +185,18 @@ public class Strings {
 	}
 	
 	/**
-	 * Front-zero buff a number, and return it as a string. (Effectively,
-	 * <code>padLeftToWidth(String.valueOf($n), "0", $desiredWidth)</code>.)
+	 * Buff a number with leading zeros, and return it as a string. (Effectively,
+	 * <code>padLeftToWidth(String.valueOf($n), '0', $desiredWidth)</code>.)
 	 */
 	public static String frontZeroBuff(int $n, int $desiredWidth) {
+		return padLeftToWidth(String.valueOf($n), '0', $desiredWidth);
+	}
+	
+	/**
+	 * Buff a number with leading zeros, and return it as a string. (Effectively,
+	 * <code>padLeftToWidth(String.valueOf($n), '0', $desiredWidth)</code>.)
+	 */
+	public static String frontZeroBuff(long $n, int $desiredWidth) {
 		return padLeftToWidth(String.valueOf($n), '0', $desiredWidth);
 	}
 	
@@ -389,15 +399,26 @@ public class Strings {
 			$chars[2 * $i + 1] = HEX_CHARS[$bah[$i] & 0x0F];
 		}
 		return new String($chars);
-		
-		//   also works.  Relative speed untested (but presumed worse):
-		//
-		//	char[] out = new char[$bah.length * 2]; // 2  hex characters per byte
-		//	for (int i = 0; i < $bah.length; i++) {
-		//		out[2 * i] = HEX_CHARS[$bah[i] < 0 ? 8 + ($bah[i] + 128) / 16 : $bah[i] / 16]; // append sign bit for negative bytes
-		//		out[2 * i + 1] = HEX_CHARS[$bah[i] < 0 ? ($bah[i] + 128) % 16 : $bah[i] % 16];
-		//	}
-		//	return new String(out); // char sequence to string
-		//
+	}
+	
+//////////////////////////////////////////////////////////////// OTHER CRAP
+	
+	/**
+	 * Returns a string of comma separated values. Bytes which are non-whitespace
+	 * printable ascii characters are printed as themselves prefixed by a single
+	 * quotation mark; other bytes are printed as their base-10 value. This is
+	 * expected to be occationally useful in debugging, but there should be no reason
+	 * to ever use it in a production context.
+	 */
+	public static final String semireadable(byte[] $bats) {
+		StringBuilder $sb = new StringBuilder();
+		for (int $i = 0; $i < $bats.length; $i++) {
+			byte $b = $bats[$i];
+			if ($b < 127 && $b > 32) $sb.append('\'').append((char) $b);
+			else $sb.append($b);
+			$sb.append(',');
+		}
+		$sb.setLength($sb.length()-1);
+		return $sb.toString();
 	}
 }

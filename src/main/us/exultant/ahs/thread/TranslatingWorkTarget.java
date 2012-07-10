@@ -50,7 +50,7 @@ import us.exultant.ahs.util.*;
  * an application protocol.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$FROM>
  * @param <$TO>
@@ -75,7 +75,7 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Integer> {
 	private int					$actsDone;
 	
 	public boolean isDone() {
-		return $src.isClosed() && !$src.hasNext();
+		return $src.isExhausted();
 	}
 	
 	public boolean isReady() {
@@ -93,8 +93,12 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Integer> {
 	 *         not necessarily the same number as how many bits of data it has written
 	 *         out again, since exceptions or null returns from translators will not
 	 *         lead to a write.
+	 * 
+	 * @throws TranslationException
+	 *                 if a translation exception is thrown from the translator and an
+	 *                 exception handler hasn't been set to deal with it.
 	 */
-	public Integer call() {
+	public Integer call() throws TranslationException {
 		if (isDone()) return $actsDone;
 		
 		$FROM $a = $src.readNow();
@@ -110,7 +114,8 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Integer> {
 		} catch (TranslationException $e) {
 			// this error handling is the SAME for both errors in the translator and errors from writing the the sink.
 			ExceptionHandler<TranslationException> $dated_eh = $eh;
-			if ($dated_eh != null) $dated_eh.hear($e);
+			if ($dated_eh == null) throw $e;
+			$dated_eh.hear($e);
 		}
 		return $actsDone;
 	}

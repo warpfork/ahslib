@@ -42,7 +42,7 @@ import java.util.concurrent.*;
  * attempts to acquire as long as the semaphore is not flipped, or that instantly returns
  * all acquistions as soon as the semaphore is flipped, etc).
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public class FlippableSemaphore {
@@ -201,7 +201,7 @@ public class FlippableSemaphore {
 	 * available.
 	 * </ul>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 * 
 	 */
 	abstract static class Sync extends AQS {

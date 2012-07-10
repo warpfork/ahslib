@@ -25,7 +25,7 @@ import java.util.*;
  * Helper class to construct a type-safe chain of Translator instances at runtime that can
  * then act as a single coherent Translator from end to end.
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  * @param <$FROM>
  * @param <$TO>

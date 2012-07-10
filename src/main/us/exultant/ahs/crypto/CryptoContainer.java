@@ -61,7 +61,7 @@ package us.exultant.ahs.crypto;
  * </p>
  * 
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public interface CryptoContainer {

@@ -41,7 +41,7 @@ import java.nio.channels.*;
  * that the base channel has already been set to a nonblocking mode.
  * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
 public abstract class TranslatorChannelToByteBufferByFrame implements Translator<ReadableByteChannel,ByteBuffer> {
@@ -64,7 +64,7 @@ public abstract class TranslatorChannelToByteBufferByFrame implements Translator
 	 * keep thread-local state.
 	 * </p>
 	 * 
-	 * @author hash
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 */
 	public static class Nonblocking extends TranslatorChannelToByteBufferByFrame {
 		private final ByteBuffer	$preint	= ByteBuffer.allocate(4);

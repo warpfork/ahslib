@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ant-project>
 <project name="AHSlib" basedir="." default="dist">
 	<description>
 		The "And How Simple!" library provides open-source Java
@@ -16,14 +17,11 @@
 	
 	<echo>Ant version:       ${ant.version}</echo>
 	<echo>Ant jvm version:   ${ant.java.version}</echo>
-	<import file="build-exultant.xml"/> 
+	<property file="build.properties"/>
+	<import file="build-exultant.xml"/>
 	
 	
-	<target name="init" depends="exusInitId">
-		<mkdir dir="build/main"/>
-		<mkdir dir="build/test"/>
-		<mkdir dir="dist"/>
-		<mkdir dir="dox/javadoc"/>
+	<target name="init" depends="exusInit">
 	</target>
 	
 	
@@ -65,7 +63,7 @@
 			tree="test"
 			module="test"
 			classes="us/exultant/ahs/test/*"
-			depends="lib/junit.jar : dist/ahslib-complete.jar"
+			depends="${lib}/junit.jar : ${dist}/ahslib-complete.jar"
 		/>
 	</target>
 	
@@ -77,7 +75,7 @@
 		/>
 	</target>
 	<target name="dist-core" depends="compile-core">
-		<jar jarfile="dist/ahslib-core.jar" basedir="build/main/core">
+		<jar jarfile="${dist}/ahslib-core.jar" basedir="${build}/main/core">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -89,11 +87,11 @@
 		<exusJavacStrict
 			module="main/codec"
 			classes="us/exultant/ahs/codec/*, us/exultant/ahs/codec/eon/*"
-			depends="build/main/core"
+			depends="${build}/main/core"
 		/>
 	</target>
 	<target name="dist-codec" depends="compile-codec">
-		<jar jarfile="dist/ahslib-codec.jar" basedir="build/main/codec">
+		<jar jarfile="${dist}/ahslib-codec.jar" basedir="${build}/main/codec">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -105,11 +103,11 @@
 		<exusJavacStrict
 			module="main/codec-json"
 			classes="us/exultant/ahs/codec/json/**"
-			depends="build/main/codec : build/main/core"
+			depends="${build}/main/codec : ${build}/main/core"
 		/>
 	</target>
 	<target name="dist-codec-json" depends="compile-codec-json">
-		<jar jarfile="dist/ahslib-codec-json.jar" basedir="build/main/codec-json">
+		<jar jarfile="${dist}/ahslib-codec-json.jar" basedir="${build}/main/codec-json">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -121,11 +119,11 @@
 		<exusJavacStrict
 			module="main/codec-ebon"
 			classes="us/exultant/ahs/codec/ebon/**"
-			depends="build/main/codec : build/main/core"
+			depends="${build}/main/codec : ${build}/main/core"
 		/>
 	</target>
 	<target name="dist-codec-ebon" depends="compile-codec-ebon">
-		<jar jarfile="dist/ahslib-codec-ebon.jar" basedir="build/main/codec-ebon">
+		<jar jarfile="${dist}/ahslib-codec-ebon.jar" basedir="${build}/main/codec-ebon">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -137,11 +135,11 @@
 		<exusJavacStrict
 			module="main/codec-pre"
 			classes="us/exultant/ahs/codec/eon/pre/**"
-			depends="build/main/codec : build/main/core"
+			depends="${build}/main/codec : ${build}/main/core"
 		/>
 	</target>
 	<target name="dist-codec-pre" depends="compile-codec-pre">
-		<jar jarfile="dist/ahslib-codec-pre.jar" basedir="build/main/codec-pre">
+		<jar jarfile="${dist}/ahslib-codec-pre.jar" basedir="${build}/main/codec-pre">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -153,11 +151,11 @@
 		<exusJavacStrict
 			module="main/log"
 			classes="us/exultant/ahs/log/**"
-			depends="build/main/core"
+			depends="${build}/main/core"
 		/>
 	</target>
 	<target name="dist-log" depends="compile-log">
-		<jar jarfile="dist/ahslib-log.jar" basedir="build/main/log">
+		<jar jarfile="${dist}/ahslib-log.jar" basedir="${build}/main/log">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -169,11 +167,11 @@
 		<exusJavacStrict
 			module="main/test"
 			classes="us/exultant/ahs/test/*.java"
-			depends="build/main/core : build/main/log"
+			depends="${build}/main/core : ${build}/main/log"
 		/>
 	</target>
 	<target name="dist-test" depends="compile-test">
-		<jar jarfile="dist/ahslib-test.jar" basedir="build/main/test">
+		<jar jarfile="${dist}/ahslib-test.jar" basedir="${build}/main/test">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -184,11 +182,11 @@
 		<exusJavacStrict
 			module="main/test-junit"
 			classes="us/exultant/ahs/test/junit/**"
-			depends="build/main/core : build/main/log : lib/junit.jar"
+			depends="${build}/main/core : ${build}/main/log : ${lib}/junit.jar"
 		/>
 	</target>
 	<target name="dist-test-junit" depends="compile-test-junit">
-		<jar jarfile="dist/ahslib-test-junit.jar" basedir="build/main/test-junit">
+		<jar jarfile="${dist}/ahslib-test-junit.jar" basedir="${build}/main/test-junit">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -200,11 +198,11 @@
 		<exusJavacStrict
 			module="main/thread"
 			classes="us/exultant/ahs/thread/**"
-			depends="build/main/core"
+			depends="${build}/main/core"
 		/>
 	</target>
 	<target name="dist-thread" depends="compile-thread">
-		<jar jarfile="dist/ahslib-thread.jar" basedir="build/main/thread">
+		<jar jarfile="${dist}/ahslib-thread.jar" basedir="${build}/main/thread">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -214,13 +212,29 @@
 	
 	<target name="compile-io" depends="compile-thread">
 		<exusJavacStrict
-			 module="main/io"
-			 classes="us/exultant/ahs/io/**"
-			 depends="build/main/core : build/main/thread"
-			 />
+				module="main/io"
+				classes="us/exultant/ahs/io/**"
+				depends="${build}/main/core : ${build}/main/thread"
+		/>
 	</target>
 	<target name="dist-io" depends="compile-io">
-		<jar jarfile="dist/ahslib-io.jar" basedir="build/main/io">
+		<jar jarfile="${dist}/ahslib-io.jar" basedir="${build}/main/io">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}"/>
+				<attribute name="Build-Date" value="${builddate}"/>
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="compile-crypto" depends="compile-codec">
+		<exusJavacStrict
+				module="main/crypto"
+				classes="us/exultant/ahs/crypto/**"
+				depends="${build}/main/core : ${build}/main/codec: ${lib}/bouncy.jar"
+				/>
+	</target>
+	<target name="dist-crypto" depends="compile-crypto">
+		<jar jarfile="${dist}/ahslib-crypto.jar" basedir="${build}/main/crypto">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -232,11 +246,11 @@
 		<exusJavacStrict
 			 module="main/scratch"
 			 classes="us/exultant/ahs/scratch/**"
-			 depends="build/main/core : build/main/codec : build/main/codec-ebon : build/main/codec-pre : lib/plugin.jar"
+			 depends="${build}/main/core : ${build}/main/codec : ${build}/main/codec-ebon : ${build}/main/codec-pre : ${lib}/plugin.jar"
 			 />
 	</target>
 	<target name="dist-scratch" depends="compile-scratch">
-		<jar jarfile="dist/ahslib-scratch.jar" basedir="build/main/scratch">
+		<jar jarfile="${dist}/ahslib-scratch.jar" basedir="${build}/main/scratch">
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -254,20 +268,21 @@
 			compile-test,
 			compile-test-junit,
 			compile-thread,
-			compile-io
+			compile-io,
+			compile-crypto
 		">
-		<jar jarfile="dist/ahslib-complete.jar">
-			<fileset dir="build/main/core"/>
-			<fileset dir="build/main/codec"/>
-			<fileset dir="build/main/codec-json"/>
-			<fileset dir="build/main/codec-ebon"/>
-			<fileset dir="build/main/codec-pre"/>
-			<fileset dir="build/main/log"/>
-			<fileset dir="build/main/test"/>
-			<fileset dir="build/main/test-junit"/>
-			<fileset dir="build/main/thread"/>
-			<fileset dir="build/main/io"/>
-			<!-- does not include scratch, and does not include anything with external dependancies (except junit, because who cares). -->
+		<jar jarfile="${dist}/ahslib-complete.jar">
+			<fileset dir="${build}/main/core"/>
+			<fileset dir="${build}/main/codec"/>
+			<fileset dir="${build}/main/codec-json"/>
+			<fileset dir="${build}/main/codec-ebon"/>
+			<fileset dir="${build}/main/codec-pre"/>
+			<fileset dir="${build}/main/log"/>
+			<fileset dir="${build}/main/test"/>
+			<fileset dir="${build}/main/test-junit"/>
+			<fileset dir="${build}/main/thread"/>
+			<fileset dir="${build}/main/io"/>
+			<fileset dir="${build}/main/crypto"/>
 			<manifest>
 				<attribute name="Implementation-Version" value="${version}"/>
 				<attribute name="Build-Date" value="${builddate}"/>
@@ -277,32 +292,32 @@
 	
 	
 	<target name="clean" description="clean up">
-		<delete dir="build"/>
-		<delete dir="dist"/>
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
 	</target>
 	
 	
 	<target name="dox" depends="init" description="generate javadoc">
 		<javadoc
-			destdir="dox/javadoc"
+			destdir="${dox}/javadoc"
 			author="true"
 			version="true"
 			use="true"
 			windowtitle="AHS Library">
 					
-			<packageset dir="./src/main/" defaultexcludes="yes">
+			<packageset dir="./${src}/main/" defaultexcludes="yes">
 				<include name="**"/>
 				<exclude name="**todo**"/>
 				<exclude name="**krap**"/>
 			</packageset>
 			<group title="Core"				packages="us.exultant.ahs.core*,us.exultant.ahs.util*,us.exultant.ahs.anno*"/>
+			<group title="Thread"				packages="us.exultant.ahs.thread*"/>
 			<group title="Codec Core"			packages="us.exultant.ahs.codec*"/>
 			<group title="Codec (JSON)"			packages="us.exultant.ahs.codec.json*"/>
 			<group title="Codec (EBON)"			packages="us.exultant.ahs.codec.ebon*"/>
 			<group title="Codec (Premade En/Decoders)"	packages="us.exultant.ahs.codec.eon.pre*"/>
 			<group title="Logging"				packages="us.exultant.ahs.log*"/>
 			<group title="Unit Testing"			packages="us.exultant.ahs.test*"/>
-			<group title="Thread"				packages="us.exultant.ahs.thread*"/>
 			<group title="IO"				packages="us.exultant.ahs.io*"/>
 			<group title="Crypto"				packages="us.exultant.ahs.crypto*"/>
 			<group title="Scratch"				packages="us.exultant.ahs.scratch*"/>

@@ -140,7 +140,7 @@ public class JSAPResult implements ExceptionMap {
      * @param id the unique ID of the parameter with which the specified values
      * are associated.
      * @param exception the exception to associate with the specified key.
-     * @see ahs.scratch.jsap.ExceptionMap#addException(String,Exception)
+     * @see us.exultant.ahs.scratch.jsap.ExceptionMap#addException(String,Exception)
      */
     public void addException(String id, Exception exception) {
         List el = null;
@@ -1278,7 +1278,7 @@ public class JSAPResult implements ExceptionMap {
      * @return the first exception associated with the specified ID, or null
      * if no
      * exceptions are associated with the specified ID.
-     * @see ahs.scratch.jsap.ExceptionMap#getException(String)
+     * @see us.exultant.ahs.scratch.jsap.ExceptionMap#getException(String)
      */
     public Exception getException(String id) {
         Exception result = null;
@@ -1300,7 +1300,7 @@ public class JSAPResult implements ExceptionMap {
      * parameter ID,
      * or an empty (zero-length) array if no exceptions are associated with the
      * specified parameter ID.
-     * @see ahs.scratch.jsap.ExceptionMap#getExceptionArray(String)
+     * @see us.exultant.ahs.scratch.jsap.ExceptionMap#getExceptionArray(String)
      */
     public Exception[] getExceptionArray(String id) {
         Exception[] result = new Exception[0];

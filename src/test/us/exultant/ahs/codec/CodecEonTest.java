@@ -2,303 +2,299 @@
  * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
  * 
  * This file is part of AHSlib.
- *
- * AHSlib is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, version 3 of the License, or
- * (at the original copyright holder's option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * AHSlib is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Lesser General Public License as published by the Free Software Foundation,
+ * version 3 of the License, or (at the original copyright holder's option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package us.exultant.ahs.codec;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.test.junit.*;
-import us.exultant.ahs.codec.ebon.*;
 import us.exultant.ahs.codec.eon.*;
+import us.exultant.ahs.log.*;
+import us.exultant.ahs.test.*;
 import java.util.*;
 
 /**
- * Any Eon implementor should be able to make an instantiable test case out of this by
- * just making a default constructor that hands an appropriate codec to this testcase.
+ * <p>
+ * Any {@link EonCodec} implementor should be able to make an instantiable test case out
+ * of this by just making a default constructor that hands an appropriate codec to this
+ * testcase.
+ * </p>
  * 
- * This does NOT test EonRAD or EonRAE in any way. Annotative reflective crap is its own
- * bag.
+ * <p>
+ * This does NOT test {@link EonRAD} or {@link EonRAE} in any way; reflective annotative
+ * stuff is its own bag.
+ * </p>
  * 
- * This does NOT test boundary conditions on things like Int.MAX_VALUE or Double.NAN --
- * these are things that (perhaps unfortunately) aren't actually fully specified for the
- * Eon interfaces. Some implementations (like EBON) will deal with these readily, while
- * others (like JSON) have other specifications that I have no control over which forbid
- * them these options.
+ * <p>
+ * This does NOT test boundary conditions on things like {@link Integer#MAX_VALUE} or
+ * {@link Double#NaN} &mdash; these are things that (perhaps unfortunately) aren't
+ * actually fully specified for the Eon interfaces. Some implementations (like EBON) will
+ * deal with these readily, while others (like JSON) have other specifications that I have
+ * no control over which forbid them these options.
+ * </p>
  * 
- * @author hash
+ * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
-abstract class CodecEonTest extends JUnitTestCase {
-	protected CodecEonTest(EonCodec $seed) {
+abstract class CodecEonTest extends TestCase {
+	public CodecEonTest(EonCodec $seed) {
+		this($seed, new Logger(Logger.LEVEL_TRACE), true);
+	}
+	
+	public CodecEonTest(EonCodec $seed, Logger $log, boolean $enableConfirmation) {
+		super($log, $enableConfirmation);
 		this.$seed = $seed;
 	}
 	
-	private EonCodec $seed;
-	
-	public void setUp() throws Exception {
-		super.setUp();
-		X.saye("");
+	public List<Unit> getUnits() {
+		List<Unit> $tests = new ArrayList<Unit>();
+		$tests.add(new TestTrivial());
+		$tests.add(new TestTrivialSerial());
+		$tests.add(new TestPrimitiveSerial());
+		$tests.add(new TestCompositeD2Serial());
+		$tests.add(new TestCompositeNullSerial());
+		$tests.add(new TestCompositeD3Mux());
+		$tests.add(new TestCompositeD4NMuxSerial());
+		$tests.add(new TestList());
+		$tests.add(new TestListDense());
+		$tests.add(new TestListDenseSerial());
+		return $tests;
 	}
-	
-	
-	
-	// single object with no fields
-	
-	public void testTrivial() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		$codec.putHook(Oe.class, new Oe.Den());
-		
-		Oe $x1 = new Oe();
-		EonObject $c = $codec.encode($x1);
-		X.saye(str($c));
-		Oe $x2 = $codec.decode($c, Oe.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	public void testTrivialSerial() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		$codec.putHook(Oe.class, new Oe.Den());
-		
-		Oe $x1 = new Oe();
-		byte[] $c = $codec.serialize($x1);
-		Oe $x2 = $codec.deserialize($c, Oe.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	
-	
-	// single object with primitive field
-	
-	public void testSimple() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		$codec.putHook(O1p.class, new O1p.Den());
-		
-		O1p $x1 = new O1p("stuff");
-		EonObject $c = $codec.encode($x1);
-		X.saye(str($c));
-		O1p $x2 = $codec.decode($c, O1p.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	public void testSimpleSerial() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		$codec.putHook(O1p.class, new O1p.Den());
-		
-		O1p $x1 = new O1p("stuff");
-		byte[] $c = $codec.serialize($x1);
-		O1p $x2 = $codec.deserialize($c, O1p.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	
-	
-	// object with both a primitive and composite field (which may not be null). depth = 2.
-	
-	public void testCompositeD2() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		$codec.putHook(Oc.class, new Oc.DenNoMux());
-		$codec.putHook(O1p.class, new O1p.Den());
-		
-		Oc $x1 = new Oc(17, new O1p("thingy\nsauce"));
-		EonObject $c = $codec.encode($x1);
-		X.saye(str($c));
-		Oc $x2 = $codec.decode($c, Oc.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	public void testCompositeD2Serial() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		$codec.putHook(Oc.class, new Oc.DenNoMux());
-		$codec.putHook(O1p.class, new O1p.Den());
-		
-		Oc $x1 = new Oc(17, new O1p("stuff"));
-		byte[] $c = $codec.serialize($x1);
-		Oc $x2 = $codec.deserialize($c, Oc.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	
-	
-	// object with both a primitive and composite field (which is be null). depth = 2.
-	
-	public void testCompositeD2N() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		$codec.putHook(Oc.class, new Oc.DenNoMux());
-		$codec.putHook(O1p.class, new O1p.Den());
-		
-		Oc $x1 = new Oc(17, null);
-		EonObject $c = $codec.encode($x1);
-		X.saye(str($c));
-		Oc $x2 = $codec.decode($c, Oc.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	public void testCompositeD2NSerial() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		$codec.putHook(Oc.class, new Oc.DenNoMux());
-		$codec.putHook(O1p.class, new O1p.Den());
-		
-		Oc $x1 = new Oc(17, null);
-		byte[] $c = $codec.serialize($x1);
-		Oc $x2 = $codec.deserialize($c, Oc.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	
-	
-	// object with both a primitive and composite field.  the composite field is muxed.  depth = 2.
-	
-	public void testCompositeD2Mux() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($codec, OFace.class);
-		$mux.enroll(O1p.class, new O1p.Den());
-		$mux.enroll(Oc.class, new Oc.DenMux());
-		
-		Oc $x1 = new Oc(17, new Oc(321512, new O1p("jump")));
-		EonObject $c = $codec.encode($x1, OFace.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
-		X.saye(str($c));
-		Oc $x2 = (Oc)$codec.decode($c, OFace.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	public void testCompositeD2MuxSerial() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($codec, OFace.class);
-		$mux.enroll(O1p.class, new O1p.Den());
-		$mux.enroll(Oc.class, new Oc.DenMux());
-		
-		Oc $x1 = new Oc(17, new Oc(321512, new O1p("jump")));
-		byte[] $c = $codec.serialize($x1, OFace.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!;
-		Oc $x2 = (Oc)$codec.deserialize($c, OFace.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	
-	
-	// object with both primitive and composite fields, some of which may be null.  muxed.  depth = 3.
-	
-	public void testCompositeD3NMux() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($codec, OFace.class);
-		$mux.enroll(O1p.class, new O1p.Den());
-		$mux.enroll(Oc.class, new Oc.DenMux());
-		
-		Oc $x1 = new Oc(17, new Oc(321512, new Oc(33, new O1p("deep"))));
-		EonObject $c = $codec.encode($x1, OFace.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
-		X.saye(str($c));
-		Oc $x2 = (Oc)$codec.decode($c, OFace.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	public void testCompositeD3NMuxSerial() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		
-		EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($codec, OFace.class);
-		$mux.enroll(O1p.class, new O1p.Den());
-		$mux.enroll(Oc.class, new Oc.DenMux());
-
-		Oc $x1 = new Oc(17, new Oc(321512, new Oc(33, new O1p("deep"))));
-		byte[] $c = $codec.serialize($x1, OFace.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!;
-		Oc $x2 = (Oc)$codec.deserialize($c, OFace.class);
-		
-		assertEquals($x1, $x2);
-	}
-	
-	
-	
-	// object with a list which in turn contains composites.
 	
 	/**
-	 * tests the recursive stuff where an object contains a list that it hands off to
-	 * codec and hopes for the best.
+	 * This is set in the constructor and all codecs for each test are created from it
+	 * via the copy constructors. Thus, this determines the object and array types for
+	 * the tests.
 	 */
-	public void testList() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		$codec.putHook(O1p.class, new O1p.Den());
-		$codec.putHook(Ol.class, new Ol.Den());
-		
-		Ol $x1 = new Ol(Arr.asList(new O1p[] { new O1p("before the cream sits out too long"), new O1p("you must whip it"), new O1p("whip it"), new O1p("whip it good") } ));
-		EonObject $c = $codec.encode($x1);
-		X.saye(str($c));
-		Ol $x2 = $codec.decode($c, Ol.class);
-		
-		assertEquals($x1, $x2);
+	protected final EonCodec	$seed;
+	
+	
+	
+	
+	/** Encode and decode a single object with no fields. */
+	public class TestTrivial extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			$codec.putHook(TobjTrivial.class, new TobjTrivial.Den());
+			
+			TobjTrivial $x1 = new TobjTrivial();
+			EonObject $c = $codec.encode($x1);
+			$log.trace(this, str($c));
+			TobjTrivial $x2 = $codec.decode($c, TobjTrivial.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
 	}
+	
+	
+	
+	/** Encode, serialize, deserialize, and decode a single object with no fields. */
+	public class TestTrivialSerial extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			$codec.putHook(TobjTrivial.class, new TobjTrivial.Den());
+			
+			TobjTrivial $x1 = new TobjTrivial();
+			byte[] $c = $codec.serialize($x1);
+			$log.trace(this, Strings.semireadable($c));
+			TobjTrivial $x2 = $codec.deserialize($c, TobjTrivial.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
+	}
+	
+	
+	
+	/** Encode, serialize, deserialize, and decode a single object with one primitive field. */
+	public class TestPrimitiveSerial extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
+			
+			TobjPrimitive $x1 = new TobjPrimitive("stuff");
+			byte[] $c = $codec.serialize($x1);
+			TobjPrimitive $x2 = $codec.deserialize($c, TobjPrimitive.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
+	}
+	
+	
+	
+	/** Encode, serialize, deserialize, and decode an object with a primitive field and a composite field (depth=2). */
+	public class TestCompositeD2Serial extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			$codec.putHook(TobjComposite.class, new TobjComposite.DenNoMux());
+			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
+			
+			TobjComposite $x1 = new TobjComposite(17, new TobjPrimitive("stuff"));
+			byte[] $c = $codec.serialize($x1);
+			TobjComposite $x2 = $codec.deserialize($c, TobjComposite.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
+	}
+	
+	
+	
+	/** Encode, serialize, deserialize, and decode an object with a primitive field and a composite field which is set to null. */
+	public class TestCompositeNullSerial extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			$codec.putHook(TobjComposite.class, new TobjComposite.DenNoMux());
+			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());		//XXX: is this needed here?  unsure.  probably something that belongs in documentation.
+			
+			TobjComposite $x1 = new TobjComposite(17, null);
+			byte[] $c = $codec.serialize($x1);
+			TobjComposite $x2 = $codec.deserialize($c, TobjComposite.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
+	}
+	
+	
+	
+	/** Encode and decode an object with a primitive field and a composite field (depth=3).  The composite field is muxed. */
+	public class TestCompositeD3Mux extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($codec, OFace.class);
+			$mux.enroll(TobjPrimitive.class, new TobjPrimitive.Den());
+			$mux.enroll(TobjComposite.class, new TobjComposite.DenMux());
+			
+			TobjComposite $x1 = new TobjComposite(17, new TobjComposite(321512, new TobjPrimitive("jump")));
+			EonObject $c = $codec.encode($x1, OFace.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!
+			X.saye(str($c));
+			TobjComposite $x2 = (TobjComposite) $codec.decode($c, OFace.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
+	}
+	
+	
+	
+	/** Encode, serialize, deserialize, and decode an object with a primitive field and a composite field (depth=4), some which may be null.  Muxed.*/
+	public class TestCompositeD4NMuxSerial extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($codec, OFace.class);
+			$mux.enroll(TobjPrimitive.class, new TobjPrimitive.Den());
+			$mux.enroll(TobjComposite.class, new TobjComposite.DenMux());
+			
+			TobjComposite $x1 = new TobjComposite(17, new TobjComposite(321512, new TobjComposite(33, new TobjPrimitive("deep"))));
+			byte[] $c = $codec.serialize($x1, OFace.class);	// you NEED this class reference here!  if you don't have it, you don't get the polymorphic behavior!;
+			TobjComposite $x2 = (TobjComposite) $codec.deserialize($c, OFace.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
+	}
+	
+
+
+	/**
+	 * Tests a list with a {@link Decoder} that uses the
+	 * {@link EonCodec#encodeList(List)} and
+	 * {@link EonCodec#decodeList(EonArray, Class)} methods to deal with the
+	 * composites contained in the list.
+	 */
+	public class TestList extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
+			$codec.putHook(TobjFaceList.class, new TobjFaceList.Den());
+			
+			TobjFaceList $x1 = new TobjFaceList(Arr.asList(new TobjPrimitive[] { new TobjPrimitive("before the cream sits out too long"), new TobjPrimitive("you must whip it"), new TobjPrimitive("whip it"), new TobjPrimitive("whip it good") }));
+			EonObject $c = $codec.encode($x1);
+			X.saye(str($c));
+			TobjFaceList $x2 = $codec.decode($c, TobjFaceList.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
+	}
+	
+
 
 	/**
 	 * demonstrates how use of a different encoder is easily possible (and can have
 	 * significant space savings in special cases over more generic approaches).
 	 */
-	public void testListDense() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		$codec.putHook(O1p.class, new O1p.Den());
-		$codec.putHook(Ol.class, new Ol.Dense());
-		
-		Ol $x1 = new Ol(Arr.asList(new O1p[] { new O1p("before the cream sits out too long"), new O1p("you must whip it"), new O1p("whip it"), new O1p("whip it good") } ));
-		EonObject $c = $codec.encode($x1);
-		X.saye(str($c));
-		Ol $x2 = $codec.decode($c, Ol.class);
-		
-		assertEquals($x1, $x2);
+	public class TestListDense extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
+			$codec.putHook(TobjFaceList.class, new TobjFaceList.Dense());
+			
+			TobjFaceList $x1 = new TobjFaceList(Arr.asList(new TobjPrimitive[] { new TobjPrimitive("before the cream sits out too long"), new TobjPrimitive("you must whip it"), new TobjPrimitive("whip it"), new TobjPrimitive("whip it good") }));
+			EonObject $c = $codec.encode($x1);
+			X.saye(str($c));
+			TobjFaceList $x2 = $codec.decode($c, TobjFaceList.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
 	}
+	
 
-	public void testListDenseSerial() throws TranslationException {
-		EonCodec $codec = new EonCodec($seed);
-		$codec.putHook(O1p.class, new O1p.Den());
-		$codec.putHook(Ol.class, new Ol.Dense());
-		
-		Ol $x1 = new Ol(Arr.asList(new O1p[] { new O1p("before the cream sits out too long"), new O1p("you must whip it"), new O1p("whip it"), new O1p("whip it good") } ));
-		byte[] $c = $codec.serialize($x1);
-		Ol $x2 = $codec.deserialize($c, Ol.class);
-		
-		assertEquals($x1, $x2);
+
+	/**
+	 * demonstrates how use of a different encoder is easily possible (and can have
+	 * significant space savings in special cases over more generic approaches).
+	 */
+	public class TestListDenseSerial extends TestCase.Unit {
+		public Object call() throws TranslationException {
+			EonCodec $codec = new EonCodec($seed);
+			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
+			$codec.putHook(TobjFaceList.class, new TobjFaceList.Dense());
+			
+			TobjFaceList $x1 = new TobjFaceList(Arr.asList(new TobjPrimitive[] { new TobjPrimitive("before the cream sits out too long"), new TobjPrimitive("you must whip it"), new TobjPrimitive("whip it"), new TobjPrimitive("whip it good") }));
+			byte[] $c = $codec.serialize($x1);
+			TobjFaceList $x2 = $codec.deserialize($c, TobjFaceList.class);
+			
+			assertEquals($x1, $x2);
+			return null;
+		}
 	}
 	
 	
+
 	
-	
-	
-	
-	
-	
-	
-	
+//	/**
+//	 * same as previous recursive test, except the codec isn't initialized with all of
+//	 * the needed encoders or decoders.
+//	 */
+//	public void testListFailFromMissingDencoder() throws TranslationException {
+//		JsonCodec $jc = new JsonCodec();
+//		$jc.putHook(TobjFaceList.class, new TobjFaceList.Den());
+//		
+//		try {
+//			TobjFaceList $toy = new TobjFaceList(Arr.asList(new TobjPrimitive[] { new TobjPrimitive("whip it") }));
+//			$jc.encode($toy);
+//			fail("Encoding should have failed.");
+//		} catch (TranslationException $e) {
+//			assertEquals("Encoding dispatch hook not found for ahs.codec.CodecEonTest$O1p",$e.getMessage());	
+//		}
+//	}
 	
 	
 	
@@ -307,29 +303,35 @@ abstract class CodecEonTest extends JUnitTestCase {
 	// stuff!
 	
 	protected String str(EonObject $eo) {
-		if ($eo instanceof EbonObject) return ((EbonObject)$eo).toArrStr();
+		//if ($eo instanceof EbonObject) try {
+		//	return Strings.semireadable($eo.serialize());
+		//} catch (TranslationException $e) { throw new MajorBug($e); }
 		return $eo.toString();
 	}
 	
+	
+	
 	/**
-	 * Simplest possible target.  Contains no fields.  None.
+	 * Simplest possible target. Contains no fields. None.
 	 */
-	public static class Oe {
-		public Oe() {}
+	public static class TobjTrivial {
+		public TobjTrivial() {}
 		
-		public static class Den implements Dencoder<EonCodec,EonObject,Oe> {
-			public EonObject encode(EonCodec $codec, Oe $x) throws TranslationException {
-				return $codec.simple($x,null,"nothing");
+		
+		
+		public static class Den implements Dencoder<EonCodec,EonObject,TobjTrivial> {
+			public EonObject encode(EonCodec $codec, TobjTrivial $x) throws TranslationException {
+				return $codec.simple($x, null, (String)null);
 			}
 			
-			public Oe decode(EonCodec $codec, EonObject $x) throws TranslationException {
-				$x.assertKlass(Oe.class);
-				return new Oe();
+			public TobjTrivial decode(EonCodec $codec, EonObject $x) throws TranslationException {
+				$x.assertKlass(TobjTrivial.class);
+				return new TobjTrivial();
 			}
 		}
 		
 		public int hashCode() {
-			return 0;
+			return getClass().hashCode();
 		}
 		
 		public boolean equals(Object obj) {
@@ -339,39 +341,42 @@ abstract class CodecEonTest extends JUnitTestCase {
 			return true;
 		}
 	}
-
+	
+	
+	
 	/**
 	 * Contains a single field (a String) that can be handled by any encoding scheme
 	 * directly.
 	 */
-	public static class O1p implements OFace {
-		public O1p(String $s) { $dat = $s; }
+	public static class TobjPrimitive implements OFace {
+		public TobjPrimitive(String $s) {
+			$dat = $s;
+		}
 		
-		String $dat;
+		String	$dat;
 		
-		public static class Den implements Dencoder<EonCodec,EonObject,O1p> {
-			public EonObject encode(EonCodec $codec, O1p $x) throws TranslationException {
-				return $codec.simple($x,"dat",$x.$dat);
+		
+		
+		public static class Den implements Dencoder<EonCodec,EonObject,TobjPrimitive> {
+			public EonObject encode(EonCodec $codec, TobjPrimitive $x) throws TranslationException {
+				return $codec.simple($x, "dat", $x.$dat);
 			}
 			
-			public O1p decode(EonCodec $codec, EonObject $x) throws TranslationException {
-				$x.assertKlass(O1p.class);
-				return new O1p($x.getStringData());
+			public TobjPrimitive decode(EonCodec $codec, EonObject $x) throws TranslationException {
+				$x.assertKlass(TobjPrimitive.class);
+				return new TobjPrimitive($x.getStringData());
 			}
 		}
 		
 		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((this.$dat == null) ? 0 : this.$dat.hashCode());
-			return result;
+			return 31 + ((this.$dat == null) ? 0 : this.$dat.hashCode());
 		}
 		
 		public boolean equals(Object obj) {
 			if (this == obj) return true;
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
-			O1p other = (O1p) obj;
+			TobjPrimitive other = (TobjPrimitive) obj;
 			if (this.$dat == null) {
 				if (other.$dat != null) return false;
 			} else if (!this.$dat.equals(other.$dat)) return false;
@@ -379,51 +384,57 @@ abstract class CodecEonTest extends JUnitTestCase {
 		}
 	}
 	
-	public static class Oc implements OFace {
-		public Oc(int $val, OFace $kid) {
+	
+	
+	public static class TobjComposite implements OFace {
+		public TobjComposite(int $val, OFace $kid) {
 			this.$val = $val;
 			this.$kid = $kid;
 		}
 		
-		int $val;
-		OFace $kid;
-
-		public static class DenNoMux implements Dencoder<EonCodec,EonObject,Oc> {
-			public EonObject encode(EonCodec $codec, Oc $x) throws TranslationException {
+		int	$val;
+		OFace	$kid;
+		
+		
+		
+		public static class DenNoMux implements Dencoder<EonCodec,EonObject,TobjComposite> {
+			public EonObject encode(EonCodec $codec, TobjComposite $x) throws TranslationException {
 				EonObject $eo = $codec.newObj();
-				$eo.putKlass(Oc.class);
+				$eo.putKlass(TobjComposite.class);
 				$eo.put("val", $x.$val);
 				if ($x.$kid != null) $eo.put("bebe", $codec.encode($x.$kid));
 				return $eo;
 			}
 			
-			public Oc decode(EonCodec $codec, EonObject $x) throws TranslationException {
-				$x.assertKlass(Oc.class);
-				return new Oc(
-						$x.getInt("val"), 
-						$x.optObj("bebe") == null ? null : $codec.decode($x.getObj("bebe"), O1p.class)	// note that this is NOT using polymorphism.  this works only for some values of $kid, but doesn't demand muxing be used in the codec.
+			public TobjComposite decode(EonCodec $codec, EonObject $x) throws TranslationException {
+				$x.assertKlass(TobjComposite.class);
+				return new TobjComposite(
+						$x.getInt("val"),
+						$x.optObj("bebe") == null ? null : $codec.decode($x.getObj("bebe"), TobjPrimitive.class)	// note that this is NOT using polymorphism.  this works only for some values of $kid, but doesn't demand muxing be used in the codec.
 				);
 			}
 		}
 		
-		public static class DenMux implements Dencoder<EonCodec,EonObject,Oc> {
-			public EonObject encode(EonCodec $codec, Oc $x) throws TranslationException {
+		
+		
+		public static class DenMux implements Dencoder<EonCodec,EonObject,TobjComposite> {
+			public EonObject encode(EonCodec $codec, TobjComposite $x) throws TranslationException {
 				EonObject $eo = $codec.newObj();
-				$eo.putKlass(Oc.class);
+				$eo.putKlass(TobjComposite.class);
 				$eo.put("val", $x.$val);
 				if ($x.$kid != null) $eo.put("bebe", $codec.encode($x.$kid, OFace.class));	// this is another place you have to make dang sure you're demanding the polymorphic behavior you expect from muxing.
 				return $eo;
 			}
 			
-			public Oc decode(EonCodec $codec, EonObject $x) throws TranslationException {
-				$x.assertKlass(Oc.class);
-				return new Oc(
-						$x.getInt("val"), 
+			public TobjComposite decode(EonCodec $codec, EonObject $x) throws TranslationException {
+				$x.assertKlass(TobjComposite.class);
+				return new TobjComposite(
+						$x.getInt("val"),
 						$x.optObj("bebe") == null ? null : $codec.decode($x.getObj("bebe"), OFace.class)	// demands muxing on the OFace interface be set up in the codec.
 				);
 			}
 		}
-
+		
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
@@ -431,12 +442,12 @@ abstract class CodecEonTest extends JUnitTestCase {
 			result = prime * result + this.$val;
 			return result;
 		}
-
+		
 		public boolean equals(Object obj) {
 			if (this == obj) return true;
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
-			Oc other = (Oc) obj;
+			TobjComposite other = (TobjComposite) obj;
 			if (this.$kid == null) {
 				if (other.$kid != null) return false;
 			} else if (!this.$kid.equals(other.$kid)) return false;
@@ -445,41 +456,49 @@ abstract class CodecEonTest extends JUnitTestCase {
 		}
 	}
 	
+	
+	
 	/**
 	 * Contains a list of Ob, thus testing both recursive encoding as well as
 	 * EonCodec's special functions for lists.
 	 */
-	public static class Ol implements OFace {
-		public Ol(List<O1p> $x) { $dat = $x; }
+	public static class TobjFaceList implements OFace {
+		public TobjFaceList(List<TobjPrimitive> $x) {
+			$dat = $x;
+		}
 		
-		List<O1p> $dat;
+		List<TobjPrimitive>	$dat;
 		
-		public static class Den implements Dencoder<EonCodec,EonObject,Ol> {
-			public EonObject encode(EonCodec $codec, Ol $x) throws TranslationException {
-				return $codec.simple($x,null,$codec.encodeList($x.$dat));
+		
+		
+		public static class Den implements Dencoder<EonCodec,EonObject,TobjFaceList> {
+			public EonObject encode(EonCodec $codec, TobjFaceList $x) throws TranslationException {
+				return $codec.simple($x, null, $codec.encodeList($x.$dat));
 			}
 			
-			public Ol decode(EonCodec $codec, EonObject $x) throws TranslationException {
-				$x.assertKlass(Ol.class);
-				return new Ol($codec.decodeList($x.getArrayData(), O1p.class));
+			public TobjFaceList decode(EonCodec $codec, EonObject $x) throws TranslationException {
+				$x.assertKlass(TobjFaceList.class);
+				return new TobjFaceList($codec.decodeList($x.getArrayData(), TobjPrimitive.class));
 			}
 		}
 		
-		public static class Dense implements Dencoder<EonCodec,EonObject,Ol> {
-			public EonObject encode(EonCodec $codec, Ol $x) throws TranslationException {
+		
+		
+		public static class Dense implements Dencoder<EonCodec,EonObject,TobjFaceList> {
+			public EonObject encode(EonCodec $codec, TobjFaceList $x) throws TranslationException {
 				EonArray $ja = $codec.newArr();
 				for (int $i = 0; $i < $x.$dat.size(); $i++)
 					$ja.put($i, $x.$dat.get($i).$dat);
 				return $codec.simple($x, null, $ja);
 			}
 			
-			public Ol decode(EonCodec $codec, EonObject $x) throws TranslationException {
-				$x.assertKlass(Ol.class);
+			public TobjFaceList decode(EonCodec $codec, EonObject $x) throws TranslationException {
+				$x.assertKlass(TobjFaceList.class);
 				EonArray $ja = $x.getArrayData();
-				List<O1p> $ar = new ArrayList<O1p>($ja.size());
+				List<TobjPrimitive> $ar = new ArrayList<TobjPrimitive>($ja.size());
 				for (int $i = 0; $i < $ja.size(); $i++)
-					$ar.add(new O1p($ja.getString($i)));
-				return new Ol($ar);
+					$ar.add(new TobjPrimitive($ja.getString($i)));
+				return new TobjFaceList($ar);
 			}
 		}
 		
@@ -494,13 +513,15 @@ abstract class CodecEonTest extends JUnitTestCase {
 			if (this == obj) return true;
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
-			Ol other = (Ol) obj;
+			TobjFaceList other = (TobjFaceList) obj;
 			if (this.$dat == null) {
 				if (other.$dat != null) return false;
 			} else if (!this.$dat.equals(other.$dat)) return false;
 			return true;
 		}
 	}
+	
+	
 	
 	/**
 	 * Implemented by O1p and Ol for use in mux testing. (Also, this is what she
