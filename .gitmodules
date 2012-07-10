@@ -1,3 +1,4 @@
 [submodule "releases"]
 	path = releases
-	url = https://github.com/heavenlyhash/ahslib-releases.git
+	url = https://github.com/heavenlyhash-releases/ahslib-releases.git
+	mdm = releases
