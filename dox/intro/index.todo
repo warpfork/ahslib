@@ -1,6 +1,0 @@
-Okay, there's a couple of ways you can come at viewing this project if you're not familiar with it yet.
-
-If you've been around a while as a software developer, one of the fastest ways you can tell what a project does (and how serious and well-planned it is) is probably by quickly comparing it to tools you're familiar with.
-So, without further ado, we assure you that we've been doing the same throughout the development process of this library -- we specifically aim to not overlap with other widely used and well designed libraries where applicable (Apache commons, here's looking at you).  The only exceptions are if  we're very confident that we have a feature that goes well above and beyond what existing tools provide (in terms of either power, performance, extensibility, or simplicity of interface), and in such situations the documentation will include a link to a play-by-play of what's worth paying attention to in our approach.
-
-

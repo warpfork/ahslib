@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package us.exultant.ahs.io;
+package us.exultant.ahs.iob;
 
 import java.io.*;
 
