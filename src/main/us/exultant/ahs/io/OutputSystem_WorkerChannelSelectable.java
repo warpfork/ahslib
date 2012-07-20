@@ -13,8 +13,13 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 		this.$selector = $selector;
 	}
 	
-	void install(WorkFuture<Void> $selfFuture) {
+	void install(final WorkFuture<Void> $selfFuture) {
 		$selectedListener = new Updater($selfFuture);
+		$source.setListener(new Listener<ReadHead<$MSG>>() {
+			public void hear(ReadHead<$MSG> $x) {
+				$selfFuture.update();
+			}
+		});
 		// it's possible that there was a call() before this install(), which may (improbably) have gotten stuck.  check for that.  incredibly improbably, this could also end up redundant, but that's fine.
 		if ($buffered) $selector.registerWrite($channel, $selectedListener);
 	}
