@@ -53,7 +53,7 @@ public interface ChannelWriter<$MSG> {
 
 	
 	
-	//public static class LinedFramer implements ChannelWriter<$MSG> {}
+	//public static class LinedFramer implements ChannelWriter<$MSG> {}	// this is actually a just a specific instance of an IFS-oriented framer!
 	
 	
 	
@@ -98,6 +98,11 @@ public interface ChannelWriter<$MSG> {
 			} else return false;
 		}
 	}
+	
+	
+	
+	//public static class CsvFramer implements ChannelWriter<String[]> {}	// actually these are probably the wrong level.  they'd be line-framed; CSV/TDV is a translation layer.
+	//public static class TdvFramer implements ChannelWriter<String[]> {}	// actually these are probably the wrong level.  they'd be line-framed; CSV/TDV is a translation layer.
 	
 	
 	
