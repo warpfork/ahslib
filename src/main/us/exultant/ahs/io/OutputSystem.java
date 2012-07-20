@@ -43,10 +43,10 @@ public class OutputSystem<$MSG> {
 		return makeWriteSystem(WorkManager.getDefaultScheduler(), $source, $sink, $translator);
 	}
 	public static <$MSG> OutputSystem<$MSG> makeWriteSystem(
-			WorkScheduler $scheduler,
-			ReadHead<$MSG> $source,
-			ReadableByteChannel $sink,
-			ChannelWriter<$MSG> $translator
+			final WorkScheduler $scheduler,
+			final ReadHead<$MSG> $source,
+			final ReadableByteChannel $sink,
+			final ChannelWriter<$MSG> $translator
 		) {
 		// behavior for filesystem or other crap that doesn't match the SelectableChannel interface
 		return null;

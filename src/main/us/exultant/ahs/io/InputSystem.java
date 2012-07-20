@@ -9,10 +9,10 @@ public class InputSystem<$MSG> {
 		return setup(WorkManager.getDefaultScheduler(), $sink, $source, $framer);
 	}
 	public static <$MSG> InputSystem<$MSG> setup(
-			WorkScheduler $scheduler,
-			WriteHead<$MSG> $sink,
-			ReadableByteChannel $source,
-			ChannelReader<$MSG> $framer
+			final WorkScheduler $scheduler,
+			final WriteHead<$MSG> $sink,
+			final ReadableByteChannel $source,
+			final ChannelReader<$MSG> $framer
 		) {
 		return null;	//TODO:AHS:IO: behavior for filesystem or other crap that doesn't match the SelectableChannel interface
 	}
@@ -21,11 +21,11 @@ public class InputSystem<$MSG> {
 		return setup(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $sink, $source, $framer);
 	}
 	public static <$MSG, $CHAN extends SelectableChannel & ReadableByteChannel> InputSystem<$MSG> setup(
-			WorkScheduler $scheduler,
-			SelectionSignaller $selector,
-			WriteHead<$MSG> $sink,
-			$CHAN $source,
-			ChannelReader<$MSG> $framer
+			final WorkScheduler $scheduler,
+			final SelectionSignaller $selector,
+			final WriteHead<$MSG> $sink,
+			final $CHAN $source,
+			final ChannelReader<$MSG> $framer
 		) {
 		if ($source.isBlocking()) throw new IllegalArgumentException("channel must be in nonblocking mode");
 		final InputSystem_WorkerChannelSelectable<$MSG, $CHAN> $wt = new InputSystem_WorkerChannelSelectable<$MSG, $CHAN>($selector, $sink, $source, $framer);
