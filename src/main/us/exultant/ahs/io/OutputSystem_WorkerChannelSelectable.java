@@ -49,10 +49,10 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 			if (!$buffered) {
 				$MSG $msg = $source.readNow();
 				if ($msg == null) return null;
-				$buffered = $trans.write($channel, $msg);
+				$buffered = !$trans.write($channel, $msg);
 			}
 			for (int $i = 0; $buffered && $i < 3; $i++)
-				$buffered = $trans.write($channel, null);
+				$buffered = !$trans.write($channel, null);
 		} catch (TranslationException $e) {
 			throw $e;
 		} catch (IOException $e) {
