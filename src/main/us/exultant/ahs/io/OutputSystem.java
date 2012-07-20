@@ -42,7 +42,12 @@ public class OutputSystem<$MSG> {
 	public static <$MSG> OutputSystem<$MSG> makeWriteSystem(ReadHead<$MSG> $source, ReadableByteChannel $sink, ChannelWriter<$MSG> $translator) {
 		return makeWriteSystem(WorkManager.getDefaultScheduler(), $source, $sink, $translator);
 	}
-	public static <$MSG> OutputSystem<$MSG> makeWriteSystem(WorkScheduler $scheduler, ReadHead<$MSG> $source, ReadableByteChannel $sink, ChannelWriter<$MSG> $translator) {
+	public static <$MSG> OutputSystem<$MSG> makeWriteSystem(
+			WorkScheduler $scheduler,
+			ReadHead<$MSG> $source,
+			ReadableByteChannel $sink,
+			ChannelWriter<$MSG> $translator
+		) {
 		// behavior for filesystem or other crap that doesn't match the SelectableChannel interface
 		return null;
 	}
@@ -50,7 +55,13 @@ public class OutputSystem<$MSG> {
 	public static <$MSG, $CHAN extends SelectableChannel & WritableByteChannel> OutputSystem<$MSG> makeWriteSystem(ReadHead<$MSG> $source, $CHAN $sink, ChannelWriter<$MSG> $translator) {
 		return makeWriteSystem(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $source, $sink, $translator);
 	}
-	public static <$MSG, $CHAN extends SelectableChannel & WritableByteChannel> OutputSystem<$MSG> makeWriteSystem(final WorkScheduler $scheduler, final SelectionSignaller $selector, final ReadHead<$MSG> $source, final $CHAN $sink, final ChannelWriter<$MSG> $translator) {
+	public static <$MSG, $CHAN extends SelectableChannel & WritableByteChannel> OutputSystem<$MSG> makeWriteSystem(
+			final WorkScheduler $scheduler,
+			final SelectionSignaller $selector,
+			final ReadHead<$MSG> $source,
+			final $CHAN $sink,
+			final ChannelWriter<$MSG> $translator
+		) {
 		if ($sink.isBlocking()) throw new IllegalArgumentException("channel must be in nonblocking mode");
 		final OutputSystem_WorkerChannelSelectable<$MSG, $CHAN> $wt = new OutputSystem_WorkerChannelSelectable<$MSG, $CHAN>($selector, $source, $sink, $translator);
 		final WorkFuture<Void> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
