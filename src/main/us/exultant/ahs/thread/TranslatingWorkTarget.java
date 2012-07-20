@@ -21,6 +21,7 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.anno.*;
 
 /**
  * <p>
@@ -112,7 +113,6 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Integer> {
 			
 			$sink.write($b);
 		} catch (TranslationException $e) {
-			// this error handling is the SAME for both errors in the translator and errors from writing the the sink.
 			ExceptionHandler<TranslationException> $dated_eh = $eh;
 			if ($dated_eh == null) throw $e;
 			$dated_eh.hear($e);
@@ -150,9 +150,12 @@ public class TranslatingWorkTarget<$FROM, $TO> implements WorkTarget<Integer> {
 	 * </p>
 	 * 
 	 * @param $eh
+	 * @return this selfsame object
 	 */
-	public void setExceptionHandler(ExceptionHandler<TranslationException> $eh) {
+	@ChainableInvocation
+	public TranslatingWorkTarget<$FROM,$TO> setExceptionHandler(ExceptionHandler<TranslationException> $eh) {
 		this.$eh = $eh;
+		return this;
 	}
 	
 	public String toString() {

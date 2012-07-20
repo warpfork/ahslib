@@ -26,11 +26,16 @@ import java.util.concurrent.*;
 
 /**
  * <p>
- * A WorkTarget is similar to {@link Runnable} and/or {@link Callable}, but combines the
- * concept of runnability with properties essential for intelligent scheduling of work.
+ * A WorkTarget is a task description &mdash; it is similar to {@link Runnable} and/or
+ * {@link Callable}, but combines the concept of runnability with properties essential for
+ * intelligent scheduling of work.
+ * </p>
+ * 
+ * <p>
  * Implementations of the WorkTarget interface which define their readiness for scheduling
- * based on availability of messages from a {@link us.exultant.ahs.core.ReadHead} form the
- * essence of the Actor model of concurrent programming.
+ * based on availability of messages from a {@link ReadHead} form the essence of the Actor
+ * model of concurrent programming. {@link WorkTarget.FlowingAdapter} is a template for
+ * this pattern.
  * </p>
  * 
  * <p>
@@ -369,7 +374,6 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		 * must define.
 		 */
 		public final Void call() throws Exception {
-			if (isDone()) return null;
 			$IN $a = $src.readNow();
 			if ($a == null) return null;
 			$OUT $b = run($a);
@@ -380,7 +384,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 		protected abstract $OUT run($IN $chunk) throws Exception;
 		
 		/** @inheritDocs */
-		public final boolean isReady() { return !$src.hasNext(); }
+		public final boolean isReady() { return $src.hasNext(); }
 		/** @inheritDocs */
 		public final boolean isDone() { return $src.isExhausted(); }
 		/** @inheritDocs */

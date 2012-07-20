@@ -20,24 +20,13 @@
 package us.exultant.ahs.crypto.bc;
 
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.log.*;
-import us.exultant.ahs.test.*;
 import us.exultant.ahs.crypto.*;
+import us.exultant.ahs.test.*;
 import java.nio.*;
 import java.util.*;
 
 public class AesCtrPkcs7Sha1Test extends TestCase {
-	public static void main(String... $args) {
-		new AesCtrPkcs7Sha1Test().run();
-	}
-	
-	public AesCtrPkcs7Sha1Test() {
-		super(new Logger(Logger.LEVEL_DEBUG), true);
-	}
-	
-	public AesCtrPkcs7Sha1Test(Logger $log, boolean $enableConfirmation) {
-		super($log, $enableConfirmation);
-	}
+	public static void main(String... $args) { new AesCtrPkcs7Sha1Test().run(); }
 	
 	public List<Unit> getUnits() {
 		return Arr.asList(

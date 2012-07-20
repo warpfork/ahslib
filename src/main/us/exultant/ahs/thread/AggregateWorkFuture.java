@@ -26,9 +26,11 @@ import java.util.concurrent.*;
 
 /**
  * <p>
- * A {@link WorkFuture} that represents a set of WorkFutures. This makes it possible to
- * wait for all of the collected WorkFutures to complete, or use the completion listener
- * to fire once when all the tasks of a set are done.
+ * A {@link WorkFuture} that represents a set of WorkFutures, making it possible to
+ * coordinate them easily as a group. An AggregateWorkFuture can wait for all of the
+ * collected WorkFutures to complete, use the completion listener to fire once when all
+ * the tasks of a set are done, issue cancellations to all of the collected tasks, and
+ * trigger scheduler updates in bulk.
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>

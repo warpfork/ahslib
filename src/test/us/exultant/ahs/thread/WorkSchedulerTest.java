@@ -21,7 +21,6 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
-import us.exultant.ahs.log.*;
 import us.exultant.ahs.test.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -55,13 +54,6 @@ import java.util.concurrent.atomic.*;
  * 
  */
 public abstract class WorkSchedulerTest extends TestCase {
-	public WorkSchedulerTest() {
-		super(new Logger(Logger.LEVEL_TRACE), true);
-	}
-	
-	public WorkSchedulerTest(Logger $log, boolean $enableConfirmation) {
-		super($log, $enableConfirmation);
-	}
 	
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
@@ -132,9 +124,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 					try {
 						$wf.get(0, TimeUnit.NANOSECONDS);
 					}
-					catch (InterruptedException $e) { throw new AssertionFailed($e); }
-					catch (ExecutionException $e) { throw new AssertionFailed($e); }
-					catch (TimeoutException $e) { throw new AssertionFailed($e); }
+					catch (InterruptedException $e) { breakUnit($e); }
+					catch (ExecutionException $e) { breakUnit($e); }
+					catch (TimeoutException $e) { breakUnit($e); }
 				}
 			});
 			$ws.start();
@@ -170,9 +162,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 					try {
 						$wf.get(0, TimeUnit.NANOSECONDS);
 					}
-					catch (InterruptedException $e) { throw new AssertionFailed($e); }
-					catch (ExecutionException $e) { throw new AssertionFailed($e); }
-					catch (TimeoutException $e) { throw new AssertionFailed($e); }
+					catch (InterruptedException $e) { breakUnit($e); }
+					catch (ExecutionException $e) { breakUnit($e); }
+					catch (TimeoutException $e) { breakUnit($e); }
 				}
 			});
 			
@@ -365,7 +357,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertEquals("work became cancelling state", WorkFuture.State.CANCELLING, $wf.getState());
 			try {
 				$wf.get(TSCALE*4, TimeUnit.MILLISECONDS);	// it will still take the full amount of time since we didn't send an interrupt
-				throw new AssertionFailed("should have gotten CancellationException");
+				breakUnit("should have gotten CancellationException");
 			} catch (CancellationException $e) { /* good! */ }
 			assertTrue("thread is clear of the work", $clear);
 			assertEquals("work reached cancelled state", WorkFuture.State.CANCELLED, $wf.getState());
@@ -393,15 +385,15 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$wf[2] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 17), ScheduleParams.makeDelayed(3*space));
 			$wf[6] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), 30), ScheduleParams.makeDelayed(7*space));
 			$wf[7] = $ws.schedule(new WorkTarget.RunnableWrapper(new Work(), -6), ScheduleParams.makeDelayed(8*space));
-			$log.trace(this, "work scheduler starting...");
+			$log.trace("work scheduler starting...");
 			$ws.start();
-			$log.trace(this, "work scheduler started.");
+			$log.trace("work scheduler started.");
 			
 			long $startTime = X.time();
 			for (int $i = 1; $i < WTC; $i++) {
 				$wf[$i-1].get();
 				long $timeTaken = X.time() - $startTime;
-				$log.trace(this, "task with "+$i*space+"ms delay finished");
+				$log.trace("task with "+$i*space+"ms delay finished");
 				assertTrue("task less than "+TSCALE+"ms overdue ($timeTaken="+$timeTaken+")", $timeTaken-TSCALE < $i*space);
 				assertFalse($wf[$i].isDone());
 			}
@@ -412,7 +404,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		private class Work implements Runnable {
 			public void run() {	// the run-once functionality is just provided by the RunnableWrapper class.
-				$log.trace(this, "task running");
+				$log.trace("task running");
 			}
 		}
 	}
@@ -447,7 +439,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			public volatile int x = 10;
 			public Integer call() {
 				x--;
-				$log.trace(this, "reached count "+x);
+				$log.trace("reached count "+x);
 				return x;
 			}
 			public boolean isReady() {
@@ -483,20 +475,20 @@ public abstract class WorkSchedulerTest extends TestCase {
 		public Object call() throws InterruptedException, ExecutionException {
 			feedPipe();
 
-			$log.trace(this, "creating work targets");
+			$log.trace("creating work targets");
 			for (int $i = 0; $i < WTC; $i++)
 				$wt[$i] = new Work($i);
-			$log.trace(this, "scheduling work targets");
+			$log.trace("scheduling work targets");
 			for (int $i = 0; $i < WTC; $i++)
 				$wf[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
 			
 			configurePipe();	// this actually illustrates an important conundrum: one can't assign listeners until after we have the WorkFuture to make noise about... so if you want to be able to write (and possibly finish writing) concurrently with starting up new work to do reading, you actually require the ReadHead to send a "spurious" (that is, not triggered by any actual life-cycle event of write, close, or final read) event when you assign that Listener to it. 
 			
-			$log.trace(this, "waiting for work future completion");
+			$log.trace("waiting for work future completion");
 			boolean $wonOnce = false;
 			for (int $i = 0; $i < WTC; $i++) {
 				Integer $ans = $wf[$i].get();
-				$log.debug(this, "final result of work target "+$i+": "+$ans);
+				$log.debug("final result of work target "+$i+": "+$ans);
 				if ($ans != null && $ans == HIGH) {
 					assertFalse("No more than one WorkTarget finished with the high value.", $wonOnce);
 					$wonOnce = true;
@@ -513,7 +505,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			private final int $name;
 			public Integer call() {
 				Integer $move = $pipe.source().readNow();
-				$log.trace(this, "WT"+$name+" pulled "+$move);
+				$log.trace("WT"+$name+" pulled "+$move);
 				return $move;
 			}
 			public boolean isReady() {		// note that these actually CAN NOT be synchronized.  if they are, deadlock can occur in schedulers.
@@ -530,12 +522,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 		protected void feedPipe() {
-			$log.trace(this, "feed started");
+			$log.trace("feed started");
 			for (int $i = 1; $i <= HIGH; $i++)
 				$pipe.sink().write($i);
-			$log.trace(this, "feed complete");
+			$log.trace("feed complete");
 			$pipe.sink().close();
-			$log.trace(this, "feed closed");
+			$log.trace("feed closed");
 		}
 		protected void configurePipe() {}
 	}
@@ -598,7 +590,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		
 		public Object call() {
 			//TMPL
-			breakIfFailed();
+			breakUnitIfFailed();
 			$ws.stop(false);
 			return null;
 		}
