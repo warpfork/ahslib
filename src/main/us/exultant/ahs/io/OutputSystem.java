@@ -39,10 +39,10 @@ import java.nio.channels.*;
  * 
  */
 public class OutputSystem<$MSG> {
-	public static <$MSG> OutputSystem<$MSG> makeWriteSystem(ReadHead<$MSG> $source, ReadableByteChannel $sink, ChannelWriter<$MSG> $translator) {
-		return makeWriteSystem(WorkManager.getDefaultScheduler(), $source, $sink, $translator);
+	public static <$MSG> OutputSystem<$MSG> setup(ReadHead<$MSG> $source, ReadableByteChannel $sink, ChannelWriter<$MSG> $translator) {
+		return setup(WorkManager.getDefaultScheduler(), $source, $sink, $translator);
 	}
-	public static <$MSG> OutputSystem<$MSG> makeWriteSystem(
+	public static <$MSG> OutputSystem<$MSG> setup(
 			final WorkScheduler $scheduler,
 			final ReadHead<$MSG> $source,
 			final ReadableByteChannel $sink,
@@ -52,10 +52,10 @@ public class OutputSystem<$MSG> {
 		return null;
 	}
 	
-	public static <$MSG, $CHAN extends SelectableChannel & WritableByteChannel> OutputSystem<$MSG> makeWriteSystem(ReadHead<$MSG> $source, $CHAN $sink, ChannelWriter<$MSG> $translator) {
-		return makeWriteSystem(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $source, $sink, $translator);
+	public static <$MSG, $CHAN extends SelectableChannel & WritableByteChannel> OutputSystem<$MSG> setup(ReadHead<$MSG> $source, $CHAN $sink, ChannelWriter<$MSG> $translator) {
+		return setup(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $source, $sink, $translator);
 	}
-	public static <$MSG, $CHAN extends SelectableChannel & WritableByteChannel> OutputSystem<$MSG> makeWriteSystem(
+	public static <$MSG, $CHAN extends SelectableChannel & WritableByteChannel> OutputSystem<$MSG> setup(
 			final WorkScheduler $scheduler,
 			final SelectionSignaller $selector,
 			final ReadHead<$MSG> $source,
