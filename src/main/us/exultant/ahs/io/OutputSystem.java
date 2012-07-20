@@ -2,6 +2,7 @@ package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.thread.*;
+import java.io.*;
 import java.nio.channels.*;
 
 // point of interest: you will want some systems that allow you to know when you've flushed.  and they might still not want to be synchronous.
@@ -62,7 +63,11 @@ public class OutputSystem<$MSG> {
 			final $CHAN $sink,
 			final ChannelWriter<$MSG> $translator
 		) {
-		if ($sink.isBlocking()) throw new IllegalArgumentException("channel must be in nonblocking mode");
+		if ($sink.isBlocking()) {
+			try {
+				$sink.configureBlocking(false);
+			} catch (IOException $e) { throw new IllegalArgumentException("channel must be in nonblocking mode; and failed to change mode.", $e); }
+		}
 		final OutputSystem_WorkerChannelSelectable<$MSG, $CHAN> $wt = new OutputSystem_WorkerChannelSelectable<$MSG, $CHAN>($selector, $source, $sink, $translator);
 		final WorkFuture<Void> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
 		$wt.install($wf);

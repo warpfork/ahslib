@@ -2,6 +2,7 @@ package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.thread.*;
+import java.io.*;
 import java.nio.channels.*;
 
 public class InputSystem<$MSG> {
@@ -27,7 +28,11 @@ public class InputSystem<$MSG> {
 			final $CHAN $source,
 			final ChannelReader<$MSG> $framer
 		) {
-		if ($source.isBlocking()) throw new IllegalArgumentException("channel must be in nonblocking mode");
+		if ($source.isBlocking()) {
+			try {
+				$source.configureBlocking(false);
+			} catch (IOException $e) { throw new IllegalArgumentException("channel must be in nonblocking mode; and failed to change mode.", $e); }
+		}
 		final InputSystem_WorkerChannelSelectable<$MSG, $CHAN> $wt = new InputSystem_WorkerChannelSelectable<$MSG, $CHAN>($selector, $sink, $source, $framer);
 		final WorkFuture<$MSG> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
 		$wt.install($wf);
