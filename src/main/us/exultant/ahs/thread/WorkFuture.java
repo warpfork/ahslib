@@ -108,11 +108,26 @@ public interface WorkFuture<$V> extends Future<$V> {
 	@ThreadSafe
 	@Nullipotent
 	public boolean isDone();
-	
+
+	/**
+	 * <p>
+	 * Checks whether or not this work is completed, and if so if it finished
+	 * gracefully or by throwing an exception.
+	 * </p>
+	 * 
+	 * @throws CancellationException
+	 *                 if the work was cancelled (i.e. {@link #isCancelled()} is
+	 *                 true).
+	 * 
+	 * @returns {@link Boolean#TRUE} if {@link #getState()} is {@link State#FINISHED}
+	 *          and {@link #get()} returns a value; {@link Boolean#FALSE} if
+	 *          {@link #getState()} is {@link State#FINISHED} and {@link #get()}
+	 *          throws an ExecutionException; null otherwise (i.e. if the work isn't
+	 *          finished or cancelled yet).
+	 */
 	@ThreadSafe
 	@Nullipotent
-	// true == finished gracefully; false == finished with exception; null == not yet finished; CancellationException == cancelled.
-	public Boolean isFinishedGracefully() throws CancellationException, InterruptedException;	// this is a dumb idea.  both CANCELLED and FINISHED-but-with-exception could be this.  hm, confining it to with-exception would seem valid to me though.  but yeah, you wouldn't want people to just check this, because they'd they wait forever on a cancelled event.  maybe it can throw cancellation/
+	public Boolean isFinishedGracefully() throws CancellationException;
 	
 	/**
 	 * <p>

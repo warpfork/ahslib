@@ -27,14 +27,21 @@ abstract public class WorkFutureAdapter<$V> implements WorkFuture<$V> {
 		}
 	}
 	
-	public Boolean isFinishedGracefully() throws CancellationException, InterruptedException {
+	public Boolean isFinishedGracefully() throws CancellationException {
 		switch (getState()) {
 			case FINISHED:
-				try {
-					get();
-					return true;
-				} catch (ExecutionException $e) {
-					return false;
+				boolean $interrupted = false;
+				while (true) {
+					try {
+						get();
+						return true;
+					} catch (ExecutionException $e) {
+						return false;
+					} catch (InterruptedException $e) {
+						$interrupted = true;
+					} finally {
+						if ($interrupted) Thread.currentThread().interrupt();
+					}
 				}
 			case CANCELLED:
 				throw new CancellationException();
