@@ -29,7 +29,7 @@ import java.util.concurrent.locks.*;
  * This is one of the most common implementations for use in managing tasks in a
  * WorkScheduler.
  */
-class WorkFutureImpl<$V> implements WorkFuture<$V> {
+class WorkFutureImpl<$V> extends WorkFutureAdapter<$V> {
 	WorkFutureImpl(WorkScheduler $parent, WorkTarget<$V> $wt, ScheduleParams $schedp) {
 		this.$parent = $parent;
 		this.$work = $wt;
@@ -104,18 +104,6 @@ class WorkFutureImpl<$V> implements WorkFuture<$V> {
 	
 	public boolean cancel(boolean $mayInterruptIfRunning) {
 		return $sync.cancel($mayInterruptIfRunning);
-	}
-	
-	public boolean isCancelled() {
-		return getState() == State.CANCELLED;
-	}
-	
-	public boolean isDone() {
-		switch (getState()) {
-			case FINISHED: return true;
-			case CANCELLED: return true;
-			default: return false;
-		}
 	}
 	
 	public $V get() throws InterruptedException, ExecutionException, CancellationException {

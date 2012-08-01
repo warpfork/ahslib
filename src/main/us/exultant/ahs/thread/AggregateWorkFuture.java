@@ -36,7 +36,7 @@ import java.util.concurrent.*;
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
-public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
+public class AggregateWorkFuture<$T> extends WorkFutureAdapter<Void> {
 	public AggregateWorkFuture(Collection<WorkFuture<$T>> $futures) {
 		this.$pip = new FuturePipe<$T>();
 		this.$state = WorkFuture.State.WAITING;
@@ -85,18 +85,6 @@ public class AggregateWorkFuture<$T> implements WorkFuture<Void> {
 	
 	public ScheduleParams getScheduleParams() {
 		return ScheduleParams.NOW;
-	}
-	
-	public boolean isCancelled() {
-		return getState() == State.CANCELLED;
-	}
-	
-	public boolean isDone() {
-		switch (getState()) {
-			case FINISHED: return true;
-			case CANCELLED: return true;
-			default: return false;
-		}
 	}
 	
 	/**

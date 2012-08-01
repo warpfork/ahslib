@@ -98,8 +98,8 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * 
 	 * <p>
 	 * After this method returns true, subsequent calls to {@link #isDone()} will
-	 * always return true; subsequent calls to {@link #get()} and
-	 * {@link #get(long, TimeUnit)} will return instantly; and
+	 * always return true; and subsequent calls to {@link #get()} and
+	 * {@link #get(long, TimeUnit)} will return instantly.
 	 * </p>
 	 * 
 	 * @returns true if {@link #getState()} is {@link State#CANCELLED} or
@@ -108,6 +108,26 @@ public interface WorkFuture<$V> extends Future<$V> {
 	@ThreadSafe
 	@Nullipotent
 	public boolean isDone();
+
+	/**
+	 * <p>
+	 * Checks whether or not this work is completed, and if so if it finished
+	 * gracefully or by throwing an exception.
+	 * </p>
+	 * 
+	 * @throws CancellationException
+	 *                 if the work was cancelled (i.e. {@link #isCancelled()} is
+	 *                 true).
+	 * 
+	 * @returns {@link Boolean#TRUE} if {@link #getState()} is {@link State#FINISHED}
+	 *          and {@link #get()} returns a value; {@link Boolean#FALSE} if
+	 *          {@link #getState()} is {@link State#FINISHED} and {@link #get()}
+	 *          throws an ExecutionException; null otherwise (i.e. if the work isn't
+	 *          finished or cancelled yet).
+	 */
+	@ThreadSafe
+	@Nullipotent
+	public Boolean isFinishedGracefully() throws CancellationException;
 	
 	/**
 	 * <p>
