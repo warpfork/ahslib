@@ -14,10 +14,6 @@
 		complete with an abundance of abstract interfaces that made it
 		sufficient to provide services to a diverse range of projects.
 	</description>
-	
-	<echo>Ant version:       ${ant.version}</echo>
-	<echo>Ant jvm version:   ${ant.java.version}</echo>
-	<property file="build.properties"/>
 	<import file="lib/exus-build/build-exultant.xml"/>
 	
 	
@@ -71,13 +67,9 @@
 		/>
 	</target>
 	<target name="dist-core" depends="compile-core">
-		<jar jarfile="${dist}/ahslib-core.jar" basedir="${build}/main/core">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-core.jar">
+			<fileset file="${build}/main/core/**" />
+		</exusPack>
 	</target>
 	
 	<target name="compile-codec" depends="compile-core">
@@ -88,13 +80,9 @@
 		/>
 	</target>
 	<target name="dist-codec" depends="compile-codec">
-		<jar jarfile="${dist}/ahslib-codec.jar" basedir="${build}/main/codec">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-codec.jar">
+			<fileset file="${build}/main/codec/**" />
+		</exusPack>
 	</target>
 	
 	<target name="compile-codec-json" depends="compile-codec">
@@ -105,13 +93,9 @@
 		/>
 	</target>
 	<target name="dist-codec-json" depends="compile-codec-json">
-		<jar jarfile="${dist}/ahslib-codec-json.jar" basedir="${build}/main/codec-json">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-codec-json.jar">
+			<fileset file="${build}/main/codec-json/**" />
+		</exusPack>
 	</target>
 	
 	<target name="compile-codec-ebon" depends="compile-codec">
@@ -122,13 +106,9 @@
 		/>
 	</target>
 	<target name="dist-codec-ebon" depends="compile-codec-ebon">
-		<jar jarfile="${dist}/ahslib-codec-ebon.jar" basedir="${build}/main/codec-ebon">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-codec-ebon.jar">
+			<fileset file="${build}/main/codec-ebon/**" />
+		</exusPack>
 	</target>
 		
 	<target name="compile-codec-pre" depends="compile-codec">
@@ -139,13 +119,9 @@
 		/>
 	</target>
 	<target name="dist-codec-pre" depends="compile-codec-pre">
-		<jar jarfile="${dist}/ahslib-codec-pre.jar" basedir="${build}/main/codec-pre">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-codec-pre.jar">
+			<fileset file="${build}/main/codec-pre/**" />
+		</exusPack>
 	</target>
 	
 	<target name="compile-test">
@@ -156,13 +132,9 @@
 		/>
 	</target>
 	<target name="dist-test" depends="compile-test">
-		<jar jarfile="${dist}/ahslib-test.jar" basedir="${build}/main/test">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-test.jar">
+			<fileset file="${build}/main/test/**" />
+		</exusPack>
 	</target>
 	
 	<target name="compile-thread" depends="compile-core">
@@ -173,13 +145,9 @@
 		/>
 	</target>
 	<target name="dist-thread" depends="compile-thread">
-		<jar jarfile="${dist}/ahslib-thread.jar" basedir="${build}/main/thread">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-thread.jar">
+			<fileset file="${build}/main/thread/**" />
+		</exusPack>
 	</target>
 	
 	<target name="compile-io" depends="compile-thread">
@@ -190,13 +158,9 @@
 		/>
 	</target>
 	<target name="dist-io" depends="compile-io">
-		<jar jarfile="${dist}/ahslib-io.jar" basedir="${build}/main/io">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-io.jar">
+			<fileset file="${build}/main/io/**" />
+		</exusPack>
 	</target>
 	
 	<target name="compile-crypto" depends="compile-codec">
@@ -207,13 +171,9 @@
 				/>
 	</target>
 	<target name="dist-crypto" depends="compile-crypto">
-		<jar jarfile="${dist}/ahslib-crypto.jar" basedir="${build}/main/crypto">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-crypto.jar">
+			<fileset file="${build}/main/crypto/**" />
+		</exusPack>
 	</target>
 	
 	<target name="compile-scratch" depends="compile-core, compile-codec, compile-codec-ebon, compile-codec-pre">
@@ -224,13 +184,9 @@
 			 />
 	</target>
 	<target name="dist-scratch" depends="compile-scratch">
-		<jar jarfile="${dist}/ahslib-scratch.jar" basedir="${build}/main/scratch">
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
+		<exusPack destfile="${dist}/ahslib-scratch.jar">
+			<fileset file="${build}/main/scratch/**" />
+		</exusPack>
 	</target>
 	
 	<target name="dist-complete" depends="
