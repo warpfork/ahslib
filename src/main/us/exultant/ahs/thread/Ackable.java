@@ -21,6 +21,7 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.anno.*;
+import java.util.concurrent.*;
 
 /**
  * <p>
@@ -41,8 +42,9 @@ import us.exultant.ahs.anno.*;
  * <li>The WT1 sends an Ackable-wrapped message to WT2, spawns WT4, and sets WT4 to run
  * when the Ackable's WorkFuture finishes.
  * <li>WT2 reads the Ackable, <i>holds on to it</i>, does its work, makes a second
- * Ackable, sets a completion listener on the second Ackable to fire the ack on the first,
- * and seconds the second Ackable and payload on to WT3.
+ * Ackable, sets a completion listener on the second Ackable to fire the ack on the first
+ * (use {@link #chain(Ackable, Ackable)} to make that a one-liner), and sends the second
+ * Ackable and payload along to WT3.
  * <li>WT3 commits stuff to the database and calls ack on its Ackable (which is second
  * one).
  * </ol>
@@ -136,5 +138,44 @@ public class Ackable<PAYLOAD> {
 	@Idempotent
 	public void nak(Throwable $exception) {
 		$future.setException($exception);
+	}
+	
+	
+	
+	/**
+	 * <p>
+	 * Chain a downstream Ackable to fire {@link #ack() ack} on an upstream Ackable as
+	 * soon as it itself is ack'd.
+	 * </p>
+	 * 
+	 * <p>
+	 * If the downstream Ackable was {@link #nak(Throwable) nak}'d, the upstream will
+	 * be also be nak'd with the same Throwable.
+	 * </p>
+	 * 
+	 * @param $upstream
+	 *                the guy to send an acknowledgement to.
+	 * @param $downstream
+	 *                the guy who gets acknowledgements first and who should pass them
+	 *                on.
+	 */
+	public static void chain(final Ackable<?> $upstream, final Ackable<?> $downstream) {
+		$downstream.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+			public void hear(WorkFuture<?> $downstreamResult) {
+				boolean $interrupted = false;
+				while (true) {
+					try {
+						$downstreamResult.get();
+						$upstream.ack();
+					} catch (ExecutionException $e) {
+						$upstream.nak($e.getCause());
+					} catch (InterruptedException $e) {
+						$interrupted = true;
+					} finally {
+						if ($interrupted) Thread.currentThread().interrupt();
+					}
+				}
+			}
+		});
 	}
 }
