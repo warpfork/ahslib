@@ -21,6 +21,7 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.anno.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -81,7 +82,7 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 	public ScheduleParams getScheduleParams() {
 		return ScheduleParams.NOW;
 	}
-
+	
 	/**
 	 * Sets the result of this WorkFuture to the given value unless this future has
 	 * already been set or has been cancelled.
@@ -89,6 +90,8 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 	 * @return true if this set call caused the WorkFuture to become finished with
 	 *         this value; false if there was a concurrent set or cancel.
 	 */
+	@ThreadSafe
+	@Idempotent
 	public boolean set($V $result) {
 		if (!shiftToFinished()) return false;
 		this.$result = $result;
@@ -104,6 +107,8 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 	 * @return true if this set call caused the WorkFuture to become finished with
 	 *         this value; false if there was a concurrent set or cancel.
 	 */
+	@ThreadSafe
+	@Idempotent
 	public boolean setException(Throwable $result) {
 		if (!shiftToFinished()) return false;
 		this.$exception = new ExecutionException($result);
@@ -112,6 +117,8 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		return true;
 	}
 	
+	@ThreadSafe
+	@Idempotent
 	private boolean shiftToFinished() {
 		synchronized ($latch) {
 			switch ($state) {
@@ -122,6 +129,8 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		}
 	}
 	
+	@ThreadSafe
+	@Idempotent
 	public $V get() throws InterruptedException, CancellationException, ExecutionException {
 		$latch.await();
 		if (isCancelled()) throw new CancellationException();
@@ -129,6 +138,8 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		return $result;
 	}
 	
+	@ThreadSafe
+	@Idempotent
 	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, TimeoutException, CancellationException, ExecutionException {
 		$latch.await($timeout, $unit);
 		if (isCancelled()) throw new CancellationException();
@@ -147,6 +158,8 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 	 *         already {@link WorkFuture.State#FINISHED} or
 	 *         {@link WorkFuture.State#CANCELLED}, returns false.
 	 */
+	@ThreadSafe
+	@Idempotent
 	public boolean cancel(boolean $notApplicable) {
 		synchronized ($latch) {
 			switch ($state) {
@@ -165,7 +178,6 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		return true;
 	}
 	
-
 	/**
 	 * <p>
 	 * Updating is not a meaningful operation for a {@link WorkFutureLatched}; we're
