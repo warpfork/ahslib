@@ -19,36 +19,31 @@
 
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.core.*;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
  * <p>
- * Creates a WorkTarget that will become ready and runnable after...................... this is suboptimal.  this is a condition you might like to apply *along with any of the others already avaiable* like flowing or the triggerables or callable or runnable.
- * </p>
- * 
- * <p>
- * If constructed in run-once mode, the WorkTarget will run exactly once when
- * scheduled with a {@link WorkScheduler}; otherwise if run-once is false the work
- * will always be ready and will never become done (to stop it, the
- * {@link WorkFuture} must be cancelled or it must throw an exception).
+ * Creates a WorkTarget that will become ready after a set of other {@link WorkFuture}s complete.
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
-public class WorkTargetAdapterFollowup<$V> extends WorkTargetAdapterTriggerable<$V> {
-	public WorkTargetAdapterFollowup(Callable<$V> $wrap) { this($wrap,true,true,0); }
-	public WorkTargetAdapterFollowup(Callable<$V> $wrap, boolean $startReady, boolean $runOnce) { this($wrap,$startReady,$runOnce,0); }
-	public WorkTargetAdapterFollowup(Callable<$V> $wrap, int $priority) { this($wrap,true,true,$priority); }
-	public WorkTargetAdapterFollowup(Callable<$V> $wrap, boolean $startReady, boolean $runOnce, int $priority) {
-		super($startReady, $runOnce, $priority);
-		if ($wrap == null) throw new NullPointerException();
-		this.$wrap = $wrap;
-	}
-	
-	private final Callable<$V>	$wrap;
-	
-	protected $V run() throws Exception {
-		$wrap.call();
-		return null;
+//XXX:AHS:THREAD: this is suboptimal.  We'd really like to be able to apply followup conditions along with any of the other adapters already available; especially like flowing but also the other the triggerables like callable and runnable.
+public abstract class WorkTargetAdapterFollowup<$V> extends WorkTargetAdapterTriggerable<$V> {
+	public WorkTargetAdapterFollowup(Collection<WorkFuture<?>> $eventsToFollow, int $priority) {
+		super(false, true, $priority);
+		final CountDownLatch $latch = new CountDownLatch( $eventsToFollow.size() );
+		final Listener<WorkFuture<?>> $downcounter = new Listener<WorkFuture<?>>() {
+			public void hear(WorkFuture<?> $wf) {
+				$latch.countDown();
+				if ($latch.getCount() == 0)
+					trigger();
+					//XXX:AHS:THREAD: this doesn't emit any events that can be used to update our own WorkFuture at the scheduler now, which isn't cool.  The workaround is to add those updators to everyone in $eventsToFollow after creating and scheduling this WorkTarget, but that's definitely clunky.  (Or as usual, just forget about event-based updating and let that be a clocked thing.)
+			}
+		};
+		for (WorkFuture<?> $wf : $eventsToFollow)
+			$wf.addCompletionListener($downcounter);
 	}
 }
