@@ -43,7 +43,7 @@ import java.util.concurrent.*;
  * 
  * <p>
  * For waiting for or getting notifications of a group of WorkFutures, use
- * {@link AggregateWorkFuture}.
+ * {@link WorkFutureAggregate}.
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
@@ -313,7 +313,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * <p>
 		 * For some kinds of {@link WorkFuture} that do not directly represent a
 		 * {@link WorkTarget} scheduled with a {@link WorkScheduler} (such as an
-		 * {@link AggregateWorkFuture} for example), this is the default state:
+		 * {@link WorkFutureAggregate} for example), this is the default state:
 		 * {@link #SCHEDULED} and {@link #RUNNING} may never occur.
 		 * </p>
 		 */
@@ -425,11 +425,11 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * <p>
 		 * For some kinds of {@link WorkFuture} that do not directly represent a
 		 * {@link WorkTarget} scheduled with a {@link WorkScheduler} (such as an
-		 * {@link AggregateWorkFuture} for example), this may be a valid
+		 * {@link WorkFutureAggregate} for example), this may be a valid
 		 * transition directly from {@link #WAITING} state, it may be a somewhat
 		 * more prolonged state, and it may have different semantics regarding
 		 * where a thread is. See the documentation of
-		 * {@link AggregateWorkFuture#cancel(boolean)} for an example of this; the
+		 * {@link WorkFutureAggregate#cancel(boolean)} for an example of this; the
 		 * semantics are slightly different, but should be essentially
 		 * unsurprising.
 		 * </p>

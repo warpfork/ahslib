@@ -36,8 +36,8 @@ import java.util.concurrent.*;
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
-public class AggregateWorkFuture<$T> extends WorkFutureAdapter<Void> {
-	public AggregateWorkFuture(Collection<WorkFuture<$T>> $futures) {
+public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
+	public WorkFutureAggregate(Collection<WorkFuture<$T>> $futures) {
 		this.$pip = new FuturePipe<$T>();
 		this.$state = WorkFuture.State.WAITING;
 		this.$completionListeners = new ArrayList<Listener<WorkFuture<?>>>(1);
@@ -163,8 +163,8 @@ public class AggregateWorkFuture<$T> extends WorkFutureAdapter<Void> {
 	 * cancellation was issued it's quite possible that they have not yet returned. To
 	 * wait for all tasks to be completed and to have no threads with stack frames in
 	 * their {@link WorkTarget#call()} method, simply use
-	 * {@link AggregateWorkFuture#get()} or
-	 * {@link AggregateWorkFuture#addCompletionListener(Listener)} in the usual ways.
+	 * {@link WorkFutureAggregate#get()} or
+	 * {@link WorkFutureAggregate#addCompletionListener(Listener)} in the usual ways.
 	 * </p>
 	 * 
 	 * <p>
@@ -230,7 +230,7 @@ public class AggregateWorkFuture<$T> extends WorkFutureAdapter<Void> {
 	private void hearDone() {
 		synchronized ($completionListeners) {
 			for (Listener<WorkFuture<?>> $x : $completionListeners)
-				$x.hear(AggregateWorkFuture.this);
+				$x.hear(WorkFutureAggregate.this);
 			$completionListeners.clear();	// let that crap be gc'd even if this future is forced to hang around for a while
 		}
 	}
