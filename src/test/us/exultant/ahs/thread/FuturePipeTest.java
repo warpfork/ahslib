@@ -53,8 +53,8 @@ public class FuturePipeTest extends TestCase {
 	
 	
 	
-	public static final WorkTarget.TriggerableAdapter<Void> makeNoopWork(boolean $alreadyReady) {
-		return new WorkTarget.RunnableWrapper(new Runnable() { public void run() {} }, $alreadyReady, true);
+	public static final WorkTargetAdapterTriggerable<Void> makeNoopWork(boolean $alreadyReady) {
+		return new WorkTargetWrapperRunnable(new Runnable() { public void run() {} }, $alreadyReady, true);
 	}
 	
 	
@@ -69,7 +69,7 @@ public class FuturePipeTest extends TestCase {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			$ws.start();
 			
-			WorkTarget.TriggerableAdapter<Void> $wt = makeNoopWork(false);
+			WorkTargetAdapterTriggerable<Void> $wt = makeNoopWork(false);
 			WorkFuture<Void> $wf = $ws.schedule($wt, ScheduleParams.NOW);
 			$wfp.sink().write($wf);
 			$wfp.sink().close();
@@ -177,9 +177,9 @@ public class FuturePipeTest extends TestCase {
 		public Object call() {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			
-			WorkTarget.TriggerableAdapter<Void> $wt1 = makeNoopWork(false);
-			WorkTarget.TriggerableAdapter<Void> $wt2 = makeNoopWork(false);
-			WorkTarget.TriggerableAdapter<Void> $wt3 = makeNoopWork(false);
+			WorkTargetAdapterTriggerable<Void> $wt1 = makeNoopWork(false);
+			WorkTargetAdapterTriggerable<Void> $wt2 = makeNoopWork(false);
+			WorkTargetAdapterTriggerable<Void> $wt3 = makeNoopWork(false);
 			WorkFuture<Void> $wf1 = $ws.schedule($wt1, ScheduleParams.NOW);
 			WorkFuture<Void> $wf2 = $ws.schedule($wt2, ScheduleParams.NOW);
 			WorkFuture<Void> $wf3 = $ws.schedule($wt3, ScheduleParams.NOW);

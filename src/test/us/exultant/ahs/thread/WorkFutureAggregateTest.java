@@ -60,7 +60,7 @@ public class WorkFutureAggregateTest extends TestCase {
 	
 	
 	
-	private static class StickableWorkTarget extends WorkTarget.TriggerableAdapter<Void> {
+	private static class StickableWorkTarget extends WorkTargetAdapterTriggerable<Void> {
 		public StickableWorkTarget(CountDownLatch $latch, int $priority) {
 			super(false, true, $priority);
 			this.$latch = $latch;
