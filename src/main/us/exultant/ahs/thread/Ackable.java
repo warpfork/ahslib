@@ -153,6 +153,12 @@ public class Ackable<PAYLOAD> {
 	 * be also be nak'd with the same Throwable.
 	 * </p>
 	 * 
+	 * <p>
+	 * Multiple upstreams can be chained to a single downstream without a problem. However, if
+	 * multiple downstreams are chained to a single upstream, the downstream to be
+	 * ack'd will cause the upstream to be ack'd (and thus implicitly may also
+	 * determine whether the upstream finishes with an ack or nak).  If you need chain multiple downstreams to a single upstream, .......TODO perhaps a workfuture which has readiness defined by all of them is best?  leaves you somewhere to put the logic on how to deal with numerous failures. 
+	 * 
 	 * @param $upstream
 	 *                the guy to send an acknowledgement to.
 	 * @param $downstream
@@ -178,4 +184,6 @@ public class Ackable<PAYLOAD> {
 			}
 		});
 	}
+	
+	//TODO creating one WorkTarget which schedules after several other WorkFuture would seem to largely be an easy issue of wielding a WorkFutureAggregate.  but... boy, how to fabricate those without a smooth predicate syntax?  ouch.  lispier things here would make this a helluva lot prettier.
 }
