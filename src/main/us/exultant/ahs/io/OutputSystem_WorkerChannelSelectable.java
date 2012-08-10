@@ -48,7 +48,7 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 		try {
 			if (!$buffered) {
 				$MSG $msg = $source.readNow();
-				if ($msg == null) return null;
+				if ($msg == null) return null;	// it might behoove us to make sure $signal is unset here.  it probably is, but a very slow queue for write interest deregistration could cause us to loop unpleasantly on an empty pipe.	// this may or may not have been intentionally deleted already?  fucked up something with stash, leaves me unsure.
 				$buffered = !$trans.write($channel, $msg);
 			}
 			for (int $i = 0; $buffered && $i < 3; $i++)
@@ -62,8 +62,10 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 		
 		if (!$buffered) {
 			// clean finish, no one blocked or nothing
-			$selector.deregisterWrite($channel);	/* this request is queued, and the selector is capable of being in the middle of signally process that's going to leave our $signal set again even right after this next line where we unset it.  this is still fine.  that possibility is impossible to prevent, but the absolute worst it can ever cause is a spurious call of this WT, which quickly exits again and clears the $signal. */
-			$signal = false;
+			if ($signal) {  // we needn't bother the selectorsignaller with a deregister request if we were never registered.
+				$selector.deregisterWrite($channel);	/* this request is queued, and the selector is capable of being in the middle of signally process that's going to leave our $signal set again even right after this next line where we unset it.  this is still fine.  that possibility is impossible to prevent, but the absolute worst it can ever cause is a spurious call of this WT, which quickly exits again and clears the $signal. */
+				$signal = false;
+			}
 		} else {
 			// we didn't get to write the whole chunk.  we need to set up a callback to schedule us again when the selection system says it's ready to accept more writing.
 			if ($selectedListener != null) $selector.registerWrite($channel, $selectedListener);
