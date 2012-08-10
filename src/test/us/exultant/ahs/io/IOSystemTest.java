@@ -50,7 +50,7 @@ public class IOSystemTest extends TestCase {
 	
 	abstract class TestTemplate extends TestCase.Unit {
 		protected WorkScheduler $scheduler = new WorkSchedulerFlexiblePriority(8);
-		protected SelectionSignaller $selector = new SelectionSignaller(0);
+		protected SelectionSignaller $selector = new SelectionSignaller();
 		private WorkScheduler $ssws = new WorkSchedulerFlexiblePriority(1).start();
 		{ $selector.schedule($ssws, ScheduleParams.NOW); }
 		
