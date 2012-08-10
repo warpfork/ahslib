@@ -50,9 +50,10 @@ public class IOSystemTest extends TestCase {
 	
 	abstract class TestTemplate extends TestCase.Unit {
 		protected WorkScheduler $scheduler = new WorkSchedulerFlexiblePriority(8);
-		protected SelectionSignaller $selector = new SelectionSignaller();
+		protected SelectionSignaller $selector = new SelectionSignaller(0);
 		private WorkScheduler $ssws = new WorkSchedulerFlexiblePriority(1).start();
-		{ $selector.schedule($ssws, ScheduleParams.NOW); }
+		private WorkFuture<Void> $sswf;
+		{ $sswf = $selector.schedule($ssws, ScheduleParams.NOW); }
 		
 		/**
 		 * call this at the end of a test in order to stop the schedulers that
@@ -61,6 +62,7 @@ public class IOSystemTest extends TestCase {
 		 * otherwise not actually very important.
 		 */
 		protected void cleanup() {
+			$sswf.cancel(true);
 			$ssws.stop(true);
 			$scheduler.stop(true);
 		}
