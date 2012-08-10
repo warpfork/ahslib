@@ -33,11 +33,11 @@ public class WorkManager {
 	/**
 	 * Uses a {@link Factory} to produce one {@link WorkTarget} instance per core on
 	 * the machine and schedules them with the {@link #getDefaultScheduler() default
-	 * scheduler}, and returns an {@link AggregateWorkFuture} that allows you to track
+	 * scheduler}, and returns an {@link WorkFutureAggregate} that allows you to track
 	 * their overall progress.
 	 * 
 	 * @param $wtf
-	 * @return an {@link AggregateWorkFuture}
+	 * @return an {@link WorkFutureAggregate}
 	 */
 	public static <$T> Future<Void> scheduleOnePerCore(Factory<WorkTarget<$T>> $wtf) {
 		return scheduleOnePerCore($wtf, getDefaultScheduler());
@@ -46,19 +46,19 @@ public class WorkManager {
 	/**
 	 * Uses a {@link Factory} to produce one {@link WorkTarget} instance per core on
 	 * the machine and schedules them with the {@link WorkScheduler} provided, and
-	 * returns an {@link AggregateWorkFuture} that allows you to track their overall
+	 * returns an {@link WorkFutureAggregate} that allows you to track their overall
 	 * progress.
 	 * 
 	 * @param $wtf
 	 * @param $ws
-	 * @return an {@link AggregateWorkFuture}
+	 * @return an {@link WorkFutureAggregate}
 	 */
 	public static <$T> Future<Void> scheduleOnePerCore(final Factory<WorkTarget<$T>> $wtf, final WorkScheduler $ws) {
 		final int $n = Runtime.getRuntime().availableProcessors();
 		List<WorkFuture<$T>> $fa = new ArrayList<WorkFuture<$T>>($n);
 		for (int $i = 0; $i < $n; $i++)
 			$fa.add($ws.schedule($wtf.make(), ScheduleParams.NOW));	// i assume it wouldn't often make sense to schedule the same task at the same time on multiple cores if it's clock-based
-		return new AggregateWorkFuture<$T>($fa);
+		return new WorkFutureAggregate<$T>($fa);
 	}
 	
 	

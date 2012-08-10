@@ -78,7 +78,7 @@
  * If your application needs to wait for the completion of several tasks, you can use
  * either a {@link us.exultant.ahs.thread.FuturePipe} (which will return WorkFutures to
  * you in the order they are finished) or an
- * {@link us.exultant.ahs.thread.AggregateWorkFuture} (which is itself a WorkFuture, so
+ * {@link us.exultant.ahs.thread.WorkFutureAggregate} (which is itself a WorkFuture, so
  * you can either block on it until completed, or register completion listeners with it).
  * </p>
  * 

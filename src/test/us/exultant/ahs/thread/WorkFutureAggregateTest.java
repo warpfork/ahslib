@@ -27,7 +27,7 @@ import java.util.concurrent.*;
 
 /**
  * <p>
- * Tests {@link AggregateWorkFuture}.
+ * Tests {@link WorkFutureAggregate}.
  * </p>
  * 
  * <p>
@@ -42,8 +42,8 @@ import java.util.concurrent.*;
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
  */
-public class AggregateWorkFutureTest extends TestCase {
-	public static void main(String... $args) { new AggregateWorkFutureTest().run(); }
+public class WorkFutureAggregateTest extends TestCase {
+	public static void main(String... $args) { new WorkFutureAggregateTest().run(); }
 	
 	private final int TSCALE = 25;
 	
@@ -60,7 +60,7 @@ public class AggregateWorkFutureTest extends TestCase {
 	
 	
 	
-	private static class StickableWorkTarget extends WorkTarget.TriggerableAdapter<Void> {
+	private static class StickableWorkTarget extends WorkTargetAdapterTriggerable<Void> {
 		public StickableWorkTarget(CountDownLatch $latch, int $priority) {
 			super(false, true, $priority);
 			this.$latch = $latch;
@@ -89,7 +89,7 @@ public class AggregateWorkFutureTest extends TestCase {
 			
 			Collection<WorkFuture<Void>> $wfc = new ArrayList<WorkFuture<Void>>();
 			$wfc.add($wf);
-			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>($wfc);
+			WorkFutureAggregate<Void> $awf = new WorkFutureAggregate<Void>($wfc);
 			$awf.addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $wf) {
 					$success.countDown();
@@ -158,7 +158,7 @@ public class AggregateWorkFutureTest extends TestCase {
 				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.NOW);
 			for (int $i = 0; $i < $tasks; $i++)
 				$wts[$i].trigger();
-			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>(Arr.asList($wfs));
+			WorkFutureAggregate<Void> $awf = new WorkFutureAggregate<Void>(Arr.asList($wfs));
 			
 			// nothing should be able to finish because they weren't ready when we scheduled them.
 			X.chill(TSCALE);
@@ -196,7 +196,7 @@ public class AggregateWorkFutureTest extends TestCase {
 			for (int $i = 0; $i < $tasks; $i++)
 				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.NOW);
 			
-			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>(Arr.asList($wfs));
+			WorkFutureAggregate<Void> $awf = new WorkFutureAggregate<Void>(Arr.asList($wfs));
 			$awf.addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $wf) {
 					$success.countDown();
@@ -240,7 +240,7 @@ public class AggregateWorkFutureTest extends TestCase {
 			for (int $i = 0; $i < $tasks; $i++)
 				$wfs[$i] = $ws.schedule($wts[$i], ScheduleParams.NOW);
 			
-			AggregateWorkFuture<Void> $awf = new AggregateWorkFuture<Void>(Arr.asList($wfs));
+			WorkFutureAggregate<Void> $awf = new WorkFutureAggregate<Void>(Arr.asList($wfs));
 			$awf.addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $wf) {
 					$success.countDown();
