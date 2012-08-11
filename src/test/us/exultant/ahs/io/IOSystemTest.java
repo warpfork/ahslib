@@ -62,9 +62,14 @@ public class IOSystemTest extends TestCase {
 		 * otherwise not actually very important.
 		 */
 		protected void cleanup() {
+			$log.debug("cleaning up:");
+			$log.trace("cancelling selector...");
 			$sswf.cancel(true);
+			$log.trace("stopping selector scheduler...");
 			$ssws.stop(true);
+			$log.trace("stopping main scheduler...");
 			$scheduler.stop(true);
+			$log.debug("cleanup done");
 		}
 		
 		protected Tup2<SocketChannel,SocketChannel> makeSocketChannelPair() throws IOException {
