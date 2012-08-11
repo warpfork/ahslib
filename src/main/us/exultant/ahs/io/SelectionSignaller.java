@@ -377,7 +377,14 @@ public class SelectionSignaller {
 			// PHASE TWO
 			// chill out
 			assert logger.debug("selector selecting...");
+			long $start = X.time();
 			boolean $freshWorkExists = callSelect() > 0;
+			if (!$freshWorkExists && Thread.interrupted()) {
+				if (X.time() - $start > 7000)
+					{ X.sayet("yes, it's as bad as you feared!"); System.exit(20); }
+				else
+					return null;
+			}
 			assert logger.debug("selector wake, workExists:{}", $freshWorkExists);
 			
 			// PHASE... TWO AND A HALF?
@@ -398,7 +405,7 @@ public class SelectionSignaller {
 			try {
 				/* block until channel events, or wakeups triggered by the event pipe's listener, or thread interrupts. */
 				if ($timeout < 0) return $selector.selectNow();
-				return $selector.select($timeout);
+				return $selector.select(10000);
 			} catch (ClosedSelectorException $e) {
 				/* selectors can't be closed except by their close method, which we control all access to, so this shouldn't happen in a way that surprises us. */
 				throw new MajorBug($e);
