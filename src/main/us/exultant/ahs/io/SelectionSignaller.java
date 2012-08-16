@@ -395,11 +395,6 @@ public class SelectionSignaller {
 				return null;
 			}
 			
-			// PHASE... TWO AND A HALF?
-			// if we were a blocking selector, we might have been woken up specifically to deal with a new event, so we should do so asap
-			//callRegistrationProcessing();
-			// actually no, this is silly.  if we're being used in blocking mode, we're probably also being used in our own thread, so we'll be looping back to phase one momentarily anyway and it's all kay.
-			
 			// PHASE THREE
 			// disbatch events to folks who're deserving
 			assert logger.debug("selector disbatching events...");
