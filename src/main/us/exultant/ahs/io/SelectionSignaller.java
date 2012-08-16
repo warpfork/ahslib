@@ -48,19 +48,29 @@ import org.slf4j.*;
  * 
  * <p>
  * If you choose not to use the default global instance of this selector and instead
- * construct and schedule your own, please note that this WorkTarget is not so ammenable
- * to pooling as one might like; unfortunately, there were design choices made in the core
- * of the Java standard libraries that leave us with a lot of limitations. In particular,
- * we have no way of getting events that the selector itself has events ready other than
- * full-out checking it &mdash; so, we're stuck with an {@link Worker#isReady()} method
- * that helplessly always returns true, and fundamentally no way to disbatch events
- * relating to the core selector's readiness. There are two ways to deal with this: you
- * may actually just run this system in its own personal thread (creating a
- * {@link WorkSchedulerFlexiblePriority} instance with a thread pool of size one is a
- * reasonable way to do this); otherwise, if you do wish to keep it in the same Scheduler
- * as other tasks, you should be sure to construct this selector with purely nonblocking
- * mode (negative selection timeout parameter) and fixed-delay scheduling parameters (i.e.
- * {@link ScheduleParams#makeFixedDelay(long)}).
+ * construct and schedule your own, there are a couple of caveats:
+ * <ul>
+ * <li>This WorkTarget is not so ammenable to pooling as one might like; unfortunately
+ * there are a lot of limitations ingrained below the level this library can change. In
+ * particular, we have no way of getting events that the selector itself has events ready
+ * other than full-out checking it &mdash; so, we're stuck with an
+ * {@link Worker#isReady()} method that helplessly always returns true, and fundamentally
+ * no way to disbatch events relating to the core selector's readiness. There are two ways
+ * to deal with this: you may actually just run this system in its own personal thread
+ * (creating a {@link WorkSchedulerFlexiblePriority} instance with a thread pool of size
+ * one is a reasonable way to do this); otherwise, if you do wish to keep it in the same
+ * Scheduler as other tasks, you should be sure to construct this selector with purely
+ * nonblocking mode (negative selection timeout parameter) and fixed-delay scheduling
+ * parameters (i.e. {@link ScheduleParams#makeFixedDelay(long)}).
+ * <li>Using a <code>selectionTimeout</code> parameter of 0 can be unhealthy. Some JVMs
+ * will fail to wake up selection calls if the selecting thread was interrupted before the
+ * selection call; this means there are race conditions in interruption that are
+ * impossible to address, which in turn means that cancelling a SelectionSignaller with a
+ * selectionTimeout parameter of 0 can unpredictably simply fail to work on some JVMs
+ * (such a bug is documented <a
+ * href="https://code.google.com/p/android/issues/detail?id=15388">here</a> for some
+ * versions of android).
+ * </ul>
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
@@ -377,15 +387,13 @@ public class SelectionSignaller {
 			// PHASE TWO
 			// chill out
 			assert logger.debug("selector selecting...");
-			long $start = X.time();
 			boolean $freshWorkExists = callSelect() > 0;
-			if (!$freshWorkExists && Thread.interrupted()) {
-				if (X.time() - $start > 7000)
-					{ X.sayet("yes, it's as bad as you feared!"); System.exit(20); }
-				else
-					return null;
-			}
 			assert logger.debug("selector wake, workExists:{}", $freshWorkExists);
+			if (Thread.interrupted()) {
+				// okay, acknowledging interrupt; we'll return immediately.
+				assert logger.debug("selector interrupted!  forgetting about event disbatch and returning to scheduler immediately.");
+				return null;
+			}
 			
 			// PHASE... TWO AND A HALF?
 			// if we were a blocking selector, we might have been woken up specifically to deal with a new event, so we should do so asap
@@ -405,7 +413,7 @@ public class SelectionSignaller {
 			try {
 				/* block until channel events, or wakeups triggered by the event pipe's listener, or thread interrupts. */
 				if ($timeout < 0) return $selector.selectNow();
-				return $selector.select(10000);
+				return $selector.select($timeout);
 			} catch (ClosedSelectorException $e) {
 				/* selectors can't be closed except by their close method, which we control all access to, so this shouldn't happen in a way that surprises us. */
 				throw new MajorBug($e);
