@@ -84,6 +84,14 @@ public class IOSystemTest extends TestCase {
 	
 	
 	
+	/**
+	 * 
+	 * A pair of (TCP) SocketChannel are constructed; one is read from, and one is
+	 * written to (each is used unidirectionally).
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
 	private class TestBasic extends TestTemplate {
 		public Object call() throws IOException {
 			// set up ye olde sockets to stuff to test against
