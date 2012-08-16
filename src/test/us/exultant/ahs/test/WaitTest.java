@@ -20,7 +20,6 @@
 package us.exultant.ahs.test;
 
 import us.exultant.ahs.util.*;
-import java.io.*;
 import java.util.*;
 
 public class WaitTest extends TestCase {
