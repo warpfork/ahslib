@@ -43,7 +43,7 @@ public class WaitTest extends TestCase {
 			long $start = X.time();
 			for (int $i = 0; $i < $loop_times; $i++)
 				X.chill($pause_ms);
-			assertEquals($start+($pause_ms*$loop_times), X.time(), $error_margin);	//FIXME:AHS:TEST: TestUnit needs margin-of-error convenience methods.
+			assertEquals($start+($pause_ms*$loop_times), X.time(), $error_margin);
 		}
 	}
 	
