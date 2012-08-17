@@ -43,6 +43,9 @@ public class IOSystemTest extends TestCase {
 	public List<Unit> getUnits() {
 		return Arrays.asList(new Unit[] {
 				new TestBasic(),
+				new TestBasicMultimessage(),
+				new TestBasicBig(),
+				new TestBidiBig()
 		});
 	}
 	
@@ -134,6 +137,211 @@ public class IOSystemTest extends TestCase {
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
 			assertEquals($m1.array(), $incomingPipe.source().read().array());
+			
+			cleanup();
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * 
+	 * A pair of (TCP) SocketChannel are constructed; one is read from, and one is
+	 * written to (each is used unidirectionally); two messages are sent.
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
+	private class TestBasicMultimessage extends TestTemplate {
+		public Object call() throws IOException {
+			// set up ye olde sockets to stuff to test against
+			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
+			SocketChannel $outsock = $socks.getA();
+			SocketChannel $insock = $socks.getB();
+			
+			// set up the input system!
+			$log.debug("setting up InputSystem");
+			DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
+			InputSystem<ByteBuffer> $insys = InputSystem.setup(
+					$scheduler,
+					$selector,
+					$incomingPipe.sink(),
+					$insock,
+					new ChannelReader.BinaryFramer()
+			);
+			
+			// set up the output system!
+			$log.debug("setting up OutputSystem");
+			DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
+			OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
+					$scheduler,
+					$selector,
+					$outgoingPipe.source(),
+					$outsock,
+					new ChannelWriter.BinaryFramer()
+			);
+			
+			// make test messages
+			ByteBuffer $m1 = ByteBuffer.wrap(new byte[] {0x10, 0x20, 0x30, 0x40, 0x50});
+			ByteBuffer $m2 = ByteBuffer.wrap(new byte[] {0x70, 0x7F, 0x10, 0x00, -0x80});
+			
+			// start scheduler behind the IO systems
+			$scheduler.start();
+			
+			// do some writes
+			$log.debug("writing chunks...");
+			$outgoingPipe.sink().write($m1);
+			$outgoingPipe.sink().write($m2);
+			
+			// do some reads, and make assertion
+			$log.debug("reading chunks...");
+			assertEquals($m1.array(), $incomingPipe.source().read().array());
+			assertEquals($m2.array(), $incomingPipe.source().read().array());
+			
+			cleanup();
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * 
+	 * A pair of (TCP) SocketChannel are constructed; one is read from, and one is
+	 * written to (each is used unidirectionally); the data size is sufficient that we
+	 * should definitely be filling up the write buffers at some point.
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
+	private class TestBasicBig extends TestTemplate {
+		public Object call() throws IOException {
+			// set up ye olde sockets to stuff to test against
+			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
+			SocketChannel $outsock = $socks.getA();
+			SocketChannel $insock = $socks.getB();
+			
+			// set up the input system!
+			$log.debug("setting up InputSystem");
+			DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
+			InputSystem<ByteBuffer> $insys = InputSystem.setup(
+					$scheduler,
+					$selector,
+					$incomingPipe.sink(),
+					$insock,
+					new ChannelReader.BinaryFramer()
+			);
+			
+			// set up the output system!
+			$log.debug("setting up OutputSystem");
+			DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
+			OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
+					$scheduler,
+					$selector,
+					$outgoingPipe.source(),
+					$outsock,
+					new ChannelWriter.BinaryFramer()
+			);
+			
+			// make test messages
+			ByteBuffer $m1 = TestData.getFreshTestData().bb10m.duplicate();
+			
+			// start scheduler behind the IO systems
+			$scheduler.start();
+			
+			// do some writes
+			$log.debug("writing chunks...");
+			$outgoingPipe.sink().write($m1.duplicate());
+			
+			// do some reads, and make assertion
+			// note it's tough to use assertEquals on these byte arrays because they're just huge
+			$log.debug("reading chunks...");
+			assertTrue(Arr.equals(TestData.getFreshTestData().bb10m.array(), $incomingPipe.source().read().array()));
+			
+			cleanup();
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * A pair of (TCP) SocketChannel are constructed; each is used for both writing
+	 * and reading the other and the same time; the data size is sufficient that we
+	 * should definitely be filling up the write buffers at some point.
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
+	private class TestBidiBig extends TestTemplate {
+		public Object call() throws IOException {
+			// set up ye olde sockets to stuff to test against
+			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
+			SocketChannel $sockA = $socks.getA();
+			SocketChannel $sockB = $socks.getB();
+			
+			// set up the input systems!
+			$log.debug("setting up InputSystem A");
+			DataPipe<ByteBuffer> $incomingPipeA = new DataPipe<ByteBuffer>();
+			InputSystem<ByteBuffer> $insysA = InputSystem.setup(
+					$scheduler,
+					$selector,
+					$incomingPipeA.sink(),
+					$sockA,
+					new ChannelReader.BinaryFramer()
+			);
+			$log.debug("setting up InputSystem B");
+			DataPipe<ByteBuffer> $incomingPipeB = new DataPipe<ByteBuffer>();
+			InputSystem<ByteBuffer> $insysB = InputSystem.setup(
+					$scheduler,
+					$selector,
+					$incomingPipeB.sink(),
+					$sockB,
+					new ChannelReader.BinaryFramer()
+			);
+			
+			// set up the output systems!
+			$log.debug("setting up OutputSystem A");
+			DataPipe<ByteBuffer> $outgoingPipeA = new DataPipe<ByteBuffer>();
+			OutputSystem<ByteBuffer> $outsysA = OutputSystem.setup(
+					$scheduler,
+					$selector,
+					$outgoingPipeA.source(),
+					$sockA,
+					new ChannelWriter.BinaryFramer()
+			);
+			$log.debug("setting up OutputSystem B");
+			DataPipe<ByteBuffer> $outgoingPipeB = new DataPipe<ByteBuffer>();
+			OutputSystem<ByteBuffer> $outsysB = OutputSystem.setup(
+					$scheduler,
+					$selector,
+					$outgoingPipeB.source(),
+					$sockB,
+					new ChannelWriter.BinaryFramer()
+			);
+			
+			// make test messages
+			ByteBuffer $m1 = TestData.getFreshTestData().bb10m.duplicate();
+			
+			// start scheduler behind the IO systems
+			$scheduler.start();
+			
+			// do some writes
+			$log.debug("writing chunks...");
+			$outgoingPipeA.sink().write($m1.duplicate());
+			$outgoingPipeB.sink().write($m1.duplicate());
+			$outgoingPipeB.sink().write($m1.duplicate());
+			$outgoingPipeA.sink().write($m1.duplicate());
+			
+			// do some reads, and make assertion
+			$log.debug("reading chunks...");
+			assertTrue(Arr.equals($m1.array(), $incomingPipeA.source().read().array()));
+			assertTrue(Arr.equals($m1.array(), $incomingPipeA.source().read().array()));
+			assertFalse($incomingPipeA.source().hasNext());
+			assertTrue(Arr.equals($m1.array(), $incomingPipeB.source().read().array()));
+			assertTrue(Arr.equals($m1.array(), $incomingPipeB.source().read().array()));
+			assertFalse($incomingPipeB.source().hasNext());
 			
 			cleanup();
 			return null;
