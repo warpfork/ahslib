@@ -86,7 +86,7 @@ public interface ChannelReader<$MSG> {
 				if ($preint.remaining() > 0) return null; // don't have a size header yet.  keep waiting for more data.
 				$messlen = Primitives.intFromByteArray($preint.array());
 				$preint.rewind();
-				if ($messlen < 1) throw new TranslationException("malformed babble -- message length header not positive");
+				if ($messlen < 0) throw new TranslationException("malformed babble -- message length header cannot be negative");
 				$mess = ByteBuffer.allocate($messlen);
 			} else if ($messlen == 0) {
 				// i don't know who sends empty chunks, but okay...
