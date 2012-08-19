@@ -19,6 +19,7 @@
 
 package us.exultant.ahs.io;
 
+import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import us.exultant.ahs.test.*;
 import us.exultant.ahs.thread.*;
@@ -53,7 +54,7 @@ public class IOSystemTest extends TestCase {
 	
 	abstract class TestTemplate extends TestCase.Unit {
 		protected WorkScheduler $scheduler = new WorkSchedulerFlexiblePriority(8);
-		protected SelectionSignaller $selector = new SelectionSignaller(0);
+		protected SelectionSignaller $selector = new SelectionSignaller(10000);
 		private WorkScheduler $ssws = new WorkSchedulerFlexiblePriority(1).start();
 		private WorkFuture<Void> $sswf;
 		{ $sswf = $selector.schedule($ssws, ScheduleParams.NOW); }
@@ -104,19 +105,24 @@ public class IOSystemTest extends TestCase {
 			
 			// set up the input system!
 			$log.debug("setting up InputSystem");
-			DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
-			InputSystem<ByteBuffer> $insys = InputSystem.setup(
+			final DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
+			final InputSystem<ByteBuffer> $insys = InputSystem.setup(
 					$scheduler,
 					$selector,
 					$incomingPipe.sink(),
 					$insock,
 					new ChannelReader.BinaryFramer()
 			);
+			$insys.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $x) {
+					$incomingPipe.source().close();
+				}
+			});
 			
 			// set up the output system!
 			$log.debug("setting up OutputSystem");
-			DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
-			OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
+			final DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
+			final OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
 					$scheduler,
 					$selector,
 					$outgoingPipe.source(),
@@ -162,19 +168,24 @@ public class IOSystemTest extends TestCase {
 			
 			// set up the input system!
 			$log.debug("setting up InputSystem");
-			DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
-			InputSystem<ByteBuffer> $insys = InputSystem.setup(
+			final DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
+			final InputSystem<ByteBuffer> $insys = InputSystem.setup(
 					$scheduler,
 					$selector,
 					$incomingPipe.sink(),
 					$insock,
 					new ChannelReader.BinaryFramer()
 			);
+			$insys.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $x) {
+					$incomingPipe.source().close();
+				}
+			});
 			
 			// set up the output system!
 			$log.debug("setting up OutputSystem");
-			DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
-			OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
+			final DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
+			final OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
 					$scheduler,
 					$selector,
 					$outgoingPipe.source(),
@@ -224,19 +235,24 @@ public class IOSystemTest extends TestCase {
 			
 			// set up the input system!
 			$log.debug("setting up InputSystem");
-			DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
-			InputSystem<ByteBuffer> $insys = InputSystem.setup(
+			final DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
+			final InputSystem<ByteBuffer> $insys = InputSystem.setup(
 					$scheduler,
 					$selector,
 					$incomingPipe.sink(),
 					$insock,
 					new ChannelReader.BinaryFramer()
 			);
+			$insys.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $x) {
+					$incomingPipe.source().close();
+				}
+			});
 			
 			// set up the output system!
 			$log.debug("setting up OutputSystem");
-			DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
-			OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
+			final DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
+			final OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
 					$scheduler,
 					$selector,
 					$outgoingPipe.source(),
@@ -283,28 +299,38 @@ public class IOSystemTest extends TestCase {
 			
 			// set up the input systems!
 			$log.debug("setting up InputSystem A");
-			DataPipe<ByteBuffer> $incomingPipeA = new DataPipe<ByteBuffer>();
-			InputSystem<ByteBuffer> $insysA = InputSystem.setup(
+			final DataPipe<ByteBuffer> $incomingPipeA = new DataPipe<ByteBuffer>();
+			final InputSystem<ByteBuffer> $insysA = InputSystem.setup(
 					$scheduler,
 					$selector,
 					$incomingPipeA.sink(),
 					$sockA,
 					new ChannelReader.BinaryFramer()
 			);
+			$insysA.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $x) {
+					$incomingPipeA.source().close();
+				}
+			});
 			$log.debug("setting up InputSystem B");
-			DataPipe<ByteBuffer> $incomingPipeB = new DataPipe<ByteBuffer>();
-			InputSystem<ByteBuffer> $insysB = InputSystem.setup(
+			final DataPipe<ByteBuffer> $incomingPipeB = new DataPipe<ByteBuffer>();
+			final InputSystem<ByteBuffer> $insysB = InputSystem.setup(
 					$scheduler,
 					$selector,
 					$incomingPipeB.sink(),
 					$sockB,
 					new ChannelReader.BinaryFramer()
 			);
+			$insysB.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $x) {
+					$incomingPipeB.source().close();
+				}
+			});
 			
 			// set up the output systems!
 			$log.debug("setting up OutputSystem A");
-			DataPipe<ByteBuffer> $outgoingPipeA = new DataPipe<ByteBuffer>();
-			OutputSystem<ByteBuffer> $outsysA = OutputSystem.setup(
+			final DataPipe<ByteBuffer> $outgoingPipeA = new DataPipe<ByteBuffer>();
+			final OutputSystem<ByteBuffer> $outsysA = OutputSystem.setup(
 					$scheduler,
 					$selector,
 					$outgoingPipeA.source(),
@@ -312,8 +338,8 @@ public class IOSystemTest extends TestCase {
 					new ChannelWriter.BinaryFramer()
 			);
 			$log.debug("setting up OutputSystem B");
-			DataPipe<ByteBuffer> $outgoingPipeB = new DataPipe<ByteBuffer>();
-			OutputSystem<ByteBuffer> $outsysB = OutputSystem.setup(
+			final DataPipe<ByteBuffer> $outgoingPipeB = new DataPipe<ByteBuffer>();
+			final OutputSystem<ByteBuffer> $outsysB = OutputSystem.setup(
 					$scheduler,
 					$selector,
 					$outgoingPipeB.source(),
