@@ -25,9 +25,11 @@ import java.util.concurrent.*;
 
 /**
  * <p>
- * Ackable objects are used to create transactional systems. They work with the existing
- * {@link Flow} system; for example, you can wrap data as you feed it into the
- * {@link WriteHead} of a {@link DataPipe}, and
+ * Ackable objects wrap some payload data, and provide two things: a {@link WorkFuture}
+ * that can be used to wait for an ack, and an {@link #ack()} method that pokes the
+ * WorkFuture into doneness. Pretty simple. So, for any $PAYLOAD class, just use a
+ * Flow&lt;Ackable&lt;$PAYLOAD&gt;&gt;, and you have the basics of a distributed
+ * transaction system right there!
  * </p>
  * 
  * <p>
