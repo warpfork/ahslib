@@ -347,6 +347,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	
 	
 	
+	/** Tests that a piece of work that takes a long time to respond to a cancel still becomes cancelled, and also that it does not become cancelled until the thread doing work is clear of the area. */
 	private class TestCancelWhileRunning extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		private volatile boolean $clear = false;
