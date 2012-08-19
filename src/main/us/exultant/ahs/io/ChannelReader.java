@@ -76,7 +76,8 @@ public interface ChannelReader<$MSG> {
 			if ($messlen < 0) {
 				// try to read enough info to figure out what length of message we expect
 				try {
-					$base.read($preint);
+					if ($base.read($preint) == -1)
+						$base.close();
 				} catch (ClosedChannelException $e) {
 					/* this is the one place a binary frame protocol for a smooth shutdown to be legal... the pump should just notice the channel being closed before next time around. */
 					if ($preint.remaining() == 4) return null;
