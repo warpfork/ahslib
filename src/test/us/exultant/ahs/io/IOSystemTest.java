@@ -27,6 +27,7 @@ import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * General tests that any InputSystem and OutputSystem with matching framers attached to
@@ -46,7 +47,8 @@ public class IOSystemTest extends TestCase {
 				new TestBasic(),
 				new TestBasicMultimessage(),
 				new TestBasicBig(),
-				new TestBidiBig()
+				new TestBidiBig(),
+				new TestBasicClosure()
 		});
 	}
 	
@@ -368,6 +370,81 @@ public class IOSystemTest extends TestCase {
 			assertTrue(Arr.equals($m1.array(), $incomingPipeB.source().read().array()));
 			assertTrue(Arr.equals($m1.array(), $incomingPipeB.source().read().array()));
 			assertFalse($incomingPipeB.source().hasNext());
+			
+			cleanup();
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * A pair of (TCP) SocketChannel are constructed; one is read from, and one is
+	 * written to (each is used unidirectionally); two messages are written and then
+	 * the channel closed.
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
+	private class TestBasicClosure extends TestTemplate {
+		public Object call() throws IOException, ExecutionException, InterruptedException {
+			// set up ye olde sockets to stuff to test against
+			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
+			SocketChannel $outsock = $socks.getA();
+			SocketChannel $insock = $socks.getB();
+			
+			// set up the input system!
+			$log.debug("setting up InputSystem");
+			final DataPipe<ByteBuffer> $incomingPipe = new DataPipe<ByteBuffer>();
+			final InputSystem<ByteBuffer> $insys = InputSystem.setup(
+					$scheduler,
+					$selector,
+					$incomingPipe.sink(),
+					$insock,
+					new ChannelReader.BinaryFramer()
+			);
+			$insys.getFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+				public void hear(WorkFuture<?> $x) {
+					$incomingPipe.source().close();
+				}
+			});
+			
+			// set up the output system!
+			$log.debug("setting up OutputSystem");
+			final DataPipe<ByteBuffer> $outgoingPipe = new DataPipe<ByteBuffer>();
+			final OutputSystem<ByteBuffer> $outsys = OutputSystem.setup(
+					$scheduler,
+					$selector,
+					$outgoingPipe.source(),
+					$outsock,
+					new ChannelWriter.BinaryFramer()
+			);
+			
+			// make test messages
+			ByteBuffer $m1 = ByteBuffer.wrap(new byte[] {0x10, 0x20, 0x30, 0x40, 0x50});
+			ByteBuffer $m2 = ByteBuffer.wrap(new byte[] {0x70, 0x7F, 0x10, 0x00, -0x80});
+			
+			// start scheduler behind the IO systems
+			$scheduler.start();
+			
+			// do some writes
+			$log.debug("writing chunks...");
+			$outgoingPipe.sink().write($m1);
+			$outgoingPipe.sink().write($m2);
+			$outgoingPipe.sink().close();
+			
+			// do some reads, and make assertion
+			$log.debug("reading chunks...");
+			assertEquals("message 1 read", $m1.array(), $incomingPipe.source().read().array());
+			assertEquals("message 2 read", $m2.array(), $incomingPipe.source().read().array());
+			$incomingPipe.source().readAll();
+			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());
+			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
+			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
+			
+			// check for any errors
+			$insys.getFuture().get();
+			$outsys.getFuture().get();
 			
 			cleanup();
 			return null;
