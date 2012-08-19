@@ -43,7 +43,7 @@ public class AckableWriteHeadBridge<$PAYLOAD> implements WriteHead<$PAYLOAD> {
 	}
 	
 	public void writeAll(Collection<? extends $PAYLOAD> $chunks) {
-		Collection<Ackable<? extends $PAYLOAD>> $bunches = new ArrayList<Ackable<? extends $PAYLOAD>>();
+		Collection<Ackable<$PAYLOAD>> $bunches = new ArrayList<Ackable<$PAYLOAD>>();
 		for ($PAYLOAD $chunk : $chunks)
 			$bunches.add(new Ackable<$PAYLOAD>($chunk));
 		$wrap.writeAll($bunches);
