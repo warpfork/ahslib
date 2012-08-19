@@ -96,7 +96,10 @@ public interface ChannelReader<$MSG> {
 			// if procedure gets here, we either had messlen state from the last round or we have it now.
 			
 			// get the message (or at least part of it, if possible)
-			$base.read($mess);	/* an exception here is a channel break. */
+			if ($base.read($mess) == -1) {
+				$base.close();
+				throw new TranslationException("malformed babble -- partial message read before unexpected EOF");
+			}
 			
 			if ($mess.remaining() > 0) return null; // we just don't have as much information as this chunk should contain yet.  keep waiting for more data.
 			
