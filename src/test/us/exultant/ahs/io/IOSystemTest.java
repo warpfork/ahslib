@@ -113,7 +113,7 @@ public class IOSystemTest extends TestCase {
 					$insock,
 					new ChannelReader.BinaryFramer()
 			);
-			$insys.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+			$insys.getFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $x) {
 					$incomingPipe.source().close();
 				}
@@ -176,7 +176,7 @@ public class IOSystemTest extends TestCase {
 					$insock,
 					new ChannelReader.BinaryFramer()
 			);
-			$insys.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+			$insys.getFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $x) {
 					$incomingPipe.source().close();
 				}
@@ -243,7 +243,7 @@ public class IOSystemTest extends TestCase {
 					$insock,
 					new ChannelReader.BinaryFramer()
 			);
-			$insys.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+			$insys.getFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $x) {
 					$incomingPipe.source().close();
 				}
@@ -307,7 +307,7 @@ public class IOSystemTest extends TestCase {
 					$sockA,
 					new ChannelReader.BinaryFramer()
 			);
-			$insysA.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+			$insysA.getFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $x) {
 					$incomingPipeA.source().close();
 				}
@@ -321,7 +321,7 @@ public class IOSystemTest extends TestCase {
 					$sockB,
 					new ChannelReader.BinaryFramer()
 			);
-			$insysB.getWorkFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
+			$insysB.getFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $x) {
 					$incomingPipeB.source().close();
 				}

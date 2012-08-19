@@ -60,11 +60,11 @@ public class InputSystem<$MSG> {
 	
 	/** Always made by factory methods, since we often have things to do that are closely bound to the initial scheduling. */
 	private final WorkFuture<$MSG>		$future;
-
+	
 	/** System parameter.  Usually defaults to {@link WorkManager#getDefaultScheduler()}. */
 	private final WorkScheduler		$scheduler;
 	
-	public WorkFuture<$MSG> getWorkFuture() {
+	public WorkFuture<$MSG> getFuture() {
 		return this.$future;
 	}
 }
