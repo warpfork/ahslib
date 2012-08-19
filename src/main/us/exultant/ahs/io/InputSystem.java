@@ -36,22 +36,25 @@ public class InputSystem<$MSG> {
 		final InputSystem_WorkerChannelSelectable<$MSG, $CHAN> $wt = new InputSystem_WorkerChannelSelectable<$MSG, $CHAN>($selector, $sink, $source, $framer);
 		final WorkFuture<$MSG> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
 		$wt.install($wf);
-		return new InputSystem<$MSG>($scheduler, $sink, $framer, $wt, $wf);
+		return new InputSystem<$MSG>($scheduler, $sink, $framer, $source, $wt, $wf);
 	}
 	
 	
 	
-	private InputSystem(WorkScheduler $scheduler, WriteHead<$MSG> $sink, ChannelReader<$MSG> $framer, WorkTarget<$MSG> $worker, WorkFuture<$MSG> $future) {
+	private InputSystem(WorkScheduler $scheduler, WriteHead<$MSG> $sink, ChannelReader<$MSG> $framer, Channel $channel, WorkTarget<$MSG> $worker, WorkFuture<$MSG> $future) {
 		this.$framer = $framer;
+		this.$channel = $channel;
 		this.$sink = $sink;
 		this.$worker = $worker;
 		this.$future = $future;
 		this.$scheduler = $scheduler;
 	}
-
+	
 	/** System parameter. */
 	private final ChannelReader<$MSG>	$framer;
-
+	
+	private final Channel			$channel;
+	
 	/** System parameter.  Where we push our freshly read messages into. */
 	private final WriteHead<$MSG>		$sink;
 	
@@ -66,5 +69,9 @@ public class InputSystem<$MSG> {
 	
 	public WorkFuture<$MSG> getFuture() {
 		return this.$future;
+	}
+	
+	public Channel getChannel() {
+		return $channel;
 	}
 }

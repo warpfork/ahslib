@@ -71,40 +71,40 @@ public class OutputSystem<$MSG> {
 		final OutputSystem_WorkerChannelSelectable<$MSG, $CHAN> $wt = new OutputSystem_WorkerChannelSelectable<$MSG, $CHAN>($selector, $source, $sink, $translator);
 		final WorkFuture<Void> $wf = $scheduler.schedule($wt, ScheduleParams.NOW);
 		$wt.install($wf);
-		return new OutputSystem<$MSG>($scheduler, $wf, $translator);
+		return new OutputSystem<$MSG>($scheduler, $wf, $sink, $translator);
 	}
 	
 	
 	
-	// this class might end up holding most of the things that are currently in the args of the factory methods... the factory methods can then let you choose all your own like they do now, or have more stuff that's like makeMeATcp(port), and in either case you have the same tuple holder when you're done.
-	
-	/**
-	 * @param $scheduler
-	 * @param $future
-	 * @param $translator
-	 */
-	private OutputSystem(WorkScheduler $scheduler, WorkFuture<Void> $future, ChannelWriter<$MSG> $translator) {
+	private OutputSystem(WorkScheduler $scheduler, WorkFuture<Void> $future, Channel $channel, ChannelWriter<$MSG> $translator) {
 		this.$scheduler = $scheduler;
+		this.$channel = $channel;
 		this.$future = $future;
 		this.$translator = $translator;
 	}
 	
-	private final WorkScheduler		$scheduler;
 	private final WorkFuture<Void>		$future;
 	private final ChannelWriter<$MSG>	$translator;
+	private final Channel			$channel;
+	private final WorkScheduler		$scheduler;
 	
 	// things we could but won't allow you to get out of this:
 	//   - the SelectionSignaller (actually i'd be open to this, but i'm not doing it until i find a reason to do so).  oh also that's not necessarily a thing at all for a lot of implementations.
-	//   - the sink, because its type can be a bit... whatever it wants to be.  Perhaps we'll make this a generic type eventually, but that's actually a detail of implementation i'd rather conceal more often than not.
 	//   - the ReadHead the worker will pull work from, because why would you want that?  If anything, you'd want the WriteHead that matches it, which we never had to begin with (which in turn was a choice made because the couplings between WorkTargets are the application designer's job to begin with).
 	
-	public WorkScheduler getScheduler() {	// hard to know why you'd want this either.
-		return this.$scheduler;
-	}
 	public WorkFuture<Void> getFuture() {
 		return this.$future;
 	}
+	
 	public ChannelWriter<$MSG> getTranslator() {	// hard to know why you'd want this either.
 		return this.$translator;
+	}
+	
+	public Channel getChannel() {
+		return $channel;
+	}
+	
+	public WorkScheduler getScheduler() {	// hard to know why you'd want this either.
+		return this.$scheduler;
 	}
 }
