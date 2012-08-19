@@ -81,6 +81,13 @@ public class OutputSystem<$MSG> {
 		this.$channel = $channel;
 		this.$future = $future;
 		this.$translator = $translator;
+		final WorkTargetChannelCloser $wt_closer = new WorkTargetChannelCloser(this);
+		final WorkFuture<Void> $wf_closer = $scheduler.schedule($wt_closer, ScheduleParams.NOW);
+		$future.addCompletionListener(new Listener<WorkFuture<?>>() {
+			public void hear(WorkFuture<?> $x) {
+				$wf_closer.update();
+			}
+		});
 	}
 	
 	private final WorkFuture<Void>		$future;
