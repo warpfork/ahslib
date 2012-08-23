@@ -41,15 +41,19 @@ import java.util.concurrent.*;
  */
 public abstract class IOSystemTest<$MSG> extends TestCase {
 	public List<Unit> getUnits() {
-		return Arrays.asList(new Unit[] {
-				new TestBasic(),
-				new TestBasicMultimessage(),
-				new TestBasicBig(),
-				new TestBidiBig(),
-				new TestBasicClosureWaitingOnPipe()
-		});
+		List<Unit> $units = new ArrayList<Unit>();
+		$units.add(new TestBasic());
+		if (defineSupportsMultimessage()) $units.add(new TestBasicMultimessage());
+		$units.add(new TestBasicBig());
+		$units.add(new TestBidiBig());
+		if (defineSupportsMultimessage()) $units.add(new TestBidiBigMultimessage());
+		$units.add(new TestClosureWaitingOnPipe());
+		if (defineSupportsMultimessage()) $units.add(new TestClosureMultimessageWaitingOnPipe());
+		return $units;
 	}
-	
+
+	protected abstract boolean defineSupportsMultimessage();
+	//protected abstract boolean defineSupportsBinaryMessage();	you can deal with this already by defining the messages.
 	protected abstract ChannelReader<$MSG> defineReader();
 	protected abstract ChannelWriter<$MSG> defineWriter();
 	protected abstract $MSG defineTestMessage1();
@@ -285,11 +289,62 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$log.debug("writing chunks...");
 			$outgoingPipeA.sink().write(defineTestMessageBig());
 			$outgoingPipeB.sink().write(defineTestMessageBig());
+			
+			// do some reads, and make assertion
+			$log.debug("reading chunks...");
+			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().read()));
+			assertFalse($incomingPipeA.source().hasNext());
+			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().read()));
+			assertFalse($incomingPipeB.source().hasNext());
+			
+			cleanup();
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * A pair of (TCP) SocketChannel are constructed; each is used for both writing
+	 * and reading the other and the same time; the data size is sufficient that we
+	 * should definitely be filling up the write buffers at some point.
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
+	private class TestBidiBigMultimessage extends TestTemplate {
+		public Object call() throws IOException {
+			// set up ye olde sockets to stuff to test against
+			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
+			SocketChannel $sockA = $socks.getA();
+			SocketChannel $sockB = $socks.getB();
+			
+
+			// set up the input system!
+			$log.debug("setting up InputSystem");
+			final DataPipe<$MSG> $incomingPipeA = new DataPipe<$MSG>();
+			final InputSystem<$MSG> $insysA = buildInputSystem($sockA, $incomingPipeA.sink());
+			final DataPipe<$MSG> $incomingPipeB = new DataPipe<$MSG>();
+			final InputSystem<$MSG> $insysB = buildInputSystem($sockB, $incomingPipeB.sink());
+			
+			// set up the output system!
+			$log.debug("setting up OutputSystem");
+			final DataPipe<$MSG> $outgoingPipeA = new DataPipe<$MSG>();
+			final OutputSystem<$MSG> $outsysA = buildOutputSystem($sockA, $outgoingPipeA.source());
+			final DataPipe<$MSG> $outgoingPipeB = new DataPipe<$MSG>();
+			final OutputSystem<$MSG> $outsysB = buildOutputSystem($sockB, $outgoingPipeB.source());
+			
+			// do some writes
+			$log.debug("writing chunks...");
+			$outgoingPipeA.sink().write(defineTestMessageBig());
+			$outgoingPipeA.sink().write(defineTestMessageBig());
+			$outgoingPipeB.sink().write(defineTestMessageBig());
 			$outgoingPipeB.sink().write(defineTestMessageBig());
 			$outgoingPipeA.sink().write(defineTestMessageBig());
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
+			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().read()));
 			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().read()));
 			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().read()));
 			assertFalse($incomingPipeA.source().hasNext());
@@ -313,7 +368,57 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 * 
 	 */
-	private class TestBasicClosureWaitingOnPipe extends TestTemplate {
+	private class TestClosureWaitingOnPipe extends TestTemplate {
+		public Object call() throws IOException, ExecutionException, InterruptedException {
+			// set up ye olde sockets to stuff to test against
+			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
+			SocketChannel $outsock = $socks.getA();
+			SocketChannel $insock = $socks.getB();
+
+			// set up the input system!
+			$log.debug("setting up InputSystem");
+			final DataPipe<$MSG> $incomingPipe = new DataPipe<$MSG>();
+			final InputSystem<$MSG> $insys = buildInputSystem($insock, $incomingPipe.sink());
+			
+			// set up the output system!
+			$log.debug("setting up OutputSystem");
+			final DataPipe<$MSG> $outgoingPipe = new DataPipe<$MSG>();
+			final OutputSystem<$MSG> $outsys = buildOutputSystem($outsock, $outgoingPipe.source());
+			
+			// do some writes
+			$log.debug("writing chunks...");
+			$outgoingPipe.sink().write(defineTestMessage1());
+			$outgoingPipe.sink().close();
+			
+			// do some reads, and make assertion
+			$log.debug("reading chunks...");
+			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().read());
+			$incomingPipe.source().readAll();
+			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());
+			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
+			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
+			
+			// check for any errors
+			$insys.getFuture().get();
+			$outsys.getFuture().get();
+			
+			cleanup();
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * A pair of (TCP) SocketChannel are constructed; one is read from, and one is
+	 * written to (each is used unidirectionally); two messages are written and then
+	 * the channel closed. Closure is checked after blocking for a readAll on the
+	 * inputsystem pipe.
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
+	private class TestClosureMultimessageWaitingOnPipe extends TestTemplate {
 		public Object call() throws IOException, ExecutionException, InterruptedException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
@@ -339,6 +444,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
 			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().read());
+			assertEquals("message 3 read", defineTestMessage3(), $incomingPipe.source().read());
 			assertEquals("message 2 read", defineTestMessage2(), $incomingPipe.source().read());
 			$incomingPipe.source().readAll();
 			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());

@@ -26,6 +26,10 @@ import java.util.*;
 public class IOSystemTest_FramerBinary extends IOSystemTest<ByteBuffer> {	// a class just for BinaryMessages would be reasonable here.  er, or the others can extend this and just override some of the methods.
 	public static void main(String... $args) { new IOSystemTest_FramerBinary().run(); }
 	
+	protected boolean defineSupportsMultimessage() {
+		return true;
+	}
+	
 	protected ChannelReader<ByteBuffer> defineReader() {
 		return new ChannelReader.BinaryFramer();
 	}
