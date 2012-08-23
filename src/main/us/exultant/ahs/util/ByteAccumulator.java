@@ -29,6 +29,15 @@ public class ByteAccumulator extends ByteArrayOutputStream {
 	public ByteAccumulator() { super(); }
 	public ByteAccumulator(int $size) { super($size); }
 	
+	/**
+	 * Returns a pointer to the backing array of this accumulator. If more writes are
+	 * performed on this accumulator, this array may be mutated; or a new array may be
+	 * created, in which case future calls to this method would return a different
+	 * pointer than before. {@code getByteArray().length} may be greater than
+	 * {@link #size()}.
+	 * 
+	 * @return a pointer to the backing array of this accumulator.
+	 */
 	@us.exultant.ahs.anno.DNMR
 	public byte[] getByteArray() { return buf; }
 }
