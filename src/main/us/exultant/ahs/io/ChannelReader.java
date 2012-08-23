@@ -60,9 +60,11 @@ public interface ChannelReader<$MSG> {
 	
 	/**
 	 * <p>
-	 * Writes messages framed by the binary length delimiters: the bytes that are
-	 * written to the channel look like a series of 4-byte signed integer lengths,
-	 * followed by an arbitrary blob of the size specified by the int.
+	 * Reads messages framed by the binary length delimiters: the bytes that are read
+	 * from the channel look like a series of 4-byte signed integer lengths, followed
+	 * by an arbitrary blob of the size specified by the int. The size bytes are
+	 * discarded after being used to determine the blob, and the blob is wrapped in a
+	 * ByteBuffer and returned as the result of the translation.
 	 * </p>
 	 * 
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
