@@ -16,14 +16,19 @@
  * limitations under the License.
  */
 
-package us.exultant.ahs.codec.ebon;
+package us.exultant.ahs.util;
 
 import java.io.*;
 
-/** I need this class purely in order to get access to the backing byte array when i'm done writing without jumping through a heinously unnecessary copy operation. */
-class Bah extends ByteArrayOutputStream {
-	public Bah(int $size) { super($size); }
+/**
+ * Use this class in place of a ByteArrayOutputStream in order to get access to the
+ * backing byte array when you're done writing without without jumping through a heinously
+ * unnecessary copy operation.
+ */
+public class ByteAccumulator extends ByteArrayOutputStream {
+	public ByteAccumulator() { super(); }
+	public ByteAccumulator(int $size) { super($size); }
 	
-	/** DNMR */
+	@us.exultant.ahs.anno.DNMR
 	public byte[] getByteArray() { return buf; }
 }

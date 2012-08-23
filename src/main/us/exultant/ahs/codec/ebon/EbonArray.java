@@ -256,7 +256,7 @@ public class EbonArray implements EonArray {
 	
 	
 	public byte[] serialize() throws EbonException {
-		Bah $bah = new Bah(128);
+		ByteAccumulator $bah = new ByteAccumulator(128);
 		DataOutputStream $dou = new DataOutputStream($bah);
 		serialize($dou);
 		return ($bah.size() == $bah.getByteArray().length) ? $bah.getByteArray() : $bah.toByteArray();
