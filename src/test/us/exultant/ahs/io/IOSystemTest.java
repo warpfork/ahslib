@@ -160,7 +160,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertEquals(defineTestMessage1(), $incomingPipe.source().read());
+			assertEquals(defineTestMessage1(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
 			
 			cleanup();
 			return null;
@@ -202,9 +202,9 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertEquals(defineTestMessage1(), $incomingPipe.source().read());
-			assertEquals(defineTestMessage2(), $incomingPipe.source().read());
-			assertEquals(defineTestMessage3(), $incomingPipe.source().read());
+			assertEquals(defineTestMessage1(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
+			assertEquals(defineTestMessage2(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
+			assertEquals(defineTestMessage3(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
 			
 			cleanup();
 			return null;
@@ -246,7 +246,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some reads, and make assertion
 			// note it's tough to use assertEquals on these byte arrays because they're just huge
 			$log.debug("reading chunks...");
-			assertTrue(defineTestMessageBig().equals($incomingPipe.source().read()));
+			assertTrue(defineTestMessageBig().equals($incomingPipe.source().readSoon(1, TimeUnit.SECONDS)));
 			
 			cleanup();
 			return null;
@@ -292,9 +292,9 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().read()));
+			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
 			assertFalse($incomingPipeA.source().hasNext());
-			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().read()));
+			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
 			assertFalse($incomingPipeB.source().hasNext());
 			
 			cleanup();
@@ -344,12 +344,12 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().read()));
-			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().read()));
-			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().read()));
+			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
+			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
+			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
 			assertFalse($incomingPipeA.source().hasNext());
-			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().read()));
-			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().read()));
+			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
+			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
 			assertFalse($incomingPipeB.source().hasNext());
 			
 			cleanup();
@@ -392,7 +392,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().read());
+			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
 			$incomingPipe.source().readAll();
 			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());
 			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
@@ -443,9 +443,9 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().read());
-			assertEquals("message 3 read", defineTestMessage3(), $incomingPipe.source().read());
-			assertEquals("message 2 read", defineTestMessage2(), $incomingPipe.source().read());
+			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
+			assertEquals("message 3 read", defineTestMessage3(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
+			assertEquals("message 2 read", defineTestMessage2(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
 			$incomingPipe.source().readAll();
 			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());
 			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
