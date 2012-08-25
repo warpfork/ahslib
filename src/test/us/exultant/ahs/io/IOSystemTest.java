@@ -157,6 +157,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some writes
 			$log.debug("writing chunks...");
 			$outgoingPipe.sink().write(defineTestMessage1()); 
+			$outgoingPipe.close();
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
@@ -242,6 +243,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some writes
 			$log.debug("writing chunks...");
 			$outgoingPipe.sink().write(defineTestMessageBig());
+			$outgoingPipe.close();
 			
 			// do some reads, and make assertion
 			// note it's tough to use assertEquals on these byte arrays because they're just huge
@@ -289,6 +291,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$log.debug("writing chunks...");
 			$outgoingPipeA.sink().write(defineTestMessageBig());
 			$outgoingPipeB.sink().write(defineTestMessageBig());
+			$outgoingPipeA.close();
+			$outgoingPipeB.close();
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
@@ -341,6 +345,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$outgoingPipeB.sink().write(defineTestMessageBig());
 			$outgoingPipeB.sink().write(defineTestMessageBig());
 			$outgoingPipeA.sink().write(defineTestMessageBig());
+			$outgoingPipeA.close();
+			$outgoingPipeB.close();
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
