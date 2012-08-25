@@ -248,7 +248,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some reads, and make assertion
 			// note it's tough to use assertEquals on these byte arrays because they're just huge
 			$log.debug("reading chunks...");
-			assertTrue(defineTestMessageBig().equals($incomingPipe.source().readSoon(1, TimeUnit.SECONDS)));
+			assertEquals(defineTestMessageBig(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
 			
 			cleanup();
 			return null;
@@ -296,9 +296,9 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
+			assertEquals(defineTestMessageBig(), $incomingPipeA.source().readSoon(1, TimeUnit.SECONDS));
 			assertFalse($incomingPipeA.source().hasNext());
-			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
+			assertEquals(defineTestMessageBig(), $incomingPipeB.source().readSoon(1, TimeUnit.SECONDS));
 			assertFalse($incomingPipeB.source().hasNext());
 			
 			cleanup();
@@ -350,12 +350,12 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
-			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
+			assertEquals(defineTestMessageBig(), $incomingPipeA.source().readSoon(1, TimeUnit.SECONDS));
+			assertEquals(defineTestMessageBig(), $incomingPipeA.source().readSoon(1, TimeUnit.SECONDS));
 			assertFalse($incomingPipeA.source().hasNext());
-			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
-			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
-			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
+			assertEquals(defineTestMessageBig(), $incomingPipeB.source().readSoon(1, TimeUnit.SECONDS));
+			assertEquals(defineTestMessageBig(), $incomingPipeB.source().readSoon(1, TimeUnit.SECONDS));
+			assertEquals(defineTestMessageBig(), $incomingPipeB.source().readSoon(1, TimeUnit.SECONDS));
 			assertFalse($incomingPipeB.source().hasNext());
 			
 			cleanup();
