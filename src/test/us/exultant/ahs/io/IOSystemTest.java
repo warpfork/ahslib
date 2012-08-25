@@ -346,8 +346,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$log.debug("reading chunks...");
 			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
 			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
-			assertTrue(defineTestMessageBig().equals($incomingPipeA.source().readSoon(1, TimeUnit.SECONDS)));
 			assertFalse($incomingPipeA.source().hasNext());
+			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
 			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
 			assertTrue(defineTestMessageBig().equals($incomingPipeB.source().readSoon(1, TimeUnit.SECONDS)));
 			assertFalse($incomingPipeB.source().hasNext());
@@ -438,6 +438,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some writes
 			$log.debug("writing chunks...");
 			$outgoingPipe.sink().write(defineTestMessage1());
+			$outgoingPipe.sink().write(defineTestMessage3());
 			$outgoingPipe.sink().write(defineTestMessage2());
 			$outgoingPipe.sink().close();
 			
