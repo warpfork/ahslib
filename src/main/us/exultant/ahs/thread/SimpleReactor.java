@@ -25,7 +25,7 @@ import us.exultant.ahs.core.*;
  * <p>
  * Allows an action to be attached to a ReadHead directly, triggering it with a piece of
  * data every time one is available. Compared to building a full WorkTarget (or using
- * something similar to {@link WorkTarget.FlowingAdapter}) to handle data from a ReadHead,
+ * something similar to {@link WorkTargetAdapterFlowing}) to handle data from a ReadHead,
  * this is much simpler: this doesn't require you to deal with spurious wakeups, and you
  * don't have to schedule this; you just specify a {@link Listener} for the message type
  * and you're done. On the other hand, there are definitely reasons to prefer the more

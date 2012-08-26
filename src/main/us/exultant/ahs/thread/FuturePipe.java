@@ -36,7 +36,7 @@ import java.util.*;
  * <p>
  * If you want a WorkFuture that will represent the completion of all of a set of
  * WorkFutures (i.e. so that you can use the completion listener to fire once when all the
- * set of tasks is done), consider using {@link AggregateWorkFuture}.
+ * set of tasks is done), consider using {@link WorkFutureAggregate}.
  * </p>
  * 
  * <h3>Why doesn't this work with {@link java.util.concurrent.Future}?</h3>

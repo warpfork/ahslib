@@ -29,21 +29,27 @@ import java.util.concurrent.*;
  * A WorkFuture is a system that allows the user to run an asynchronous task and at their
  * option either wait (blockingly) for it to complete, or register a listener to be
  * notified when the task becomes complete (following a more nonblocking/event-based
- * design pattern).
+ * design pattern). The practical upshot of this is that you can implement the
+ * Producer-Consumer pattern however you want, and the two sides don't even need to agree
+ * on a threading strategy.
  * </p>
  * 
  * <p>
  * The most common appearance of a WorkFuture is cooperation with the
  * {@link WorkScheduler}, which produces a WorkFuture when a {@link WorkTarget} is
  * {@link WorkScheduler#schedule(WorkTarget, ScheduleParams) scheduled} with it.
- * WorkFuture can also represent other kinds of delayed system; for example
- * {@link WorkScheduler#stop(boolean) stopping a WorkScheduler} is another action you can
- * either wait for the completion of or request a callback from.
- * </p>
- * 
- * <p>
- * For waiting for or getting notifications of a group of WorkFutures, use
- * {@link AggregateWorkFuture}.
+ * WorkFuture can also represent other kinds of delayed system; for example:
+ * <ul>
+ * <li>A {@link WorkFutureLatched} can be used as a simple implementation of WorkFuture to
+ * get the job done when you just want to hack together a system that returns a value in
+ * an asynchronous way and lets other get at it how they want; it doesn't require a lot to
+ * integrate with, you just call it's {@link WorkFutureLatched#set(Object)} method.
+ * <li>For waiting for or getting notifications of a group of WorkFutures, use
+ * {@link WorkFutureAggregate}.
+ * <li>{@link WorkScheduler#stop(boolean) stopping a WorkScheduler} is another action you
+ * can either wait for the completion of or request a callback from, so WorkFuture was an
+ * obvious choice for a return type.
+ * </ul>
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
@@ -313,7 +319,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * <p>
 		 * For some kinds of {@link WorkFuture} that do not directly represent a
 		 * {@link WorkTarget} scheduled with a {@link WorkScheduler} (such as an
-		 * {@link AggregateWorkFuture} for example), this is the default state:
+		 * {@link WorkFutureAggregate} for example), this is the default state:
 		 * {@link #SCHEDULED} and {@link #RUNNING} may never occur.
 		 * </p>
 		 */
@@ -425,11 +431,11 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * <p>
 		 * For some kinds of {@link WorkFuture} that do not directly represent a
 		 * {@link WorkTarget} scheduled with a {@link WorkScheduler} (such as an
-		 * {@link AggregateWorkFuture} for example), this may be a valid
+		 * {@link WorkFutureAggregate} for example), this may be a valid
 		 * transition directly from {@link #WAITING} state, it may be a somewhat
 		 * more prolonged state, and it may have different semantics regarding
 		 * where a thread is. See the documentation of
-		 * {@link AggregateWorkFuture#cancel(boolean)} for an example of this; the
+		 * {@link WorkFutureAggregate#cancel(boolean)} for an example of this; the
 		 * semantics are slightly different, but should be essentially
 		 * unsurprising.
 		 * </p>
