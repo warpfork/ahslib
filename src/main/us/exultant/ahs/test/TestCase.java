@@ -179,8 +179,7 @@ public abstract class TestCase implements Runnable {
 	 * Sets up a default logger based on the name of the current class.
 	 */
 	public TestCase() {
-		// funny story, by the way: java's inane "cannot refer to an instance method while explicitly invoking a constructor" rule prevents you from writing this constructor as a call to the other one.  but you can still do the same thing by copypastaing extra code.  -.- 
-		this.$log = LoggerFactory.getLogger(getClass());
+		this.$log = LoggerFactory.getLogger("TestCase."+Reflect.getShortClassName(this));
 	}
 	
 	public TestCase(Logger $log) {
@@ -239,7 +238,7 @@ public abstract class TestCase implements Runnable {
 					if ($unit.expectExceptionType().isAssignableFrom($e.getClass())) {
 						// and it was this kind that was expected, so this is good.
 						$numUnitsPassed++;
-						assertInstanceOf($unit.expectExceptionType(), $e);	// generates a normal confirmation message
+						$unit.assertInstanceOf($unit.expectExceptionType(), $e);	// generates a normal confirmation message
 						$log.info("TEST UNIT "+$unit.getName()+" PASSED SUCCESSFULLY!\n");
 					} else {
 						// and it wasn't this kind.  this represents fatal failure.
@@ -347,6 +346,13 @@ public abstract class TestCase implements Runnable {
 	 * </p>
 	 */
 	public abstract class Unit implements Callable<Object> {
+		protected final Logger	$log = LoggerFactory.getLogger(TestCase.this.$log.getName()+"."+this.getName());
+		
+		public String getName() {
+			String[] $arrg = Primitives.Patterns.DOT.split(getClass().getCanonicalName());
+			return $arrg[$arrg.length-1];
+		}
+		
 		/**
 		 * If this returns null, any exception thrown from the {@link #call()}
 		 * method results in failure of the Unit and aborting of all further Units
@@ -358,31 +364,288 @@ public abstract class TestCase implements Runnable {
 		public <$T extends Throwable> Class<$T> expectExceptionType() { return null; }
 		// this method often seems to cause warnings about unchecked conversion in subclasses even when the return type is obviously legitimate, but i'm unsure of why.
 		
-		public void breakUnitIfFailed() throws AssertionFailed {
+		
+		public final void breakUnitIfFailed() throws AssertionFailed {
 			if ($unitFailures > 0) throw new AssertionFailed("breaking: "+$unitFailures+" failures.");
 		}
-		public void breakCaseIfFailed() throws AssertionFatal {
+		public final void breakCaseIfFailed() throws AssertionFatal {
 			if ($unitFailures > 0) throw new AssertionFatal("breaking case: "+$unitFailures+" failures.");
 		}
-
-		public void breakUnit(String $message) throws AssertionFailed {
+		
+		public final void breakUnit(String $message) throws AssertionFailed {
 			throw new AssertionFailed("breaking: "+$message);
 		}
-		public void breakCase(String $message) throws AssertionFatal {
-			throw new AssertionFatal("breaking case: "+$message);
-		}
-
-		public void breakUnit(Throwable $message) throws AssertionFailed {
-			throw new AssertionFailed("breaking: "+$message);
-		}
-		public void breakCase(Throwable $message) throws AssertionFatal {
+		public final void breakCase(String $message) throws AssertionFatal {
 			throw new AssertionFatal("breaking case: "+$message);
 		}
 		
-		public String getName() {
-			String[] $arrg = Primitives.Patterns.DOT.split(getClass().getCanonicalName());
-			return $arrg[$arrg.length-1];
+		public final void breakUnit(Throwable $message) throws AssertionFailed {
+			throw new AssertionFailed("breaking: "+$message);
 		}
+		public final void breakCase(Throwable $message) throws AssertionFatal {
+			throw new AssertionFatal("breaking case: "+$message);
+		}
+		
+		
+		////////////////
+		//  BOOLEAN
+		////////////////
+		public final boolean assertTrue(boolean $bool) {
+			return assertEquals(null, true, $bool);
+		}
+		public final boolean assertFalse(boolean $bool) {
+			return assertEquals(null, false, $bool);
+		}
+		public final boolean assertEquals(boolean $expected, boolean $actual) {
+			return assertEquals(null, $expected, $actual);
+		}
+		public final boolean assertTrue(String $label, boolean $bool) {
+			return assertEquals($label, true, $bool);
+		}
+		public final boolean assertFalse(String $label, boolean $bool) {
+			return assertEquals($label, false, $bool);
+		}
+		public final boolean assertEquals(String $label, boolean $expected, boolean $actual) {
+			if ($expected != $actual) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual));
+			return true;
+		}
+		
+		
+		////////////////
+		//  Object
+		////////////////
+		public final boolean assertSame(Object $expected, Object $actual) {
+			return assertSame(null, $expected, $actual);
+		}
+		public final boolean assertSame(String $label, Object $expected, Object $actual) {
+			if ($expected != $actual) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual));
+			return true;
+		}
+		public final boolean assertNotSame(Object $expected, Object $actual) {
+			return assertNotSame(null, $expected, $actual);
+		}
+		public final boolean assertNotSame(String $label, Object $expected, Object $actual) {
+			if ($expected == $actual) {
+				$unitFailures++;
+				$log.warn(messageFailNot($label, $expected, $actual), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePassNot($label, $expected, $actual));
+			return true;
+		}
+		public final boolean assertNull(Object $actual) {
+			return assertSame(null, null, $actual);
+		}
+		public final boolean assertNull(String $label, Object $actual) {
+			return assertSame($label, null, $actual);
+		}
+		public final boolean assertNotNull(Object $actual) {
+			return assertNotSame(null, null, $actual);
+		}
+		public final boolean assertNotNull(String $label, Object $actual) {
+			return assertNotSame($label, null, $actual);
+		}
+		public final boolean assertEquals(Object $expected, Object $actual) {
+			return assertEquals(null, $expected, $actual);
+		}
+		public final boolean assertEquals(String $label, Object $expected, Object $actual) {
+			if (!assertEqualsHelper($expected, $actual)) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual));
+			return true;
+		}
+		private boolean assertEqualsHelper(Object $expected, Object $actual) {
+			if ($expected == null) return ($actual == null);
+			return $expected.equals($actual);
+		}
+		public final boolean assertInstanceOf(Class<?> $klass, Object $obj) {
+			return assertInstanceOf(null, $klass, $obj);
+		}
+		public final boolean assertInstanceOf(String $label, Class<?> $klass, Object $obj) {
+			if ($obj == null) {
+				$unitFailures++;
+				$log.warn(messageFail($label, "null is never an instance of anything, and certainly not "+$klass+"."), new AssertionFailed());
+				return false;
+			}
+			try {
+				$klass.cast($obj);
+				$log.debug(messagePass($label, "\""+$obj.getClass().getCanonicalName()+"\" is an instance of \""+$klass.getCanonicalName()+"\""));
+				return true;
+			} catch (ClassCastException $e) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $e.getMessage()+"."), new AssertionFailed());
+				return false;
+			}
+		}
+		
+		
+		////////////////
+		//  String
+		////////////////
+		// there's not actually a dang thing special about these, i just want the api itself to reassure developers that yes, strings can be asserted on and nothing weird happens.
+		public final boolean assertEquals(String $expected, String $actual) {
+			return assertEquals(null, (Object)$expected, (Object)$actual);
+		}
+		public final boolean assertEquals(String $label, String $expected, String $actual) {
+			return assertEquals($label, (Object)$expected, (Object)$actual);
+		}
+		
+		
+		////////////////
+		//  INT
+		////////////////
+		public final boolean assertEquals(int $expected, int $actual) {
+			return assertEquals(null, $expected, $actual);
+		}
+		public final boolean assertEquals(String $label, int $expected, int $actual) {
+			if ($expected != $actual) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual));
+			return true;
+		}
+		public final boolean assertEquals(int $expected, int $actual, int $margin) {
+			return assertEquals(null, $expected, $actual, $margin);
+		}
+		public final boolean assertEquals(String $label, int $expected, int $actual, int $margin) {
+			if (Math.abs($expected - $actual) <= $margin) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual, $margin));
+			return true;
+		}
+		
+		
+		////////////////
+		//  LONG
+		////////////////
+		public final boolean assertEquals(long $expected, long $actual) {
+			return assertEquals(null, $expected, $actual);
+		}
+		public final boolean assertEquals(String $label, long $expected, long $actual) {
+			if ($expected != $actual) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual));
+			return true;
+		}
+		public final boolean assertEquals(long $expected, long $actual, long $margin) {
+			return assertEquals(null, $expected, $actual, $margin);
+		}
+		public final boolean assertEquals(String $label, long $expected, long $actual, long $margin) {
+			if (Math.abs($expected - $actual) <= $margin) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual, $margin));
+			return true;
+		}
+		
+		
+		////////////////
+		//  DOUBLE
+		////////////////
+		public final boolean assertEquals(double $expected, double $actual) {
+			return assertEquals(null, $expected, $actual);
+		}
+		public final boolean assertEquals(String $label, double $expected, double $actual) {
+			if ($expected != $actual) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual));
+			return true;
+		}
+		public final boolean assertEquals(double $expected, double $actual, double $margin) {
+			return assertEquals(null, $expected, $actual, $margin);
+		}
+		public final boolean assertEquals(String $label, double $expected, double $actual, double $margin) {
+			if (Math.abs($expected - $actual) <= $margin) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual, $margin));
+			return true;
+		}
+		
+		
+		////////////////
+		//  FLOAT
+		////////////////
+		public final boolean assertEquals(float $expected, float $actual) {
+			return assertEquals(null, $expected, $actual);
+		}
+		public final boolean assertEquals(String $label, float $expected, float $actual) {
+			if ($expected != $actual) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual));
+			return true;
+		}
+		public final boolean assertEquals(float $expected, float $actual, float $margin) {
+			return assertEquals(null, $expected, $actual, $margin);
+		}
+		public final boolean assertEquals(String $label, float $expected, float $actual, float $margin) {
+			if (Math.abs($expected - $actual) <= $margin) {
+				$unitFailures++;
+				$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
+				return false;
+			}
+			$log.debug(messagePass($label, $expected, $actual, $margin));
+			return true;
+		}
+		
+		
+		////////////////
+		//  BYTE
+		////////////////
+		public final boolean assertEquals(byte[] $expected, byte[] $actual) {
+			return assertEquals(null, $expected, $actual);
+		}
+		public final boolean assertEquals(String $label, byte[] $expected, byte[] $actual) {
+			return assertEquals($label, Strings.toHex($expected), Strings.toHex($actual));
+		}
+		
+		
+		////////////////
+		//  CHAR
+		////////////////
+		public final boolean assertEquals(char[] $expected, char[] $actual) {
+			return assertEquals(null, $expected, $actual);
+		}
+		public final boolean assertEquals(String $label, char[] $expected, char[] $actual) {
+			return assertEquals($label, Arr.toString($expected), Arr.toString($actual));
+		}
+		
+		
+		// Note!  You can not make methods like:
+		//	assertNotEquals(byte[] $a, byte[] $b) {
+		//		return !assertEquals($a, $b);
+		// because they'll still do the failure count and the log messages backwards inside.
 	}
 	
 	
@@ -447,266 +710,6 @@ public abstract class TestCase implements Runnable {
 	
 	
 	
-	
-	
-	////////////////
-	//  BOOLEAN
-	////////////////
-	public boolean assertTrue(boolean $bool) {
-		return assertEquals(null, true, $bool);
-	}
-	public boolean assertFalse(boolean $bool) {
-		return assertEquals(null, false, $bool);
-	}
-	public boolean assertEquals(boolean $expected, boolean $actual) {
-		return assertEquals(null, $expected, $actual);
-	}
-	public boolean assertTrue(String $label, boolean $bool) {
-		return assertEquals($label, true, $bool);
-	}
-	public boolean assertFalse(String $label, boolean $bool) {
-		return assertEquals($label, false, $bool);
-	}
-	public boolean assertEquals(String $label, boolean $expected, boolean $actual) {
-		if ($expected != $actual) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual));
-		return true;
-	}
-	
-	
-	////////////////
-	//  Object
-	////////////////
-	public boolean assertSame(Object $expected, Object $actual) {
-		return assertSame(null, $expected, $actual);
-	}
-	public boolean assertSame(String $label, Object $expected, Object $actual) {
-		if ($expected != $actual) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual));
-		return true;
-	}
-	public boolean assertNotSame(Object $expected, Object $actual) {
-		return assertNotSame(null, $expected, $actual);
-	}
-	public boolean assertNotSame(String $label, Object $expected, Object $actual) {
-		if ($expected == $actual) {
-			$unitFailures++;
-			$log.warn(messageFailNot($label, $expected, $actual), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePassNot($label, $expected, $actual));
-		return true;
-	}
-	public boolean assertNull(Object $actual) {
-		return assertSame(null, null, $actual);
-	}
-	public boolean assertNull(String $label, Object $actual) {
-		return assertSame($label, null, $actual);
-	}
-	public boolean assertNotNull(Object $actual) {
-		return assertNotSame(null, null, $actual);
-	}
-	public boolean assertNotNull(String $label, Object $actual) {
-		return assertNotSame($label, null, $actual);
-	}
-	public boolean assertEquals(Object $expected, Object $actual) {
-		return assertEquals(null, $expected, $actual);
-	}
-	public boolean assertEquals(String $label, Object $expected, Object $actual) {
-		if (!assertEqualsHelper($expected, $actual)) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual));
-		return true;
-	}
-	private boolean assertEqualsHelper(Object $expected, Object $actual) {
-		if ($expected == null) return ($actual == null);
-		return $expected.equals($actual);
-	}
-	public boolean assertInstanceOf(Class<?> $klass, Object $obj) {
-		return assertInstanceOf(null, $klass, $obj);
-	}
-	public boolean assertInstanceOf(String $label, Class<?> $klass, Object $obj) {
-		if ($obj == null) {
-			$unitFailures++;
-			$log.warn(messageFail($label, "null is never an instance of anything, and certainly not "+$klass+"."), new AssertionFailed());
-			return false;
-		}
-		try {
-			$klass.cast($obj);
-			$log.debug(messagePass($label, "\""+$obj.getClass().getCanonicalName()+"\" is an instance of \""+$klass.getCanonicalName()+"\""));
-			return true;
-		} catch (ClassCastException $e) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $e.getMessage()+"."), new AssertionFailed());
-			return false;
-		}
-	}
-	
-	
-	////////////////
-	//  String
-	////////////////
-	// there's not actually a dang thing special about these, i just want the api itself to reassure developers that yes, strings can be asserted on and nothing weird happens.
-	public boolean assertEquals(String $expected, String $actual) {
-		return assertEquals(null, (Object)$expected, (Object)$actual);
-	}
-	public boolean assertEquals(String $label, String $expected, String $actual) {
-		return assertEquals($label, (Object)$expected, (Object)$actual);
-	}
-	
-	
-	////////////////
-	//  INT
-	////////////////
-	public boolean assertEquals(int $expected, int $actual) {
-		return assertEquals(null, $expected, $actual);
-	}
-	public boolean assertEquals(String $label, int $expected, int $actual) {
-		if ($expected != $actual) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual));
-		return true;
-	}
-	public boolean assertEquals(int $expected, int $actual, int $margin) {
-		return assertEquals(null, $expected, $actual, $margin);
-	}
-	public boolean assertEquals(String $label, int $expected, int $actual, int $margin) {
-		if (Math.abs($expected - $actual) <= $margin) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual, $margin));
-		return true;
-	}
-	
-	
-	////////////////
-	//  LONG
-	////////////////
-	public boolean assertEquals(long $expected, long $actual) {
-		return assertEquals(null, $expected, $actual);
-	}
-	public boolean assertEquals(String $label, long $expected, long $actual) {
-		if ($expected != $actual) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual));
-		return true;
-	}
-	public boolean assertEquals(long $expected, long $actual, long $margin) {
-		return assertEquals(null, $expected, $actual, $margin);
-	}
-	public boolean assertEquals(String $label, long $expected, long $actual, long $margin) {
-		if (Math.abs($expected - $actual) <= $margin) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual, $margin));
-		return true;
-	}
-	
-	
-	////////////////
-	//  DOUBLE
-	////////////////
-	public boolean assertEquals(double $expected, double $actual) {
-		return assertEquals(null, $expected, $actual);
-	}
-	public boolean assertEquals(String $label, double $expected, double $actual) {
-		if ($expected != $actual) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual));
-		return true;
-	}
-	public boolean assertEquals(double $expected, double $actual, double $margin) {
-		return assertEquals(null, $expected, $actual, $margin);
-	}
-	public boolean assertEquals(String $label, double $expected, double $actual, double $margin) {
-		if (Math.abs($expected - $actual) <= $margin) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual, $margin));
-		return true;
-	}
-	
-	
-	////////////////
-	//  FLOAT
-	////////////////
-	public boolean assertEquals(float $expected, float $actual) {
-		return assertEquals(null, $expected, $actual);
-	}
-	public boolean assertEquals(String $label, float $expected, float $actual) {
-		if ($expected != $actual) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual));
-		return true;
-	}
-	public boolean assertEquals(float $expected, float $actual, float $margin) {
-		return assertEquals(null, $expected, $actual, $margin);
-	}
-	public boolean assertEquals(String $label, float $expected, float $actual, float $margin) {
-		if (Math.abs($expected - $actual) <= $margin) {
-			$unitFailures++;
-			$log.warn(messageFail($label, $expected, $actual, $margin), new AssertionFailed());
-			return false;
-		}
-		$log.debug(messagePass($label, $expected, $actual, $margin));
-		return true;
-	}
-	
-	
-	////////////////
-	//  BYTE
-	////////////////
-	public boolean assertEquals(byte[] $expected, byte[] $actual) {
-		return assertEquals(null, $expected, $actual);
-	}
-	public boolean assertEquals(String $label, byte[] $expected, byte[] $actual) {
-		return assertEquals($label, Strings.toHex($expected), Strings.toHex($actual));
-	}
-	
-	
-	////////////////
-	//  CHAR
-	////////////////
-	public boolean assertEquals(char[] $expected, char[] $actual) {
-		return assertEquals(null, $expected, $actual);
-	}
-	public boolean assertEquals(String $label, char[] $expected, char[] $actual) {
-		return assertEquals($label, Arr.toString($expected), Arr.toString($actual));
-	}
-	
-	
-	
-	
-	
 	private static class AssertionFailed extends Error {
 		public AssertionFailed() { super(); }
 		public AssertionFailed(String $arg0) { super($arg0); }
@@ -719,11 +722,6 @@ public abstract class TestCase implements Runnable {
 		public AssertionFatal(Throwable $arg0) { super($arg0); }
 		public AssertionFatal(String $arg0, Throwable $arg1) { super($arg0, $arg1); }
 	}
-	
-	// Note!  You can not make methods like:
-	//	assertNotEquals(byte[] $a, byte[] $b) {
-	//		return !assertEquals($a, $b);
-	// because they'll still do the failure count and the log messages backwards inside.
 	
 	//future work:
 	//   i think it should be more or less possible to provide an interface to retrofit ahs TestCase to JUnit, which would be handy for folks that like the ability integrate JUnit with eclipse plugins or the like.
