@@ -179,8 +179,7 @@ public abstract class TestCase implements Runnable {
 	 * Sets up a default logger based on the name of the current class.
 	 */
 	public TestCase() {
-		// funny story, by the way: java's inane "cannot refer to an instance method while explicitly invoking a constructor" rule prevents you from writing this constructor as a call to the other one.  but you can still do the same thing by copypastaing extra code.  -.- 
-		this.$log = LoggerFactory.getLogger(getClass());
+		this.$log = LoggerFactory.getLogger("TestCase."+Reflect.getShortClassName(this));
 	}
 	
 	public TestCase(Logger $log) {
@@ -347,6 +346,8 @@ public abstract class TestCase implements Runnable {
 	 * </p>
 	 */
 	public abstract class Unit implements Callable<Object> {
+		protected final Logger	$log = LoggerFactory.getLogger(TestCase.this.$log.getName()+"."+this.getName());
+		
 		/**
 		 * If this returns null, any exception thrown from the {@link #call()}
 		 * method results in failure of the Unit and aborting of all further Units
