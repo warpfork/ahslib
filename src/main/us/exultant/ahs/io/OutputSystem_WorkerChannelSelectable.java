@@ -61,6 +61,7 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 				$buffered = !$trans.write($channel, $msg);
 			}
 			for (int $i = 0; $buffered && $i < 3; $i++) {
+				Thread.currentThread().yield();
 				assert logger.debug("continuing write of buffered chunk");
 				$buffered = !$trans.write($channel, null);
 			}
