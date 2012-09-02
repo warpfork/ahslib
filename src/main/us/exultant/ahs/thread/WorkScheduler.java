@@ -169,7 +169,7 @@ public interface WorkScheduler {
 	 * @return a {@link ReadHead} that returns WorkFuture instances that were managed
 	 *         by this scheduler and have now been completed.
 	 */
-	public ReadHead<WorkFuture<?>> completed();
+	public ReadHead<WorkFuture<Object>> completed();
 	
 	/**
 	 * <p>
