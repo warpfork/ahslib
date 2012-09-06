@@ -5,3 +5,15 @@
 [submodule "lib/exus-build"]
 	path = lib/exus-build
 	url = https://github.com/heavenlyhash/exus-build.git
+[submodule "lib/slf4j"]
+	path = lib/slf4j
+	url = https://raw.github.com/mdm-releases/slf4j-releases/master/v1.6.6.git
+	mdm = dependency
+[submodule "lib/bcprov-java"]
+	path = lib/bcprov-java
+	url = https://raw.github.com/mdm-releases/bcprov-java-releases/master/v1.46.git
+	mdm = dependency
+[submodule "lib/logback"]
+	path = lib/logback
+	url = https://raw.github.com/mdm-releases/logback-releases/master/v1.0.7.git
+	mdm = dependency
