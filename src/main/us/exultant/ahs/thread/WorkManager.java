@@ -20,8 +20,10 @@
 package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
+import org.slf4j.*;
 
 /**
  * Facade class with a default scheduler and quick methods for scheduling tasks.
@@ -30,6 +32,8 @@ import java.util.concurrent.*;
  *
  */
 public class WorkManager {
+	static final Logger LOG = LoggerFactory.getLogger(WorkManager.class);
+	
 	/**
 	 * Uses a {@link Factory} to produce one {@link WorkTarget} instance per core on
 	 * the machine and schedules them with the {@link #getDefaultScheduler() default
@@ -112,6 +116,13 @@ public class WorkManager {
 	 * returned.
 	 * </p>
 	 * 
+	 * <p>
+	 * The {@link WorkScheduler#completed()} ReadHead of this scheduler is set up with
+	 * a listener that consumes completed tasks, and issues a warning to the
+	 * WorkManager's logger if any tasks ended by throwing an Exception (exactly as if
+	 * {@link #attachFailureLogger(WorkScheduler)} had been applied to the scheduler).
+	 * </p>
+	 * 
 	 * @return the single default WorkScheduler for this VM.
 	 */
 	public static WorkScheduler getDefaultScheduler() {
@@ -119,6 +130,67 @@ public class WorkManager {
 	}
 
 	private static class SingletonHolder {
-		public static final WorkScheduler INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors())).start();
+		public static final WorkScheduler INSTANCE;
+		static {
+			INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()));
+			attachFailureLogger(INSTANCE);
+			INSTANCE.start();
+		}
+	}
+	
+	/**
+	 * <p>
+	 * Attaches a listener to the {@link WorkScheduler#completed()} ReadHead of this
+	 * scheduler that consumes completed tasks, and issues a message to WorkManager's
+	 * logger at the ERROR level if any tasks ended by throwing an Exception. (The
+	 * same effect can be achieved using other loggers by using
+	 * {@link WorkFailureLogger}.)
+	 * </p>
+	 * 
+	 * <p>
+	 * Removing or replacing this behavior only requires changing the listener on
+	 * {@link WorkScheduler#completed()} ReadHead as is usual for any ReadHead.
+	 * </p>
+	 * 
+	 * @param $scheduler
+	 */
+	public static void attachFailureLogger(WorkScheduler $scheduler) {
+		$scheduler.completed().setListener(WorkFailureLogger.SingletonHolder.INSTANCE);
+	}
+	
+	public static class WorkFailureLogger implements Listener<ReadHead<WorkFuture<Object>>> {
+		static class SingletonHolder { static final WorkFailureLogger INSTANCE = new WorkFailureLogger(LOG); }
+		
+		public WorkFailureLogger(Logger $log) { this.$log = $log; }
+		private final Logger $log;
+		
+		public void hear(ReadHead<WorkFuture<Object>> $x) {
+			boolean $interrupted = false;
+			try {
+				for (WorkFuture<Object> $wf : $x.readAllNow()) {
+					switch ($wf.getState()) {
+						case FINISHED:
+							while (true) {
+								try {
+									$wf.get();
+								} catch (InterruptedException $e) {
+									$interrupted = true;
+									continue;
+								} catch (ExecutionException $e) {
+									$log.error("WorkFuture {} terminated with exception: ", $wf, $e);
+								}
+								break;
+							} break;
+						case CANCELLED:
+							/* i presume this was on purpose and thus you don't want to hear about it. */
+							break;
+						default:
+							throw new MajorBug();
+					}
+				}
+			} finally {
+				if ($interrupted) Thread.currentThread().interrupt();
+			}
+		}
 	}
 }
