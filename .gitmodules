@@ -5,3 +5,7 @@
 [submodule "lib/exus-build"]
 	path = lib/exus-build
 	url = https://github.com/heavenlyhash/exus-build.git
+[submodule "lib/slf4j"]
+	path = lib/slf4j
+	url = https://raw.github.com/mdm-releases/slf4j-releases/master/v1.6.6.git
+	mdm = dependency
