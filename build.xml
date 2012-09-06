@@ -54,7 +54,6 @@
 		<exusJavacStrict
 			tree="test"
 			module="test"
-			classes="us/exultant/ahs/test/*"
 			depends="${lib}/slf4j-api-1.6.4.jar : ${dist}/ahslib-complete.jar"
 		/>
 	</target>
@@ -63,7 +62,7 @@
 		<exusJavacStrict
 			module="main/core"
 			classes="us/exultant/ahs/core/**, us/exultant/ahs/util/**, us/exultant/ahs/anno/**, us/exultant/ahs/iob/**"
-			depends=""
+			depends="${lib}/slf4j-api-1.6.4.jar"
 		/>
 	</target>
 	<target name="dist-core" depends="compile-core">
@@ -141,7 +140,7 @@
 		<exusJavacStrict
 			module="main/thread"
 			classes="us/exultant/ahs/thread/**"
-			depends="${build}/main/core"
+			depends="${build}/main/core : ${lib}/slf4j-api-1.6.4.jar"
 		/>
 	</target>
 	<target name="dist-thread" depends="compile-thread">
@@ -154,7 +153,7 @@
 		<exusJavacStrict
 				module="main/io"
 				classes="us/exultant/ahs/io/**"
-				depends="${build}/main/core : ${build}/main/thread"
+				depends="${build}/main/core : ${build}/main/thread : ${lib}/slf4j-api-1.6.4.jar"
 		/>
 	</target>
 	<target name="dist-io" depends="compile-io">

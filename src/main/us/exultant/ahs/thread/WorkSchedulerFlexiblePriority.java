@@ -19,6 +19,7 @@
 
 package us.exultant.ahs.thread;
 
+import us.exultant.ahs.core.*;
 import us.exultant.ahs.util.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -88,10 +89,15 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		} finally {
 			$lock.unlock();
 		}
+		
+		//TODO:AHS:THREAD: and you should also be making sure all tasks still somewhere in the scheduler become cancelled.  especially because external cancels after we close this pipe will be quite unpleasant.
+		$completed.sink().close();
 	}
 	
+	@SuppressWarnings("unchecked")
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
 		WorkFutureImpl<$V> $wf = new WorkFutureImpl<$V>(this, $work, $when);
+		$completed.sink().write((WorkFuture<Object>)$wf);
 		$lock.lock();
 		try {
 			if ($wf.$sync.scheduler_shiftToScheduled()) {
@@ -160,6 +166,10 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}
 	}
 	
+	public ReadHead<WorkFuture<Object>> completed() {
+		return $completed.source();
+	}
+	
 	
 	
 	private final Thread[]			$threads;
@@ -170,6 +180,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	private final Set<WorkFutureImpl<?>>	$unready	= new HashSet<WorkFutureImpl<?>>();
 	private final Set<WorkFutureImpl<?>>	$updatereq	= Collections.newSetFromMap(new ConcurrentHashMap<WorkFutureImpl<?>,Boolean>());	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
 	private final Map<Thread,Object> 	$running	= new ConcurrentHashMap<Thread,Object>();	// this is purely for bookkeeping/debugging/statusreporting and serves absolutely zero functional purpose out of that. 
+	private final FuturePipe<Object>	$completed	= new FuturePipe<Object>();
 	
 	private final ReentrantLock		$lock		= new ReentrantLock();
 	private Thread				$leader		= null;

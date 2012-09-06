@@ -69,6 +69,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 		$tests.add(new TestNonblockingManyWorkSingleSource());
 		$tests.add(new TestNonblockingManyWorkSingleConcurrentSource());
 		$tests.add(new TestPrioritizedDuo());
+		$tests.add(new TestCompletion());
+		$tests.add(new TestStopAndCompletionClose());
+		//$tests.add(new TestStopAndCompletionWait());	// this doesn't pass on a WS implementation that has a blocking stop method.
 		return $tests;
 	}
 	
@@ -581,6 +584,54 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		
 		private class Work implements Runnable { public void run() { X.chill(TSCALE*5); } }
+	}
+	
+	
+	
+	/** Test that the WorkFuture of a scheduled task comes back out of the WorkScheduler's completed() ReadHead. */
+	private class TestCompletion extends TestCase.Unit {
+		private WorkScheduler $ws = makeScheduler(0).start();
+		private volatile boolean $clear = false;
+		public Object call() throws InterruptedException, ExecutionException, TimeoutException {
+			WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable(new Work()), ScheduleParams.NOW);
+			$wf.get();
+			assertSame("completed queue returns done workfuture", $wf, $ws.completed().read());
+			assertFalse("completed queue hasNext", $ws.completed().hasNext());
+			$ws.stop(true);
+			return null;
+		}
+		private class Work implements Runnable { public void run() {} }
+	}
+	
+	
+	
+	/** Test a WorkScheduler's completed() ReadHead becomes closed after the scheduler has been stopped. */
+	private class TestStopAndCompletionClose extends TestCase.Unit {
+		private WorkScheduler $ws = makeScheduler(0).start();
+		private volatile boolean $clear = false;
+		public Object call() {
+			$ws.stop(true);
+			assertTrue("completed queue closed after stop", $ws.completed().isClosed());
+			return null;
+		}
+	}
+	
+	
+	
+	/** Test a WorkScheduler's completed() ReadHead becomes closed only after the scheduler has been stopped AND work in progress has completed. */
+	private class TestStopAndCompletionWait extends TestCase.Unit {
+		private WorkScheduler $ws = makeScheduler(0).start();
+		private volatile boolean $clear = false;
+		public Object call() throws InterruptedException, ExecutionException, TimeoutException {
+			WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable(new Work()), ScheduleParams.NOW);
+			while ($wf.getState() != WorkFuture.State.RUNNING) X.chill(1);	// don't stop the scheduler until the test task is underway
+			$ws.stop(false);
+			assertFalse("completed queue open after stop", $ws.completed().isClosed());
+			$wf.get();
+			assertTrue("completed queue open after last task done", $ws.completed().isClosed());
+			return null;
+		}
+		private class Work implements Runnable { public void run() { X.chill(TSCALE); $clear = true; } }
 	}
 	
 	
