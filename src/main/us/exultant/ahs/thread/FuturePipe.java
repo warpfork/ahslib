@@ -103,6 +103,7 @@ public final class FuturePipe<$T> implements Pipe<WorkFuture<$T>> {
 		public void close() {
 			synchronized ($held) {	// synchronizing this is requisite for proper synchronous closure of the outbound pipe to be possible
 				$allowMore = false;
+				if ($held.size() <= 0) $outbound.sink().close();
 			}
 		}
 	}

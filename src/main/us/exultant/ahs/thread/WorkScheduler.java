@@ -21,6 +21,7 @@ package us.exultant.ahs.thread;
 
 import us.exultant.ahs.core.*;
 import us.exultant.ahs.anno.*;
+import us.exultant.ahs.thread.WorkFuture.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -149,6 +150,26 @@ public interface WorkScheduler {
 	@ThreadSafe
 	@Idempotent
 	public <$V> void update(Collection<WorkFuture<$V>> $futs);
+	
+	/**
+	 * <p>
+	 * A {@link ReadHead} that returns {@link WorkFuture} instances that were managed
+	 * by this scheduler and have now been completed (i.e. either
+	 * {@link State#FINISHED} or {@link State#CANCELLED}). Like the behavior of a
+	 * {@link FuturePipe}, WorkFutures are returned in the order they were completed.
+	 * </p>
+	 * 
+	 * <p>
+	 * The ReadHead's {@link ReadHead#isClosed()} method will return true only when
+	 * the scheduler is accepting no more tasks and all tasks already entered have
+	 * become complete, so waiting for this ReadHead to close is effectively waiting
+	 * for the scheduler to be stopped and have shut down gracefully.
+	 * </p>
+	 * 
+	 * @return a {@link ReadHead} that returns WorkFuture instances that were managed
+	 *         by this scheduler and have now been completed.
+	 */
+	public ReadHead<WorkFuture<Object>> completed();
 	
 	/**
 	 * <p>
