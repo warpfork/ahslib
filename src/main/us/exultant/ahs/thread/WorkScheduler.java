@@ -41,7 +41,7 @@ import java.util.concurrent.*;
  * <p>
  * {@link WorkTarget} represents runnable logic that performs some work when given a
  * thread. A {@link WorkScheduler} provides threads to all of the WorkTargets that it
- * manages in the best order it knows how &mdash corraling tasks with clock-based
+ * manages in the best order it knows how &mdash; corralling tasks with clock-based
  * schedules and tasks of various priorities, all of which may or may not be ready to
  * perform some work at any given time. A WorkScheduler returns a {@link WorkFuture} when
  * given a WorkTarget to manage; this behaves pretty much exactly like you'd expect any
@@ -57,9 +57,9 @@ import java.util.concurrent.*;
  * 
  * <p>
  * If a WorkTarget represents a task which can be performed by several threads at once (a
- * common example being some sort of server can respond to one client independantly per
+ * common example being some sort of server can respond to one client independently per
  * thread), then several instances of the same WorkTarget implementation should be created
- * and each of them scheduled &mdash one per thread which should be able to respond. (If
+ * and each of them scheduled &mdash; one per thread which should be able to respond. (If
  * you want as many threads as possible to be able to perform a type of work, consider
  * creating a {@link Factory} for the WorkTarget and using the
  * {@link WorkManager#scheduleOnePerCore(Factory,WorkScheduler)} helper method.)
@@ -150,6 +150,65 @@ public interface WorkScheduler {
 	@ThreadSafe
 	@Idempotent
 	public <$V> void update(Collection<WorkFuture<$V>> $futs);
+	
+	/**
+	 * Produces a description of the current state of this scheduler. There is no
+	 * particular standard to this description, since WorkScheduler implementations
+	 * can vary widely in how they are implemented, but typically it might contain
+	 * some helpful information like how many tasks are currently running, how many
+	 * threads are available, and possibly some basic information about how tasks are
+	 * pooled or sorted (i.e. how big is the waiting set versus the ready heap, or how
+	 * big is the low priority pool compared to the high priority, etc).
+	 * 
+	 * @return a description, probably a String or object with a very reasonable
+	 *         toString method.
+	 */
+	public Object describe();
+	
+	/**
+	 * <p>
+	 * Trigger updating of all unready tasks managed by this scheduler. Much like the
+	 * {@link #update(WorkFuture)} method, {@link #flush()} may request updating which
+	 * the scheduler services at its leisure.
+	 * </p>
+	 * 
+	 * <p>
+	 * You may schedule a task to have a scheduler periodically flush itself.
+	 * {@link WorkManager#periodicallyFlush(WorkScheduler, long, TimeUnit)} is a
+	 * one-line way to set this up.
+	 * </p>
+	 * 
+	 * <p>
+	 * Whether or not this method should actually be used is an interesting
+	 * discussion.
+	 * </p>
+	 * 
+	 * <p>
+	 * It is entirely possible to construct a program where all task completions and
+	 * all work availability changes are updated in an event-based fashion, without
+	 * resorting to polling {@link #flush()}. Polling {@link #flush()} periodically
+	 * will provide less rapid reactions because there may be a delay proportional to
+	 * the poll frequency for any new work; while high frequency polling may make this
+	 * appear negligible to human standards, if events occur in a series the delay may
+	 * apply at every stop in that series and accumulate to something serious.
+	 * </p>
+	 * 
+	 * <p>
+	 * That being said, polling {@link #flush()} periodically is incredibly simple and
+	 * very hard to screw up in a way that hangs you. Furthermore, in some systems
+	 * that have very high throughputs of events and WorkTarget that are often ready,
+	 * it's actually possible that designing to use periodic flushing instead of
+	 * spending time doing dispatches of update requests for each event in a deluge
+	 * can actually cause a net performance throughput win.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note that in many implementations the scheduler may be forced to acquire a
+	 * global lock on the entire scheduler in order to perform this function.
+	 * </p>
+	 * 
+	 */
+	public void flush();
 	
 	/**
 	 * <p>

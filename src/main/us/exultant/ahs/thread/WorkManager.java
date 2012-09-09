@@ -117,6 +117,13 @@ public class WorkManager {
 	 * </p>
 	 * 
 	 * <p>
+	 * In the interest of simplicity, periodic flushing of this WorkScheduler has been
+	 * enabled via
+	 * {@link WorkManager#periodicallyFlush(WorkScheduler, long, TimeUnit)}; flushing
+	 * will take place every 2ms.
+	 * </p>
+	 * 
+	 * <p>
 	 * The {@link WorkScheduler#completed()} ReadHead of this scheduler is set up with
 	 * a listener that consumes completed tasks, and issues a warning to the
 	 * WorkManager's logger if any tasks ended by throwing an Exception (exactly as if
@@ -132,8 +139,9 @@ public class WorkManager {
 	private static class SingletonHolder {
 		public static final WorkScheduler INSTANCE;
 		static {
-			INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()));
+			INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()*2));
 			attachFailureLogger(INSTANCE);
+			periodicallyFlush(INSTANCE, 2, TimeUnit.MILLISECONDS);
 			INSTANCE.start();
 		}
 	}
@@ -193,4 +201,25 @@ public class WorkManager {
 			}
 		}
 	}
+	
+	
+	
+	/**
+	 * Schedules a task on the scheduler to periodically flush itself.
+	 * 
+	 * @return the WorkFuture of the flush task.
+	 */
+	public static WorkFuture<Void> periodicallyFlush(WorkScheduler $scheduler, long $time, TimeUnit $timeunit) {
+		return $scheduler.schedule(new SchedulerFlushWorkTarget($scheduler), ScheduleParams.makeFixedDelay($time, $timeunit));
+	}
+	
+	static class SchedulerFlushWorkTarget implements WorkTarget<Void> {
+		SchedulerFlushWorkTarget(WorkScheduler $scheduler) { this.$scheduler = $scheduler; }
+		private final WorkScheduler $scheduler;
+		public Void call() { $scheduler.flush(); return null; }
+		public boolean isDone() { return false; }
+		public boolean isReady() { return true; }
+		public int getPriority() { return -100000; }
+	}
+
 }
