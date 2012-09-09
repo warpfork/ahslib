@@ -117,6 +117,13 @@ public class WorkManager {
 	 * </p>
 	 * 
 	 * <p>
+	 * In the interest of simplicity, periodic flushing of this WorkScheduler has been
+	 * enabled via
+	 * {@link WorkManager#periodicallyFlush(WorkScheduler, long, TimeUnit)}; flushing
+	 * will take place every 2ms.
+	 * </p>
+	 * 
+	 * <p>
 	 * The {@link WorkScheduler#completed()} ReadHead of this scheduler is set up with
 	 * a listener that consumes completed tasks, and issues a warning to the
 	 * WorkManager's logger if any tasks ended by throwing an Exception (exactly as if
@@ -134,6 +141,7 @@ public class WorkManager {
 		static {
 			INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()));
 			attachFailureLogger(INSTANCE);
+			periodicallyFlush(INSTANCE, 2, TimeUnit.MILLISECONDS);
 			INSTANCE.start();
 		}
 	}
