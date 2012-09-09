@@ -152,6 +152,20 @@ public interface WorkScheduler {
 	public <$V> void update(Collection<WorkFuture<$V>> $futs);
 	
 	/**
+	 * Produces a description of the current state of this scheduler. There is no
+	 * particular standard to this description, since WorkScheduler implementations
+	 * can vary widely in how they are implemented, but typically it might contain
+	 * some helpful information like how many tasks are currently running, how many
+	 * threads are available, and possibly some basic information about how tasks are
+	 * pooled or sorted (i.e. how big is the waiting set versus the ready heap, or how
+	 * big is the low priority pool compared to the high priority, etc).
+	 * 
+	 * @return a description, probably a String or object with a very reasonable
+	 *         toString method.
+	 */
+	public Object describe();
+	
+	/**
 	 * <p>
 	 * A {@link ReadHead} that returns {@link WorkFuture} instances that were managed
 	 * by this scheduler and have now been completed (i.e. either

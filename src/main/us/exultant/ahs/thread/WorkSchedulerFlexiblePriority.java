@@ -399,56 +399,51 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 //		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
 	}
 	
-	public String getStatus(boolean $allOfIt) {
+	public String describe() {
 		$lock.lock();
 		String $moar = null;
 		int $runningCount = 0;
 		try {
-			if ($allOfIt) {
-				StringBuilder $sb = new StringBuilder();
-				
-				$sb.append("\n\t\tRUNNING:");
-				if ($running.size() > 0)
-					for (Map.Entry<Thread,Object> $thing : $running.entrySet()) {
-						$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
-						$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
-					}
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$sb.append("\n\t\tSCHEDULED:");
-				if ($scheduled.$size > 0)
-					for (int $i = 0; $i < $scheduled.$size; $i++)
-						$sb.append("\n\t\t\t"+$scheduled.$queue[$i]);
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$sb.append("\n\t\tUNREADY:");
-				if ($unready.size() > 0)
-					for (WorkFuture<?> $thing : $unready)
-						$sb.append("\n\t\t\t"+$thing);
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$sb.append("\n\t\tDELAYED:");
-				if ($delayed.$size > 0)
-					for (int $i = 0; $i < $delayed.$size; $i++)
-						$sb.append("\n\t\t\t"+$delayed.$queue[$i]);
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$sb.append("\n\t\tUPDATEREQ:");
-				if ($updatereq.size() > 0)
-					for (WorkFuture<?> $thing : $updatereq)
-						$sb.append("\n\t\t\t"+$thing);
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$moar = $sb.toString();
-			} else {
-				for (Map.Entry<Thread,Object> $thing : $running.entrySet())
+			StringBuilder $sb = new StringBuilder();
+			
+			$sb.append("\n\t\tRUNNING:");
+			if ($running.size() > 0)
+				for (Map.Entry<Thread,Object> $thing : $running.entrySet()) {
+					$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
 					$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
-			}
+				}
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$sb.append("\n\t\tSCHEDULED:");
+			if ($scheduled.$size > 0)
+				for (int $i = 0; $i < $scheduled.$size; $i++)
+					$sb.append("\n\t\t\t"+$scheduled.$queue[$i]);
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$sb.append("\n\t\tUNREADY:");
+			if ($unready.size() > 0)
+				for (WorkFuture<?> $thing : $unready)
+					$sb.append("\n\t\t\t"+$thing);
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$sb.append("\n\t\tDELAYED:");
+			if ($delayed.$size > 0)
+				for (int $i = 0; $i < $delayed.$size; $i++)
+					$sb.append("\n\t\t\t"+$delayed.$queue[$i]);
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$sb.append("\n\t\tUPDATEREQ:");
+			if ($updatereq.size() > 0)
+				for (WorkFuture<?> $thing : $updatereq)
+					$sb.append("\n\t\t\t"+$thing);
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$moar = $sb.toString();
 		} finally {
 			$lock.unlock();
 		}
@@ -458,7 +453,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
 		"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
 		"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5) +
-		(($allOfIt)?$moar:"");
+		$moar;
 	}
 	
 	
