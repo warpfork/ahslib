@@ -41,7 +41,7 @@ import java.util.concurrent.*;
  * <p>
  * {@link WorkTarget} represents runnable logic that performs some work when given a
  * thread. A {@link WorkScheduler} provides threads to all of the WorkTargets that it
- * manages in the best order it knows how &mdash corraling tasks with clock-based
+ * manages in the best order it knows how &mdash; corralling tasks with clock-based
  * schedules and tasks of various priorities, all of which may or may not be ready to
  * perform some work at any given time. A WorkScheduler returns a {@link WorkFuture} when
  * given a WorkTarget to manage; this behaves pretty much exactly like you'd expect any
@@ -57,9 +57,9 @@ import java.util.concurrent.*;
  * 
  * <p>
  * If a WorkTarget represents a task which can be performed by several threads at once (a
- * common example being some sort of server can respond to one client independantly per
+ * common example being some sort of server can respond to one client independently per
  * thread), then several instances of the same WorkTarget implementation should be created
- * and each of them scheduled &mdash one per thread which should be able to respond. (If
+ * and each of them scheduled &mdash; one per thread which should be able to respond. (If
  * you want as many threads as possible to be able to perform a type of work, consider
  * creating a {@link Factory} for the WorkTarget and using the
  * {@link WorkManager#scheduleOnePerCore(Factory,WorkScheduler)} helper method.)
