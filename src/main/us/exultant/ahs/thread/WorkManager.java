@@ -193,4 +193,25 @@ public class WorkManager {
 			}
 		}
 	}
+	
+	
+	
+	/**
+	 * Schedules a task on the scheduler to periodically flush itself.
+	 * 
+	 * @return the WorkFuture of the flush task.
+	 */
+	public static WorkFuture<Void> periodicallyFlush(WorkScheduler $scheduler, long $time, TimeUnit $timeunit) {
+		return $scheduler.schedule(new SchedulerFlushWorkTarget($scheduler), ScheduleParams.makeFixedDelay($time, $timeunit));
+	}
+	
+	static class SchedulerFlushWorkTarget implements WorkTarget<Void> {
+		SchedulerFlushWorkTarget(WorkScheduler $scheduler) { this.$scheduler = $scheduler; }
+		private final WorkScheduler $scheduler;
+		public Void call() { $scheduler.flush(); return null; }
+		public boolean isDone() { return false; }
+		public boolean isReady() { return true; }
+		public int getPriority() { return -100000; }
+	}
+
 }
