@@ -167,6 +167,51 @@ public interface WorkScheduler {
 	
 	/**
 	 * <p>
+	 * Trigger updating of all unready tasks managed by this scheduler. Much like the
+	 * {@link #update(WorkFuture)} method, {@link #flush()} may request updating which
+	 * the scheduler services at its leisure.
+	 * </p>
+	 * 
+	 * <p>
+	 * You may schedule a task to have a scheduler periodically flush itself.
+	 * {@link WorkManager#periodicallyFlush(WorkScheduler, long, TimeUnit)} is a
+	 * one-line way to set this up.
+	 * </p>
+	 * 
+	 * <p>
+	 * Whether or not this method should actually be used is an interesting
+	 * discussion.
+	 * </p>
+	 * 
+	 * <p>
+	 * It is entirely possible to construct a program where all task completions and
+	 * all work availability changes are updated in an event-based fashion, without
+	 * resorting to polling {@link #flush()}. Polling {@link #flush()} periodically
+	 * will provide less rapid reactions because there may be a delay proportional to
+	 * the poll frequency for any new work; while high frequency polling may make this
+	 * appear negligible to human standards, if events occur in a series the delay may
+	 * apply at every stop in that series and accumulate to something serious.
+	 * </p>
+	 * 
+	 * <p>
+	 * That being said, polling {@link #flush()} periodically is incredibly simple and
+	 * very hard to screw up in a way that hangs you. Furthermore, in some systems
+	 * that have very high throughputs of events and WorkTarget that are often ready,
+	 * it's actually possible that designing to use periodic flushing instead of
+	 * spending time doing dispatches of update requests for each event in a deluge
+	 * can actually cause a net performance throughput win.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note that in many implementations the scheduler may be forced to acquire a
+	 * global lock on the entire scheduler in order to perform this function.
+	 * </p>
+	 * 
+	 */
+	public void flush();
+	
+	/**
+	 * <p>
 	 * A {@link ReadHead} that returns {@link WorkFuture} instances that were managed
 	 * by this scheduler and have now been completed (i.e. either
 	 * {@link State#FINISHED} or {@link State#CANCELLED}). Like the behavior of a
