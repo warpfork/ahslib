@@ -139,7 +139,7 @@ public class WorkManager {
 	private static class SingletonHolder {
 		public static final WorkScheduler INSTANCE;
 		static {
-			INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()));
+			INSTANCE = new WorkSchedulerFlexiblePriority(Math.max(4, Runtime.getRuntime().availableProcessors()*2));
 			attachFailureLogger(INSTANCE);
 			periodicallyFlush(INSTANCE, 2, TimeUnit.MILLISECONDS);
 			INSTANCE.start();
