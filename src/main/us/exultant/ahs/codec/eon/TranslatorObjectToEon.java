@@ -35,12 +35,12 @@ import us.exultant.ahs.codec.*;
  */
 public class TranslatorObjectToEon<$FACE> implements Translator<$FACE,EonObject> {
 	public TranslatorObjectToEon(Class<$FACE> $klass, EonCodec $codec) {
+		if ($codec == null) throw new NullPointerException();
 		this.$klass = $klass;
 		this.$codec = $codec;
 	}
 	public TranslatorObjectToEon(EonCodec $codec) {
-		this.$klass = null;
-		this.$codec = $codec;
+		this(null, $codec);
 	}
 	
 	private final Class<$FACE>	$klass;

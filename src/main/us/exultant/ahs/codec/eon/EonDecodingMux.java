@@ -91,6 +91,7 @@ public class EonDecodingMux<$FACE> {
 	}
 	
 	public <$T extends $FACE> void enroll(Class<$T> $klass, final Encoder<EonCodec,EonObject,$T> $encoder, final Decoder<EonCodec,EonObject,$T> $decoder) {
+		if ($klass == null) throw new NullPointerException();
 		$parent.putHook($klass, $encoder);
 		$parent.putHook($klass, $decoder);
 		$demux.put(Eon.getKlass($klass), $klass);
@@ -103,6 +104,7 @@ public class EonDecodingMux<$FACE> {
 	 * @param $dencoder
 	 */
 	public <$T extends $FACE> void enroll(Class<$T> $klass, final Dencoder<EonCodec,EonObject,$T> $dencoder) {
+		if ($dencoder == null) throw new NullPointerException();
 		enroll($klass, $dencoder, $dencoder);
 	}
 }
