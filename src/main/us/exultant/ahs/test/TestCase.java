@@ -21,7 +21,6 @@ package us.exultant.ahs.test;
 
 import us.exultant.ahs.util.*;
 import java.util.*;
-import java.util.concurrent.*;
 import org.slf4j.*;
 
 /**
@@ -336,16 +335,10 @@ public abstract class TestCase implements Runnable {
 	 * of Unit is used when logging the successful passing of a Unit and so use of
 	 * anonymous subclasses of Unit is not advised.
 	 * </p>
-	 * 
-	 * <p>
-	 * Any object returned by the {@link #call()} method is ignored by TestCase, so
-	 * it's typically appropriate to act as if Unit actually implemented
-	 * <tt>Callable&lt;{@link Void}&gt;</tt>. (The return type of Object is allowed in
-	 * case the client cares to compose their units in odd ways, but doing so is not
-	 * recommended.)
-	 * </p>
 	 */
-	public abstract class Unit implements Callable<Object> {
+	public abstract class Unit {
+		public abstract void call() throws Throwable;
+		
 		protected final Logger	$log = LoggerFactory.getLogger(TestCase.this.$log.getName()+"."+this.getName());
 		
 		public String getName() {

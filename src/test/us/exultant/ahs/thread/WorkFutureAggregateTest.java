@@ -82,7 +82,7 @@ public class WorkFutureAggregateTest extends TestCase {
 	private class TestBasic extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
 		private final CountDownLatch $success = new CountDownLatch(1);
-		public Object call() throws TimeoutException, CancellationException, ExecutionException, InterruptedException {
+		public void call() throws TimeoutException, CancellationException, ExecutionException, InterruptedException {
 			CountDownLatch $latch = new CountDownLatch(1);
 			StickableWorkTarget $wt = new StickableWorkTarget($latch, 0);
 			WorkFuture<Void> $wf = $ws.schedule($wt, ScheduleParams.NOW);
@@ -123,7 +123,6 @@ public class WorkFutureAggregateTest extends TestCase {
 			$success.await(1, TimeUnit.MILLISECONDS);
 			
 			$ws.stop(false);
-			return null;
 		}
 	}
 	
@@ -151,7 +150,7 @@ public class WorkFutureAggregateTest extends TestCase {
 	 */
 	private class TestUpdate extends TestTemplate {
 		public TestUpdate() { super(2); }
-		public Object call() throws TimeoutException, CancellationException, InterruptedException {
+		public void call() throws TimeoutException, CancellationException, InterruptedException {
 			for (int $i = 0; $i < $tasks; $i++)
 				$wts[$i] = new StickableWorkTarget(null, 0);
 			for (int $i = 0; $i < $tasks; $i++)
@@ -173,7 +172,6 @@ public class WorkFutureAggregateTest extends TestCase {
 			assertTrue($wfs[1].isDone());
 			
 			$ws.stop(false);
-			return null;
 		}
 	}
 	
@@ -186,7 +184,7 @@ public class WorkFutureAggregateTest extends TestCase {
 	private class TestManyLongTasks extends TestTemplate {
 		private final CountDownLatch $success = new CountDownLatch(1);
 		public TestManyLongTasks() { super(10); }
-		public Object call() throws TimeoutException, CancellationException, InterruptedException {
+		public void call() throws TimeoutException, CancellationException, InterruptedException {
 			for (int $i = 0; $i < $tasks; $i+=2)
 				$wts[$i] = new StickableWorkTarget(null, 0);
 			for (int $i = 1; $i < $tasks; $i+=2)
@@ -217,7 +215,6 @@ public class WorkFutureAggregateTest extends TestCase {
 			$success.await(1, TimeUnit.MILLISECONDS);
 			
 			$ws.stop(false);
-			return null;
 		}
 	}
 	
@@ -230,7 +227,7 @@ public class WorkFutureAggregateTest extends TestCase {
 	private class TestCancellation extends TestTemplate {
 		private final CountDownLatch $success = new CountDownLatch(1);
 		public TestCancellation() { super(10); }
-		public Object call() throws TimeoutException, CancellationException, InterruptedException {
+		public void call() throws TimeoutException, CancellationException, InterruptedException {
 			for (int $i = 0; $i < $tasks; $i+=2)
 				$wts[$i] = new StickableWorkTarget(null, 0);
 			for (int $i = 1; $i < $tasks; $i+=2)
@@ -280,7 +277,6 @@ public class WorkFutureAggregateTest extends TestCase {
 				assertEquals(WorkFuture.State.CANCELLED, $wfs[$i].getState());
 			
 			$ws.stop(false);
-			return null;
 		}
 	}
 	
@@ -291,11 +287,10 @@ public class WorkFutureAggregateTest extends TestCase {
 	 */
 	private class TestTest extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
-		public Object call() {
+		public void call() {
 			$ws.start();
 			
 			$ws.stop(false);
-			return null;
 		}
 	}
 }

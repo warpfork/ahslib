@@ -40,7 +40,7 @@ public class StringsTest extends TestCase {
 	
 	
 	private class TestParting extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			//getPartAfter
 			assertEquals("qwerzjkl;",	Strings.getPartAfter("asdfzqwerzjkl;","z"));
 			assertEquals("sdfzqwerzjkl;",	Strings.getPartAfter("asdfzqwerzjkl;","a"));
@@ -82,13 +82,11 @@ public class StringsTest extends TestCase {
 			$sa = Strings.splitOnLast("asdfzqwerzjkl;", "z");
 			assertEquals("asdfzqwer", $sa[0]);
 			assertEquals("jkl;", $sa[1]);
-			
-			return null;
 		}
 	}
 	
 	private class TestFileNameManipulation extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			String $path1 = "/ahs/d/data/screwAll.txt";
 			String $path2 = "/ahs/d/data/";
 			String $path3 = "/ahs/d/data/screwAll.txt.bak";
@@ -118,13 +116,11 @@ public class StringsTest extends TestCase {
 			assertEquals("bak",	Strings.extension($path3));
 			assertEquals("",	Strings.extension($path4));
 			assertEquals("",	Strings.extension($path5));
-			
-			return null;
 		}
 	}
 	
 	private class TestPadding extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			assertEquals("   hi!",		Strings.padLeft("hi!", 3));
 			assertEquals("   hi! ",		Strings.padLeft("hi! ", 3));
 			assertEquals("   hi!",		Strings.padLeftToWidth("hi!", 6));
@@ -133,28 +129,22 @@ public class StringsTest extends TestCase {
 			assertEquals("hi!    ",		Strings.padRight("hi! ", 3));
 			assertEquals("hi!   ",		Strings.padRightToWidth("hi!", 6));
 			assertEquals("hi!   ",		Strings.padRightToWidth("hi! ", 6));
-			
-			return null;
 		}
 	}
 	
 	private class TestToHex extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			assertEquals("FF",Strings.toHex(new byte[] {-1}));
 			assertEquals("00",Strings.toHex(new byte[] {0}));
 			assertEquals("0C",Strings.toHex(new byte[] {12}));
 			assertEquals("78",Strings.toHex(new byte[] {120}));
 			assertEquals("780CFF00",Strings.toHex(new byte[] {120,12,-1,0}));
-			
-			return null;
 		}
 	}
 	
 	private class TestFromHex extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			assertEquals(new byte[] {120,12,-1,0},Strings.fromHex(Strings.toHex(new byte[] {120,12,-1,0})));
-			
-			return null;
 		}
 	}
 }

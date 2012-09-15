@@ -50,7 +50,7 @@ public class BitVectorTest extends TestCase {
 	
 	
 	private class TestBitSetStupidity extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitSet $bs = new BitSet(3);
 			$bs.set(2);	// so we get "001"
 			assertEquals("001", new BitVector($bs).toString());
@@ -63,20 +63,17 @@ public class BitVectorTest extends TestCase {
 			$bs.set(2);
 			assertEquals(false, $bs.get(900));
 			assertEquals(3, $bs.length());	// length on bitset has no bearing on what length you tell it to have.
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestStringConstructor extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			trial("1");
 			trial("101");
 			trial("101100110010101110101001110111111101101010010100100101111101010100101");
 			trial("101100");
-			return null;
 		}
 		
 		private void trial(String $s) {
@@ -87,7 +84,7 @@ public class BitVectorTest extends TestCase {
 	
 	
 	private class TestBitSetStuff extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitSet $bs = new BitSet(3);
 			$bs.set(2);	// so we get "001"
 			assertEquals("001", new BitVector($bs).toString());
@@ -100,15 +97,13 @@ public class BitVectorTest extends TestCase {
 			$bs.set(9);
 			assertEquals("0010000001", new BitVector($bs).toString());
 			assertEquals("{2, 9}", $bs.get(0, 10).toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestGet extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitVector $bv = new BitVector("00100111");
 			
 			BitSet $bs = $bv.$bs.get(0, 3);
@@ -125,15 +120,13 @@ public class BitVectorTest extends TestCase {
 			$bv2 = $bv.get(2, 5);
 			assertEquals(3, $bv2.length());
 			assertEquals("100", $bv2.toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestShift extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitVector $bv = new BitVector("001");
 			assertEquals(false, $bv.shift());
 			assertEquals(2, $bv.length());
@@ -150,15 +143,13 @@ public class BitVectorTest extends TestCase {
 			assertEquals(5, $bv2.length());
 			assertEquals("10110", $bv2.toString());
 			assertEquals("0110010101110101001110111111101101010010100100101111101010100101", $bv.toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestUnshift extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitVector $bv = new BitVector("001");
 			$bv.unshift(true);
 			assertEquals("1001", $bv.toString());
@@ -180,15 +171,13 @@ public class BitVectorTest extends TestCase {
 			$bv = new BitVector("110010");
 			$bv.unshift(new BitVector("00101"));
 			assertEquals("00101110010", $bv.toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestToByteArray extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitVector $bv = new BitVector("1");
 			assertEquals(-128, $bv.toByteArray()[0]);
 			
@@ -207,15 +196,13 @@ public class BitVectorTest extends TestCase {
 			assertEquals(1, $bv.toByteArray()[0]);
 			assertEquals(3, $bv.toByteArray()[1]);
 			assertEquals(-1, $bv.toByteArray()[2]);
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestPop extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitVector $bv = new BitVector("110010");
 			assertEquals(false, $bv.pop());
 			assertEquals(true, $bv.pop());
@@ -223,29 +210,25 @@ public class BitVectorTest extends TestCase {
 			assertEquals("1100", $bv.toString());
 			assertEquals("100", $bv.pop(3).toString());
 			assertEquals("1", $bv.toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestPush extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitVector $bv = new BitVector("110010");
 			$bv.push(true);
 			$bv.push("110");
 			$bv.push(new BitVector("00010"));
 			assertEquals("110010111000010", $bv.toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestSlide extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitVector $bv = new BitVector("110010");
 			$bv.emptySlide(2);
 			assertEquals("001100", $bv.toString());
@@ -253,28 +236,24 @@ public class BitVectorTest extends TestCase {
 			BitVector $bv2 = $bv.slide(new BitVector("101"));
 			assertEquals("101001", $bv.toString());
 			assertEquals("100", $bv2.toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestRslide extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			BitVector $bv = new BitVector("110010");
 			BitVector $bv2 = $bv.rslide(new BitVector("101"));
 			assertEquals("010101", $bv.toString());
 			assertEquals("110", $bv2.toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestByteArrayConstructors extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			byte[] $t;
 			BitVector $bv;
 			
@@ -295,15 +274,13 @@ public class BitVectorTest extends TestCase {
 			
 			$bv = new BitVector(new byte[] { 0x21, -0x01, 0x21 }, 4, 15);
 			assertEquals("000111111111001", $bv.toString());
-			
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestJsonSerialization extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			JsonCodec $codec = new JsonCodec();
 			$codec.putHook(BitVector.class, BitVectorDencoder.ENCODER);
 			$codec.putHook(BitVector.class, BitVectorDencoder.DECODER);
@@ -315,8 +292,6 @@ public class BitVectorTest extends TestCase {
 			X.saye($jo + "");
 			$bv2 = $codec.decode($jo, BitVector.class);
 			assertEquals($bv, $bv2);
-			
-			return null;
 		}
 	}
 }

@@ -50,55 +50,49 @@ public class WaitTest extends TestCase {
 	
 	
 	private class TestA extends LoopedWaitTemplate {
-		public Object call() {
+		public void call() {
 			wait(50,10,10);
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestA2 extends LoopedWaitTemplate {
-		public Object call() {
+		public void call() {
 			wait(50,10,3);
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestA3 extends LoopedWaitTemplate {
-		public Object call() {
+		public void call() {
 			wait(50,10,1);
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestB extends LoopedWaitTemplate {
-		public Object call() {
+		public void call() {
 			wait(20,20,2);
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestB10 extends LoopedWaitTemplate {
-		public Object call() {
+		public void call() {
 			for (int $i = 0; $i < 10; $i++)
 				wait(20,20,2);
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestC extends LoopedWaitTemplate {
-		public Object call() {
+		public void call() {
 			wait(500,10,5);
-			return null;
 		}
 	}
 }

@@ -75,7 +75,7 @@ public class InternTest extends TestCase {
 		private T $canon2 = new T();
 		private T $alt1 = T.copyPartial($canon1);
 		private T $alt2 = T.copyTotal($canon2);
-		public Object call() {
+		public void call() {
 			assertSame($canon1, $intern.intern($canon1));
 			assertSame($canon2, $intern.intern($canon2));
 			assertSame($canon1, $intern.intern($canon1));	// repeated canonicalization should of course have no effect.
@@ -87,8 +87,6 @@ public class InternTest extends TestCase {
 			assertEquals($canon2, $alt2);
 			assertNotSame($canon2, $alt2);
 			assertSame($canon2, $intern.intern($alt2));
-			
-			return null;
 		}
 	}
 	
@@ -98,7 +96,7 @@ public class InternTest extends TestCase {
 		private String $canon2;
 		private String $alt1 = String.copyValueOf($canon1.toCharArray());
 		private String $alt2;
-		public Object call() {
+		public void call() {
 			$canon2 = Integer.toBinaryString(new Random().nextInt());
 			$alt2 = String.copyValueOf($canon2.toCharArray());
 			
@@ -119,8 +117,6 @@ public class InternTest extends TestCase {
 			assertSame($canon2, $intern.optIntern($alt2));
 			
 			
-			
-			return null;
 		}
 	}
 	
@@ -128,12 +124,10 @@ public class InternTest extends TestCase {
 		private Intern<String> $intern = new Intern.Strings();
 		private String $canon1 = "canon";
 		private String $alt1 = "canon";
-		public Object call() {
+		public void call() {
 			assertSame($canon1, $intern.intern($canon1));	// this is the same...
 			assertSame($canon1, $intern.intern($alt1));	// and this is the same...
 			assertSame($canon1, $alt1);			// ...and those were both trivial because they were already literals to the jvm.
-			
-			return null;
 		}
 	}
 	
@@ -193,7 +187,7 @@ public class InternTest extends TestCase {
 		private T2 $canon2 = new T2();
 		private T2 $alt1 = T2.copyPartial($canon1);
 		private T2 $alt2 = T2.copyTotal($canon2);
-		public Object call() {
+		public void call() {
 			assertSame($canon1, $intern.intern($canon1));
 			assertSame($canon2, $intern.intern($canon2));
 			
@@ -203,8 +197,6 @@ public class InternTest extends TestCase {
 			assertNotSame($canon2, $alt2);
 			assertSame($canon2, $intern.intern($alt2));
 			assertSame($canon2, $intern.optIntern($alt2));
-			
-			return null;
 		}
 	}
 }
