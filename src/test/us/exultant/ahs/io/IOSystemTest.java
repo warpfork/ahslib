@@ -48,6 +48,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 		$units.add(new TestBidiBig());
 		if (defineSupportsMultimessage()) $units.add(new TestBidiBigMultimessage());
 		$units.add(new TestClosureWaitingOnPipe());
+		$units.add(new TestClosureBigWaitingOnPipe());
 		if (defineSupportsMultimessage()) $units.add(new TestClosureMultimessageWaitingOnPipe());
 		return $units;
 	}
@@ -200,6 +201,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$outgoingPipe.sink().write(defineTestMessage1());
 			$outgoingPipe.sink().write(defineTestMessage2());
 			$outgoingPipe.sink().write(defineTestMessage3());
+			$outgoingPipe.close();
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
@@ -367,15 +369,16 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	
 	/**
 	 * A pair of (TCP) SocketChannel are constructed; one is read from, and one is
-	 * written to (each is used unidirectionally); two messages are written and then
-	 * the channel closed. Closure is checked after blocking for a readAll on the
-	 * inputsystem pipe.
+	 * written to (each is used unidirectionally); one message is written and then
+	 * that pipe closed to the OutputSystem is closed. Closure of both underlying
+	 * channels as well as the Pipe from the InputSystem is checked after blocking for
+	 * a readAll on the InputSystem pipe.
 	 * 
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 * 
 	 */
 	private class TestClosureWaitingOnPipe extends TestTemplate {
-		public Object call() throws IOException, ExecutionException, InterruptedException {
+		public Object call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -405,8 +408,59 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
 			
 			// check for any errors
-			$insys.getFuture().get();
-			$outsys.getFuture().get();
+			$insys.getFuture().get(1, TimeUnit.SECONDS);
+			$outsys.getFuture().get(1, TimeUnit.SECONDS);
+			
+			cleanup();
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * A pair of (TCP) SocketChannel are constructed; one is read from, and one is
+	 * written to (each is used unidirectionally); one (large) message is written and
+	 * then that pipe closed to the OutputSystem is closed. Closure of both underlying
+	 * channels as well as the Pipe from the InputSystem is checked after blocking for
+	 * a readAll on the InputSystem pipe.
+	 * 
+	 * @author Eric Myhre <tt>hash@exultant.us</tt>
+	 * 
+	 */
+	private class TestClosureBigWaitingOnPipe extends TestTemplate {
+		public Object call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
+			// set up ye olde sockets to stuff to test against
+			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
+			SocketChannel $outsock = $socks.getA();
+			SocketChannel $insock = $socks.getB();
+
+			// set up the input system!
+			$log.debug("setting up InputSystem");
+			final DataPipe<$MSG> $incomingPipe = new DataPipe<$MSG>();
+			final InputSystem<$MSG> $insys = buildInputSystem($insock, $incomingPipe.sink());
+			
+			// set up the output system!
+			$log.debug("setting up OutputSystem");
+			final DataPipe<$MSG> $outgoingPipe = new DataPipe<$MSG>();
+			final OutputSystem<$MSG> $outsys = buildOutputSystem($outsock, $outgoingPipe.source());
+			
+			// do some writes
+			$log.debug("writing chunks...");
+			$outgoingPipe.sink().write(defineTestMessageBig());
+			$outgoingPipe.sink().close();
+			
+			// do some reads, and make assertion
+			$log.debug("reading chunks...");
+			assertEquals("message big read", defineTestMessageBig(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
+			$incomingPipe.source().readAll();
+			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());
+			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
+			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
+			
+			// check for any errors
+			$insys.getFuture().get(1, TimeUnit.SECONDS);
+			$outsys.getFuture().get(1, TimeUnit.SECONDS);
 			
 			cleanup();
 			return null;
@@ -425,7 +479,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestClosureMultimessageWaitingOnPipe extends TestTemplate {
-		public Object call() throws IOException, ExecutionException, InterruptedException {
+		public Object call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -459,8 +513,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
 			
 			// check for any errors
-			$insys.getFuture().get();
-			$outsys.getFuture().get();
+			$insys.getFuture().get(1, TimeUnit.SECONDS);
+			$outsys.getFuture().get(1, TimeUnit.SECONDS);
 			
 			cleanup();
 			return null;
