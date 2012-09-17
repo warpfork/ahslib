@@ -47,15 +47,33 @@
 			dist-crypto"
 		description="pack jars">
 	</target>
-	<target name="test"
+	
+	
+	<target name="test-compile"
 		depends="dist"
 		description="build tests">
 		<exusJavacStrict
 			tree="test"
 			module="test"
-			depends="${lib}/slf4j/slf4j-api.jar : ${dist}/ahslib-complete.jar"
+			depends="
+				  ${lib}/slf4j/slf4j-api.jar
+				: ${lib}/bcprov-java/bcprov.jar
+				: ${dist}/ahslib-core.jar
+				: ${dist}/ahslib-codec.jar
+				: ${dist}/ahslib-codec-json.jar
+				: ${dist}/ahslib-codec-ebon.jar
+				: ${dist}/ahslib-codec-pre.jar
+				: ${dist}/ahslib-test.jar
+				: ${dist}/ahslib-thread.jar
+				: ${dist}/ahslib-io.jar
+				: ${dist}/ahslib-crypto.jar
+				: ${dist}/ahslib-core.jar
+				: ${dist}/ahslib-core.jar
+				: ${dist}/ahslib-core.jar
+			"
 		/>
 	</target>
+	
 	
 	<target name="compile-core" depends="init">
 		<exusJavacStrict
