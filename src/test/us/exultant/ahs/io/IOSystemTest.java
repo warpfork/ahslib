@@ -139,7 +139,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBasic extends TestTemplate {
-		public Object call() throws IOException {
+		public void call() throws IOException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -165,7 +165,6 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertEquals(defineTestMessage1(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
 			
 			cleanup();
-			return null;
 		}
 	}
 	
@@ -180,7 +179,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBasicMultimessage extends TestTemplate {
-		public Object call() throws IOException {
+		public void call() throws IOException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -210,7 +209,6 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertEquals(defineTestMessage3(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
 			
 			cleanup();
-			return null;
 		}
 	}
 	
@@ -226,7 +224,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBasicBig extends TestTemplate {
-		public Object call() throws IOException {
+		public void call() throws IOException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -253,7 +251,6 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertEquals(defineTestMessageBig(), $incomingPipe.source().readSoon(1, TimeUnit.SECONDS));
 			
 			cleanup();
-			return null;
 		}
 	}
 	
@@ -268,7 +265,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBidiBig extends TestTemplate {
-		public Object call() throws IOException {
+		public void call() throws IOException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $sockA = $socks.getA();
@@ -304,7 +301,6 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertFalse($incomingPipeB.source().hasNext());
 			
 			cleanup();
-			return null;
 		}
 	}
 	
@@ -319,7 +315,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBidiBigMultimessage extends TestTemplate {
-		public Object call() throws IOException {
+		public void call() throws IOException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $sockA = $socks.getA();
@@ -361,7 +357,6 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertFalse($incomingPipeB.source().hasNext());
 			
 			cleanup();
-			return null;
 		}
 	}
 	
@@ -378,7 +373,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestClosureWaitingOnPipe extends TestTemplate {
-		public Object call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
+		public void call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -412,7 +407,6 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$outsys.getFuture().get(1, TimeUnit.SECONDS);
 			
 			cleanup();
-			return null;
 		}
 	}
 	
@@ -429,7 +423,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestClosureBigWaitingOnPipe extends TestTemplate {
-		public Object call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
+		public void call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -463,7 +457,6 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$outsys.getFuture().get(1, TimeUnit.SECONDS);
 			
 			cleanup();
-			return null;
 		}
 	}
 	
@@ -479,7 +472,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestClosureMultimessageWaitingOnPipe extends TestTemplate {
-		public Object call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
+		public void call() throws IOException, ExecutionException, InterruptedException, TimeoutException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -517,7 +510,6 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$outsys.getFuture().get(1, TimeUnit.SECONDS);
 			
 			cleanup();
-			return null;
 		}
 	}
 }
