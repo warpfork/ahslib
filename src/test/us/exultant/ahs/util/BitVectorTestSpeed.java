@@ -47,7 +47,7 @@ public class BitVectorTestSpeed extends TestCase {
 	
 	
 	private class TestToByteArray_t1 extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			long $start = X.time();
 			
 			BitVector $bv;
@@ -74,15 +74,13 @@ public class BitVectorTestSpeed extends TestCase {
 			
 			double $long = (X.time()-$start)/(double)LOTS;
 			X.say($long+"");
-			
-			return null;
 		}
 	}
 	
 	
 
 	private class TestToByteArray_t3 extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			long $start = X.time();
 			
 			BitVector $bv;
@@ -109,15 +107,13 @@ public class BitVectorTestSpeed extends TestCase {
 	
 			double $long = (X.time()-$start)/(double)LOTS;
 			X.say($long+"");
-			
-			return null;
 		}
 	}
 	
 	
 
 	private class TestByteArrayConstructors extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			long $start = X.time();
 			
 			byte[] $t;
@@ -144,8 +140,6 @@ public class BitVectorTestSpeed extends TestCase {
 	
 			double $long = (X.time()-$start)/(double)LOTS;
 			X.say($long+"");
-			
-			return null;
 		}
 	}
 }

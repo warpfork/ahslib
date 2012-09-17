@@ -177,8 +177,15 @@ public class Strings {
 //////////////////////////////////////////////////////////////// PADDING FUNCTIONS
 	
 	public static String repeat(char $pad, int $count) {
-		if ($count < 0) throw new IllegalArgumentException("padCount must be >= 0");
-		StringBuffer $buf = new StringBuffer($count);
+		if ($count < 0) throw new IllegalArgumentException("count must be >= 0");
+		char[] $ch = new char[$count];
+		Arr.fill($ch, $pad);
+		return new String($ch);
+	}
+	
+	public static String repeat(String $pad, int $count) {
+		if ($count < 0) throw new IllegalArgumentException("count must be >= 0");
+		StringBuffer $buf = new StringBuffer($count*$pad.length());
 		for (int i = 0; i < $count; ++i)
 			$buf.append($pad);
 		return $buf.toString();

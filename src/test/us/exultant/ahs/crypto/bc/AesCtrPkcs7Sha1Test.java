@@ -57,7 +57,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 	}
 	
 	private class TestAnything extends TestCase.Unit { 
-		public Object call() {
+		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
@@ -65,7 +65,6 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 					$ks2,
 					$c1
 			);
-			return null;
 		}
 	}
 	
@@ -75,7 +74,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 			return ArrayIndexOutOfBoundsException.class;
 		}
 		
-		public Object call() {
+		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
@@ -83,7 +82,6 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 					$ks2,
 					$c1
 			);
-			return null;
 		}
 	}
 	
@@ -93,7 +91,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 			return IllegalArgumentException.class;
 		}
 		
-		public Object call() {
+		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ksws,
@@ -101,12 +99,11 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 					$ks2,
 					$c1
 			);
-			return null;
 		}
 	}
 	
 	private class TestInvalidMacKey extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
@@ -117,12 +114,11 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 			// It's pretty hard to come up with something that actually qualifies as an invalid MAC key.
 			// Having a MAC key longer than needed results in hashing and then trimming of the hash; having a MAC key shorter than needed results in padding with zeros.
 			// For SHA1, the appropriate HMAC key length is 64 bytes. 
-			return null;
 		}
 	}
 
 	private class TestCiphertextConsistency extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
 					$ks1,
@@ -142,12 +138,11 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 					$cph.getMac(),
 					Strings.fromHex("A2E025C02A21392EA17ADC2C0FE12CDC66F5C3C9")
 			);
-			return null;
 		}
 	}
 
 	private class TestKeyReuse extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph1 = $sys.encrypt(
 					$ks1,
@@ -165,7 +160,6 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 					$cph1.getBody(),
 					$cph2.getBody()
 			);
-			return null;
 		}
 	}
 }

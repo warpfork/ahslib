@@ -399,56 +399,51 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 //		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
 	}
 	
-	public String getStatus(boolean $allOfIt) {
+	public String describe() {
 		$lock.lock();
 		String $moar = null;
 		int $runningCount = 0;
 		try {
-			if ($allOfIt) {
-				StringBuilder $sb = new StringBuilder();
-				
-				$sb.append("\n\t\tRUNNING:");
-				if ($running.size() > 0)
-					for (Map.Entry<Thread,Object> $thing : $running.entrySet()) {
-						$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
-						$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
-					}
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$sb.append("\n\t\tSCHEDULED:");
-				if ($scheduled.$size > 0)
-					for (int $i = 0; $i < $scheduled.$size; $i++)
-						$sb.append("\n\t\t\t"+$scheduled.$queue[$i]);
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$sb.append("\n\t\tUNREADY:");
-				if ($unready.size() > 0)
-					for (WorkFuture<?> $thing : $unready)
-						$sb.append("\n\t\t\t"+$thing);
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$sb.append("\n\t\tDELAYED:");
-				if ($delayed.$size > 0)
-					for (int $i = 0; $i < $delayed.$size; $i++)
-						$sb.append("\n\t\t\t"+$delayed.$queue[$i]);
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$sb.append("\n\t\tUPDATEREQ:");
-				if ($updatereq.size() > 0)
-					for (WorkFuture<?> $thing : $updatereq)
-						$sb.append("\n\t\t\t"+$thing);
-				else
-					$sb.append("\n\t\t\t--- none ---");
-				
-				$moar = $sb.toString();
-			} else {
-				for (Map.Entry<Thread,Object> $thing : $running.entrySet())
+			StringBuilder $sb = new StringBuilder();
+			
+			$sb.append("\n\t\tRUNNING:");
+			if ($running.size() > 0)
+				for (Map.Entry<Thread,Object> $thing : $running.entrySet()) {
+					$sb.append("\n\t\t\t"+Strings.padRightToWidth($thing.getKey().toString(),40)+" --->   "+$thing.getValue());
 					$runningCount += ($thing.getValue() instanceof WorkFuture) ? 1 : 0;
-			}
+				}
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$sb.append("\n\t\tSCHEDULED:");
+			if ($scheduled.$size > 0)
+				for (int $i = 0; $i < $scheduled.$size; $i++)
+					$sb.append("\n\t\t\t"+$scheduled.$queue[$i]);
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$sb.append("\n\t\tUNREADY:");
+			if ($unready.size() > 0)
+				for (WorkFuture<?> $thing : $unready)
+					$sb.append("\n\t\t\t"+$thing);
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$sb.append("\n\t\tDELAYED:");
+			if ($delayed.$size > 0)
+				for (int $i = 0; $i < $delayed.$size; $i++)
+					$sb.append("\n\t\t\t"+$delayed.$queue[$i]);
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$sb.append("\n\t\tUPDATEREQ:");
+			if ($updatereq.size() > 0)
+				for (WorkFuture<?> $thing : $updatereq)
+					$sb.append("\n\t\t\t"+$thing);
+			else
+				$sb.append("\n\t\t\t--- none ---");
+			
+			$moar = $sb.toString();
 		} finally {
 			$lock.unlock();
 		}
@@ -458,7 +453,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
 		"delayed: "   + Strings.padLeftToWidth($delayed.$size+"", 5)    + "    " +
 		"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5) +
-		(($allOfIt)?$moar:"");
+		$moar;
 	}
 	
 	
@@ -567,8 +562,8 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}
 	}
 	
-
-
+	
+	
 	/**
 	 * <p>
 	 * When run, dumps the entire set of tasks known to this WorkScheduler as
@@ -577,39 +572,21 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * </p>
 	 * 
 	 * <p>
-	 * This is not not necessarily advised for normal use, since it should typically
-	 * be entirely feasible to construct event flows to insure that all task
-	 * completions and all work availability changes are updated in an event-based
-	 * fashion and without requiring a polling operation such as this (the entire
-	 * exultant thread module and Pipes in particular are designed with the intention
-	 * of supporting such a pure event-based model). While use of this mechanism is
-	 * acceptable as a last-ditch recovery system, it will provide less rapid
-	 * reactions than a pure event-based system, and it also acquires a global lock on
-	 * the entire Scheduler in order to perform its function, and so is clearly not of
-	 * optimal performance.
+	 * Note: this function must acquire a global lock on the entire Scheduler in order
+	 * to perform its function, so calling it wantonly is not advised.
+	 * </p>
+	 * 
+	 * <p>
+	 * This does not request updating or re-sorting of tasks already in the scheduled
+	 * heap.
 	 * </p>
 	 */
-	public class RelentlessGC implements WorkTarget<Void> {
-		public Void call() throws Exception {
-			$lock.lockInterruptibly();
-			try {
-				$updatereq.addAll($unready);
-			} finally {
-				$lock.unlock();
-			}
-			return null;
-		}
-
-		public boolean isDone() {
-			return false;
-		}
-		
-		public boolean isReady() {
-			return true;
-		}
-
-		public int getPriority() {
-			return -100000;
+	public void flush() {
+		$lock.lock();
+		try {
+			$updatereq.addAll($unready);
+		} finally {
+			$lock.unlock();
 		}
 	}
 }

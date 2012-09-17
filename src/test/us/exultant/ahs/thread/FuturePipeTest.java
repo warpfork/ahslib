@@ -65,7 +65,7 @@ public class FuturePipeTest extends TestCase {
 	 */
 	private class TestBasic extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
-		public Object call() {
+		public void call() {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			$ws.start();
 			
@@ -105,7 +105,6 @@ public class FuturePipeTest extends TestCase {
 			assertFalse("FuturePipe is empty when expected", $wfp.source().hasNext());
 			assertTrue("FuturePipe became closed for reading when empty", $wfp.source().isClosed());
 			$ws.stop(false);
-			return null;
 		}
 	}
 	
@@ -121,7 +120,7 @@ public class FuturePipeTest extends TestCase {
 		static final int N = 1000;
 		static final int D0 = 700;
 		static final int D1 = N - D0;
-		public Object call() {
+		public void call() {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			
 			@SuppressWarnings("unchecked")
@@ -155,7 +154,6 @@ public class FuturePipeTest extends TestCase {
 			assertFalse("FuturePipe is empty when expected", $wfp.source().hasNext());
 			assertTrue("FuturePipe became closed for reading when empty", $wfp.source().isClosed());
 			$ws.stop(false);
-			return null;
 		}
 	}
 	
@@ -174,7 +172,7 @@ public class FuturePipeTest extends TestCase {
 	 */
 	private class TestOrdering extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(1);
-		public Object call() {
+		public void call() {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			
 			WorkTargetAdapterTriggerable<Void> $wt1 = makeNoopWork(false);
@@ -199,8 +197,6 @@ public class FuturePipeTest extends TestCase {
 			assertEquals("1st done, 1st out", $wf1, $wfp.source().read());
 			assertEquals("2nd done, 2nd out", $wf2, $wfp.source().read());
 			assertEquals("3rd done, 3rd out", $wf3, $wfp.source().read());
-			
-			return null;
 		}
 	}
 }

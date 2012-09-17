@@ -45,7 +45,7 @@ public class DataPipeTest extends TestCase {
 	
 	/** Just tests mixed read and writes in a single thread. */
 	private class TestBasic extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			Pipe<String> $pipe = new DataPipe<String>();
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().write(TD.s2);
@@ -57,13 +57,12 @@ public class DataPipeTest extends TestCase {
 			assertEquals(TD.s2, $pipe.source().read());
 			assertEquals(TD.s3, $pipe.source().read());
 			assertEquals(0, $pipe.size());
-			return null;
 		}
 	}
 	
 	/** Tests the group writing of collected chunks. */
 	private class TestBasic_WriteAll extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			Pipe<String> $pipe = new DataPipe<String>();
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().writeAll(Arr.asList(TD.s2,TD.s2,TD.s3));
@@ -75,7 +74,6 @@ public class DataPipeTest extends TestCase {
 			assertEquals(TD.s2, $arr.get(1));
 			assertEquals(TD.s2, $arr.get(2));
 			assertEquals(TD.s3, $arr.get(3));
-			return null;
 		}
 	}
 	
@@ -89,23 +87,21 @@ public class DataPipeTest extends TestCase {
 			public Class<NullPointerException> expectExceptionType() {
 				return NullPointerException.class;
 			}
-			public Object call() {
+			public void call() {
 				$pipe.sink().write(TD.s1);
 				$pipe.sink().writeAll(Arr.asList(TD.s2,null,TD.s3));
-				return null;
 			}
 		}
 		
 		/** Tests that the Pipe's size and contents are still consistent, and that it contains exactly the elements preceeding the one that caused the exception. */
 		private class Part2 extends TestCase.Unit {
-			public Object call() {
+			public void call() {
 				assertEquals(2, $pipe.size());
 				breakUnitIfFailed();
 				List<String> $arr = $pipe.source().readAllNow();
 				assertEquals(0, $pipe.size());
 				assertEquals(TD.s1, $arr.get(0));
 				assertEquals(TD.s2, $arr.get(1));
-				return null;
 			}
 		}
 	}
@@ -116,19 +112,18 @@ public class DataPipeTest extends TestCase {
 		public Class<IllegalStateException> expectExceptionType() {
 			return IllegalStateException.class;
 		}
-		public Object call() {
+		public void call() {
 			Pipe<String> $pipe = new DataPipe<String>();
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().write(TD.s2);
 			assertEquals(TD.s1, $pipe.source().read());
 			$pipe.sink().close();
 			$pipe.sink().write(TD.s3);	// this should throw
-			return null;
 		}
 	}
 	
 	private class TestBasicClose_ReadAfterCloseReturns extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			Pipe<String> $pipe = new DataPipe<String>();
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().write(TD.s2);
@@ -141,7 +136,6 @@ public class DataPipeTest extends TestCase {
 			breakUnitIfFailed();	// we'd rather not block on this next call if we already know there's something wrong.
 			assertEquals(null, $pipe.source().read());		// this may block forever if something's broken
 			assertEquals(0, $pipe.source().readAll().size());	// this may block forever if something's broken
-			return null;
 		}
 	}
 	
@@ -149,7 +143,7 @@ public class DataPipeTest extends TestCase {
 		Pipe<String> $pipe = new DataPipe<String>();
 		volatile boolean $won = false;
 		
-		public Object call() {
+		public void call() {
 			new Thread() { public void run() {
 					$pipe.source().read();
 					$won = true;
@@ -157,7 +151,6 @@ public class DataPipeTest extends TestCase {
 			$pipe.sink().write(TD.s1);
 			while (!$won) X.chill(5);
 			// honestly, just making it out of here alive is test enough.
-			return null;
 		}	
 	}
 	
@@ -202,7 +195,7 @@ public class DataPipeTest extends TestCase {
 		//  with the older generation of interrupt-based pipes:
 		//   about (min:23k;  max:35k;  ave:27k)/sec  on a 2.7ghz+4core+ubuntu10.10; only about 50% of 2 cores utilized (20% userspace, 30% kernel). 
 		
-		public Object call() {
+		public void call() {
 			Runnable[] $tasks = new Runnable[$threadPairsToSpawn*2];
 			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
 				$tasks[$i] = new Reader();
@@ -216,7 +209,6 @@ public class DataPipeTest extends TestCase {
 			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
 				assertEquals($msgsPerThread, $counter.getCount("w"+$i));
 			$log.info("performance {} kops/sec", (($msgsPerThread/1000.0)/($time/1000.0)));
-			return null;
 		}
 		
 		private class Writer implements Runnable {
@@ -268,7 +260,7 @@ public class DataPipeTest extends TestCase {
 		final int n = 10000;
 		final int n2 = 100;
 		
-		public Object call() {
+		public void call() {
 			Runnable[] $tasks = new Runnable[4];
 			$tasks[0] = new Writer(TD.s1);	// puts 2n+n2
 			$tasks[1] = new Reader();	// consumes up to n
@@ -276,7 +268,6 @@ public class DataPipeTest extends TestCase {
 			$tasks[3] = new FinalReader();	// consumes some arbitrary amount based on thread scheduling, minimum n2.
 			ThreadUtil.doAll($tasks);
 			assertEquals(2*n+n2, $counter.getCount(TD.s1));
-			return null;
 		}
 		
 

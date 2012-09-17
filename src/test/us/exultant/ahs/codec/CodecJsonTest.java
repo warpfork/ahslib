@@ -40,7 +40,7 @@ public class CodecJsonTest extends CodecEonTest {
 	
 	
 	private class TestBasicSerialMatch extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			JsonCodec $jc = new JsonCodec();
 			$jc.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
 			
@@ -48,7 +48,6 @@ public class CodecJsonTest extends CodecEonTest {
 			JsonObject $c = $jc.encode($x1);
 			
 			assertEquals("{\"#\":\"TobjPrimitive\",\"$\":\"dat\",\"%\":\"whip it\"}", $c.toString());
-			return null;
 		}
 	}
 }
