@@ -31,8 +31,7 @@
 			compile-test,
 			compile-thread,
 			compile-io,
-			compile-crypto,
-			compile-scratch"
+			compile-crypto"
 		description="compile the source">
 	</target>
 	<target name="dist"
@@ -45,9 +44,7 @@
 			dist-test,
 			dist-thread,
 			dist-io,
-			dist-crypto,
-			dist-complete,
-			dist-scratch"
+			dist-crypto"
 		description="pack jars">
 	</target>
 	<target name="test"
@@ -175,48 +172,6 @@
 		<exusPack destfile="${dist}/ahslib-crypto.jar">
 			<fileset file="${build}/main/crypto/**" />
 		</exusPack>
-	</target>
-	
-	<target name="compile-scratch" depends="compile-core, compile-codec, compile-codec-ebon, compile-codec-pre">
-		<exusJavacStrict
-			 module="main/scratch"
-			 classes="us/exultant/ahs/scratch/**"
-			 depends="${build}/main/core : ${build}/main/codec : ${build}/main/codec-ebon : ${build}/main/codec-pre : ${lib}/plugin.jar"
-			 />
-	</target>
-	<target name="dist-scratch" depends="compile-scratch">
-		<exusPack destfile="${dist}/ahslib-scratch.jar">
-			<fileset file="${build}/main/scratch/**" />
-		</exusPack>
-	</target>
-	
-	<target name="dist-complete" depends="
-			compile-core,
-			compile-codec,
-			compile-codec-json,
-			compile-codec-ebon,
-			compile-codec-pre,
-			compile-test,
-			compile-thread,
-			compile-io,
-			compile-crypto
-		">
-		<jar jarfile="${dist}/ahslib-complete.jar">
-			<fileset dir="${build}/main/core"/>
-			<fileset dir="${build}/main/codec"/>
-			<fileset dir="${build}/main/codec-json"/>
-			<fileset dir="${build}/main/codec-ebon"/>
-			<fileset dir="${build}/main/codec-pre"/>
-			<fileset dir="${build}/main/test"/>
-			<fileset dir="${build}/main/thread"/>
-			<fileset dir="${build}/main/io"/>
-			<fileset dir="${build}/main/crypto"/>
-			<manifest>
-				<attribute name="Implementation-Version" value="${version}"/>
-				<attribute name="Git-Commit" value="${git-version}"/>
-				<attribute name="Build-Date" value="${builddate}"/>
-			</manifest>
-		</jar>
 	</target>
 	
 	
