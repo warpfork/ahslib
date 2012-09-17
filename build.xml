@@ -31,6 +31,7 @@
 			compile-test,
 			compile-thread,
 			compile-io,
+			compile-crypto,
 			compile-scratch"
 		description="compile the source">
 	</target>
@@ -44,6 +45,7 @@
 			dist-test,
 			dist-thread,
 			dist-io,
+			dist-crypto,
 			dist-complete,
 			dist-scratch"
 		description="pack jars">
@@ -166,7 +168,7 @@
 		<exusJavacStrict
 				module="main/crypto"
 				classes="us/exultant/ahs/crypto/**"
-				depends="${build}/main/core : ${build}/main/codec: ${lib}/bcprov-java/bcprov.jar"
+				depends="${build}/main/core : ${build}/main/codec : ${lib}/bcprov-java/bcprov.jar"
 				/>
 	</target>
 	<target name="dist-crypto" depends="compile-crypto">
