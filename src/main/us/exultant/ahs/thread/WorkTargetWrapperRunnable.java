@@ -21,15 +21,21 @@ package us.exultant.ahs.thread;
 
 /**
  * <p>
- * Bridges the gap between {@link Runnable} and WorkTarget. The work is ready any
- * time that it's not done.
+ * Bridges the gap between {@link Runnable} and WorkTarget. The work is ready any time
+ * that it's not done.
  * </p>
  * 
  * <p>
- * If constructed in run-once mode, the WorkTarget will run exactly once when
- * scheduled with a {@link WorkScheduler}; otherwise if run-once is false the work
- * will always be ready and will never become done (to stop it, the
- * {@link WorkFuture} must be cancelled or it must throw an exception).
+ * If constructed in run-once mode, the WorkTarget will run exactly once when scheduled
+ * with a {@link WorkScheduler}; otherwise if run-once is false the work will always be
+ * ready and will never become done (to stop it, the {@link WorkFuture} must be cancelled
+ * or it must throw an exception).
+ * </p>
+ * 
+ * <p>
+ * If you find yourself wanting to construct one of these with a null {@link Runnable} and
+ * then override the {@link #run()} method, perhaps you should just extend
+ * {@link WorkTargetAdapterTriggerable}.
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
