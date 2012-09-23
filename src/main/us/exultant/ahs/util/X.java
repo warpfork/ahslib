@@ -38,7 +38,7 @@ public class X {
 	public static void say(String $s) {
 		System.out.println($s);
 	}
-
+	
 	/**
 	 * Writes a line to stdout, prefixing it with the id number of the current thread.
 	 */
@@ -180,11 +180,11 @@ public class X {
 	public static void notifyAll(final Object $sync) {
 		synchronized ($sync) {
 			$sync.notifyAll();
-		}	
+		}
 	}
 	
 	
-
+	
 	/**
 	 * as per runtime.exec, but waits for completion and returns the exit value of the
 	 * process.
