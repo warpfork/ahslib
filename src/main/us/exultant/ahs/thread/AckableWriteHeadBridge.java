@@ -23,9 +23,9 @@ import us.exultant.ahs.core.*;
 import java.util.*;
 
 /**
- * Bridges a system that expects to read Ackable objects to a system that doesn't a system
- * that provides them. This class wraps a WriteHead that deals with Ackable objects and
- * automatically wraps all bare payloads given to it with ackable objects.
+ * Bridges a system that expects to read Ackable objects to a system that doesn't provide
+ * them. This class wraps a WriteHead that deals with Ackable objects so that bare
+ * payloads can be supplied and they will be automatically wrapped into ackable objects.
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * 
