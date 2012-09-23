@@ -397,10 +397,10 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
 			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			$incomingPipe.source().readAll();
+			X.chill(TimeUnit.SECONDS.toMillis(PATIENCE)/8);
+			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
 			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());
 			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
-			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
 			
 			// check for any errors
 			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
@@ -447,10 +447,10 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
 			assertEquals("message big read", defineTestMessageBig(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			$incomingPipe.source().readAll();
+			X.chill(TimeUnit.SECONDS.toMillis(PATIENCE)/8);
+			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
 			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());
 			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
-			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
 			
 			// check for any errors
 			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
@@ -500,10 +500,10 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
 			assertEquals("message 3 read", defineTestMessage3(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
 			assertEquals("message 2 read", defineTestMessage2(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			$incomingPipe.source().readAll();
+			X.chill(TimeUnit.SECONDS.toMillis(PATIENCE)/8);
+			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
 			assertTrue("underlying channel (write side) is closed", !$outsys.getChannel().isOpen());
 			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
-			assertTrue("incoming pipe is closed", $incomingPipe.source().isClosed());
 			
 			// check for any errors
 			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
