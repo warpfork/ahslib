@@ -167,8 +167,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertEquals("message read", defineTestMessage1(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
 			
 			// check for any errors
-			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -216,8 +216,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertEquals("message 3 read", defineTestMessage3(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
 			
 			// check for any errors
-			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -263,8 +263,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertEquals("big message read", defineTestMessageBig(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
 			
 			// check for any errors
-			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -318,10 +318,10 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertFalse("anything more available on B", $incomingPipeB.source().hasNext());
 			
 			// check for any errors
-			$insysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
-			$insysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -381,10 +381,10 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertFalse("anything more available on B", $incomingPipeB.source().hasNext());
 			
 			// check for any errors
-			$insysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
-			$insysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -434,8 +434,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
 			
 			// check for any errors
-			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -485,8 +485,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
 			
 			// check for any errors
-			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -539,8 +539,8 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			assertTrue("underlying channel (read side) is closed", !$insys.getChannel().isOpen());
 			
 			// check for any errors
-			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
