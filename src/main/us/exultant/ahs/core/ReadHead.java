@@ -258,13 +258,17 @@ public interface ReadHead<$T> {
 	 *         array returned may have zero entries if no data ever becomes available
 	 *         (including if the stream is already closed and empty when the
 	 *         invocation occurs), but null may never be returned.
+	 * @throws InterruptedException
+	 *                 if the current thread is interrupted while waiting for the
+	 *                 stream to close. If this is thrown, no data was consumed
+	 *                 (everything will be available to a future call).
 	 * @throws UnsupportedOperationException
 	 *                 if the underlying stream has no notion of closed or finished,
 	 *                 since this method is then not well defined.
 	 * 
 	 */
 	@ThreadSafe
-	public List<$T> readAll();
+	public List<$T> readAll() throws InterruptedException;
 	
 	/**
 	 * Immediately returns entire contents of this stream at once (minus, of course,
