@@ -123,7 +123,7 @@ public class DataPipeTest extends TestCase {
 	}
 	
 	private class TestBasicClose_ReadAfterCloseReturns extends TestCase.Unit {
-		public void call() {
+		public void call() throws InterruptedException {
 			Pipe<String> $pipe = new DataPipe<String>();
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().write(TD.s2);
@@ -290,8 +290,12 @@ public class DataPipeTest extends TestCase {
 		private class FinalReader implements Runnable {
 			public FinalReader() {}
 			public void run() {
-				for (String $s : $pipe.source().readAll())
-					$counter.hear($s);
+				try {
+					for (String $s : $pipe.source().readAll())
+						$counter.hear($s);
+				} catch (InterruptedException $e) {
+					breakUnit($e);
+				}
 			}
 		}
 	}

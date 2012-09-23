@@ -212,7 +212,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 			return $gate.availablePermits() > 0;
 		}
 		
-		public List<$T> readAll() {
+		public List<$T> readAll() throws InterruptedException {
 			waitForClose();
 			return readAllNow();
 		}
@@ -265,10 +265,10 @@ public final class DataPipe<$T> implements Pipe<$T> {
 			invokeListener($el);
 		}
 		
-		private void waitForClose() {
+		private void waitForClose() throws InterruptedException {
 			synchronized ($gate) {
 				while (!isClosed())
-					X.wait($gate);
+					$gate.wait();
 			}
 		}
 		
