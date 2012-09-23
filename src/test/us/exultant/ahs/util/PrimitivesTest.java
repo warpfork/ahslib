@@ -41,7 +41,7 @@ public class PrimitivesTest extends TestCase {
 	
 	
 	private class TestIntBytes extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			intBytesTrial(0);
 			intBytesTrial(1);
 			intBytesTrial(-1);
@@ -57,8 +57,6 @@ public class PrimitivesTest extends TestCase {
 			//System.out.println(Primitives.intFromByteArray(new byte[] {127,-128,-128,-128}));
 			//System.out.println(Primitives.intFromByteArray(new byte[] {0,0,0,0}));
 			//System.out.println(Primitives.intFromByteArray(new byte[] {-128,-128,-128,-128}));
-			
-			return null;
 		}
 		private void intBytesTrial(byte[] $b) {
 			assertEquals($b, Primitives.byteArrayFromInt(Primitives.intFromByteArray($b)));
@@ -69,30 +67,26 @@ public class PrimitivesTest extends TestCase {
 	}
 	
 	private class TestStringArrayCleanse extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			String[] $a1 = new String[] { "a", "b", "c", null, "e", null, null, "h" };
 			assertEquals(8,$a1.length);
 			String[] $a2 = Arr.arrayCleanse($a1);
 			//assertTrue(Arr.equals(new String[] { "a", "b", "c", null, "e", null, null, "h" }, $a1));
 			assertTrue(Arr.equals(new String[] { "a", "b", "c", "e", "h" }, $a2));
-			
-			return null;
 		}
 	}
 	
 	private class TestByteArrayCat extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			assertTrue(Arr.equals(
 					new byte[] { 34, 34, 65, 48, 18, 23, 84, 96, 10 },
 					Arr.cat(new byte[] { 34, 34, 65, 48, 18 }, new byte[] { 23, 84, 96, 10 })
 			));
-			
-			return null;
 		}
 	}
 	
 	private class TestMasking extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			int $i = 4;
 			$i = Primitives.addMask($i,3);
 			$i = Primitives.removeMask($i,3);
@@ -102,13 +96,11 @@ public class PrimitivesTest extends TestCase {
 			$i = Primitives.addMask($i,10);
 			$i = Primitives.removeMask($i,7);
 			assertEquals(8,$i);
-			
-			return null;
 		}
 	}
 	
 	private class TestMaskContains extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			assertTrue (Primitives.containsFullMask   (Integer.parseInt( "110010000", 2), Integer.parseInt( "110010000", 2)));
 			assertTrue (Primitives.containsFullMask   (Integer.parseInt("0110010000", 2), Integer.parseInt( "110010000", 2)));
 			assertTrue (Primitives.containsFullMask   (Integer.parseInt( "110010000", 2), Integer.parseInt("0110010000", 2)));
@@ -119,17 +111,13 @@ public class PrimitivesTest extends TestCase {
 			assertTrue (Primitives.containsPartialMask(Integer.parseInt( "110010110", 2), Integer.parseInt( "110010110", 2)));
 			assertFalse(Primitives.containsPartialMask(Integer.parseInt( "110010110", 2), Integer.parseInt( "000000000", 2)));	// not sure i'm a fan of this behavior, but eh.
 			assertFalse(Primitives.containsPartialMask(Integer.parseInt( "110010110", 2), Integer.parseInt( "001101001", 2)));
-			
-			return null;
 		}
 	}
 	
 	private class TestBase64 extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			base64trial(new byte[] { (byte)0x00, (byte)0xFF, (byte)0x77, (byte)0x02, (byte)0xF7, (byte)0x02});
 			base64trial(new byte[] { (byte)0x00, (byte)0xFF, (byte)0x97, (byte)0x42, (byte)0x17});
-			
-			return null;
 		}
 		private void base64trial(byte[] $bat) {
 			assertEquals($bat,Base64.decode(Base64.encode($bat)));

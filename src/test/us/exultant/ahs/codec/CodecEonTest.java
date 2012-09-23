@@ -80,7 +80,7 @@ abstract class CodecEonTest extends TestCase {
 	
 	/** Encode and decode a single object with no fields. */
 	public class TestTrivial extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			$codec.putHook(TobjTrivial.class, new TobjTrivial.Den());
 			
@@ -90,7 +90,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjTrivial $x2 = $codec.decode($c, TobjTrivial.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -98,7 +97,7 @@ abstract class CodecEonTest extends TestCase {
 	
 	/** Encode, serialize, deserialize, and decode a single object with no fields. */
 	public class TestTrivialSerial extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			$codec.putHook(TobjTrivial.class, new TobjTrivial.Den());
 			
@@ -108,7 +107,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjTrivial $x2 = $codec.deserialize($c, TobjTrivial.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -116,7 +114,7 @@ abstract class CodecEonTest extends TestCase {
 	
 	/** Encode, serialize, deserialize, and decode a single object with one primitive field. */
 	public class TestPrimitiveSerial extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
 			
@@ -125,7 +123,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjPrimitive $x2 = $codec.deserialize($c, TobjPrimitive.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -133,7 +130,7 @@ abstract class CodecEonTest extends TestCase {
 	
 	/** Encode, serialize, deserialize, and decode an object with a primitive field and a composite field (depth=2). */
 	public class TestCompositeD2Serial extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			$codec.putHook(TobjComposite.class, new TobjComposite.DenNoMux());
 			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
@@ -143,7 +140,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjComposite $x2 = $codec.deserialize($c, TobjComposite.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -151,7 +147,7 @@ abstract class CodecEonTest extends TestCase {
 	
 	/** Encode, serialize, deserialize, and decode an object with a primitive field and a composite field which is set to null. */
 	public class TestCompositeNullSerial extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			$codec.putHook(TobjComposite.class, new TobjComposite.DenNoMux());
 			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());		//XXX: is this needed here?  unsure.  probably something that belongs in documentation.
@@ -161,7 +157,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjComposite $x2 = $codec.deserialize($c, TobjComposite.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -169,7 +164,7 @@ abstract class CodecEonTest extends TestCase {
 	
 	/** Encode and decode an object with a primitive field and a composite field (depth=3).  The composite field is muxed. */
 	public class TestCompositeD3Mux extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($codec, OFace.class);
 			$mux.enroll(TobjPrimitive.class, new TobjPrimitive.Den());
@@ -181,7 +176,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjComposite $x2 = (TobjComposite) $codec.decode($c, OFace.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -189,7 +183,7 @@ abstract class CodecEonTest extends TestCase {
 	
 	/** Encode, serialize, deserialize, and decode an object with a primitive field and a composite field (depth=4), some which may be null.  Muxed.*/
 	public class TestCompositeD4NMuxSerial extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			EonDecodingMux<OFace> $mux = new EonDecodingMux<OFace>($codec, OFace.class);
 			$mux.enroll(TobjPrimitive.class, new TobjPrimitive.Den());
@@ -200,7 +194,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjComposite $x2 = (TobjComposite) $codec.deserialize($c, OFace.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -213,7 +206,7 @@ abstract class CodecEonTest extends TestCase {
 	 * composites contained in the list.
 	 */
 	public class TestList extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
 			$codec.putHook(TobjFaceList.class, new TobjFaceList.Den());
@@ -224,7 +217,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjFaceList $x2 = $codec.decode($c, TobjFaceList.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -235,7 +227,7 @@ abstract class CodecEonTest extends TestCase {
 	 * significant space savings in special cases over more generic approaches).
 	 */
 	public class TestListDense extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
 			$codec.putHook(TobjFaceList.class, new TobjFaceList.Dense());
@@ -246,7 +238,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjFaceList $x2 = $codec.decode($c, TobjFaceList.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	
@@ -257,7 +248,7 @@ abstract class CodecEonTest extends TestCase {
 	 * significant space savings in special cases over more generic approaches).
 	 */
 	public class TestListDenseSerial extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			EonCodec $codec = new EonCodec($seed);
 			$codec.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
 			$codec.putHook(TobjFaceList.class, new TobjFaceList.Dense());
@@ -267,7 +258,6 @@ abstract class CodecEonTest extends TestCase {
 			TobjFaceList $x2 = $codec.deserialize($c, TobjFaceList.class);
 			
 			assertEquals($x1, $x2);
-			return null;
 		}
 	}
 	

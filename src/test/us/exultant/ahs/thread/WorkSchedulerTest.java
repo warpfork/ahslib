@@ -90,7 +90,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestRunOnce extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			Work $w = new Work();
 			Future<?> $f = $ws.schedule(new WorkTargetWrapperRunnable($w), ScheduleParams.NOW);
 			
@@ -100,7 +100,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements Runnable {
 			public volatile int x = 1000;
@@ -115,7 +114,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestCompletionPreSubscribe extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0);
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			final Work $wt = new Work();
 			final WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable($wt), ScheduleParams.NOW);
@@ -141,7 +140,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements Runnable { public void run() {} }
 	}
@@ -151,7 +149,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestCompletionPostSubscribe extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			final Work $wt = new Work();
 			final WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable($wt), ScheduleParams.NOW);
@@ -175,7 +173,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements Runnable { public void run() {} }
 	}
@@ -187,7 +184,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestWtAlwaysReady extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			Work[] $wt = new Work[8];
 			@SuppressWarnings("unchecked")	//srsly.
@@ -209,7 +206,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements WorkTarget<Void> {
 			public volatile int x = 1000;
@@ -237,7 +233,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		final int HIGH = 10000;
 		final int LOW = 100;
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			WorkLeader $w1 = new WorkLeader();
 			WorkFollower $w2 = new WorkFollower();
 			$w2.$leader = $w1;
@@ -257,7 +253,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class WorkLeader implements WorkTarget<Void> {
 			public volatile WorkFuture<?> $followerFuture;
@@ -310,7 +305,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private final Pipe<String> $pipe = new DataPipe<String>();
 		
 		//XXX:AHS:THREAD: this really not a very smart test i think.  we should have one thread just constantly trying to finish a work target that's counting to 10.
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().write(TD.s2);
 			$pipe.sink().close();
@@ -326,7 +321,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements WorkTarget<String> {
 			public String call() {
@@ -354,7 +348,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestCancelWhileRunning extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		private volatile boolean $clear = false;
-		public Object call() throws InterruptedException, ExecutionException, TimeoutException {
+		public void call() throws InterruptedException, ExecutionException, TimeoutException {
 			WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable(new Work()), ScheduleParams.NOW);
 			while ($wf.getState() != WorkFuture.State.RUNNING) X.chill(1);
 			$wf.cancel(false);
@@ -366,7 +360,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertTrue("thread is clear of the work", $clear);
 			assertEquals("work reached cancelled state", WorkFuture.State.CANCELLED, $wf.getState());
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements Runnable { public void run() { X.chill(TSCALE*3); $clear = true; } }
 	}
@@ -378,7 +371,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		private WorkScheduler $ws = makeScheduler(0);
 		public final int WTC = 8;
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			final int space = TSCALE*4;
 			WorkFuture<?>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
 			$wf[3] = $ws.schedule(new WorkTargetWrapperRunnable(new Work(), 03), ScheduleParams.makeDelayed(4*space));
@@ -404,7 +397,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements Runnable {
 			public void run() {	// the run-once functionality is just provided by the RunnableWrapper class.
@@ -419,7 +411,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestScheduleFixedRate extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			Work $wt = new Work();
 			final int initialDelay = TSCALE*10;
 			final int repeatDelay = TSCALE*4;
@@ -437,7 +429,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements WorkTarget<Integer> {
 			public volatile int x = 10;
@@ -476,7 +467,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 		@SuppressWarnings("unchecked")	// impossible to not suck in java.
 		protected final WorkFuture<Integer>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			feedPipe();
 
 			$log.trace("creating work targets");
@@ -502,7 +493,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			
 			breakCaseIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 		private class Work implements WorkTarget<Integer> {
 			public Work(int $name) { this.$name = $name; }
@@ -544,7 +534,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			final WorkSchedulerFlexiblePriority $bs = (WorkSchedulerFlexiblePriority) $ws;
 			$ws.schedule(new WorkTargetWrapperRunnable(new Runnable() {
 				public void run() {
-					$log.trace("PIPE SIZE: "+$pipe.size()+"\nSCHEDULER STATUS:\n" + $bs.getStatus(true));
+					$log.trace("PIPE SIZE: "+$pipe.size()+"\nSCHEDULER STATUS:\n" + $bs.describe());
 				}
 			}, true, false, 100000), ScheduleParams.makeFixedDelay(100));
 			
@@ -569,7 +559,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestPrioritizedDuo extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(1);
 		
-		public Object call() throws InterruptedException, ExecutionException {
+		public void call() throws InterruptedException, ExecutionException {
 			WorkFuture<Void> $wf_low = $ws.schedule(new WorkTargetWrapperRunnable(new Work(), 10), ScheduleParams.NOW);
 			WorkFuture<Void> $wf_high = $ws.schedule(new WorkTargetWrapperRunnable(new Work(), 90000), ScheduleParams.NOW);
 			$ws.start();
@@ -580,7 +570,6 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$wf_low.get();
 
 			$ws.stop(false);
-			return null;
 		}
 		
 		private class Work implements Runnable { public void run() { X.chill(TSCALE*5); } }
@@ -592,13 +581,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestCompletion extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		private volatile boolean $clear = false;
-		public Object call() throws InterruptedException, ExecutionException, TimeoutException {
+		public void call() throws InterruptedException, ExecutionException, TimeoutException {
 			WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable(new Work()), ScheduleParams.NOW);
 			$wf.get();
 			assertSame("completed queue returns done workfuture", $wf, $ws.completed().read());
 			assertFalse("completed queue hasNext", $ws.completed().hasNext());
 			$ws.stop(true);
-			return null;
 		}
 		private class Work implements Runnable { public void run() {} }
 	}
@@ -609,10 +597,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestStopAndCompletionClose extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		private volatile boolean $clear = false;
-		public Object call() {
+		public void call() {
 			$ws.stop(true);
 			assertTrue("completed queue closed after stop", $ws.completed().isClosed());
-			return null;
 		}
 	}
 	
@@ -622,14 +609,13 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestStopAndCompletionWait extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		private volatile boolean $clear = false;
-		public Object call() throws InterruptedException, ExecutionException, TimeoutException {
+		public void call() throws InterruptedException, ExecutionException, TimeoutException {
 			WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable(new Work()), ScheduleParams.NOW);
 			while ($wf.getState() != WorkFuture.State.RUNNING) X.chill(1);	// don't stop the scheduler until the test task is underway
 			$ws.stop(false);
 			assertFalse("completed queue open after stop", $ws.completed().isClosed());
 			$wf.get();
 			assertTrue("completed queue open after last task done", $ws.completed().isClosed());
-			return null;
 		}
 		private class Work implements Runnable { public void run() { X.chill(TSCALE); $clear = true; } }
 	}
@@ -640,11 +626,10 @@ public abstract class WorkSchedulerTest extends TestCase {
 	private class TestBasic extends TestCase.Unit {
 		protected WorkScheduler $ws = makeScheduler(0).start();
 		
-		public Object call() {
+		public void call() {
 			//TMPL
 			breakUnitIfFailed();
 			$ws.stop(false);
-			return null;
 		}
 	}
 }

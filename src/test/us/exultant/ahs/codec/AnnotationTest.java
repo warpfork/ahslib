@@ -124,7 +124,7 @@ public class AnnotationTest extends TestCase {
 	////////////////////////////////////////////////////////////////
 	
 	private class TestBasicEncodeDefault extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Encable $e = new Encable("pub","priv");
 			
 			EonCodec $codec = new JsonCodec();
@@ -137,14 +137,13 @@ public class AnnotationTest extends TestCase {
 			assertEquals("Encable", $v.getKlass());
 			assertEquals("pub",  $v.getString("$public"));
 			assertEquals("priv", $v.getString("$private"));
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestBasicEncodeSelected extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Encable $e = new Encable("pub","priv");
 			
 			EonCodec $codec = new JsonCodec();
@@ -156,14 +155,13 @@ public class AnnotationTest extends TestCase {
 			assertEquals(2, $v.size());
 			assertEquals("Encable", $v.getKlass());
 			assertEquals("priv", $v.getString("$private"));
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestEncodeFieldLabeled extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Encable2 $e = new Encable2("pub","priv","ABBA");
 			
 			EonCodec $codec = new JsonCodec();
@@ -177,7 +175,6 @@ public class AnnotationTest extends TestCase {
 			assertEquals("pub",  $v.getString("o"));
 			assertEquals("priv", $v.getString("x"));
 			assertEquals(Base64.decode("ABBA"), $v.getBytes("b"));
-			return null;
 		}
 	}
 	
@@ -187,20 +184,19 @@ public class AnnotationTest extends TestCase {
 		@SuppressWarnings("unchecked")
 		public Class<UnencodableException> expectExceptionType() { return UnencodableException.class; }
 		
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Encable2 $e = new Encable2("pub","priv","ABBA");
 			
 			EonCodec $codec = new JsonCodec();
 			
 			EonRAE<Encable2> $rae = new EonRAE<Encable2>(Encable2.class, Enc.SELECTED);
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestEncodeNullString extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Encable2 $e = new Encable2("pub",null,"ABBA");
 			
 			EonCodec $codec = new JsonCodec();
@@ -214,14 +210,13 @@ public class AnnotationTest extends TestCase {
 			assertEquals("pub",  $v.getString("o"));
 			assertEquals(null, $v.optString("x"));
 			assertEquals(Base64.decode("ABBA"), $v.getBytes("b"));
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestEncodeNullByteArray extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Encable2 $e = new Encable2("pub","priv",null);
 			
 			EonCodec $codec = new JsonCodec();
@@ -235,14 +230,13 @@ public class AnnotationTest extends TestCase {
 			assertEquals("pub",  $v.getString("o"));
 			assertEquals("priv", $v.getString("x"));
 			assertEquals(null, $v.optBytes("b"));
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestDecode extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Encable $e = new Encable("pub","priv");
 			
 			EonCodec $codec = new JsonCodec();
@@ -255,14 +249,13 @@ public class AnnotationTest extends TestCase {
 			Encable $z = $codec.decode($v, Encable.class);
 			assertEquals("pub",  $z.getPublic());
 			assertEquals("priv", $z.getPrivate());
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestNestedEncode extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Big $b = new Big(new Little("asdf"));
 			
 			EonCodec $codec = new JsonCodec();
@@ -279,14 +272,13 @@ public class AnnotationTest extends TestCase {
 			assertEquals(2, $v.size());
 			assertEquals("Little", $v2.getKlass());
 			assertEquals("asdf", $v2.getString("$str"));
-			return null;
 		}
 	}
 	
 	
 	
 	private class TestNestedDecode extends TestCase.Unit {
-		public Object call() throws TranslationException {
+		public void call() throws TranslationException {
 			Big $b = new Big(new Little("asdf"));
 			
 			EonCodec $codec = new JsonCodec();
@@ -300,7 +292,6 @@ public class AnnotationTest extends TestCase {
 			
 			Big $z = $codec.decode($v, Big.class);
 			assertEquals("asdf", $z.getLil().getStr());
-			return null;
 		}
 	}
 }

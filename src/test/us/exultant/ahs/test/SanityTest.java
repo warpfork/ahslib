@@ -46,9 +46,8 @@ public class SanityTest extends TestCase {
 	
 	
 	private class TestBasic extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			
-			return null;
 		}
 	}
 	
@@ -58,7 +57,7 @@ public class SanityTest extends TestCase {
 	//CONCLUSION: the incrementor is only executed when the end of the loop body is reached.
 	//OUTPUT: after loop: 4\nafter loop: 6\n
 	private class TestForLoopBreak extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			int $i;
 			for ($i = 0; $i < 6; $i++) {
 				if ($i == 4) break;
@@ -67,7 +66,6 @@ public class SanityTest extends TestCase {
 			
 			for ($i = 0; $i < 6; $i++) {}
 			X.say("after loop: "+$i);
-			return null;
 		}
 	}
 	
@@ -75,12 +73,11 @@ public class SanityTest extends TestCase {
 	
 	//CONCLUSION: primitive arrays outside a function can show mutations made inside a function they were passed to.
 	private class TestPrimitiveArrayMutability extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			String[] $x = new String[] { "asdf", "qwer" };
 			assertTrue(Arr.equals(new String[] { "asdf", "qwer" }, $x));
 			helper($x);
 			assertTrue(Arr.equals(new String[] { "asdf", "zxcv" }, $x));
-			return null;
 		}
 		public void helper(String[] $in) {
 			$in[1] = "zxcv";
@@ -91,14 +88,13 @@ public class SanityTest extends TestCase {
 	
 	//CONCLUSION: so basically... yes, if you pass an array into a varargs method, that external array is STILL mutable from inside the method.
 	private class TestVarArgsMutability extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			assertTrue(Arr.equals(new String[] { "asdf", "qwer" }, helper_doNothing("asdf", "qwer")));
 			assertTrue(Arr.equals(new String[] { "asdf", "zxcv" }, helper_mutate("asdf", "qwer")));
 			
 			String[] $x = new String[] { "asdf", "qwer" };
 			assertTrue(Arr.equals(new String[] { "asdf", "zxcv" }, helper_mutate($x)));
 			assertTrue(Arr.equals(new String[] { "asdf", "zxcv" }, $x));
-			return null;
 		}
 		public String[] helper_doNothing(String... $ins) {
 			return $ins;
@@ -112,7 +108,7 @@ public class SanityTest extends TestCase {
 	
 	
 	private class TestGenericUpsubAntefiling extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			  Sup<Blah> $a = new Sup<Blah>();	// no cast:	WIN
 			  Sup<Blag> $d = new Sup<Blag>();	// no cast:	WIN
 			  Sup<Blah> $b = new Sub<Blah>();	// up cast out:	WIN
@@ -120,7 +116,6 @@ public class SanityTest extends TestCase {
 			//Sup<Blah> $e = new Sup<Blag>();	// up cast in:	FAIL	"type mismatch: cannot convert ..."
 			//Sub<Blah> $e = new Sub<Blag>();	// up cast in:	FAIL	"type mismatch: cannot convert ..."
 			  // and no, putting a cast explicitly in parens doesn't help either.		
-			return null;
 		}
 	}
 	private static class Blah {}
@@ -131,12 +126,11 @@ public class SanityTest extends TestCase {
 	
 	
 	private class VomitCharsetsAvailable extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			X.say("==charsets available==");
 			for (String $n : Charset.availableCharsets().keySet())
 				X.say("\t"+$n);
 			X.say("==end charsets==");
-			return null;
 		}
 	}
 	
@@ -144,10 +138,9 @@ public class SanityTest extends TestCase {
 	
 	//CONCLUSION: within a single function, if arguments have to be evaluated recursively, it goes left to right
 	private class TestEvalOrderInNestedCalls extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 			int $x = 0;
 			helper($x++,$x++);
-			return null;
 		}
 		private void helper(int $a, int $b) {
 			assertEquals(0, $a);
@@ -160,12 +153,11 @@ public class SanityTest extends TestCase {
 	//CONCLUSION: yes, you CAN select which method to use by limiting the type information of its arguments.
 	//   ...you can do a LOT of magic with interfaces here if you're into that sort of thing.
 	private class TestArgsOverriding extends TestCase.Unit {
-		public Object call() {
+		public void call() {
 
 			OverrideSub $x = new OverrideSub();
 			assertEquals(1, OverrideChooser.yayy($x));
 			assertEquals(0, OverrideChooser.yayy((OverrideSup)$x));
-			return null;
 		}
 	}
 	private static class OverrideSub extends OverrideSup {}
