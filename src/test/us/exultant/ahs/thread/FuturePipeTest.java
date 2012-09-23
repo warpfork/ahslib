@@ -65,7 +65,7 @@ public class FuturePipeTest extends TestCase {
 	 */
 	private class TestBasic extends TestCase.Unit {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(8);
-		public void call() {
+		public void call() throws InterruptedException {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			$ws.start();
 			
@@ -120,7 +120,7 @@ public class FuturePipeTest extends TestCase {
 		static final int N = 1000;
 		static final int D0 = 700;
 		static final int D1 = N - D0;
-		public void call() {
+		public void call() throws InterruptedException {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			
 			@SuppressWarnings("unchecked")

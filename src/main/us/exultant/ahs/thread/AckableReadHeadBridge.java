@@ -69,7 +69,7 @@ public class AckableReadHeadBridge<$PAYLOAD> implements ReadHead<$PAYLOAD> {
 		return this.$wrap.hasNext();
 	}
 	
-	public List<$PAYLOAD> readAll() {
+	public List<$PAYLOAD> readAll() throws InterruptedException {
 		List<Ackable<$PAYLOAD>> $xs = this.$wrap.readAll();
 		List<$PAYLOAD> $v = new ArrayList<$PAYLOAD>($xs.size()); 
 		for (Ackable<$PAYLOAD> $x : $xs) {
