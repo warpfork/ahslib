@@ -95,8 +95,15 @@ public class Ackable<PAYLOAD> {
 	}
 	
 	/**
+	 * <p>
 	 * The WorkFuture to wait on or register callbacks with that will return/fire when
 	 * this Ackable is {@link #ack() acknowleged}.
+	 * </p>
+	 * 
+	 * <p>
+	 * {@link WorkFuture#get()} on the returned object will throw an
+	 * {@link ExecutionException} if this Ackable is {@link #nak(Throwable) nak}'d.
+	 * </p>
 	 * 
 	 * @return the payload
 	 */
