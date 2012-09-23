@@ -50,7 +50,7 @@ public class IOSystemTest_FramerBinary extends IOSystemTest<ByteBuffer> {	// a c
 		return ByteBuffer.wrap(new byte[] {0x70, 0x7F, 0x10, 0x00, -0x80, 0x00, -0x1, 0x7F, 0x0A, 0x0D, 0x00, 0x65, 0x30, 0x40, 0x70});
 	}
 	
-	private final ByteBuffer $big = ByteBuffer.allocate(1024 * 1024 * 10); { Random $r = new Random(); while ($big.hasRemaining()) $big.putInt($r.nextInt()); $big.rewind(); }
+	private final ByteBuffer $big = ByteBuffer.allocate(1024 * 1024 * 5); { Random $r = new Random(); while ($big.hasRemaining()) $big.putInt($r.nextInt()); $big.rewind(); }
 	
 	protected ByteBuffer defineTestMessageBig() {
 		return ByteBuffer.wrap(Arr.copy($big.array()));
