@@ -81,7 +81,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 		}
 
 		
-		protected InputSystem<$MSG> buildInputSystem(SocketChannel $base, final WriteHead<$MSG> $flow) {
+		protected InputSystem<$MSG> buildInputSystem(final SocketChannel $base, final WriteHead<$MSG> $flow) {
 			final InputSystem<$MSG> $insys = InputSystem.setup(
 					$scheduler,
 					$selector,
@@ -91,6 +91,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			);
 			$insys.getFuture().addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $x) {
+					$log.debug("closing input pipe sink {} bound to base channel {}", $flow, $base);
 					$flow.close();
 				}
 			});
@@ -139,7 +140,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBasic extends TestTemplate {
-		public void call() throws IOException {
+		public void call() throws IOException, TimeoutException, InterruptedException, ExecutionException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -158,11 +159,16 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some writes
 			$log.debug("writing chunks...");
 			$outgoingPipe.sink().write(defineTestMessage1()); 
+			$log.debug("closing output pipes...");
 			$outgoingPipe.close();
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertEquals(defineTestMessage1(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertEquals("message read", defineTestMessage1(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			
+			// check for any errors
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -179,7 +185,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBasicMultimessage extends TestTemplate {
-		public void call() throws IOException {
+		public void call() throws IOException, TimeoutException, InterruptedException, ExecutionException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -200,13 +206,18 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$outgoingPipe.sink().write(defineTestMessage1());
 			$outgoingPipe.sink().write(defineTestMessage2());
 			$outgoingPipe.sink().write(defineTestMessage3());
+			$log.debug("closing output pipes...");
 			$outgoingPipe.close();
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertEquals(defineTestMessage1(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertEquals(defineTestMessage2(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertEquals(defineTestMessage3(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertEquals("message 1 read", defineTestMessage1(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertEquals("message 2 read", defineTestMessage2(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertEquals("message 3 read", defineTestMessage3(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			
+			// check for any errors
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -224,7 +235,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBasicBig extends TestTemplate {
-		public void call() throws IOException {
+		public void call() throws IOException, TimeoutException, InterruptedException, ExecutionException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $outsock = $socks.getA();
@@ -243,12 +254,17 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some writes
 			$log.debug("writing chunks...");
 			$outgoingPipe.sink().write(defineTestMessageBig());
+			$log.debug("closing output pipes...");
 			$outgoingPipe.close();
 			
 			// do some reads, and make assertion
 			// note it's tough to use assertEquals on these byte arrays because they're just huge
 			$log.debug("reading chunks...");
-			assertEquals(defineTestMessageBig(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertEquals("big message read", defineTestMessageBig(), $incomingPipe.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			
+			// check for any errors
+			$insys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$outsys.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -265,7 +281,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBidiBig extends TestTemplate {
-		public void call() throws IOException {
+		public void call() throws IOException, TimeoutException, InterruptedException, ExecutionException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $sockA = $socks.getA();
@@ -290,15 +306,22 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$log.debug("writing chunks...");
 			$outgoingPipeA.sink().write(defineTestMessageBig());
 			$outgoingPipeB.sink().write(defineTestMessageBig());
+			$log.debug("closing output pipes...");
 			$outgoingPipeA.close();
 			$outgoingPipeB.close();
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertEquals(defineTestMessageBig(), $incomingPipeA.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertFalse($incomingPipeA.source().hasNext());
-			assertEquals(defineTestMessageBig(), $incomingPipeB.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertFalse($incomingPipeB.source().hasNext());
+			assertEquals("big message (B->A) read", defineTestMessageBig(), $incomingPipeA.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertFalse("anything more available on A", $incomingPipeA.source().hasNext());
+			assertEquals("big message (A->B) read", defineTestMessageBig(), $incomingPipeB.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertFalse("anything more available on B", $incomingPipeB.source().hasNext());
+			
+			// check for any errors
+			$insysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$outsysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$outsysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -315,7 +338,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 	 * 
 	 */
 	private class TestBidiBigMultimessage extends TestTemplate {
-		public void call() throws IOException {
+		public void call() throws IOException, TimeoutException, InterruptedException, ExecutionException {
 			// set up ye olde sockets to stuff to test against
 			Tup2<SocketChannel,SocketChannel> $socks = makeSocketChannelPair();
 			SocketChannel $sockA = $socks.getA();
@@ -343,18 +366,25 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$outgoingPipeB.sink().write(defineTestMessageBig());
 			$outgoingPipeB.sink().write(defineTestMessageBig());
 			$outgoingPipeA.sink().write(defineTestMessageBig());
+			$log.debug("closing output pipes...");
 			$outgoingPipeA.close();
 			$outgoingPipeB.close();
 			
 			// do some reads, and make assertion
 			$log.debug("reading chunks...");
-			assertEquals(defineTestMessageBig(), $incomingPipeA.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertEquals(defineTestMessageBig(), $incomingPipeA.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertFalse($incomingPipeA.source().hasNext());
-			assertEquals(defineTestMessageBig(), $incomingPipeB.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertEquals(defineTestMessageBig(), $incomingPipeB.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertEquals(defineTestMessageBig(), $incomingPipeB.source().readSoon(PATIENCE, TimeUnit.SECONDS));
-			assertFalse($incomingPipeB.source().hasNext());
+			assertEquals("big message 1 (B->A) read", defineTestMessageBig(), $incomingPipeA.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertEquals("big message 2 (B->A) read", defineTestMessageBig(), $incomingPipeA.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertFalse("anything more available on A", $incomingPipeA.source().hasNext());
+			assertEquals("big message 3 (A->B) read", defineTestMessageBig(), $incomingPipeB.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertEquals("big message 4 (A->B) read", defineTestMessageBig(), $incomingPipeB.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertEquals("big message 5 (A->B) read", defineTestMessageBig(), $incomingPipeB.source().readSoon(PATIENCE, TimeUnit.SECONDS));
+			assertFalse("anything more available on B", $incomingPipeB.source().hasNext());
+			
+			// check for any errors
+			$insysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$outsysA.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$insysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
+			$outsysB.getFuture().get(PATIENCE, TimeUnit.SECONDS);
 			
 			cleanup();
 		}
@@ -392,6 +422,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some writes
 			$log.debug("writing chunks...");
 			$outgoingPipe.sink().write(defineTestMessage1());
+			$log.debug("closing output pipes...");
 			$outgoingPipe.sink().close();
 			
 			// do some reads, and make assertion
@@ -442,6 +473,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			// do some writes
 			$log.debug("writing chunks...");
 			$outgoingPipe.sink().write(defineTestMessageBig());
+			$log.debug("closing output pipes...");
 			$outgoingPipe.sink().close();
 			
 			// do some reads, and make assertion
@@ -493,6 +525,7 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 			$outgoingPipe.sink().write(defineTestMessage1());
 			$outgoingPipe.sink().write(defineTestMessage3());
 			$outgoingPipe.sink().write(defineTestMessage2());
+			$log.debug("closing output pipes...");
 			$outgoingPipe.sink().close();
 			
 			// do some reads, and make assertion
