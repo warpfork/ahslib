@@ -380,26 +380,26 @@ public class SelectionSignaller {
 		public Void call() {
 			// PHASE ONE
 			// check for new registration or deregistration events
-			assert logger.debug("selector doing registration processing...");
+			assert logger.trace("selector doing registration processing...");
 			callRegistrationProcessing();
-			assert logger.debug("registration processing done");
+			assert logger.trace("registration processing done");
 			
 			// PHASE TWO
 			// chill out
-			assert logger.debug("selector selecting...");
+			assert logger.trace("selector selecting...");
 			boolean $freshWorkExists = callSelect() > 0;
-			assert logger.debug("selector wake, workExists:{}", $freshWorkExists);
+			assert logger.trace("selector wake, workExists:{}", $freshWorkExists);
 			if (Thread.interrupted()) {
 				// okay, acknowledging interrupt; we'll return immediately.
-				assert logger.debug("selector interrupted!  forgetting about event disbatch and returning to scheduler immediately.");
+				assert logger.info("selector interrupted!  forgetting about event disbatch and returning to scheduler immediately.");
 				return null;
 			}
 			
 			// PHASE THREE
 			// disbatch events to folks who're deserving
-			assert logger.debug("selector disbatching events...");
+			assert logger.trace("selector disbatching events...");
 			if ($freshWorkExists) callDisbatchEvents();
-			assert logger.debug("event disbatching done");
+			assert logger.trace("event disbatching done");
 			
 			return null;
 		}
@@ -426,13 +426,29 @@ public class SelectionSignaller {
 				
 				if (!$k.isValid()) continue;
 				
-				int $ops = $k.readyOps();
-				assert logger.trace("dispatching ops:{} on channel:{}", $ops, $k.channel());
+				final int $ops = $k.readyOps();
+				final SelectableChannel $ch = $k.channel();
+				assert logger.debug("dispatching ops:{} on channel:{}", $ops, $ch);
 				Attache $a = (Attache) $k.attachment();
-				if (Primitives.containsFullMask($ops, SelectionKey.OP_CONNECT)) try { if (((SocketChannel)$k.channel()).finishConnect()) $k.interestOps(Primitives.removeMask($k.interestOps(), SelectionKey.OP_CONNECT)); } catch (IOException $e) { $k.cancel(); }
-				if (Primitives.containsFullMask($ops, SelectionKey.OP_READ) && $a.$reader != null) $a.$reader.hear($k.channel());
-				if (Primitives.containsFullMask($ops, SelectionKey.OP_WRITE) && $a.$writer != null) $a.$writer.hear($k.channel());
-				if (Primitives.containsFullMask($ops, SelectionKey.OP_ACCEPT) && $a.$accepter != null) $a.$accepter.hear($k.channel());
+				if (Primitives.containsFullMask($ops, SelectionKey.OP_CONNECT)) {
+					assert logger.debug("dispatching OP_CONNECT on channel:{}", $ch);
+					try {
+						if (((SocketChannel)$ch).finishConnect())
+							$k.interestOps(Primitives.removeMask($k.interestOps(), SelectionKey.OP_CONNECT));
+					} catch (IOException $e) { $k.cancel(); }
+				}
+				if (Primitives.containsFullMask($ops, SelectionKey.OP_READ) && $a.$reader != null) {
+					assert logger.debug("dispatching OP_READ on channel:{}", $ch);
+					$a.$reader.hear($ch);
+				}
+				if (Primitives.containsFullMask($ops, SelectionKey.OP_WRITE) && $a.$writer != null) {
+					assert logger.debug("dispatching OP_WRITE on channel:{}", $ch);
+					$a.$writer.hear($ch);
+				}
+				if (Primitives.containsFullMask($ops, SelectionKey.OP_ACCEPT) && $a.$accepter != null) {
+					assert logger.debug("dispatching OP_ACCEPT on channel:{}", $ch);
+					$a.$accepter.hear($ch);
+				}
 			}
 		}
 		
@@ -440,7 +456,7 @@ public class SelectionSignaller {
 			List<Event> $evts = $pipe.source().readAllNow();
 			for (Event $evt : $evts) {
 				if ($evt instanceof Event_Reg) {
-					assert logger.trace("registering type "+$evt.$ops+" on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
+					assert logger.debug("registering type "+$evt.$ops+" on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
 					SelectionKey $k = $evt.$chan.keyFor($selector);
 					Attache $a;
 					int $old_ops;
@@ -459,7 +475,7 @@ public class SelectionSignaller {
 						/* there's nothing we can really do to "recover" here; we just... don't do anything because there's nothing to do. */
 					}
 				} else if ($evt instanceof Event_Dereg) {
-					assert logger.trace("deregistering type "+$evt.$ops+" on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
+					assert logger.debug("deregistering type "+$evt.$ops+" on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
 					SelectionKey $k = getKey($evt);
 					$k.interestOps(Primitives.removeMask($k.interestOps(), $evt.$ops));
 					Attache $a = (Attache) $k.attachment();
@@ -467,7 +483,7 @@ public class SelectionSignaller {
 					if (Primitives.containsFullMask($evt.$ops, SelectionKey.OP_WRITE) && $a.$writer != null) $a.$writer = null; // gc help
 					if (Primitives.containsFullMask($evt.$ops, SelectionKey.OP_ACCEPT) && $a.$accepter != null) $a.$accepter = null; // gc help
 				} else if ($evt instanceof Event_Cancel) {
-					assert logger.trace("cancelling on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
+					assert logger.debug("cancelling on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
 					SelectionKey $k = getKey($evt);
 					if ($k != null) $k.cancel();
 					$k.attach(null); // gc help
