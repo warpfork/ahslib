@@ -69,7 +69,12 @@ public abstract class IOSystemTest<$MSG> extends TestCase {
 		protected SelectionSignaller $selector = new SelectionSignaller(10000);
 		private WorkScheduler $ssws = new WorkSchedulerFlexiblePriority(1).start();
 		private WorkFuture<Void> $sswf;
-		{ $sswf = $selector.schedule($ssws, ScheduleParams.NOW); }
+		{
+			WorkManager.attachFailureLogger($ssws);
+			$sswf = $selector.schedule($ssws, ScheduleParams.NOW);
+			WorkManager.attachFailureLogger($scheduler);
+			WorkManager.periodicallyFlush($scheduler, PATIENCE/4, TimeUnit.SECONDS);
+		}
 		
 		protected Tup2<SocketChannel,SocketChannel> makeSocketChannelPair() throws IOException {
 			ServerSocketChannel $ssc = ServerSocketChannel.open();
