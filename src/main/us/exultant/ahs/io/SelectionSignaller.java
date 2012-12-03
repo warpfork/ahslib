@@ -464,6 +464,10 @@ public class SelectionSignaller {
 						$a = new Attache();
 						$old_ops = 0;
 					} else {
+						if (!$k.isValid()) {
+							$k.attach(null); // gc help
+							continue;
+						}
 						$a = (Attache) $k.attachment();
 						$old_ops = $k.interestOps();
 					}
@@ -477,6 +481,12 @@ public class SelectionSignaller {
 				} else if ($evt instanceof Event_Dereg) {
 					assert logger.debug("deregistering type "+$evt.$ops+" on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
 					SelectionKey $k = getKey($evt);
+					if ($k == null) {
+						continue;
+					} else if (!$k.isValid()) {
+						$k.attach(null); // gc help
+						continue;
+					}
 					$k.interestOps(Primitives.removeMask($k.interestOps(), $evt.$ops));
 					Attache $a = (Attache) $k.attachment();
 					if (Primitives.containsFullMask($evt.$ops, SelectionKey.OP_READ) && $a.$reader != null) $a.$reader = null; // gc help
@@ -485,7 +495,8 @@ public class SelectionSignaller {
 				} else if ($evt instanceof Event_Cancel) {
 					assert logger.debug("cancelling on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
 					SelectionKey $k = getKey($evt);
-					if ($k != null) $k.cancel();
+					if ($k == null) continue;
+					$k.cancel();
 					$k.attach(null); // gc help
 				}
 			}
