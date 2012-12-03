@@ -20,7 +20,7 @@ class WorkTargetChannelCloser extends WorkTargetAdapterFollowup<Void> {
 	private final Channel $channel;
 	
 	protected Void run() throws IOException {
-		assert new Loggar(LoggerFactory.getLogger(OutputSystem_WorkerChannelSelectable.class)).debug("closing channel {}", $channel);
+		assert new Loggar(LoggerFactory.getLogger(WorkTargetChannelCloser.class)).debug("closing channel {}", $channel);
 		$channel.close();
 		return null;
 	}
