@@ -45,6 +45,8 @@ public abstract class WorkTargetAdapterFollowup<$V> extends WorkTargetAdapterTri
 				if ($latch.getCount() == 0)
 					trigger();
 					//XXX:AHS:THREAD: this doesn't emit any events that can be used to update our own WorkFuture at the scheduler now, which isn't cool.  The workaround is to add those updators to everyone in $eventsToFollow after creating and scheduling this WorkTarget, but that's definitely clunky.  (Or as usual, just forget about event-based updating and let that be a clocked thing.)
+					//  of course, this is solved if you built this on top of WorkFutureAggregate.  and i don't know why you didnt...
+					//     And after that's done, you could make some facades like WorkManager.follow(*).  which would be terribly handy to have for cleaning up connections over in io...
 			}
 		};
 		for (WorkFuture<?> $wf : $eventsToFollow)
