@@ -20,6 +20,7 @@
 package us.exultant.ahs.io;
 
 import us.exultant.ahs.util.*;
+import us.exultant.ahs.io.framer.*;
 import java.nio.*;
 import java.util.*;
 
@@ -31,11 +32,11 @@ public class IOSystemTest_FramerBinary extends IOSystemTest<ByteBuffer> {	// a c
 	}
 	
 	protected ChannelReader<ByteBuffer> defineReader() {
-		return new ChannelReader.BinaryFramer();
+		return new BinaryFrameReader();
 	}
 	
 	protected ChannelWriter<ByteBuffer> defineWriter() {
-		return new ChannelWriter.BinaryFramer();
+		return new BinaryFrameWriter();
 	}
 	
 	protected ByteBuffer defineTestMessage1() {
