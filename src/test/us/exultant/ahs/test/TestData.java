@@ -61,6 +61,7 @@ public final class TestData {
 		bb10m = ByteBuffer.allocate(1024 * 1024 * 10);	// 10MB
 		while (bb10m.hasRemaining())
 			bb10m.putInt($r.nextInt());	// yes, this relies on slightly unspoken alignment
+		bb10m.rewind();
 		
 	}
 	/**

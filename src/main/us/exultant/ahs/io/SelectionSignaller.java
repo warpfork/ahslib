@@ -27,6 +27,7 @@ import us.exultant.ahs.thread.Pipe;
 import java.io.*;
 import java.nio.channels.*;
 import java.util.*;
+import org.slf4j.*;
 
 /**
  * <p>
@@ -47,19 +48,29 @@ import java.util.*;
  * 
  * <p>
  * If you choose not to use the default global instance of this selector and instead
- * construct and schedule your own, please note that this WorkTarget is not so ammenable
- * to pooling as one might like; unfortunately, there were design choices made in the core
- * of the Java standard libraries that leave us with a lot of limitations. In particular,
- * we have no way of getting events that the selector itself has events ready other than
- * full-out checking it &mdash; so, we're stuck with an {@link Worker#isReady()} method
- * that helplessly always returns true, and fundamentally no way to disbatch events
- * relating to the core selector's readiness. There are two ways to deal with this: you
- * may actually just run this system in its own personal thread (creating a
- * {@link WorkSchedulerFlexiblePriority} instance with a thread pool of size one is a
- * reasonable way to do this); otherwise, if you do wish to keep it in the same Scheduler
- * as other tasks, you should be sure to construct this selector with purely nonblocking
- * mode (negative selection timeout parameter) and fixed-delay scheduling parameters (i.e.
- * {@link ScheduleParams#makeFixedDelay(long)}).
+ * construct and schedule your own, there are a couple of caveats:
+ * <ul>
+ * <li>This WorkTarget is not so ammenable to pooling as one might like; unfortunately
+ * there are a lot of limitations ingrained below the level this library can change. In
+ * particular, we have no way of getting events that the selector itself has events ready
+ * other than full-out checking it &mdash; so, we're stuck with an
+ * {@link Worker#isReady()} method that helplessly always returns true, and fundamentally
+ * no way to disbatch events relating to the core selector's readiness. There are two ways
+ * to deal with this: you may actually just run this system in its own personal thread
+ * (creating a {@link WorkSchedulerFlexiblePriority} instance with a thread pool of size
+ * one is a reasonable way to do this); otherwise, if you do wish to keep it in the same
+ * Scheduler as other tasks, you should be sure to construct this selector with purely
+ * nonblocking mode (negative selection timeout parameter) and fixed-delay scheduling
+ * parameters (i.e. {@link ScheduleParams#makeFixedDelay(long)}).
+ * <li>Using a <code>selectionTimeout</code> parameter of 0 can be unhealthy. Some JVMs
+ * will fail to wake up selection calls if the selecting thread was interrupted before the
+ * selection call; this means there are race conditions in interruption that are
+ * impossible to address, which in turn means that cancelling a SelectionSignaller with a
+ * selectionTimeout parameter of 0 can unpredictably simply fail to work on some JVMs
+ * (such a bug is documented <a
+ * href="https://code.google.com/p/android/issues/detail?id=15388">here</a> for some
+ * versions of android).
+ * </ul>
  * </p>
  * 
  * @author Eric Myhre <tt>hash@exultant.us</tt>
@@ -140,6 +151,9 @@ public class SelectionSignaller {
 	public WorkFuture<Void> schedule(WorkScheduler $scheduler, ScheduleParams $when) {
 		return $scheduler.schedule(new Worker(), $when);
 	}
+
+	public static final Loggar logger = new Loggar(LoggerFactory.getLogger(SelectionSignaller.class.getName()));
+	public static final Loggar logger_ingress = new Loggar(LoggerFactory.getLogger(SelectionSignaller.class.getName()+".ingress"));
 	
 	private final Selector		$selector;
 	private final Pipe<Event>	$pipe;
@@ -172,6 +186,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void registerRead(SelectableChannel $ch, Listener<SelectableChannel> $p) {
+		assert logger_ingress.debug("queuing registerRead on {channel:{}; listener:{}}", $ch, $p);
 		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_READ));
 	}
 	
@@ -191,6 +206,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void registerWrite(SelectableChannel $ch, Listener<SelectableChannel> $p) {
+		assert logger_ingress.debug("queuing registerWrite on {channel:{}; listener:{}}", $ch, $p);
 		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_WRITE));
 	}
 	
@@ -208,6 +224,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void registerAccept(ServerSocketChannel $ch, Listener<SelectableChannel> $p) {
+		assert logger_ingress.debug("queuing registerAccept on {channel:{}; listener:{}}", $ch, $p);
 		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
 	}
 	
@@ -219,6 +236,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterRead(SelectableChannel $ch) {
+		assert logger_ingress.debug("queuing deregisterRead on {channel:{}}", $ch);
 		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_READ));
 	}
 	
@@ -230,6 +248,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterWrite(SelectableChannel $ch) {
+		assert logger_ingress.debug("queuing deregisterWrite on {channel:{}}", $ch);
 		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_WRITE));
 	}
 	
@@ -242,6 +261,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterRead(Listener<SelectableChannel> $p) {
+		assert logger_ingress.debug("queuing deregisterRead on {listener:{}}", $p);
 		$pipe.sink().write(new Event_Dereg($p, SelectionKey.OP_READ));
 	}
 	
@@ -254,6 +274,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterWrite(Listener<SelectableChannel> $p) {
+		assert logger_ingress.debug("queuing deregisterWrite on {listener:{}}", $p);
 		$pipe.sink().write(new Event_Dereg($p, SelectionKey.OP_WRITE));
 	}
 	
@@ -266,6 +287,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void deregisterAccept(ServerSocketChannel $ch) {
+		assert logger_ingress.debug("queuing deregisterAccept on {channel:{}}", $ch);
 		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
 	}
 	
@@ -277,6 +299,7 @@ public class SelectionSignaller {
 	@Idempotent
 	@ThreadSafe
 	public void cancel(SelectableChannel $ch) {
+		assert logger_ingress.debug("queuing cancel on {channel:{}}", $ch);
 		$pipe.sink().write(new Event_Cancel($ch));
 	}
 	
@@ -357,20 +380,26 @@ public class SelectionSignaller {
 		public Void call() {
 			// PHASE ONE
 			// check for new registration or deregistration events
+			assert logger.trace("selector doing registration processing...");
 			callRegistrationProcessing();
+			assert logger.trace("registration processing done");
 			
 			// PHASE TWO
 			// chill out
+			assert logger.trace("selector selecting...");
 			boolean $freshWorkExists = callSelect() > 0;
-			
-			// PHASE... TWO AND A HALF?
-			// if we were a blocking selector, we might have been woken up specifically to deal with a new event, so we should do so asap
-			//callRegistrationProcessing();
-			// actually no, this is silly.  if we're being used in blocking mode, we're probably also being used in our own thread, so we'll be looping back to phase one momentarily anyway and it's all kay.
+			assert logger.trace("selector wake, workExists:{}", $freshWorkExists);
+			if (Thread.interrupted()) {
+				// okay, acknowledging interrupt; we'll return immediately.
+				assert logger.info("selector interrupted!  forgetting about event disbatch and returning to scheduler immediately.");
+				return null;
+			}
 			
 			// PHASE THREE
 			// disbatch events to folks who're deserving
+			assert logger.trace("selector disbatching events...");
 			if ($freshWorkExists) callDisbatchEvents();
+			assert logger.trace("event disbatching done");
 			
 			return null;
 		}
@@ -397,12 +426,29 @@ public class SelectionSignaller {
 				
 				if (!$k.isValid()) continue;
 				
-				int $ops = $k.readyOps();
+				final int $ops = $k.readyOps();
+				final SelectableChannel $ch = $k.channel();
+				assert logger.debug("dispatching ops:{} on channel:{}", $ops, $ch);
 				Attache $a = (Attache) $k.attachment();
-				if (Primitives.containsFullMask($ops, SelectionKey.OP_CONNECT)) try { if (((SocketChannel)$k.channel()).finishConnect()) $k.interestOps(Primitives.removeMask($k.interestOps(), SelectionKey.OP_CONNECT)); } catch (IOException $e) { $k.cancel(); }
-				if (Primitives.containsFullMask($ops, SelectionKey.OP_READ) && $a.$reader != null) $a.$reader.hear($k.channel());
-				if (Primitives.containsFullMask($ops, SelectionKey.OP_WRITE) && $a.$writer != null) $a.$writer.hear($k.channel());
-				if (Primitives.containsFullMask($ops, SelectionKey.OP_ACCEPT) && $a.$accepter != null) $a.$accepter.hear($k.channel());
+				if (Primitives.containsFullMask($ops, SelectionKey.OP_CONNECT)) {
+					assert logger.debug("dispatching OP_CONNECT on channel:{}", $ch);
+					try {
+						if (((SocketChannel)$ch).finishConnect())
+							$k.interestOps(Primitives.removeMask($k.interestOps(), SelectionKey.OP_CONNECT));
+					} catch (IOException $e) { $k.cancel(); }
+				}
+				if (Primitives.containsFullMask($ops, SelectionKey.OP_READ) && $a.$reader != null) {
+					assert logger.debug("dispatching OP_READ on channel:{}", $ch);
+					$a.$reader.hear($ch);
+				}
+				if (Primitives.containsFullMask($ops, SelectionKey.OP_WRITE) && $a.$writer != null) {
+					assert logger.debug("dispatching OP_WRITE on channel:{}", $ch);
+					$a.$writer.hear($ch);
+				}
+				if (Primitives.containsFullMask($ops, SelectionKey.OP_ACCEPT) && $a.$accepter != null) {
+					assert logger.debug("dispatching OP_ACCEPT on channel:{}", $ch);
+					$a.$accepter.hear($ch);
+				}
 			}
 		}
 		
@@ -410,6 +456,7 @@ public class SelectionSignaller {
 			List<Event> $evts = $pipe.source().readAllNow();
 			for (Event $evt : $evts) {
 				if ($evt instanceof Event_Reg) {
+					assert logger.debug("registering type "+$evt.$ops+" on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
 					SelectionKey $k = $evt.$chan.keyFor($selector);
 					Attache $a;
 					int $old_ops;
@@ -417,6 +464,10 @@ public class SelectionSignaller {
 						$a = new Attache();
 						$old_ops = 0;
 					} else {
+						if (!$k.isValid()) {
+							$k.attach(null); // gc help
+							continue;
+						}
 						$a = (Attache) $k.attachment();
 						$old_ops = $k.interestOps();
 					}
@@ -428,15 +479,24 @@ public class SelectionSignaller {
 						/* there's nothing we can really do to "recover" here; we just... don't do anything because there's nothing to do. */
 					}
 				} else if ($evt instanceof Event_Dereg) {
+					assert logger.debug("deregistering type "+$evt.$ops+" on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
 					SelectionKey $k = getKey($evt);
+					if ($k == null) {
+						continue;
+					} else if (!$k.isValid()) {
+						$k.attach(null); // gc help
+						continue;
+					}
 					$k.interestOps(Primitives.removeMask($k.interestOps(), $evt.$ops));
 					Attache $a = (Attache) $k.attachment();
 					if (Primitives.containsFullMask($evt.$ops, SelectionKey.OP_READ) && $a.$reader != null) $a.$reader = null; // gc help
 					if (Primitives.containsFullMask($evt.$ops, SelectionKey.OP_WRITE) && $a.$writer != null) $a.$writer = null; // gc help
 					if (Primitives.containsFullMask($evt.$ops, SelectionKey.OP_ACCEPT) && $a.$accepter != null) $a.$accepter = null; // gc help
 				} else if ($evt instanceof Event_Cancel) {
+					assert logger.debug("cancelling on {channel:{}; listener:{}}", $evt.$chan, $evt.$listener);
 					SelectionKey $k = getKey($evt);
-					if ($k != null) $k.cancel();
+					if ($k == null) continue;
+					$k.cancel();
 					$k.attach(null); // gc help
 				}
 			}

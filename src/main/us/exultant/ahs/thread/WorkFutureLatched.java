@@ -142,6 +142,10 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 	@Idempotent
 	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, TimeoutException, CancellationException, ExecutionException {
 		$latch.await($timeout, $unit);
+		switch ($state) {
+			case WAITING: case CANCELLING: throw new TimeoutException();
+			default: ;
+		}
 		if (isCancelled()) throw new CancellationException();
 		if ($exception != null) throw $exception;
 		return $result;

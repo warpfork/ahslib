@@ -1,9 +1,11 @@
 package us.exultant.ahs.io;
 
 import us.exultant.ahs.core.*;
+import us.exultant.ahs.util.*;
 import us.exultant.ahs.thread.*;
 import java.io.*;
 import java.nio.channels.*;
+import org.slf4j.*;
 
 class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel & ReadableByteChannel> implements WorkTarget<$MSG> {
 	public InputSystem_WorkerChannelSelectable(SelectionSignaller $selector, WriteHead<$MSG> $sink, Chan $source, ChannelReader<$MSG> $framer) {
@@ -16,6 +18,8 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 	void install(WorkFuture<$MSG> $selfFuture) {
 		$selector.registerRead($channel, new Updater($selfFuture));
 	}
+	
+	public static final Loggar logger = new Loggar(LoggerFactory.getLogger(InputSystem_WorkerChannelSelectable.class));
 	
 	private final WriteHead<$MSG>			$sink;
 	private final Chan				$channel;
@@ -33,9 +37,15 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 	
 	public $MSG call() throws IOException, TranslationException {
 		try {
+			assert logger.debug("read worker called; operating on channel {}", $channel);
 			$signal = false;
 			$MSG $msg = $framer.read($channel);
-			if ($msg != null) $sink.write($msg);
+			if ($msg != null) {
+				assert logger.debug("read message chunk from framer; handing it off.");
+				$sink.write($msg);
+			} else {
+				assert logger.debug("no full message chunk available from framer.");
+			}
 			return $msg;
 		} catch (TranslationException $e) {
 			throw $e;
@@ -47,6 +57,7 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 	
 	public void close() throws IOException {
 		try {
+			assert logger.debug("closing channel {}", $channel);
 			$channel.close();
 		} catch (IOException $e) {
 			$selector.cancel($channel);
@@ -55,6 +66,7 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 	}
 	
 	public boolean isReady() {
+		assert logger.trace("read worker asked if ready");
 		return $signal && $sink.hasRoom();
 	}
 	
@@ -62,6 +74,7 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 		public Updater(WorkFuture<?> $wf) { this.$wf = $wf; }
 		private final WorkFuture<?> $wf;
 		public final void hear(SelectableChannel $x) {
+			assert logger.trace("read worker updater called");
 			$signal = true;
 			$wf.update();
 		}
