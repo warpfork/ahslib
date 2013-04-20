@@ -221,7 +221,6 @@
 			<group title="Unit Testing"			packages="us.exultant.ahs.test*"/>
 			<group title="IO"				packages="us.exultant.ahs.io*"/>
 			<group title="Crypto"				packages="us.exultant.ahs.crypto*"/>
-			<group title="Scratch"				packages="us.exultant.ahs.scratch*"/>
 		</javadoc>
 	</target>
 	
