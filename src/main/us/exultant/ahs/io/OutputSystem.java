@@ -6,14 +6,7 @@ import java.io.*;
 import java.nio.channels.*;
 
 // point of interest: you will want some systems that allow you to know when you've flushed.  and they might still not want to be synchronous.
-//  writehead gets in your way quite directly here, having no return type.
-//    you could have versions that give you a writehead that takes a Tup2<ByteBuffer, WorkFutureLatched>, and that would work, but be all kinds of inelegance.
-//  or you could force people to use a writehead that's actually blocking if they want that kind of flushing.  but that's... baaaaaad.
-//  on the gripping hand, it's of course possible to add a return type to WriteHead.  Perhaps it would even always be WorkFutureLatched type.  but it would still usually return null because we don't want to waste time on those object allocations if we don't have to, and more often than not noone cares.
-//    well, in DataPipe it's obviously a bit trivialized.  a network system can obviously have the network fail before the program is dying, and knowing how far along in the queue of messages it is could be relevant.
-//      then again, if the system breaks it becomes Done and exceptionally, and one could just drain the pipe of things not yet done with.  so i guess it really is mostly a question of what would make someone want to wait for a write to complete before moving on with their lives.
-//  i guess the thing that makes me unsure how much minding this is worth is that if you're on the network, you never know if the far side got your message unless they respond anyway.  and if you're on a local filesystem, doing it synchronously typically isn't really a source of major butthurt.
-//    and yes, tcp has acking, sure.  but how much does that really tell you?  it tells you that the message got as far as kernel buffers on the other end.  it doesn't tell you that the application has even recieved it or become aware of it, much less done anything with that data or "committed" anything.
+//  absolved by using Flow<Ackable<Whatever>>.  though we should actually... do... that.
 
 /**
  * <p>
