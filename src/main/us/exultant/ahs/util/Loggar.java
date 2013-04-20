@@ -22,7 +22,7 @@ package us.exultant.ahs.util;
 import org.slf4j.*;
 
 /**
- * A drop-in replacement to <code>org.slf4j.Logger</code> that wraps an existing Logginer,
+ * A drop-in replacement to <code>org.slf4j.Logger</code> that wraps an existing Logger,
  * but all logging methods now always return boolean <code>true</code> (which means you
  * can use them with the <code>assert</code> keyword to remove them from runtime code
  * completely!).
