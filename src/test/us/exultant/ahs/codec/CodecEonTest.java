@@ -1,5 +1,5 @@
 /*
- * Copyright 2010, 2011 Eric Myhre <http://exultant.us>
+ * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
  * 
  * This file is part of AHSlib.
  * 
