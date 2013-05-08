@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,27 +26,27 @@ import java.util.*;
 
 public class CodecJsonTest extends CodecEonTest {
 	public static void main(String... $args) { new CodecJsonTest().run(); }
-	
+
 	public CodecJsonTest() {
 		super(new JsonCodec());
 	}
-	
+
 	public List<Unit> getUnits() {
 		List<Unit> $tests = super.getUnits();
 		$tests.add(new TestBasicSerialMatch());
 		return $tests;
 	}
-	
-	
-	
+
+
+
 	private class TestBasicSerialMatch extends TestCase.Unit {
 		public void call() throws TranslationException {
 			JsonCodec $jc = new JsonCodec();
 			$jc.putHook(TobjPrimitive.class, new TobjPrimitive.Den());
-			
+
 			TobjPrimitive $x1 = new TobjPrimitive("whip it");
 			JsonObject $c = $jc.encode($x1);
-			
+
 			assertEquals("{\"#\":\"TobjPrimitive\",\"$\":\"dat\",\"%\":\"whip it\"}", $c.toString());
 		}
 	}

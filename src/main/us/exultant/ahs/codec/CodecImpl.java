@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,18 +28,18 @@ public class CodecImpl<$CODEC extends Codec<$CODEC, $CODE>, $CODE> implements Co
 		$ed = new EncoderDispatch<$CODEC, $CODE>();
 		$dd = new DecoderDispatch<$CODEC, $CODE>();
 	}
-	
+
 	private final EncoderDispatch<$CODEC,$CODE> $ed;
 	private final DecoderDispatch<$CODEC,$CODE> $dd;
-	
+
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder) {
 		$ed.putHook($datclrclass, $encoder);
 	}
-	
+
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Decoder<$CODEC, $CODE, $TARG> $decoder) {
 		$dd.putHook($datclrclass, $decoder);
 	}
-	
+
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Dencoder<$CODEC, $CODE, $TARG> $dencoder) {
 		putHook($datclrclass, (Encoder<$CODEC, $CODE, $TARG>)$dencoder);
 		putHook($datclrclass, (Decoder<$CODEC, $CODE, $TARG>)$dencoder);
@@ -49,12 +49,12 @@ public class CodecImpl<$CODEC extends Codec<$CODEC, $CODE>, $CODE> implements Co
 	public <$TARG> $CODE encode($TARG $datclr) throws TranslationException {
 		return $ed.encode(($CODEC)this, $datclr);
 	}
-	
+
 	@SuppressWarnings("unchecked")	// we're casting to the generic arg of the exact same thing.  it's FINE.
 	public <$TARG> $CODE encode($TARG $datclr, Class<$TARG> $datclrclass) throws TranslationException {
 		return $ed.encode(($CODEC)this, $datclr, $datclrclass);
 	}
-	
+
 	@SuppressWarnings("unchecked")	// we're casting to the generic arg of the exact same thing.  it's FINE.
 	public <$TARG> $TARG decode($CODE $datenc, Class<$TARG> $datclrclass) throws TranslationException {
 		try {

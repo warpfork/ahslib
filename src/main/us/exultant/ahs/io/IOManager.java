@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,14 +26,14 @@ public class IOManager {
 	 * <p>
 	 * Gets a "default" {@link SelectionSignaller} that is a singleton to the VM.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This method is performs lazy instantiation, is thread-safe, and the returned
 	 * SelectionSignaller is already scheduled for execution in a private and
 	 * reasonably configured thread pool. In other words, there's nothing to worry
 	 * about.
 	 * </p>
-	 * 
+	 *
 	 * @return the single default SelectionSignaller for this VM.
 	 */
 	public static SelectionSignaller getDefaultSelectionSignaller() {

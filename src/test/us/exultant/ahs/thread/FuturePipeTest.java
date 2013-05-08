@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@ import java.util.*;
  * <p>
  * Tests {@link FuturePipe}.
  * </p>
- * 
+ *
  * <p>
  * {@code DEPENDS: }
  * <ul>
@@ -36,13 +36,13 @@ import java.util.*;
  * {@link WorkManager#getDefaultScheduler()}, so things <b>really</b> need to be stable.
  * </ul>
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class FuturePipeTest extends TestCase {
 	public static void main(String... $args) { new FuturePipeTest().run(); }
-	
+
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
@@ -50,15 +50,15 @@ public class FuturePipeTest extends TestCase {
 		$tests.add(new TestOrdering());
 		return $tests;
 	}
-	
-	
-	
+
+
+
 	public static final WorkTargetAdapterTriggerable<Void> makeNoopWork(boolean $alreadyReady) {
 		return new WorkTargetWrapperRunnable(new Runnable() { public void run() {} }, $alreadyReady, true);
 	}
-	
-	
-	
+
+
+
 	/**
 	 * One WorkFuture is added a FuturePipe, and the Pipe closed. The work is then
 	 * made ready, and after running becomes finished.
@@ -68,7 +68,7 @@ public class FuturePipeTest extends TestCase {
 		public void call() throws InterruptedException {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
 			$ws.start();
-			
+
 			WorkTargetAdapterTriggerable<Void> $wt = makeNoopWork(false);
 			WorkFuture<Void> $wf = $ws.schedule($wt, ScheduleParams.NOW);
 			$wfp.sink().write($wf);
@@ -77,10 +77,10 @@ public class FuturePipeTest extends TestCase {
 			assertTrue("FuturePipe became closed for writing when asked", $wfp.sink().isClosed());
 			assertFalse("FuturePipe is still open for reading", $wfp.source().isClosed());
 			breakUnitIfFailed();
-			
+
 			$wt.trigger();
 			$wf.update();
-			
+
 			$wfp.source().setListener(new Listener<ReadHead<WorkFuture<Void>>>() {
 				/*
 				 * This will actually be called up to FOUR times.
@@ -97,7 +97,7 @@ public class FuturePipeTest extends TestCase {
 					);
 				}
 			});
-			
+
 			$wfp.source().read();
 			assertTrue("WorkFuture read from FuturePipe was done", $wf.isDone());
 			breakUnitIfFailed();
@@ -107,9 +107,9 @@ public class FuturePipeTest extends TestCase {
 			$ws.stop(false);
 		}
 	}
-	
-	
-	
+
+
+
 	/**
 	 * Several WorkFuture are added to a FuturePipe (some of which go off quite
 	 * immediately, some of which go off with delays), and the Pipe closed at some
@@ -122,12 +122,12 @@ public class FuturePipeTest extends TestCase {
 		static final int D1 = N - D0;
 		public void call() throws InterruptedException {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
-			
+
 			@SuppressWarnings("unchecked")
 			WorkTarget<Void>[] $wts = Arr.newInstance(WorkTarget.class, N);
 			@SuppressWarnings("unchecked")
 			WorkFuture<Void>[] $wfs = Arr.newInstance(WorkFuture.class, N);
-			
+
 			for (int $i = 0; $i < N; $i++)
 				$wts[$i] = makeNoopWork(true);
 			for (int $i = 0; $i < D0; $i++)
@@ -140,12 +140,12 @@ public class FuturePipeTest extends TestCase {
 			assertFalse("FuturePipe is still open for writing", $wfp.sink().isClosed());
 			assertFalse("FuturePipe is still open for reading", $wfp.source().isClosed());
 			breakUnitIfFailed();
-			
+
 			$ws.start();
 			$wfp.sink().close();
 			assertTrue("FuturePipe became closed for writing when asked", $wfp.sink().isClosed());
 			breakUnitIfFailed();
-			
+
 			for (int $i = 0; $i < N; $i++) {
 				WorkFuture<Void> $wf = $wfp.source().read();
 				assertTrue("WorkFuture read from FuturePipe was done", $wf.isDone());
@@ -156,14 +156,14 @@ public class FuturePipeTest extends TestCase {
 			$ws.stop(false);
 		}
 	}
-	
-	
-	
+
+
+
 	/**
 	 * Several WorkFuture are added to a FuturePipe, then triggered in an order other
 	 * than the order in which they were written to the pipe. They must come out of
 	 * the FuturePipe in the order which they were completed.
-	 * 
+	 *
 	 * The scheduler used is constructed with only one thread; this reduces the amount
 	 * of guesswork in near-simultaneous finishes that chaotic thread scheduling by
 	 * the OS can otherwise cause (since the indirection of the completion listener in
@@ -174,7 +174,7 @@ public class FuturePipeTest extends TestCase {
 		private WorkScheduler $ws = new WorkSchedulerFlexiblePriority(1);
 		public void call() {
 			Flow<WorkFuture<Void>> $wfp = new FuturePipe<Void>();
-			
+
 			WorkTargetAdapterTriggerable<Void> $wt1 = makeNoopWork(false);
 			WorkTargetAdapterTriggerable<Void> $wt2 = makeNoopWork(false);
 			WorkTargetAdapterTriggerable<Void> $wt3 = makeNoopWork(false);
@@ -185,7 +185,7 @@ public class FuturePipeTest extends TestCase {
 			$wfp.sink().write($wf3);
 			$wfp.sink().write($wf1);
 			$wfp.sink().close();
-			
+
 			$ws.start();
 			$wt1.trigger(); $wf1.update();
 			X.chill(2);	// even with a single-thread scheduler, we still need these delays to overcome the fact that the scheduler batches updates.
@@ -193,7 +193,7 @@ public class FuturePipeTest extends TestCase {
 			X.chill(2);
 			$wt3.trigger(); $wf3.update();
 			$ws.stop(false);
-			
+
 			assertEquals("1st done, 1st out", $wf1, $wfp.source().read());
 			assertEquals("2nd done, 2nd out", $wf2, $wfp.source().read());
 			assertEquals("3rd done, 3rd out", $wf3, $wfp.source().read());

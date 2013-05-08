@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,16 +26,16 @@ import java.util.*;
  * Handy convenience methods for doing dead-simple stuff with threads. In this case, mind,
  * convenience does not mix with efficiency or good design &mdash; these methods are
  * intended only for rapid prototyping or testing purposes.
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public abstract class ThreadUtil {
 	/**
 	 * Attempts to instantiate a number of a runnable type (via a public nullary
 	 * constructor found by reflection), then wraps these in threads, starts all the
 	 * threads concurrently, then waits for the threads to complete before returning.
-	 * 
+	 *
 	 * @param $type
 	 * @param $count
 	 * @throws MajorBug
@@ -53,13 +53,13 @@ public abstract class ThreadUtil {
 		}
 		doAll($tasks);
 	}
-	
+
 	/**
 	 * Attempts to instantiate a number of several runnable types (via the public
 	 * nullary constructors found by reflection), then wraps these in threads, starts
 	 * all the threads concurrently, then waits for the threads to complete before
 	 * returning.
-	 * 
+	 *
 	 * @param $types
 	 * @param $count
 	 *                how many of each type to instantiate (so the total number of
@@ -81,11 +81,11 @@ public abstract class ThreadUtil {
 		}
 		doAll($tasks);
 	}
-	
+
 	/**
 	 * Starts all the threads concurrently and then waits for them to complete before
 	 * returning.
-	 * 
+	 *
 	 * @param $threads
 	 * @return the time taken in ms
 	 */
@@ -95,21 +95,21 @@ public abstract class ThreadUtil {
 		joinAll($threads);
 		return (X.time() - $start);
 	}
-	
+
 	/**
 	 * Starts all of the Runnable tasks concurrently each in their own new thread and
 	 * then waits for them to complete before returning.
-	 * 
+	 *
 	 * @param $tasks
 	 * @return the time taken in ms
 	 */
 	public static long doAll(Runnable... $tasks) {
 		return doAll(wrapAll($tasks));
 	}
-	
+
 	/**
 	 * Produces a thread wrapped around each of the given Runnable.
-	 * 
+	 *
 	 * @param $tasks
 	 * @return an array of new (unstarted) Thread of the same magnitude as the given
 	 *         Runnable array.
@@ -120,10 +120,10 @@ public abstract class ThreadUtil {
 			$threads[$i] = new Thread($tasks[$i]);
 		return $threads;
 	}
-	
+
 	/**
 	 * Produces a number of threads, each wrapped the given Runnable.
-	 * 
+	 *
 	 * @param $task
 	 * @param $number
 	 *                how many threads to produce
@@ -138,20 +138,20 @@ public abstract class ThreadUtil {
 		}
 		return $threads;
 	}
-	
+
 	/**
 	 * Starts all the given threads concurrently.
-	 * 
+	 *
 	 * @param $threads
 	 */
 	public static void startAll(Thread... $threads) {
 		for (int $i = 0; $i < $threads.length; $i++)
 			$threads[$i].start();
 	}
-	
+
 	/**
 	 * Waits for all the given threads to complete before returning.
-	 * 
+	 *
 	 * @param $threads
 	 */
 	public static void joinAll(Thread... $threads) {

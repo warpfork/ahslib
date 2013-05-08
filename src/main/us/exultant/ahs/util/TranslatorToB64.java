@@ -5,8 +5,8 @@ import java.nio.*;
 
 /** Like it says on the tin. */
 public class TranslatorToB64 implements Translator<ByteBuffer,String> {
-	public static final TranslatorToB64 INSTANCE = new TranslatorToB64(); 
-	
+	public static final TranslatorToB64 INSTANCE = new TranslatorToB64();
+
 	/**
 	 * @param $bytes
 	 *                a ByteBuffer to read between position and limit

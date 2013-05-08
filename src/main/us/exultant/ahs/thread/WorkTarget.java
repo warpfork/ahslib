@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -29,20 +29,20 @@ import java.util.concurrent.*;
  * {@link Callable}, but combines the concept of runnability with properties essential for
  * intelligent scheduling of work.
  * </p>
- * 
+ *
  * <p>
  * Implementations of the WorkTarget interface which define their readiness for scheduling
  * based on availability of messages from a {@link ReadHead} form the essence of the Actor
  * model of concurrent programming. {@link WorkTargetAdapterFlowing} is a template for
  * this pattern.
  * </p>
- * 
+ *
  * <p>
  * One WorkTarget instance must be created for every thread that you wish to be able to
  * perform that type of task concurrently, and it never makes sense to submit the same
  * WorkTarget into more than one WorkScheduler.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @param <$V>
  *                The type returned by {@link #call()}. (This can often be {@link Void} in
@@ -56,7 +56,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * Defines whether or not this WorkTarget currently has enough data available to
 	 * complete some atom of work immediately if powered.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * The return value of this method is used by {@link WorkScheduler} to determine
 	 * whether or not it is presently appropriate to consider scheduling this
@@ -73,7 +73,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * scheduling a WorkTarget, since the WorkFuture returned from the scheduling
 	 * process is necessary.)
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * The answer to this question is based on a best-effort system and may not be
 	 * exactly true under all circumstances due to the concurrent nature of the
@@ -82,25 +82,25 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * powered because some other WorkTarget has drained from the same Pipe that
 	 * provides the flow of work input data to both WorkTarget.
 	 * </p>
-	 * 
+	 *
 	 * @return true if this WorkTarget has at least one atom of work available; false
 	 *         otherwise.
 	 */
 	public boolean isReady();
-	
+
 	/**
 	 * <p>
 	 * Causes the current thread to be consumed in the running of the
 	 * <code>WorkTarget</code>, similarly to the {@link Runnable#run()} method.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This method can be called at any time, and any number of times, and need not be
 	 * reentrant &mdash it is the responsibility of the caller to make sure that calls
 	 * to this method are properly synchronized. (If a WorkTarget is scheduled with a
 	 * {@link WorkScheduler}, this is handled automatically.)
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Each invocation of this method may return a value or throw an exception after
 	 * performing its work, and this result may be different with every invocation.
@@ -109,7 +109,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * a {@link WriteHead} to gather output into a {@link DataPipe} and leave the
 	 * generic return type {@link Void}.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Calling this method after {@link #isDone()} returns true is allowed to have
 	 * undefined results (i.e., may return any value, or null, or throw an exception),
@@ -118,7 +118,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * {@link WorkScheduler#schedule(WorkTarget, ScheduleParams)} can be used to
 	 * consistently access the final result of the work.)
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * It is typically expected that this method will be called by a thread from a
 	 * pool kept within a {@link WorkScheduler}. As such, all actions taken by this
@@ -132,7 +132,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * {@link WorkScheduler} assigns threads based on the assumption that this sort of
 	 * idiocy will not be performed.)
 	 * </p>
-	 * 
+	 *
 	 * <h3>Additional return constraints when using a {@link WorkScheduler}</h3>
 	 * <p>
 	 * WorkScheduler implementations and the WorkFuture they link to a WorkTarget make
@@ -157,19 +157,19 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * </p>
 	 */
 	public $V call() throws Exception;
-	
+
 	/**
 	 * <p>
 	 * Signals whether or not the WorkTarget may wish to be run again at some time in
 	 * the future, or if it considers itself done and not in need of further
 	 * scheduling.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Once this method returns true, it should never again return false. (In other
 	 * words, the property of doneness must be idempotent.)
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Note that due to the inherently concurrent nature of this method and scheduling
 	 * in general, a WorkTarget is not generally allowed to assume that its
@@ -178,20 +178,20 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * the change to doneness happened during a run of the task, most implementations
 	 * will certainly succeed), but this should not be relied upon.
 	 * </p>
-	 * 
+	 *
 	 * @return false if the WorkScheduler should continue to call continute to manage
 	 *         this task instance; true if the scheduler should drop the task and
 	 *         never again invoke the {@link #call()} method.
 	 */
 	public boolean isDone();
-	
+
 	/**
 	 * <p>
 	 * Estimates the priority with which this WorkTarget should be scheduled relative
 	 * to other WorkTarget at the same WorkScheduler; a higher priority indicates that
 	 * this WorkTarget should be scheduled preferentially.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * WorkScheduler may use this priority to the best of its ability in scheduling
 	 * work for powering by the scheduler's threads, but the priority at any point in
@@ -200,7 +200,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * implementation may balance concerns other than priority (such as tasks
 	 * scheduled based on wall-clock time).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This priority may change over time (this could be useful for example in a
 	 * program which has several work buffers and always wishes to service the fullest
@@ -209,7 +209,7 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * time they are told to update their relationship with this WorkTarget via an
 	 * invocation of the {@link WorkScheduler#update(WorkFuture)} method.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Another example of effective use of the priority system is a server application
 	 * which is composed of three types of task: nonblocking reads, some application
@@ -223,24 +223,24 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * all with no special effort from the application designer except for setting
 	 * those three priorities.
 	 * </p>
-	 * 
+	 *
 	 * @return an integer representing the priority with which this WorkTarget should
 	 *         currently be considered if it has work ready.
 	 */
 	public int getPriority();
-	
-	
-	
+
+
+
 	/**
 	 * <p>
 	 * Compares two WorkTarget based on their priority alone. This is useful for
 	 * priority queues.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Note: this comparator imposes orderings that are inconsistent with equals.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Implementation note: this comparator is implemented as simple integer math
 	 * without overflow checking, so if it is applied to datasets which contain
@@ -248,9 +248,9 @@ public interface WorkTarget<$V> extends Callable<$V> {
 	 * {@link Integer#MAX_VALUE} results are unpleasant. Basically, keep your priority
 	 * values between a billion and negative one billion and you'll be fine.
 	 * </p>
-	 * 
+	 *
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
-	 * 
+	 *
 	 */
 	public static class PriorityComparator implements Comparator<WorkTarget<?>> {
 		public int compare(WorkTarget<?> $o1, WorkTarget<?> $o2) {

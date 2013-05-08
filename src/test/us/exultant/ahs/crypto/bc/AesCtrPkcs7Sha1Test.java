@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ import java.util.*;
 
 public class AesCtrPkcs7Sha1Test extends TestCase {
 	public static void main(String... $args) { new AesCtrPkcs7Sha1Test().run(); }
-	
+
 	public List<Unit> getUnits() {
 		return Arr.asList(
 				new TestAnything(),
@@ -38,7 +38,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 				new TestKeyReuse()
 		);
 	}
-	
+
 	private static final byte[]	$c1	= Strings.toBytes("oh god I'm covered in bees");
 	private static final Ks		$ks1	= new Ks.Basic(new byte[] { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F });
 	private static final Ks		$ks2	= new Ks.Basic(new byte[] { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F });
@@ -55,8 +55,8 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 			$t.putInt($r.nextInt());
 		$c10m = $t.array();
 	}
-	
-	private class TestAnything extends TestCase.Unit { 
+
+	private class TestAnything extends TestCase.Unit {
 		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
@@ -67,13 +67,13 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 			);
 		}
 	}
-	
+
 	private class TestInvalidIv extends TestCase.Unit {
 		@SuppressWarnings("unchecked")
 		public Class<ArrayIndexOutOfBoundsException> expectExceptionType(){
 			return ArrayIndexOutOfBoundsException.class;
 		}
-		
+
 		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
@@ -84,13 +84,13 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 			);
 		}
 	}
-	
+
 	private class TestInvalidKey extends TestCase.Unit {
 		@SuppressWarnings("unchecked")
 		public Class<IllegalArgumentException> expectExceptionType(){
 			return IllegalArgumentException.class;
 		}
-		
+
 		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
 			CiphertextSymmetric $cph = $sys.encrypt(
@@ -101,7 +101,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 			);
 		}
 	}
-	
+
 	private class TestInvalidMacKey extends TestCase.Unit {
 		public void call() {
 			AesCtrPkcs7Sha1.Encryptor $sys = new AesCtrPkcs7Sha1.Encryptor();
@@ -113,7 +113,7 @@ public class AesCtrPkcs7Sha1Test extends TestCase {
 			);
 			// It's pretty hard to come up with something that actually qualifies as an invalid MAC key.
 			// Having a MAC key longer than needed results in hashing and then trimming of the hash; having a MAC key shorter than needed results in padding with zeros.
-			// For SHA1, the appropriate HMAC key length is 64 bytes. 
+			// For SHA1, the appropriate HMAC key length is 64 bytes.
 		}
 	}
 

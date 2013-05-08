@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ import java.util.concurrent.*;
  * <p>
  * Creates a WorkTarget that will become ready after a set of other {@link WorkFuture}s complete.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 //XXX:AHS:THREAD: this is suboptimal.  We'd really like to be able to apply followup conditions along with any of the other adapters already available; especially like flowing but also the other the triggerables like callable and runnable.
@@ -35,7 +35,7 @@ public abstract class WorkTargetAdapterFollowup<$V> extends WorkTargetAdapterTri
 	public WorkTargetAdapterFollowup(WorkFuture<?> $eventToFollow, int $priority) {
 		this(Collections.<WorkFuture<?>>singleton($eventToFollow), $priority);
 	}
-	
+
 	public WorkTargetAdapterFollowup(Collection<WorkFuture<?>> $eventsToFollow, int $priority) {
 		super(false, true, $priority);
 		final CountDownLatch $latch = new CountDownLatch( $eventsToFollow.size() );

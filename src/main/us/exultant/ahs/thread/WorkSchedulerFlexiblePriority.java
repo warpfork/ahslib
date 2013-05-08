@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			}
 		}, $threadCount);
 	}
-		
+
 	public WorkScheduler start() {
 		$lock.lock();
 		try {
@@ -51,12 +51,12 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		} finally {
 			$lock.unlock();
 		}
-		
+
 		ThreadUtil.startAll($threads);
-		
+
 		return this;
 	}
-	
+
 	public void stop(boolean $aggressively) {
 		$lock.lock();
 		// try to transition
@@ -80,7 +80,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		} finally {
 			$lock.unlock();
 		}
-		
+
 		//TODO:AHS:THREAD: this is a total hackjob for the moment being.  We need to do some snazzy stuff with Futures here.
 		ThreadUtil.joinAll($threads);
 		$lock.lock();
@@ -89,11 +89,11 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		} finally {
 			$lock.unlock();
 		}
-		
+
 		//TODO:AHS:THREAD: and you should also be making sure all tasks still somewhere in the scheduler become cancelled.  especially because external cancels after we close this pipe will be quite unpleasant.
 		$completed.sink().close();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public <$V> WorkFuture<$V> schedule(WorkTarget<$V> $work, ScheduleParams $when) {
 		WorkFutureImpl<$V> $wf = new WorkFutureImpl<$V>(this, $work, $when);
@@ -109,7 +109,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				} else {
 					$delayed.add($wf);
 				}
-				
+
 				if ($work.isDone()) {
 					// this check MUST be done AFTER adding the task to a heap, or otherwise it becomes more than slightly dodgy, for all the usual reasons: you could have failed to shift because you just weren't ready, then the done check happens, then you concurrently "finish" from someone else draining your pipe before this scheduler knows to take update requests about you seriously.
 					$wf.$sync.tryFinish(false, null, null);		//FIXME:AHS:THREAD: i don't want to be calling completion listeners from inside the scheduler lock!
@@ -121,7 +121,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			$lock.unlock();
 		}
 	}
-	
+
 	public <$V> void update(WorkFuture<$V> $fut) {
 		/* note that this entire method could be replaced by "update(Arr.asList(new WorkFuture<?>[] {$fut}));".
 		 * we're going out of our way to avoid creating those garbage objects. */
@@ -140,19 +140,19 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		// check if it's even remotely possible that it's one of ours, and cast it into something that exposes us the guts we need to pinch
 		if (!($fut instanceof WorkFutureImpl)) return false;
 		WorkFutureImpl<?> $fui = (WorkFutureImpl<?>)$fut;
-		
+
 		/* // if it already knows itself as complete, we need pay no attention
 		* if ($fui.isDone()) return false;
 		* This would be a nice idea, but unfortunately it's invalid because we sometimes have to use the update method for the express purpose of making sure completed tasks get kicked out of the unready pile. */
-		
+
 		// check doneness of the work; try to transition immediately to FINISHED if is done.
 		if ($fui.$work.isDone()) {
 			$fui.$sync.tryFinish(false, null, null);
 			/* This is allowed to fail completely if the work is currently running.
-			 * Regardless of whether or not we were the ones to cause a finish, since we're currently outside of the scheduler lock, 
+			 * Regardless of whether or not we were the ones to cause a finish, since we're currently outside of the scheduler lock,
 			 *  we must call update to make sure tasks don't get stuck in waiting pile. */
 		}
-		
+
 		// just push this into the set of requested updates.
 		return $updatereq.add($fui);
 	}
@@ -165,33 +165,33 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			$lock.unlock();
 		}
 	}
-	
+
 	public ReadHead<WorkFuture<Object>> completed() {
 		return $completed.source();
 	}
-	
-	
-	
+
+
+
 	private final Thread[]			$threads;
 	private volatile RequestedStatus	$requestedStat	= RequestedStatus.NOT_STARTED;
-	
+
 	private final PriorityHeap		$delayed	= new PriorityHeap(WorkFutureImpl.DelayComparator.INSTANCE);
 	private final PriorityHeap		$scheduled	= new PriorityHeap(WorkFutureImpl.PriorityComparator.INSTANCE);
 	private final Set<WorkFutureImpl<?>>	$unready	= new HashSet<WorkFutureImpl<?>>();
 	private final Set<WorkFutureImpl<?>>	$updatereq	= Collections.newSetFromMap(new ConcurrentHashMap<WorkFutureImpl<?>,Boolean>());	// as long as we run updates strictly after removing something from this, our synchronization demands are quite low.
-	private final Map<Thread,Object> 	$running	= new ConcurrentHashMap<Thread,Object>();	// this is purely for bookkeeping/debugging/statusreporting and serves absolutely zero functional purpose out of that. 
+	private final Map<Thread,Object> 	$running	= new ConcurrentHashMap<Thread,Object>();	// this is purely for bookkeeping/debugging/statusreporting and serves absolutely zero functional purpose out of that.
 	private final FuturePipe<Object>	$completed	= new FuturePipe<Object>();
-	
+
 	private final ReentrantLock		$lock		= new ReentrantLock();
 	private Thread				$leader		= null;
 	private final Condition			$available	= $lock.newCondition();
-	
+
 //	private static final Logger		$log		= new Logger(Logger.LEVEL_TRACE);
-	
+
 	private static enum RequestedStatus { NOT_STARTED, RUNNING, STOPPING, STOPPING_HARD, STOPPED }
-	
-	
-	
+
+
+
 	private void worker_cycle() {
 		WorkFutureImpl<?> $chosen = null;
 		doWork: for (;;) {
@@ -235,13 +235,13 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			} finally {
 				$lock.unlock();
 			}
-			
+
 			// run the work we pulled out.
 			boolean $mayRunAgain = $chosen.$sync.scheduler_power();
-			
+
 			// clear the interrupt status of the current thread.  assuming that the interrupt was intended for the work we were in the middle of moments ago, it is no longer valid now that we've exited that work's execution, and it would in inappropriate for it to disrupt the next work or our scheduling.
 			Thread.currentThread().interrupted();
-			
+
 			// requeue the work for future attention if necessary
 			if ($mayRunAgain) {
 				$lock.lock();
@@ -275,11 +275,11 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		}
 		$running.put(Thread.currentThread(), "shutting down");
 	}
-	
+
 	/**
 	 * Try to get WorkFuture from the $scheduled heap, and don't give up. Also always
 	 * try to pull clocked work from delayed to scheduled every time around.
-	 * 
+	 *
 	 * WorkFuture returned from this method may be either SCHEDULED, CANCELLED, or
 	 * FINISHED (they may not be WAITING or RUNNING since those mutations are only
 	 * carried out under this scheduler's lock). The WorkTarget of the returned
@@ -287,7 +287,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 	 * and {@link WorkTarget#isReady()}, regardless of the WorkFuture's state; the
 	 * caller of this function should be aware of that, and either finish and drop the
 	 * task or immediately return it to waiting as necessary.
-	 * 
+	 *
 	 * The lock must be acquired during this entire function, in order to make
 	 * possible the correctly atomic shifts to RUNNING or WAITING that may be carried
 	 * out immediately following this function.
@@ -297,18 +297,18 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		try { for (;;) {
 			// offer to shift any tasks that have had updates requested
 			worker_pollUpdates();
-			
+
 			// shift any clock-based tasks that need no further delay into the scheduled heap.  note the time until the next of those clocked tasks will be delay-free.
 			long $delay = worker_pollDelayed();
-			
+
 			// get work now, if we have any.
 			WorkFutureImpl<?> $first = $scheduled.peek();
 			if ($first != null) return $scheduled.poll();
-			
+
 			// if we couldn't get any work immediately and stopping is requested, we'll concede.
 			if ($requestedStat == RequestedStatus.STOPPING) /* checking for STOPPING_HARD isn't necessary because we wouldn't get here if it was */
 				return null;
-			
+
 			// if we don't have any ready work, wait for signal of new work submission or until what we were told would be the next delay expiry; then we just retry.
 			$running.put(Thread.currentThread(), "waiting for availability of new work events");
 			if ($leader != null) {
@@ -331,7 +331,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			if ($leader == null && $scheduled.peek() != null) $available.signal();
 		}
 	}
-	
+
 	/**
 	 * Drains the {@link #$updatereq} set and tries to shift those work targets from
 	 * the {@link #$unready} heap and into the {@link #$scheduled} heap. This must be
@@ -370,16 +370,16 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			}
 		}
 	}
-	
+
 	/**
 	 * Pulls clocked work that requires no further delay off of the delayed heap,
 	 * pushes it into the scheduled heap, and sifts the shifted tasks as necessary by
 	 * priority.
-	 * 
+	 *
 	 * Hold the friggin' lock when calling, of course. Since we cause WorkFuture
 	 * instances to change their state in here, we must enforce that this aligns with
 	 * changing the heap they're in so the rest of the scheduler doesn't go insane.
-	 * 
+	 *
 	 * @return the delay (in nanosec) until the next known clocked task will be ready
 	 *         (or Long.MAX_VALUE if there are no more clocked tasks present).
 	 */
@@ -394,18 +394,18 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			$scheduled.add($key);
 		}
 	}
-	
+
 	protected void hearTaskDrop(WorkFuture<?> $wf) {
 //		X.sayet("task dropped!  " + $wf + "\n\t" + X.toString(new Exception()));
 	}
-	
+
 	public String describe() {
 		$lock.lock();
 		String $moar = null;
 		int $runningCount = 0;
 		try {
 			StringBuilder $sb = new StringBuilder();
-			
+
 			$sb.append("\n\t\tRUNNING:");
 			if ($running.size() > 0)
 				for (Map.Entry<Thread,Object> $thing : $running.entrySet()) {
@@ -414,40 +414,40 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 				}
 			else
 				$sb.append("\n\t\t\t--- none ---");
-			
+
 			$sb.append("\n\t\tSCHEDULED:");
 			if ($scheduled.$size > 0)
 				for (int $i = 0; $i < $scheduled.$size; $i++)
 					$sb.append("\n\t\t\t"+$scheduled.$queue[$i]);
 			else
 				$sb.append("\n\t\t\t--- none ---");
-			
+
 			$sb.append("\n\t\tUNREADY:");
 			if ($unready.size() > 0)
 				for (WorkFuture<?> $thing : $unready)
 					$sb.append("\n\t\t\t"+$thing);
 			else
 				$sb.append("\n\t\t\t--- none ---");
-			
+
 			$sb.append("\n\t\tDELAYED:");
 			if ($delayed.$size > 0)
 				for (int $i = 0; $i < $delayed.$size; $i++)
 					$sb.append("\n\t\t\t"+$delayed.$queue[$i]);
 			else
 				$sb.append("\n\t\t\t--- none ---");
-			
+
 			$sb.append("\n\t\tUPDATEREQ:");
 			if ($updatereq.size() > 0)
 				for (WorkFuture<?> $thing : $updatereq)
 					$sb.append("\n\t\t\t"+$thing);
 			else
 				$sb.append("\n\t\t\t--- none ---");
-			
+
 			$moar = $sb.toString();
 		} finally {
 			$lock.unlock();
 		}
-		return 
+		return
 		"running: "   + Strings.padLeftToWidth($runningCount+"", 5)     + "    " +
 		"scheduled: " + Strings.padLeftToWidth($scheduled.$size+"", 5)  + "    " +
 		"unready: "   + Strings.padLeftToWidth($unready.size()+"", 5)   + "    " +
@@ -455,14 +455,14 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		"updatereq: " + Strings.padLeftToWidth($updatereq.size()+"", 5) +
 		$moar;
 	}
-	
-	
+
+
 
 	/**
 	 * This is a max-heap; nothing too special. We do also store the index of an entry
 	 * in the entry itself, though; this enables us to remove entries or resort that
 	 * entry quickly.
-	 * 
+	 *
 	 * When we use it for actual task priorities, the highest priority is of course on
 	 * top; when we use it for delays, we use a comparator that sees the nearest times
 	 * as the highest.
@@ -471,16 +471,16 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 		public PriorityHeap(Comparator<WorkFutureImpl<?>> $comparator) {
 			this.$comparator = $comparator;
 		}
-		
+
 		private static final int		INITIAL_CAPACITY	= 64;
 		private WorkFutureImpl<?>[]		$queue			= new WorkFutureImpl<?>[INITIAL_CAPACITY];
 		private int				$size			= 0;
 		private final Comparator<WorkFutureImpl<?>>	$comparator;
-		
+
 		public WorkFutureImpl<?> peek() {
 			return $queue[0];
 		}
-		
+
 		/** Returns the first element, replacing the first element with the last and sifting it down. Call only when holding lock. */
 		private WorkFutureImpl<?> poll() {
 			assert $lock.isHeldByCurrentThread();
@@ -517,7 +517,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			}
 			return true;
 		}
-		
+
 		/** Sift element added at bottom up to its heap-ordered spot. Call only when holding lock. */
 		private void siftUp(int $k, WorkFutureImpl<?> $x) {
 			assert $lock.isHeldByCurrentThread();
@@ -532,7 +532,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			$queue[$k] = $x;
 			$x.$heapIndex = $k;
 		}
-		
+
 		/** Sift element added at top down to its heap-ordered spot. Call only when holding lock. */
 		private void siftDown(int $k, WorkFutureImpl<?> $x) {
 			assert $lock.isHeldByCurrentThread();
@@ -550,7 +550,7 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			$queue[$k] = $x;
 			$x.$heapIndex = $k;
 		}
-		
+
 		/** Resize the heap array. Call only when holding lock. */
 		private void grow() {
 			assert $lock.isHeldByCurrentThread();
@@ -561,21 +561,21 @@ public class WorkSchedulerFlexiblePriority implements WorkScheduler {
 			$queue = Arrays.copyOf($queue, $newCapacity);
 		}
 	}
-	
-	
-	
+
+
+
 	/**
 	 * <p>
 	 * When run, dumps the entire set of tasks known to this WorkScheduler as
 	 * "waiting"/"unready" into a queue that requests rechecking and updating of their
 	 * status.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Note: this function must acquire a global lock on the entire Scheduler in order
 	 * to perform its function, so calling it wantonly is not advised.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This does not request updating or re-sorting of tasks already in the scheduled
 	 * heap.

@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,12 +26,12 @@ package us.exultant.ahs.core;
  * href="https://secure.wikimedia.org/wikipedia/en/wiki/Factory_%28software_concept%29"
  * >wikipedia article</a> provides a decent introduction.
  * </p>
- * 
+ *
  * <p>
  * A Factory may have methods for customization (in addition to being inherently
  * customizable by nature of being interfaces).
  * </p>
- * 
+ *
  * <p>
  * A Factory instance's {@link #make()} method may be invoked any number of times.
  * Typically, this is expected to return a new object for every invocation, but
@@ -41,16 +41,16 @@ package us.exultant.ahs.core;
  * express this.) In general, if a new object is not produced by every invocation of the
  * factory, this should be loudly documented.
  * </p>
- * 
+ *
  * <p>
  * A Factory instance's {@link #make()} method often turns out to be idempotent, but the
  * interface does not guarantee this (Factories that deal with object pooling for example
  * will typically not have this property). If your Factory implementation is idempotent or
  * otherwise thread-safe, do your fellow programmers a favor and document it as such.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$T>
  */
 public interface Factory<$T> {

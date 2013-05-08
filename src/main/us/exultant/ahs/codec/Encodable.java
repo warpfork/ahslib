@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,7 @@ import java.lang.annotation.*;
  * constructor <code>private ClassName(Encodable $x)</code> (which generally has an empty
  * body).
  * </p>
- * 
+ *
  * <p>
  * Unfortunately, it's generally impossible to declare final fields which are subject to
  * this kind of shortcut in encoding -- if such final fields are a need, then a custom
@@ -49,7 +49,7 @@ public @interface Encodable {
 	 * flag completely (though {@link us.exultant.ahs.codec.eon.EonRAE} and
 	 * {@link us.exultant.ahs.codec.eon.EonRAD} respect it).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Two special values exist, declared in {@link #DEFAULT} and {@link #NONE}.
 	 * <tt>DEFAULT</tt> instructs the use of the cannonical class name of the
@@ -62,7 +62,7 @@ public @interface Encodable {
 	String[] styles() default { DEFAULT };
 	public static final String DEFAULT = "$";
 	public static final String NONE = "!";
-	
+
 	/**
 	 * <p>
 	 * Setting this flag to true causes encoders to assume that every non-static field

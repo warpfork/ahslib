@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ import java.util.*;
  */
 public class SanityTest extends TestCase {
 	public static void main(String... $args) { new SanityTest().run(); }
-	
+
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestForLoopBreak());
@@ -42,17 +42,17 @@ public class SanityTest extends TestCase {
 		$tests.add(new TestArgsOverriding());
 		return $tests;
 	}
-	
-	
-	
+
+
+
 	private class TestBasic extends TestCase.Unit {
 		public void call() {
-			
+
 		}
 	}
-	
-	
-	
+
+
+
 	//CONCLUSION: breaking a loop means the incrementor is not excuted that last time.
 	//CONCLUSION: the incrementor is only executed when the end of the loop body is reached.
 	//OUTPUT: after loop: 4\nafter loop: 6\n
@@ -63,14 +63,14 @@ public class SanityTest extends TestCase {
 				if ($i == 4) break;
 			}
 			X.say("after loop: "+$i);
-			
+
 			for ($i = 0; $i < 6; $i++) {}
 			X.say("after loop: "+$i);
 		}
 	}
-	
-	
-	
+
+
+
 	//CONCLUSION: primitive arrays outside a function can show mutations made inside a function they were passed to.
 	private class TestPrimitiveArrayMutability extends TestCase.Unit {
 		public void call() {
@@ -83,15 +83,15 @@ public class SanityTest extends TestCase {
 			$in[1] = "zxcv";
 		}
 	}
-	
-	
-	
+
+
+
 	//CONCLUSION: so basically... yes, if you pass an array into a varargs method, that external array is STILL mutable from inside the method.
 	private class TestVarArgsMutability extends TestCase.Unit {
 		public void call() {
 			assertTrue(Arr.equals(new String[] { "asdf", "qwer" }, helper_doNothing("asdf", "qwer")));
 			assertTrue(Arr.equals(new String[] { "asdf", "zxcv" }, helper_mutate("asdf", "qwer")));
-			
+
 			String[] $x = new String[] { "asdf", "qwer" };
 			assertTrue(Arr.equals(new String[] { "asdf", "zxcv" }, helper_mutate($x)));
 			assertTrue(Arr.equals(new String[] { "asdf", "zxcv" }, $x));
@@ -104,9 +104,9 @@ public class SanityTest extends TestCase {
 			return $ins;
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestGenericUpsubAntefiling extends TestCase.Unit {
 		public void call() {
 			  Sup<Blah> $a = new Sup<Blah>();	// no cast:	WIN
@@ -115,16 +115,16 @@ public class SanityTest extends TestCase {
 			  Sup<Blag> $c = new Sub<Blag>();	// up cast out:	WIN
 			//Sup<Blah> $e = new Sup<Blag>();	// up cast in:	FAIL	"type mismatch: cannot convert ..."
 			//Sub<Blah> $e = new Sub<Blag>();	// up cast in:	FAIL	"type mismatch: cannot convert ..."
-			  // and no, putting a cast explicitly in parens doesn't help either.		
+			  // and no, putting a cast explicitly in parens doesn't help either.
 		}
 	}
 	private static class Blah {}
 	private static class Blag extends Blah {}
 	private static class Sup<$WHAT extends Blah> {}
 	private static class Sub<$WHAT extends Blah> extends Sup<$WHAT> {}
-	
-	
-	
+
+
+
 	private class VomitCharsetsAvailable extends TestCase.Unit {
 		public void call() {
 			X.say("==charsets available==");
@@ -133,9 +133,9 @@ public class SanityTest extends TestCase {
 			X.say("==end charsets==");
 		}
 	}
-	
-	
-	
+
+
+
 	//CONCLUSION: within a single function, if arguments have to be evaluated recursively, it goes left to right
 	private class TestEvalOrderInNestedCalls extends TestCase.Unit {
 		public void call() {
@@ -147,9 +147,9 @@ public class SanityTest extends TestCase {
 			assertEquals(1, $b);
 		}
 	}
-	
-	
-	
+
+
+
 	//CONCLUSION: yes, you CAN select which method to use by limiting the type information of its arguments.
 	//   ...you can do a LOT of magic with interfaces here if you're into that sort of thing.
 	private class TestArgsOverriding extends TestCase.Unit {

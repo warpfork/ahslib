@@ -14,18 +14,18 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 		this.$framer = $framer;
 		this.$selector = $selector;
 	}
-	
+
 	void install(WorkFuture<$MSG> $selfFuture) {
 		$selector.registerRead($channel, new Updater($selfFuture));
 	}
-	
+
 	public static final Loggar logger = new Loggar(LoggerFactory.getLogger(InputSystem_WorkerChannelSelectable.class));
-	
+
 	private final WriteHead<$MSG>			$sink;
 	private final Chan				$channel;
 	private final ChannelReader<$MSG>		$framer;
 	private final SelectionSignaller		$selector;
-	
+
 	/**
 	 * Used to tell if we're ready to run or not. This is turned on by the listener we
 	 * give for read interest, and can come on at any time since we leave that
@@ -34,7 +34,7 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 	 * come back on again shortly since we never remove the listener.
 	 */
 	private volatile boolean			$signal;
-	
+
 	public $MSG call() throws IOException, TranslationException {
 		try {
 			assert logger.debug("read worker called; operating on channel {}", $channel);
@@ -54,7 +54,7 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 			throw $e;
 		}
 	}
-	
+
 	public void close() throws IOException {
 		try {
 			assert logger.debug("closing channel {}", $channel);
@@ -64,12 +64,12 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 			throw $e;
 		}
 	}
-	
+
 	public boolean isReady() {
 		assert logger.trace("read worker asked if ready");
 		return $signal && $sink.hasRoom();
 	}
-	
+
 	private final class Updater implements Listener<SelectableChannel> {
 		public Updater(WorkFuture<?> $wf) { this.$wf = $wf; }
 		private final WorkFuture<?> $wf;
@@ -79,11 +79,11 @@ class InputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel &
 			$wf.update();
 		}
 	}
-	
+
 	public int getPriority() {
 		return 0;
 	}
-	
+
 	public boolean isDone() {
 		return !$channel.isOpen();
 	}

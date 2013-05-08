@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -37,12 +37,12 @@ public class Bint extends BigInteger {
 	public Bint(String $n) {
 		super($n);
 	}
-	
+
 	public int compareTo(long $n) {
-		return super.compareTo(Bint.valueOf($n)); 
+		return super.compareTo(Bint.valueOf($n));
 	}
 	public int compareTo(double $n) {
-		return super.compareTo(Bint.valueOf((long)$n)); 
+		return super.compareTo(Bint.valueOf((long)$n));
 	}
 	public boolean isGreaterThan(BigInteger $n) {
 		return (this.compareTo($n) > 0);

@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ import java.util.concurrent.*;
  * at which point it is ready until it is done. The task may optionally be defined as
  * run-once. The priority is fixed at construction time.
  * </p>
- * 
+ *
  * <p>
  * Tasks that would otherwise be expressed as {@link Callable} or {@link Runnable} are
  * likely to be easily expressed using this adapater (in particular note that
@@ -37,9 +37,9 @@ import java.util.concurrent.*;
  * implemented that way); tasks that deal with streams of events are probably better
  * expressed using a {@link WorkTargetAdapterFlowing}.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public abstract class WorkTargetAdapterTriggerable<$V> implements WorkTarget<$V> {
 	public WorkTargetAdapterTriggerable(boolean $startReady, boolean $runOnce, int $priority) {
@@ -48,12 +48,12 @@ public abstract class WorkTargetAdapterTriggerable<$V> implements WorkTarget<$V>
 		$prio = $priority;
 		$done = false;
 	}
-	
+
 	private final boolean		$once;
 	private final int		$prio;
 	private volatile boolean	$ready;
 	private volatile boolean	$done;
-	
+
 	@Idempotent
 	@ThreadSafe
 	@ChainableInvocation
@@ -61,7 +61,7 @@ public abstract class WorkTargetAdapterTriggerable<$V> implements WorkTarget<$V>
 		$ready = true;
 		return this;
 	}
-	
+
 	/**
 	 * Call this to cause the work target to become done &mdash; after calling
 	 * this, the {@link WorkScheduler} will attempt to transition the state of
@@ -70,7 +70,7 @@ public abstract class WorkTargetAdapterTriggerable<$V> implements WorkTarget<$V>
 	 */
 	@Idempotent
 	protected final void done() { $done = true; }
-	
+
 	/**
 	 * This method does the readiness and run-once checks, then passes control
 	 * to the {@link #run()} method which you must define.
@@ -83,7 +83,7 @@ public abstract class WorkTargetAdapterTriggerable<$V> implements WorkTarget<$V>
 		return $v;
 	}
 	protected abstract $V run() throws Exception;
-	
+
 	/** returns true any time {@link #trigger()} has been called and {@link #isDone()} is still false. */
 	public final boolean isReady() { return !isDone() && $ready; }
 	/** returns true when either {@link #done()} has been called or the task was run-once and has been run. */

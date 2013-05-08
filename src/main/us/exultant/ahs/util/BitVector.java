@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,19 +26,19 @@ public class BitVector {
 		$bs = new BitSet();
 		$len = 0;
 	}
-	
+
 	public BitVector(int $nbits) {
 		$bs = new BitSet($nbits);
 		$len = $nbits;
 	}
-	
+
 	public BitVector(String $s) {
 		$len = $s.length();
 		$bs = new BitSet($len);
 		for (int $i = 0; $i < $len; $i++)
 			if ($s.charAt($i) != '0') $bs.set($i);
 	}
-	
+
 	/**
 	 * @param $b
 	 *                array to glean bits from
@@ -51,7 +51,7 @@ public class BitVector {
 		this.$len = $len;
 		$bs = getBSfromBA($b).get($offset, $offset + $len);
 	}
-	
+
 	/**
 	 * Same as BitVector($b, 0, $b.length*8); but more efficient.
 	 */
@@ -59,7 +59,7 @@ public class BitVector {
 		$len = $b.length * 8;
 		$bs = getBSfromBA($b);
 	}
-	
+
 	private BitSet getBSfromBA(byte[] $ba) {
 		BitSet $b = new BitSet($ba.length * 8);
 		for (int $i = 0; $i < $ba.length; $i++) {
@@ -83,7 +83,7 @@ public class BitVector {
 		}
 		return $b;
 	}
-	
+
 	/**
 	 * This constructor is a bit sketchy. Due to the stupid nature of the
 	 * implementation of BitSet, we can't guarantee anything about the size of this
@@ -93,15 +93,15 @@ public class BitVector {
 		$bs = $set;
 		$len = $set.length();
 	}
-	
+
 	public BitVector(BitVector $bv) {
 		$bs = (BitSet) $bv.$bs.clone();
 		$len = $bv.$len;
 	}
-	
+
 	public BitSet	$bs;
 	private int	$len;
-	
+
 	// pad		-- extend to size
 	// chop		-- limit to size
 	// shift	-- shift one off the beginning
@@ -110,12 +110,12 @@ public class BitVector {
 	// push		-- push one onto the end
 	// slide	-- unshift and pop equal amounts
 	// rslide	-- reverse slide (push and shift equal amounts)
-	
+
 	public void pad(int $size) {
 		if ($len >= $size) return;
 		$len = $size;
 	}
-	
+
 	/**
 	 * @return a reference to self.
 	 */
@@ -125,10 +125,10 @@ public class BitVector {
 		$len = $size;
 		return this;
 	}
-	
+
 	/**
 	 * Shift a bit off the beginning of the vector
-	 * 
+	 *
 	 * @return the first bit
 	 */
 	public boolean shift() {
@@ -138,10 +138,10 @@ public class BitVector {
 		$len--;
 		return $v;
 	}
-	
+
 	/**
 	 * Shift some number of bits off the beginning of the vector
-	 * 
+	 *
 	 * @return a BitVector of the shifted bits
 	 * @param $bits
 	 *                the number of bits to shift
@@ -152,14 +152,14 @@ public class BitVector {
 		$len -= $bits;
 		return $v;
 	}
-	
+
 	/**
 	 * Prepends the given value to the beginning of the vector (effectively
 	 * incrementing the index of all other values).
-	 * 
+	 *
 	 * As currently implemented, this is almost painfully inefficient. If at all
 	 * possible, PLEASE use the other methods that can do things in batches.
-	 * 
+	 *
 	 * @param $b
 	 *                the value to prepend
 	 */
@@ -167,10 +167,10 @@ public class BitVector {
 		emptyUnshift(1);
 		$bs.set(0, $b);
 	}
-	
+
 	/**
 	 * Functions as per unshift, but prepending the given number of 'off' bits.
-	 * 
+	 *
 	 * @param $size
 	 */
 	public void emptyUnshift(int $size) {
@@ -180,24 +180,24 @@ public class BitVector {
 			$bs.set($i + $size, $old.get($i));
 		$len += $size;
 	}
-	
+
 	public void unshift(String $s) {
 		int $n = $s.length();
 		emptyUnshift($n);
 		for (int $i = 0; $i < $n; $i++)
 			if ($s.charAt($i) != '0') $bs.set($i);
 	}
-	
+
 	public void unshift(BitVector $bv) {
 		int $n = $bv.length();
 		emptyUnshift($n);
 		for (int $i = 0; $i < $n; $i++)
 			set($i, $bv.get($i));
 	}
-	
+
 	/**
 	 * Pops a value off the end of the vector.
-	 * 
+	 *
 	 * @return the last value
 	 */
 	public boolean pop() {
@@ -206,10 +206,10 @@ public class BitVector {
 		$len--;
 		return $v;
 	}
-	
+
 	/**
 	 * Pop some number of bits off the end of the vector
-	 * 
+	 *
 	 * @return a BitVector of the popped bits
 	 * @param $bits
 	 *                the number of bits to pop
@@ -221,10 +221,10 @@ public class BitVector {
 		$len -= $bits;
 		return $v;
 	}
-	
+
 	/**
 	 * Appends the given value to the end of the vector.
-	 * 
+	 *
 	 * @param $b
 	 *                the value to append
 	 */
@@ -232,16 +232,16 @@ public class BitVector {
 		$bs.set($len, $b);
 		$len++;
 	}
-	
+
 	/**
 	 * Functions as per push, but appending the given number of 'off' bits.
-	 * 
+	 *
 	 * @param $size
 	 */
 	public void emptyPush(int $size) {
 		$len += $size;
 	}
-	
+
 	public void push(String $s) {
 		int $n = $s.length();
 		for (int $i = 0; $i < $n; $i++) {
@@ -249,7 +249,7 @@ public class BitVector {
 			$len++;
 		}
 	}
-	
+
 	public void push(BitVector $bv) {
 		int $n = $bv.length();
 		for (int $i = 0; $i < $n; $i++) {
@@ -257,13 +257,13 @@ public class BitVector {
 			$len++;
 		}
 	}
-	
+
 	/**
 	 * Effectively unshifts $size 'off' bits to the beginning of the the vector, while
 	 * simultaneously removing $size bits from the end.
-	 * 
+	 *
 	 * Same as calling emptyUnshift($size) followed by pop($size), but more efficient.
-	 * 
+	 *
 	 * @param $size
 	 *                number of bits to move
 	 */
@@ -274,10 +274,10 @@ public class BitVector {
 		for (int $i = 0; $i < $end; $i++)
 			$bs.set($i + $size, $old.get($i));
 	}
-	
+
 	/**
 	 * Unshift and pop equal amounts.
-	 * 
+	 *
 	 * @param $bv
 	 *                the bits to add; its length is how much will be popped off and
 	 *                returned.
@@ -288,10 +288,10 @@ public class BitVector {
 		unshift($bv);
 		return $v;
 	}
-	
+
 	/**
 	 * Reverse slide; push and shift in equal amounts.
-	 * 
+	 *
 	 * @param $bv
 	 *                the bits to append; its length is how much will be shifted off
 	 *                and returned.
@@ -302,10 +302,10 @@ public class BitVector {
 		push($bv);
 		return $v;
 	}
-	
+
 	/**
 	 * Randomly flips bits in the given range.
-	 * 
+	 *
 	 * @param $fromIndex
 	 *                index to start flipping at (inclusive)
 	 * @param $toIndex
@@ -318,20 +318,20 @@ public class BitVector {
 			if ($rand.nextBoolean()) $bs.flip($i);
 		if ($toIndex > $len) $len = $toIndex;
 	}
-	
+
 	/**
 	 * Randomly flips all bits in the vector.
-	 * 
+	 *
 	 * Same as calling this.randomize(0,this.length(),new java.util.Random());
 	 */
 	public void randomize() {
 		randomize(0, $len, new java.util.Random());
 	}
-	
-	
+
+
 
 	// converters
-	
+
 	public String toString() {
 		StringBuilder $sb = new StringBuilder(length());
 		for (int i = 0; i < length(); i++)
@@ -339,7 +339,7 @@ public class BitVector {
 			else $sb.append('0');
 		return $sb.toString();
 	}
-	
+
 	public byte[] toByteArray() {
 		return toByteArray_t3();
 	}
@@ -374,114 +374,114 @@ public class BitVector {
 		}
 		return $eax;
 	}
-	
-	
+
+
 
 	// delegates
-	
+
 	public void and(BitVector $bv) {
 		$bs.and($bv.$bs);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public void andNot(BitVector $bv) {
 		$bs.andNot($bv.$bs);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public int cardinality() {
 		return $bs.cardinality();
 	}
-	
+
 	public void clear() {
 		$bs.clear();
 	}
-	
+
 	public void clear(int $fromIndex, int $toIndex) {
 		$bs.clear($fromIndex, $toIndex);
 	}
-	
+
 	public void clear(int $bitIndex) {
 		$bs.clear($bitIndex);
 	}
-	
+
 	public boolean equals(Object $obj) {
 		if (!($obj instanceof BitVector)) return false;
 		BitVector $bv = (BitVector) $obj;
 		if ($bv.length() != this.length()) return false;
 		return $bs.equals($bv.$bs);
 	}
-	
+
 	public int hashCode() {
 		return $bs.hashCode();
 	}
-	
+
 	public void flip(int $fromIndex, int $toIndex) {
 		$bs.flip($fromIndex, $toIndex);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public void flip(int $bitIndex) {
 		$bs.flip($bitIndex);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public BitVector get(int $fromIndex, int $toIndex) {
 		BitSet $t = $bs.get($fromIndex, $toIndex);
 		BitVector $v = new BitVector($t);
 		$v.$len = $toIndex - $fromIndex;
 		return $v;
 	}
-	
+
 	public boolean get(int $bitIndex) {
 		return $bs.get($bitIndex);
 	}
-	
+
 	public boolean intersects(BitVector $bv) {
 		return $bs.intersects($bv.$bs);
 	}
-	
+
 	public boolean isEmpty() {
 		return $bs.isEmpty();
 	}
-	
+
 	public int length() {
 		return $len;
 	}
-	
+
 	public int nextClearBit(int $fromIndex) {
 		return $bs.nextClearBit($fromIndex);
 	}
-	
+
 	public int nextSetBit(int $fromIndex) {
 		return $bs.nextSetBit($fromIndex);
 	}
-	
+
 	public void or(BitVector $bv) {
 		$bs.or($bv.$bs);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public void set(int $bitIndex, boolean $value) {
 		$bs.set($bitIndex, $value);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public void set(int $fromIndex, int $toIndex, boolean $value) {
 		$bs.set($fromIndex, $toIndex, $value);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public void set(int $fromIndex, int $toIndex) {
 		$bs.set($fromIndex, $toIndex);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public void set(int $bitIndex) {
 		$bs.set($bitIndex);
 		if ($bs.length() > $len) $len = $bs.length();
 	}
-	
+
 	public void xor(BitVector $bv) {
 		$bs.xor($bv.$bs);
 		if ($bs.length() > $len) $len = $bs.length();

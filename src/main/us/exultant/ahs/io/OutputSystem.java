@@ -19,7 +19,7 @@ import java.nio.channels.*;
  * as easy as handing it an instance of the standard {@link ReadHead} interface that the
  * system should pull messages from.
  * </p>
- * 
+ *
  * <p>
  * Generally speaking you're not going to find methods here that expose to you, say, a
  * socket implementation raw that you can act on yourself. An OutputSystem unites local
@@ -28,9 +28,9 @@ import java.nio.channels.*;
  * OutputSystem to describe across all scenarios... socket timeout options on the other
  * hand would clearly not fit here.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class OutputSystem<$MSG> {
 	public static <$MSG> OutputSystem<$MSG> setup(ReadHead<$MSG> $source, ReadableByteChannel $sink, ChannelWriter<$MSG> $translator) {
@@ -45,7 +45,7 @@ public class OutputSystem<$MSG> {
 		// behavior for filesystem or other crap that doesn't match the SelectableChannel interface
 		return null;
 	}
-	
+
 	public static <$MSG, $CHAN extends SelectableChannel & WritableByteChannel> OutputSystem<$MSG> setup(ReadHead<$MSG> $source, $CHAN $sink, ChannelWriter<$MSG> $translator) {
 		return setup(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $source, $sink, $translator);
 	}
@@ -66,9 +66,9 @@ public class OutputSystem<$MSG> {
 		$wt.install($wf);
 		return new OutputSystem<$MSG>($scheduler, $wf, $sink, $translator);
 	}
-	
-	
-	
+
+
+
 	private OutputSystem(WorkScheduler $scheduler, WorkFuture<Void> $future, Channel $channel, ChannelWriter<$MSG> $translator) {
 		this.$scheduler = $scheduler;
 		this.$channel = $channel;
@@ -82,28 +82,28 @@ public class OutputSystem<$MSG> {
 			}
 		});
 	}
-	
+
 	private final WorkFuture<Void>		$future;
 	private final ChannelWriter<$MSG>	$translator;
 	private final Channel			$channel;
 	private final WorkScheduler		$scheduler;
-	
+
 	// things we could but won't allow you to get out of this:
 	//   - the SelectionSignaller (actually i'd be open to this, but i'm not doing it until i find a reason to do so).  oh also that's not necessarily a thing at all for a lot of implementations.
 	//   - the ReadHead the worker will pull work from, because why would you want that?  If anything, you'd want the WriteHead that matches it, which we never had to begin with (which in turn was a choice made because the couplings between WorkTargets are the application designer's job to begin with).
-	
+
 	public WorkFuture<Void> getFuture() {
 		return this.$future;
 	}
-	
+
 	public ChannelWriter<$MSG> getTranslator() {	// hard to know why you'd want this either.
 		return this.$translator;
 	}
-	
+
 	public Channel getChannel() {
 		return $channel;
 	}
-	
+
 	public WorkScheduler getScheduler() {	// hard to know why you'd want this either.
 		return this.$scheduler;
 	}

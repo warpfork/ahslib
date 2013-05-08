@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ public class PrimitivesTest extends TestCase {
 	public static void main(String... $args) {
 		new PrimitivesTest().run();
 	}
-	
+
 	public List<Unit> getUnits() {
 		return Arr.asList(
 				new TestIntBytes(),
@@ -37,9 +37,9 @@ public class PrimitivesTest extends TestCase {
 				new TestBase64()
 		);
 	}
-	
-	
-	
+
+
+
 	private class TestIntBytes extends TestCase.Unit {
 		public void call() {
 			intBytesTrial(0);
@@ -53,7 +53,7 @@ public class PrimitivesTest extends TestCase {
 			intBytesTrial(new byte[] {-128,3,7,8});
 			intBytesTrial(new byte[] {127,127,127,127});
 			intBytesTrial(new byte[] {-128,-128,-128,-128});
-			
+
 			//System.out.println(Primitives.intFromByteArray(new byte[] {127,-128,-128,-128}));
 			//System.out.println(Primitives.intFromByteArray(new byte[] {0,0,0,0}));
 			//System.out.println(Primitives.intFromByteArray(new byte[] {-128,-128,-128,-128}));
@@ -65,7 +65,7 @@ public class PrimitivesTest extends TestCase {
 			assertEquals($i, Primitives.intFromByteArray(Primitives.byteArrayFromInt($i)));
 		}
 	}
-	
+
 	private class TestStringArrayCleanse extends TestCase.Unit {
 		public void call() {
 			String[] $a1 = new String[] { "a", "b", "c", null, "e", null, null, "h" };
@@ -75,7 +75,7 @@ public class PrimitivesTest extends TestCase {
 			assertTrue(Arr.equals(new String[] { "a", "b", "c", "e", "h" }, $a2));
 		}
 	}
-	
+
 	private class TestByteArrayCat extends TestCase.Unit {
 		public void call() {
 			assertTrue(Arr.equals(
@@ -84,7 +84,7 @@ public class PrimitivesTest extends TestCase {
 			));
 		}
 	}
-	
+
 	private class TestMasking extends TestCase.Unit {
 		public void call() {
 			int $i = 4;
@@ -98,7 +98,7 @@ public class PrimitivesTest extends TestCase {
 			assertEquals(8,$i);
 		}
 	}
-	
+
 	private class TestMaskContains extends TestCase.Unit {
 		public void call() {
 			assertTrue (Primitives.containsFullMask   (Integer.parseInt( "110010000", 2), Integer.parseInt( "110010000", 2)));
@@ -113,7 +113,7 @@ public class PrimitivesTest extends TestCase {
 			assertFalse(Primitives.containsPartialMask(Integer.parseInt( "110010110", 2), Integer.parseInt( "001101001", 2)));
 		}
 	}
-	
+
 	private class TestBase64 extends TestCase.Unit {
 		public void call() {
 			base64trial(new byte[] { (byte)0x00, (byte)0xFF, (byte)0x77, (byte)0x02, (byte)0xF7, (byte)0x02});

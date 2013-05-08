@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,35 +36,35 @@ public final class Eon {
 		public TranslatorFromByteBuffer(EonCodec $co) {
 			this.$co = $co;
 		}
-		
+
 		private final EonCodec	$co;
-		
+
 		public EonObject translate(ByteBuffer $bb) throws TranslationException {
 			return $co.deserialize($bb.array());
 		}
 	}
-	
+
 	public static class TranslatorToByteBuffer implements Translator<EonObject,ByteBuffer> {
 		public TranslatorToByteBuffer(EonCodec $co) {
 			this.$co = $co;
 		}
-		
+
 		private final EonCodec	$co;
-		
+
 		public ByteBuffer translate(EonObject $eo) throws TranslationException {
 			return ByteBuffer.wrap($co.serialize($eo));
 		}
 	}
-	
-	
-	
+
+
+
 	private Eon() {}	// thou shalt not instantiate me // not even for thine lulz // unless thou art full of reflection // in whence case thou art also full of cocks
 				// the above comment required me to research hebrew tenses, which just taught me a LOT about the bible.
-	
+
 	/**
 	 * This key is canonically used to encode a class string that refers to the
 	 * correct type of the data encoded in an {@link EonObject}.
-	 * 
+	 *
 	 * Enforcing strict rules regarding this is up to individual {@link Decoder}
 	 * implementations. In Java, this is usually dealt with through the
 	 * {@link EonObject#putKlass(Class)} and {@link EonObject#assertKlass(Class)}
@@ -94,14 +94,14 @@ public final class Eon {
 	 * surprising results if ever using the standard provided muxing tools).
 	 */
 	public static final String MAGICWORD_HINT = "!";
-	
+
 	public static String getKlass(Class<?> $c) {
 		return Reflect.getShortClassName($c);
 	}
 	public static String getKlass(Object $x) {
 		return Reflect.getShortClassName($x);
 	}
-	
+
 	public static <$TM extends EonObject> $TM fill($TM $holder, Map<String,String> $map) throws UnencodableException {
 		for (Map.Entry<String,String> $ent : $map.entrySet())
 			$holder.put($ent.getKey(),$ent.getValue());

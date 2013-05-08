@@ -10,21 +10,21 @@ import java.lang.annotation.*;
  * volatile variables, or promises to internally handle all appropriate locking without
  * bothering you about it.
  * </p>
- * 
+ *
  * <p>
  * This can be a complex topic. Reading the javadocs of the annotated function to ensure
  * proper use is recommended.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.METHOD})	// i would put ElementType.CONSTRUCTOR here, but honestly?  you should NEVER do anything in a constructor that's not Nullipotent, or you're just fucking nuts and there's no salvation for you.
 public @interface ThreadSafe {
 	/* unparameterized marker only */
-	
+
 	// There was quite a bit of time where we considered using a string parameter to this annotation to describe locks that need to be held.
 	// It got very confusing and has been abandoned.
 	// If that concept is resurrected in the future, it will likely be as a separate annotation (probably called "HoldLock" or "GuardedBy" or something along those lines).

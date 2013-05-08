@@ -7,7 +7,7 @@
  * programmatically, but is very useful to be able to adhere to contractually. Many terms
  * to help clarify the boundaries of concurrent code are also provided.
  * </p>
- * 
+ *
  * <p>
  * This package ships as part of the <code>Core</code> module of AHSlib.
  * </p>

@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ import java.util.concurrent.*;
  * Whether or not the write methods should wait for acks before returning is configurable
  * at the time of the bridge's construction.
  * </p>
- * 
+ *
  * <p>
  * If waiting for acks is enabled, interruption of the thread waiting in a write that has
  * not been acked will cause {@link RuntimeException} wrapping
@@ -41,27 +41,27 @@ import java.util.concurrent.*;
  * exceptions present a worry to your application, then you should redesign to use Ackable
  * properly rather than using this simplistic bridge!
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$PAYLOAD>
  */
 public class AckableWriteHeadBridge<$PAYLOAD> implements WriteHead<$PAYLOAD> {
 	/**
 	 * Constructs an AckableWriteHeadBridge which immediately returns after writes
 	 * without waiting for its messages to be ack'd.
-	 * 
+	 *
 	 * @param $ackableHead
 	 *                the WriteHead to wrap
 	 */
 	public AckableWriteHeadBridge(WriteHead<Ackable<$PAYLOAD>> $ackableHead) {
 		this($ackableHead, false);
 	}
-	
+
 	/**
 	 * Constructs an AckableWriteHeadBridge with write methods which will optionally
 	 * block until their messages are ack'd.
-	 * 
+	 *
 	 * @param $ackableHead
 	 *                the WriteHead to wrap
 	 * @param $wait
@@ -72,13 +72,13 @@ public class AckableWriteHeadBridge<$PAYLOAD> implements WriteHead<$PAYLOAD> {
 		this.$wrap = $ackableHead;
 		this.$wait = $wait;
 	}
-	
+
 	private final WriteHead<Ackable<$PAYLOAD>>	$wrap;
 	private final boolean				$wait;
-	
+
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * @throws RuntimeException
 	 *                 if waiting for acks was enabled, and there is a nak or this
 	 *                 thread is interrupted while waiting for ack. See the docs on
@@ -98,7 +98,7 @@ public class AckableWriteHeadBridge<$PAYLOAD> implements WriteHead<$PAYLOAD> {
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * @throws RuntimeException
 	 *                 if waiting for acks was enabled, and there is a nak or this
 	 *                 thread is interrupted while waiting for ack. See the docs on
@@ -118,16 +118,16 @@ public class AckableWriteHeadBridge<$PAYLOAD> implements WriteHead<$PAYLOAD> {
 			throw new RuntimeException("AckableWriteHeadBridge cannot handle exception:", $e);
 		}
 	}
-	
+
 	public boolean hasRoom() {
 		return $wrap.hasRoom();
 	}
-	
+
 	public boolean isClosed() {
 		return $wrap.isClosed();
 	}
-	
+
 	public void close() {
 		$wrap.close();
-	}	
+	}
 }

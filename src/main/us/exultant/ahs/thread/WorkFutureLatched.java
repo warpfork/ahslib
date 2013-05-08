@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -36,9 +36,9 @@ import java.util.concurrent.*;
  * bunch of these {@link WorkFutureLatched} instances into a {@link WorkFutureAggregate}
  * and you win.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 	public WorkFutureLatched() {
@@ -46,7 +46,7 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		this.$completionListeners = new ArrayList<Listener<WorkFuture<?>>>(1);
 		this.$latch = new CountDownLatch(1);
 	}
-	
+
 	private final CountDownLatch $latch;
 	/**
 	 * The result to return from get(). Need not be volatile or synchronized because
@@ -74,19 +74,19 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 	 * contention not really an issue).
 	 */
 	private final List<Listener<WorkFuture<?>>>	$completionListeners;
-	
+
 	public WorkFuture.State getState() {
 		return $state;
 	}
-	
+
 	public ScheduleParams getScheduleParams() {
 		return ScheduleParams.NOW;
 	}
-	
+
 	/**
 	 * Sets the result of this WorkFuture to the given value unless this future has
 	 * already been set or has been cancelled.
-	 * 
+	 *
 	 * @return true if this set call caused the WorkFuture to become finished with
 	 *         this value; false if there was a concurrent set or cancel.
 	 */
@@ -99,11 +99,11 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		hearDone();
 		return true;
 	}
-	
+
 	/**
 	 * Causes this future to report an ExecutionException with the given throwable as
 	 * its cause, unless this future has already been set or has been cancelled.
-	 * 
+	 *
 	 * @return true if this set call caused the WorkFuture to become finished with
 	 *         this value; false if there was a concurrent set or cancel.
 	 */
@@ -116,7 +116,7 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		hearDone();
 		return true;
 	}
-	
+
 	@ThreadSafe
 	@Idempotent
 	private boolean shiftToFinished() {
@@ -128,7 +128,7 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 			}
 		}
 	}
-	
+
 	@ThreadSafe
 	@Idempotent
 	public $V get() throws InterruptedException, CancellationException, ExecutionException {
@@ -137,7 +137,7 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		if ($exception != null) throw $exception;
 		return $result;
 	}
-	
+
 	@ThreadSafe
 	@Idempotent
 	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, TimeoutException, CancellationException, ExecutionException {
@@ -150,13 +150,13 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		if ($exception != null) throw $exception;
 		return $result;
 	}
-	
+
 	/**
 	 * <p>
 	 * Immediately attempts to transition this WorkFuture to the
 	 * {@link WorkFuture.State#CANCELLED} state.
 	 * </p>
-	 * 
+	 *
 	 * @return true if transitioning to {@link WorkFuture.State#CANCELLED} successful
 	 *         and is performed by this thread; otherwise, if this WorkFuture was
 	 *         already {@link WorkFuture.State#FINISHED} or
@@ -181,7 +181,7 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 		hearDone();
 		return true;
 	}
-	
+
 	/**
 	 * <p>
 	 * Updating is not a meaningful operation for a {@link WorkFutureLatched}; we're
@@ -192,14 +192,14 @@ public class WorkFutureLatched<$V> extends WorkFutureAdapter<$V> {
 	public void update() {
 		/* no op. */
 	}
-	
+
 	public void addCompletionListener(Listener<WorkFuture<?>> $completionListener) {
 		synchronized ($completionListeners) {
 			if (isDone()) $completionListener.hear(this);
 			else $completionListeners.add($completionListener);
 		}
 	}
-	
+
 	/** Called exactly once.  Called AFTER the transition to completion has already been completed. */
 	private void hearDone() {
 		synchronized ($completionListeners) {

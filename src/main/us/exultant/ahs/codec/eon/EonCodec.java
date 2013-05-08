@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,16 +30,16 @@ import java.util.*;
  * provided by implementors of {@link EonObject}, and "Arrays" are provided by
  * implementors of {@link EonArray}.
  * </p>
- * 
+ *
  * <p>
  * Any codec scheme with a concept of map can be expressed with the Eon* interfaces. In
  * particular, the AHS library provides implementations for the JSON and EBON schema,
  * giving developers a handy choice between a human-readable schema and a high-efficiency
  * length-delimited binary schema <i>that are completely interchangeable</i>.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 	/**
@@ -51,7 +51,7 @@ public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 		this.$objProvider = $objProvider;
 		this.$arrProvider = $arrProvider;
 	}
-	
+
 	/**
 	 * Constructs a new EonCodec that contains no encode or decode hooks and using the
 	 * same (pointer-equality!) factories to produce new empty objects and arrays for
@@ -62,64 +62,64 @@ public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 		this.$objProvider = $other.$objProvider;
 		this.$arrProvider = $other.$arrProvider;
 	}
-	
+
 	private final Factory<? extends EonObject>	$objProvider;
 	private final Factory<? extends EonArray>	$arrProvider;
-	
+
 	/**
 	 * <p>
 	 * Serializes all the data in an EonObject (and all of its children recursively)
 	 * into a byte array.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * (This is actually equivalent to calling <code>$eonObj.serialize();</code> since
 	 * the role of the codec class is dealing with the formation of the EonObject and
 	 * the disbatching of encoders; once the EonObject tree is fully formed, it is
 	 * responsible for its own conversion to bytes.)
 	 * </p>
-	 * 
+	 *
 	 * @throws TranslationException
 	 */
 	public static byte[] serialize(EonObject $eo) throws TranslationException {
 		return $eo.serialize();
 	}
-	
+
 	public <$TARG> byte[] serialize($TARG $datclr) throws TranslationException {
 		return encode($datclr).serialize();
 	}
-	
+
 	public <$TARG> byte[] serialize($TARG $datclr, Class<$TARG> $class) throws TranslationException {
 		return encode($datclr, $class).serialize();
 	}
-	
+
 	public EonObject deserialize(byte[] $bar) throws TranslationException {
 		EonObject $eo = $objProvider.make();
 		$eo.deserialize($bar);
 		return $eo;
 	}
-	
+
 	public <$TARG> $TARG deserialize(byte[] $bar, Class<$TARG> $datclrclass) throws TranslationException {
 		return decode(deserialize($bar), $datclrclass);
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	public EonArray newArr() {
 		return $arrProvider.make();
 	}
-	
+
 	/** Creates a new "object" (essentially, a map) for encoding.  This returns the most specific type possible for a  */
 	public EonObject newObj() {
 		return $objProvider.make();
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	/** Helper method that encodes each element in a list as normal, then places it in an EonArray in the same order. */
 	public <$TYPE> EonArray encodeList(List<$TYPE> $list) throws TranslationException {
 		EonArray $ea = $arrProvider.make();
@@ -128,7 +128,7 @@ public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 			$ea.put($i, this.encode($list.get($i)));
 		return $ea;
 	}
-	
+
 	/** Helper method that decodes each element in an EonArray, then returns it as an {@link ArrayList} in the same order. */
 	public <$TYPE> List<$TYPE> decodeList(EonArray $ea, Class<$TYPE> $datclrclass) throws TranslationException {
 		int $size = $ea.size();
@@ -137,11 +137,11 @@ public class EonCodec extends CodecImpl<EonCodec,EonObject> {
 			$v.add(this.decode($ea.getObj($i), $datclrclass));
 		return $v;
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	/** Facade method for making very simple EonObjects in one line calls. */
 	public EonObject simple(Object $class, String $name, EonObject $data) {
 		EonObject $holder = $objProvider.make();

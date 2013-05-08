@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ package us.exultant.ahs.core;
  * <p>
  * Generic interface for listeners (whether for events or messages).
  * </p>
- * 
+ *
  * <h3>exceptions</h3>
  * <p>
  * <b>Listeners are strongly expected NOT to throw unchecked exceptions from their
@@ -33,7 +33,7 @@ package us.exultant.ahs.core;
  * throwing exceptions will rarely if ever actually be able to propagate out to a system
  * which could reasonably be considered responsible.
  * </p>
- * 
+ *
  * <h3>usage patterns</h3>
  * <p>
  * If a class wishes to handle multiple different types of events, a good pattern for this
@@ -42,7 +42,7 @@ package us.exultant.ahs.core;
  * through one object without name collisions or bad encapsulation breaks (or revealing
  * more functions than necessary on the base class).
  * </p>
- * 
+ *
  * <h3>concurrency</h3>
  * <p>
  * Listeners may be presumed to be reentrant or otherwise <b>thread-safe</b> whenever
@@ -51,16 +51,16 @@ package us.exultant.ahs.core;
  * synchronized and this departure from theme should be loudly documented due to the
  * potential for this synchronization to have a large performance impact.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$M>
  *                the message/event type
  */
 public interface Listener<$M> extends java.util.EventListener {
 	/**
 	 * Hear (and respond to) the given event/message.
-	 * 
+	 *
 	 * @param $m
 	 */
 	public void hear($M $m);

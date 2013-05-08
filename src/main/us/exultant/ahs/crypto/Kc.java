@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ public class Kc implements Key {
 	public Kc(byte[] $bytes) {
 		this.$bytes = $bytes;
 	}
-	
+
 	public final byte[]	$bytes;
 
 	public byte[] getBytes() {

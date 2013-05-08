@@ -7,7 +7,7 @@ import java.util.*;
 
 public class TestTranslators extends TestCase {
 	public static void main(String... $args) { new TestTranslators().run(); }
-	
+
 	public List<Unit> getUnits() {
 		return Arr.<Unit>asList(
 				new TestHexConsistency(),
@@ -23,7 +23,7 @@ public class TestTranslators extends TestCase {
 			assertEquals($x, $y);
 		}
 	}
-	
+
 	/**  */
 	private class TestHexAccuracy extends TestCase.Unit {
 		public void call() throws TranslationException {

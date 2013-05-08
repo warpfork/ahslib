@@ -14,7 +14,7 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 		this.$trans = $translator;
 		this.$selector = $selector;
 	}
-	
+
 	void install(final WorkFuture<Void> $selfFuture) {
 		$selectedListener = new Updater($selfFuture);
 		$source.setListener(new Listener<ReadHead<$MSG>>() {
@@ -27,7 +27,7 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 	}
 
 	public static final Loggar logger = new Loggar(LoggerFactory.getLogger(OutputSystem_WorkerChannelSelectable.class));
-	
+
 	private final ReadHead<$MSG>			$source;
 	private final Chan				$channel;
 	private final ChannelWriter<$MSG>		$trans;
@@ -47,7 +47,7 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 	 * another chunk in a future call).
 	 */
 	private volatile boolean			$signal;
-	
+
 	public Void call() throws IOException {
 		assert logger.debug("write worker called; operating on channel {}", $channel);
 		try {
@@ -71,7 +71,7 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 			close();
 			throw $e;
 		}
-		
+
 		if (!$buffered) {
 			// clean finish, no one blocked or nothing
 			if ($signal) {  // we needn't bother the selectorsignaller with a deregister request if we were never registered.
@@ -86,10 +86,10 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 			assert logger.debug("write worker has remaining buffered data, so registering write interest on channel:{}", $channel);
 			if ($selectedListener != null) $selector.registerWrite($channel, $selectedListener);
 		}
-		
+
 		return null;
 	}
-	
+
 	public void close() throws IOException {
 		try {
 			assert logger.debug("closing channel {}", $channel);
@@ -99,12 +99,12 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 			throw $e;
 		}
 	}
-	
+
 	public boolean isReady() {
 		assert logger.trace("write worker asked if ready");
 		return ($buffered) ? $signal : $source.hasNext();
 	}
-	
+
 	private final class Updater implements Listener<SelectableChannel> {
 		public Updater(WorkFuture<?> $wf) { this.$wf = $wf; }
 		private final WorkFuture<?> $wf;
@@ -114,11 +114,11 @@ class OutputSystem_WorkerChannelSelectable<$MSG, Chan extends SelectableChannel 
 			$wf.update();
 		}
 	}
-	
+
 	public int getPriority() {
 		return 0;
 	}
-	
+
 	public boolean isDone() {
 		return $source.isExhausted() && !$buffered;
 	}

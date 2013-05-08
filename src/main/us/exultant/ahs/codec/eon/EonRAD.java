@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,7 +33,7 @@ import java.lang.reflect.*;
  * in the decoded object having unexpected null values), or modify values to
  * invalid combinations.
  * </p>
- * 
+ *
  * <p>
  * It's also impossible to use one instance of this class a decoder for multiple
  * classes, unfortunately -- note the constructor.
@@ -47,33 +47,33 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 	 * object for the generic type, and that reference is needed at runtime
 	 * for critical reflection operations.
 	 * </p>
-	 * 
+	 *
 	 * @throws UnencodableException
 	 *                 if the class is not annotated with the Encodable
 	 *                 interface or otherwise not a suitable decode target.
 	 */
 	public EonRAD(Class<$T> $class, String $selector) throws UnencodableException {
 		this.$class = $class;
-		
+
 		// check if the class will allow itself to be dencoded like this
 		if ($class.isAnnotation() || $class.isInterface() || $class.isAnonymousClass())
 			throw new UnencodableException("Interfaces, anonymous classes, and annotations can not be a decode target -- such magic is impossible.");
 		Encodable $cenc = $class.getAnnotation(Encodable.class);
 		if ($cenc == null)
 			throw new UnencodableException("Class to be decoded must be annotated with the @Encodable interface.");
-		
+
 		this.$selector = $selector;
 	}
 	public EonRAD(Class<$T> $class) throws UnencodableException {
 		this($class, Encodable.DEFAULT);
 	}
-	
+
 	private Class<$T> $class;
 	private String $selector;
-	
+
 	public $T decode(EonCodec $codec, EonObject $jo) throws TranslationException {
 		String $key;
-		
+
 		// also, check if that class should have a name including in its encoding
 		// make assertions for sanity if it does
 		Encodable $cenc = $class.getAnnotation(Encodable.class);
@@ -97,7 +97,7 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 			} catch (InvocationTargetException $e) {
 				throw new UnencodableException("reflection problem: a constructor threw exception.",$e);
 			}
-			
+
 			// walk across fields and deserialize the non-static ones
 			if ($cenc.all_fields()) {	// all of them, regardless of whether that particular field is annotated
 				for (Field $f : $class.getDeclaredFields()) {
@@ -108,8 +108,8 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 					if ($anno != null) {
 						if ($anno.value().isEmpty())
 							$key = $f.getName();
-						else $key = $anno.value(); 
-						
+						else $key = $anno.value();
+
 						decodeField($codec, $jo, $key, $f, $x);
 					} else {
 						decodeField($codec, $jo, $f.getName(), $f, $x);
@@ -125,14 +125,14 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 						if (Arr.contains($anno.selected(), $selector)) {
 							if ($anno.value().isEmpty())
 								$key = $f.getName();
-							else $key = $anno.value(); 
+							else $key = $anno.value();
 
 							decodeField($codec, $jo, $key, $f, $x);
 						}
 					}
 				}
 			}
-			
+
 			return $x;
 		} catch (InstantiationException $e) {
 			throw new UnencodableException("reflection problem",$e);
@@ -140,7 +140,7 @@ public class EonRAD<$T> implements Decoder<EonCodec,EonObject,$T> {
 			throw new UnencodableException("reflection problem",$e);
 		}
 	}
-	
+
 	private void decodeField(EonCodec $codec, EonObject $eo, String $key, Field $f, $T $x) throws IllegalAccessException, TranslationException {
 		Class<?> $typo = $f.getType();
 		// i wish you could do a switch on anything that acts like a pointer

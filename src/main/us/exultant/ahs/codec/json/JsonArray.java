@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,13 +17,13 @@
  */
 /*
  * This file contains derivations of work copyrighted in 2006 to JSON.org.  The original licensing statement follows:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
+ *
  * The Software shall be used for Good, not Evil.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
@@ -79,28 +79,28 @@ import java.util.Map;
  * <li>Numbers may have the <code>0-</code> <small>(octal)</small> or <code>0x-</code>
  * <small>(hex)</small> prefix.</li>
  * </ul>
- * 
+ *
  * @author JSON.org
  * @version 2008-09-18
  */
 public class JsonArray implements EonArray {
-	
+
 	/**
 	 * The arrayList where the JsonArray's properties are kept.
 	 */
 	private ArrayList<Object>	myArrayList;
-	
-	
+
+
 	/**
 	 * Construct an empty JsonArray.
 	 */
 	public JsonArray() {
 		this.myArrayList = new ArrayList<Object>();
 	}
-	
+
 	/**
 	 * Construct a JsonArray from a JSONTokener.
-	 * 
+	 *
 	 * @param x
 	 *                A JSONTokener
 	 * @throws JsonException
@@ -143,11 +143,11 @@ public class JsonArray implements EonArray {
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Construct a JsonArray from a source JSON text.
-	 * 
+	 *
 	 * @param source
 	 *                A string that begins with <code>[</code>&nbsp;<small>(left
 	 *                bracket)</small> and ends with <code>]</code>&nbsp;<small>(right
@@ -158,23 +158,23 @@ public class JsonArray implements EonArray {
 	public JsonArray(String source) throws JsonException {
 		this(new JsonTokener(source));
 	}
-	
-	
+
+
 	/**
 	 * Construct a JsonArray from a Collection.
-	 * 
+	 *
 	 * @param collection
 	 *                A Collection.
 	 */
 	public JsonArray(Collection<Object> collection) {
 		this.myArrayList = (collection == null) ? new ArrayList<Object>() : new ArrayList<Object>(collection);
 	}
-	
+
 	/**
 	 * Construct a JsonArray from a collection of beans. The collection should have
 	 * Java Beans.
 	 */
-	
+
 	public JsonArray(Collection<Object> collection, boolean includeSuperClass) {
 		this.myArrayList = new ArrayList<Object>();
 		if (collection != null) {
@@ -183,11 +183,11 @@ public class JsonArray implements EonArray {
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Construct a JsonArray from an array
-	 * 
+	 *
 	 * @throws JsonException
 	 *                 If not an array.
 	 */
@@ -203,11 +203,11 @@ public class JsonArray implements EonArray {
 		}
 
 	}
-	
+
 	/**
 	 * Construct a JsonArray from an array with a bean. The array should have Java
 	 * Beans.
-	 * 
+	 *
 	 * @throws JsonException
 	 *                 If not an array.
 	 */
@@ -222,12 +222,12 @@ public class JsonArray implements EonArray {
 			throw new JsonException("JsonArray initial value should be a string or collection or array.");
 		}
 	}
-	
-	
+
+
 
 	/**
 	 * Get the object value associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return An object value.
@@ -239,12 +239,12 @@ public class JsonArray implements EonArray {
 		if (o == null) { throw new JsonException("JsonArray[" + index + "] not found."); }
 		return o;
 	}
-	
-	
+
+
 	/**
 	 * Get the boolean value associated with an index. The string values "true" and
 	 * "false" are converted to boolean.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The truth.
@@ -259,11 +259,11 @@ public class JsonArray implements EonArray {
 		} else if (o.equals(Boolean.TRUE) || (o instanceof String && ((String) o).equalsIgnoreCase("true"))) { return true; }
 		throw new JsonException("JsonArray[" + index + "] is not a Boolean.");
 	}
-	
-	
+
+
 	/**
 	 * Get the double value associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
@@ -279,11 +279,11 @@ public class JsonArray implements EonArray {
 			throw new JsonException("JsonArray[" + index + "] is not a number.");
 		}
 	}
-	
-	
+
+
 	/**
 	 * Get the int value associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
@@ -295,11 +295,11 @@ public class JsonArray implements EonArray {
 		Object o = get(index);
 		return o instanceof Number ? ((Number) o).intValue() : (int) getDouble(index);
 	}
-	
-	
+
+
 	/**
 	 * Get the JsonArray associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return A JsonArray value.
@@ -312,11 +312,11 @@ public class JsonArray implements EonArray {
 		if (o instanceof JsonArray) { return (JsonArray) o; }
 		throw new JsonException("JsonArray[" + index + "] is not a JsonArray.");
 	}
-	
-	
+
+
 	/**
 	 * Get the JSONObject associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                subscript
 	 * @return A JSONObject value.
@@ -329,11 +329,11 @@ public class JsonArray implements EonArray {
 		if (o instanceof JsonObject) { return (JsonObject) o; }
 		throw new JsonException("JsonArray[" + index + "] is not a JsonObject.");
 	}
-	
-	
+
+
 	/**
 	 * Get the long value associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
@@ -345,11 +345,11 @@ public class JsonArray implements EonArray {
 		Object o = get(index);
 		return o instanceof Number ? ((Number) o).longValue() : (long) getDouble(index);
 	}
-	
-	
+
+
 	/**
 	 * Get the string associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return A string value.
@@ -359,11 +359,11 @@ public class JsonArray implements EonArray {
 	public String getString(int index) throws JsonException {
 		return get(index).toString();
 	}
-	
-	
+
+
 	/**
 	 * Determine if the value is null.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return true if the value at the index is null, or if there is no value.
@@ -371,13 +371,13 @@ public class JsonArray implements EonArray {
 	public boolean isNull(int index) {
 		return JsonObject.NULL.equals(opt(index));
 	}
-	
-	
+
+
 	/**
 	 * Make a string from the contents of this JsonArray. The <code>separator</code>
 	 * string is inserted between each element. Warning: This method assumes that the
 	 * data structure is acyclical.
-	 * 
+	 *
 	 * @param separator
 	 *                A string that will be inserted between the elements.
 	 * @return a string.
@@ -387,7 +387,7 @@ public class JsonArray implements EonArray {
 	public String join(String separator) throws JsonException, UnencodableException {
 		int len = length();
 		StringBuffer sb = new StringBuffer();
-		
+
 		for (int i = 0; i < len; i += 1) {
 			if (i > 0) {
 				sb.append(separator);
@@ -396,11 +396,11 @@ public class JsonArray implements EonArray {
 		}
 		return sb.toString();
 	}
-	
-	
+
+
 	/**
 	 * Get the number of elements in the JsonArray, included nulls.
-	 * 
+	 *
 	 * @return The length (or size).
 	 */
 	public int length() {
@@ -409,7 +409,7 @@ public class JsonArray implements EonArray {
 	public int size() {
 		return this.myArrayList.size();
 	}
-	
+
 
 	public void put(int index, EonObject value) {
 		if (value.getClass() != JsonObject.class) throw new IllegalArgumentException("JsonArray isn't willing to deal with nested EonObject other than JsonObject.");
@@ -432,18 +432,18 @@ public class JsonArray implements EonArray {
 		String $s = optString(index);
 		return $s == null ? null : Base64.decode($s);
 	}
-	
+
 	public byte[] optBytes(int index, byte[] $default) {
 		String $s = optString(index);
 		if ($s == null) return $default;
 		byte[] $try = Base64.decode($s);
 		return $try == null ? $default : $try;
 	}
-	
-	
+
+
 	/**
 	 * Get the optional object value associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return An object value, or null if there is no object at that index.
@@ -451,13 +451,13 @@ public class JsonArray implements EonArray {
 	public Object opt(int index) {
 		return (index < 0 || index >= length()) ? null : this.myArrayList.get(index);
 	}
-	
-	
+
+
 	/**
 	 * Get the optional boolean value associated with an index. It returns false if
 	 * there is no value at that index, or if the value is not Boolean.TRUE or the
 	 * String "true".
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The truth.
@@ -465,13 +465,13 @@ public class JsonArray implements EonArray {
 	public boolean optBoolean(int index) {
 		return optBoolean(index, false);
 	}
-	
-	
+
+
 	/**
 	 * Get the optional boolean value associated with an index. It returns the
 	 * defaultValue if there is no value at that index or if it is not a Boolean or
 	 * the String "true" or "false" (case insensitive).
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @param defaultValue
@@ -485,13 +485,13 @@ public class JsonArray implements EonArray {
 			return defaultValue;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Get the optional double value associated with an index. NaN is returned if
 	 * there is no value for the index, or if the value is not a number and cannot be
 	 * converted to a number.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
@@ -499,13 +499,13 @@ public class JsonArray implements EonArray {
 	public double optDouble(int index) {
 		return optDouble(index, Double.NaN);
 	}
-	
-	
+
+
 	/**
 	 * Get the optional double value associated with an index. The defaultValue is
 	 * returned if there is no value for the index, or if the value is not a number
 	 * and cannot be converted to a number.
-	 * 
+	 *
 	 * @param index
 	 *                subscript
 	 * @param defaultValue
@@ -519,13 +519,13 @@ public class JsonArray implements EonArray {
 			return defaultValue;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Get the optional int value associated with an index. Zero is returned if there
 	 * is no value for the index, or if the value is not a number and cannot be
 	 * converted to a number.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
@@ -533,13 +533,13 @@ public class JsonArray implements EonArray {
 	public int optInt(int index) {
 		return optInt(index, 0);
 	}
-	
-	
+
+
 	/**
 	 * Get the optional int value associated with an index. The defaultValue is
 	 * returned if there is no value for the index, or if the value is not a number
 	 * and cannot be converted to a number.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @param defaultValue
@@ -553,11 +553,11 @@ public class JsonArray implements EonArray {
 			return defaultValue;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Get the optional JsonArray associated with an index.
-	 * 
+	 *
 	 * @param index
 	 *                subscript
 	 * @return A JsonArray value, or null if the index has no value, or if the value
@@ -567,13 +567,13 @@ public class JsonArray implements EonArray {
 		Object o = opt(index);
 		return o instanceof JsonArray ? (JsonArray) o : null;
 	}
-	
-	
+
+
 	/**
 	 * Get the optional JSONObject associated with an index. Null is returned if the
 	 * key is not found, or null if the index has no value, or if the value is not a
 	 * JSONObject.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return A JSONObject value.
@@ -582,13 +582,13 @@ public class JsonArray implements EonArray {
 		Object o = opt(index);
 		return o instanceof JsonObject ? (JsonObject) o : null;
 	}
-	
-	
+
+
 	/**
 	 * Get the optional long value associated with an index. Zero is returned if there
 	 * is no value for the index, or if the value is not a number and cannot be
 	 * converted to a number.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return The value.
@@ -596,13 +596,13 @@ public class JsonArray implements EonArray {
 	public long optLong(int index) {
 		return optLong(index, 0);
 	}
-	
-	
+
+
 	/**
 	 * Get the optional long value associated with an index. The defaultValue is
 	 * returned if there is no value for the index, or if the value is not a number
 	 * and cannot be converted to a number.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @param defaultValue
@@ -616,13 +616,13 @@ public class JsonArray implements EonArray {
 			return defaultValue;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Get the optional string value associated with an index. It returns null if no
 	 * value at that index. If the value is not a string and is not null, then it is
 	 * coverted to a string.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @return A String value.
@@ -630,12 +630,12 @@ public class JsonArray implements EonArray {
 	public String optString(int index) {
 		return optString(index, null);
 	}
-	
-	
+
+
 	/**
 	 * Get the optional string associated with an index. The defaultValue is returned
 	 * if the key is not found.
-	 * 
+	 *
 	 * @param index
 	 *                The index must be between 0 and length() - 1.
 	 * @param defaultValue
@@ -646,34 +646,34 @@ public class JsonArray implements EonArray {
 		Object o = opt(index);
 		return o != null ? o.toString() : defaultValue;
 	}
-	
-	
+
+
 	/**
 	 * Append a boolean value. This increases the array's length by one.
-	 * 
+	 *
 	 * @param value
 	 *                A boolean value.
 	 */
 	public void put(boolean value) {
 		put(value ? Boolean.TRUE : Boolean.FALSE);
 	}
-	
-	
+
+
 	/**
 	 * Put a value in the JsonArray, where the value will be a JsonArray which is
 	 * produced from a Collection.
-	 * 
+	 *
 	 * @param value
 	 *                A Collection value.
 	 */
 	public void put(Collection<Object> value) {
 		put(new JsonArray(value));
 	}
-	
-	
+
+
 	/**
 	 * Append a double value. This increases the array's length by one.
-	 * 
+	 *
 	 * @param value
 	 *                A double value.
 	 * @throws UnencodableException
@@ -684,45 +684,45 @@ public class JsonArray implements EonArray {
 		JsonObject.testValidity(d);
 		put(d);
 	}
-	
-	
+
+
 	/**
 	 * Append an int value. This increases the array's length by one.
-	 * 
+	 *
 	 * @param value
 	 *                An int value.
 	 */
 	public void put(int value) {
 		put(new Integer(value));
 	}
-	
-	
+
+
 	/**
 	 * Append an long value. This increases the array's length by one.
-	 * 
+	 *
 	 * @param value
 	 *                A long value.
 	 */
 	public void put(long value) {
 		put(new Long(value));
 	}
-	
-	
+
+
 	/**
 	 * Put a value in the JsonArray, where the value will be a JSONObject which is
 	 * produced from a Map.
-	 * 
+	 *
 	 * @param value
 	 *                A Map value.
 	 */
 	public void put(Map<Object,Object> value) {
 		put(new JsonObject(value));
 	}
-	
-	
+
+
 	/**
 	 * Append an object value. This increases the array's length by one.
-	 * 
+	 *
 	 * @param value
 	 *                An object value. The value should be a Boolean, Double, Integer,
 	 *                JsonArray, JSONObject, Long, or String, or the JSONObject.NULL
@@ -731,13 +731,13 @@ public class JsonArray implements EonArray {
 	protected void put(Object value) {
 		this.myArrayList.add(value);
 	}
-	
-	
+
+
 	/**
 	 * Put or replace a boolean value in the JsonArray. If the index is greater than
 	 * the length of the JsonArray, then null elements will be added as necessary to
 	 * pad it out.
-	 * 
+	 *
 	 * @param index
 	 *                The subscript.
 	 * @param value
@@ -746,12 +746,12 @@ public class JsonArray implements EonArray {
 	public void put(int index, boolean value) {
 		put(index, value ? Boolean.TRUE : Boolean.FALSE);
 	}
-	
-	
+
+
 	/**
 	 * Put a value in the JsonArray, where the value will be a JsonArray which is
 	 * produced from a Collection.
-	 * 
+	 *
 	 * @param index
 	 *                The subscript.
 	 * @param value
@@ -760,12 +760,12 @@ public class JsonArray implements EonArray {
 	public void put(int index, Collection<Object> value) {
 		put(index, new JsonArray(value));
 	}
-	
-	
+
+
 	/**
 	 * Put or replace a double value. If the index is greater than the length of the
 	 * JsonArray, then null elements will be added as necessary to pad it out.
-	 * 
+	 *
 	 * @param index
 	 *                The subscript.
 	 * @param value
@@ -776,12 +776,12 @@ public class JsonArray implements EonArray {
 	public void put(int index, double value) throws UnencodableException {
 		putQuestionable(index, new Double(value));
 	}
-	
-	
+
+
 	/**
 	 * Put or replace an int value. If the index is greater than the length of the
 	 * JsonArray, then null elements will be added as necessary to pad it out.
-	 * 
+	 *
 	 * @param index
 	 *                The subscript.
 	 * @param value
@@ -790,12 +790,12 @@ public class JsonArray implements EonArray {
 	public void put(int index, int value) {
 		put(index, new Integer(value));
 	}
-	
-	
+
+
 	/**
 	 * Put or replace a long value. If the index is greater than the length of the
 	 * JsonArray, then null elements will be added as necessary to pad it out.
-	 * 
+	 *
 	 * @param index
 	 *                The subscript.
 	 * @param value
@@ -804,12 +804,12 @@ public class JsonArray implements EonArray {
 	public void put(int index, long value) {
 		put(index, new Long(value));
 	}
-	
-	
+
+
 	/**
 	 * Put a value in the JsonArray, where the value will be a JSONObject which is
 	 * produced from a Map.
-	 * 
+	 *
 	 * @param index
 	 *                The subscript.
 	 * @param value
@@ -818,13 +818,13 @@ public class JsonArray implements EonArray {
 	public void put(int index, Map<Object,Object> value) {
 		put(index, new JsonObject(value));
 	}
-	
-	
+
+
 	/**
 	 * Put or replace an object value in the JsonArray. If the index is greater than
 	 * the length of the JsonArray, then null elements will be added as necessary to
 	 * pad it out.
-	 * 
+	 *
 	 * @param index
 	 *                The subscript.
 	 * @param value
@@ -835,12 +835,12 @@ public class JsonArray implements EonArray {
 	protected void put(int index, Object value) {
 		putReally(index, value);
 	}
-	
+
 	protected void putQuestionable(int index, Object value) throws UnencodableException {
 		JsonObject.testValidity(value);
 		putReally(index, value);
 	}
-	
+
 	private void putReally(int index, Object value) {
 		if (index < 0) { throw new IndexOutOfBoundsException("JsonArray[" + index + "] not found."); }
 		if (index < length()) {
@@ -852,12 +852,12 @@ public class JsonArray implements EonArray {
 			put(value);
 		}
 	}
-	
-	
+
+
 	/**
 	 * Produce a JSONObject by combining a JsonArray of names with the values of this
 	 * JsonArray.
-	 * 
+	 *
 	 * @param names
 	 *                A JsonArray containing a list of key strings. These will be
 	 *                paired with the values.
@@ -874,8 +874,8 @@ public class JsonArray implements EonArray {
 		}
 		return jo;
 	}
-	
-	
+
+
 	/**
 	 * Make a JSON text of this JsonArray. For compactness, no unnecessary whitespace
 	 * is added. If it is not possible to produce a syntactically correct JSON text
@@ -883,7 +883,7 @@ public class JsonArray implements EonArray {
 	 * invalid number.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
-	 * 
+	 *
 	 * @return a printable, displayable, transmittable representation of the array.
 	 */
 	public String toString() {
@@ -893,36 +893,36 @@ public class JsonArray implements EonArray {
 			return null;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Make a prettyprinted JSON text of this JsonArray. Warning: This method assumes
 	 * that the data structure is acyclical.
-	 * 
+	 *
 	 * @param indentFactor
 	 *                The number of spaces to add to each level of indentation.
 	 * @return a printable, displayable, transmittable representation of the object,
 	 *         beginning with <code>[</code>&nbsp;<small>(left bracket)</small> and
 	 *         ending with <code>]</code>&nbsp;<small>(right bracket)</small>.
 	 * @throws JsonException
-	 * @throws UnencodableException 
+	 * @throws UnencodableException
 	 */
 	public String toString(int indentFactor) throws JsonException, UnencodableException {
 		return toString(indentFactor, 0);
 	}
-	
-	
+
+
 	/**
 	 * Make a prettyprinted JSON text of this JsonArray. Warning: This method assumes
 	 * that the data structure is acyclical.
-	 * 
+	 *
 	 * @param indentFactor
 	 *                The number of spaces to add to each level of indentation.
 	 * @param indent
 	 *                The indention of the top level.
 	 * @return a printable, displayable, transmittable representation of the array.
 	 * @throws JsonException
-	 * @throws UnencodableException 
+	 * @throws UnencodableException
 	 */
 	String toString(int indentFactor, int indent) throws JsonException, UnencodableException {
 		int len = length();
@@ -951,8 +951,8 @@ public class JsonArray implements EonArray {
 		sb.append(']');
 		return sb.toString();
 	}
-	
-	
+
+
 	/**
 	 * Write the contents of the JsonArray as JSON text to a writer. For compactness,
 	 * no whitespace is added.
@@ -961,9 +961,9 @@ public class JsonArray implements EonArray {
 	 * <p>
 	 * Do not use a failable Writer. Write to a buffer first if you must deal with I/O
 	 * outside of the program.
-	 * 
+	 *
 	 * @return the writer.
-	 * 
+	 *
 	 * @throws MajorBug
 	 *                 if the Writer throws an IOException.
 	 */
@@ -971,9 +971,9 @@ public class JsonArray implements EonArray {
 		try {
 			boolean b = false;
 			int len = length();
-			
+
 			writer.write('[');
-			
+
 			for (int i = 0; i < len; i += 1) {
 				if (b) {
 					writer.write(',');

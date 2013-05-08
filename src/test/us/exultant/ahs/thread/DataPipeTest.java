@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ import java.util.*;
 
 public class DataPipeTest extends TestCase {
 	public static void main(String... $args) { new DataPipeTest().run(); }
-	
+
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestBasic());
@@ -42,7 +42,7 @@ public class DataPipeTest extends TestCase {
 		return $tests;
 	}
 	private static final TestData TD = TestData.getFreshTestData();
-	
+
 	/** Just tests mixed read and writes in a single thread. */
 	private class TestBasic extends TestCase.Unit {
 		public void call() {
@@ -59,7 +59,7 @@ public class DataPipeTest extends TestCase {
 			assertEquals(0, $pipe.size());
 		}
 	}
-	
+
 	/** Tests the group writing of collected chunks. */
 	private class TestBasic_WriteAll extends TestCase.Unit {
 		public void call() {
@@ -76,11 +76,11 @@ public class DataPipeTest extends TestCase {
 			assertEquals(TD.s3, $arr.get(3));
 		}
 	}
-	
+
 	/** Tests the consistency after a group write throws an exception from the middle of the operation. */
 	private class TestBasic_WriteAllPartial {
 		Pipe<String> $pipe = new DataPipe<String>();
-		
+
 		/** Tests that yes, an exception is thrown. */
 		private class Part1 extends TestCase.Unit {
 			@SuppressWarnings("unchecked")
@@ -92,7 +92,7 @@ public class DataPipeTest extends TestCase {
 				$pipe.sink().writeAll(Arr.asList(TD.s2,null,TD.s3));
 			}
 		}
-		
+
 		/** Tests that the Pipe's size and contents are still consistent, and that it contains exactly the elements preceeding the one that caused the exception. */
 		private class Part2 extends TestCase.Unit {
 			public void call() {
@@ -105,7 +105,7 @@ public class DataPipeTest extends TestCase {
 			}
 		}
 	}
-	
+
 	/** Tests that attempting to write after closing a pipe throws an exception. */
 	private class TestBasicClose_WriteAfter extends TestCase.Unit {
 		@SuppressWarnings("unchecked")
@@ -121,7 +121,7 @@ public class DataPipeTest extends TestCase {
 			$pipe.sink().write(TD.s3);	// this should throw
 		}
 	}
-	
+
 	private class TestBasicClose_ReadAfterCloseReturns extends TestCase.Unit {
 		public void call() throws InterruptedException {
 			Pipe<String> $pipe = new DataPipe<String>();
@@ -138,11 +138,11 @@ public class DataPipeTest extends TestCase {
 			assertEquals(0, $pipe.source().readAll().size());	// this may block forever if something's broken
 		}
 	}
-	
+
 	private class TestConcurrent_ReadBlockBeforeWrite extends TestCase.Unit {
 		Pipe<String> $pipe = new DataPipe<String>();
 		volatile boolean $won = false;
-		
+
 		public void call() {
 			new Thread() { public void run() {
 					$pipe.source().read();
@@ -151,9 +151,9 @@ public class DataPipeTest extends TestCase {
 			$pipe.sink().write(TD.s1);
 			while (!$won) X.chill(5);
 			// honestly, just making it out of here alive is test enough.
-		}	
+		}
 	}
-	
+
 	private class TestConcurrent_ReadWriteBlockingGeneral extends TestCase.Unit {
 		/**
 		 * @param $msgsPerThread
@@ -176,13 +176,13 @@ public class DataPipeTest extends TestCase {
 				$words.add("w"+$i);
 			this.$counter = ConcurrentCounter.make($words);
 		}
-		
+
 		final Pipe<String> $pipe = new DataPipe<String>();
 		final ConcurrentCounter<String> $counter;
 		final int $msgsPerThread;
 		final int $threadPairsToSpawn;
 		final int $writesBetweenDelay;
-		
+
 		// VAGUE PERFORMANCE OBSERVATIONS (at $msgsPerThread=1000000, $threadPairsToSpawn=2):
 		// first of all, note that these are really, really vague.  i made no attempt to factor out the impact of that event counter.
 		//  same as below test on same code and exact same hardware but with ubuntu11.10 (and a 3.0.x kernel and java 1.6.0.30)
@@ -191,26 +191,26 @@ public class DataPipeTest extends TestCase {
 		//  with the modern generation of flippable-semaphore-based pipes:
 		//   about (min;432k; max:663k; ave:541k)/sec on a 2.7ghz+4core+ubuntu11.04; about 95% of all cores utilized (~5% kernel, ~90% userspace).
 		//   performance remains in that range when increasing n another 100x, as well, if you're wondering.
-		//   of course if you drop n it goes to crap: n=100:~7k/sec; n=1000:~20k/sec; n=10000:~40k/sec; n=100000:~174k/sec; 
+		//   of course if you drop n it goes to crap: n=100:~7k/sec; n=1000:~20k/sec; n=10000:~40k/sec; n=100000:~174k/sec;
 		//  with the older generation of interrupt-based pipes:
-		//   about (min:23k;  max:35k;  ave:27k)/sec  on a 2.7ghz+4core+ubuntu10.10; only about 50% of 2 cores utilized (20% userspace, 30% kernel). 
-		
+		//   about (min:23k;  max:35k;  ave:27k)/sec  on a 2.7ghz+4core+ubuntu10.10; only about 50% of 2 cores utilized (20% userspace, 30% kernel).
+
 		public void call() {
 			Runnable[] $tasks = new Runnable[$threadPairsToSpawn*2];
 			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
 				$tasks[$i] = new Reader();
 			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
 				$tasks[$threadPairsToSpawn+$i] = new Writer("w"+$i);
-			
+
 			long $start = X.time();
 			ThreadUtil.doAll($tasks);
 			long $time = X.time() - $start;
-			
+
 			for (int $i = 0; $i < $threadPairsToSpawn; $i++)
 				assertEquals($msgsPerThread, $counter.getCount("w"+$i));
 			$log.info("performance {} kops/sec", (($msgsPerThread/1000.0)/($time/1000.0)));
 		}
-		
+
 		private class Writer implements Runnable {
 			public Writer(String $str) { this.$str = $str; }
 			private String $str;
@@ -235,31 +235,31 @@ public class DataPipeTest extends TestCase {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestConcurrent_ReadWriteBlocking extends TestConcurrent_ReadWriteBlockingGeneral {
 		public TestConcurrent_ReadWriteBlocking() {
 			super(100, 2, 0);
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestConcurrent_ReadPauseyWriteBlocking extends TestConcurrent_ReadWriteBlockingGeneral {
 		public TestConcurrent_ReadPauseyWriteBlocking() {
 			super(100, 2, 10);
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestConcurrent_Close extends TestCase.Unit {
 		Pipe<String> $pipe = new DataPipe<String>();
 		ConcurrentCounter<String> $counter = ConcurrentCounter.make(Arr.asList(TD.s1));
 		final int n = 10000;
 		final int n2 = 100;
-		
+
 		public void call() {
 			Runnable[] $tasks = new Runnable[4];
 			$tasks[0] = new Writer(TD.s1);	// puts 2n+n2
@@ -269,7 +269,7 @@ public class DataPipeTest extends TestCase {
 			ThreadUtil.doAll($tasks);
 			assertEquals(2*n+n2, $counter.getCount(TD.s1));
 		}
-		
+
 
 		private class Writer implements Runnable {
 			public Writer(String $str) { this.$str = $str; }
@@ -299,7 +299,7 @@ public class DataPipeTest extends TestCase {
 			}
 		}
 	}
-	
+
 	// if a pipe is fed, closed, and then drained, we should see exactly n+2 events (one for the closure, one for the final drain, and one for each of the (unbatched) writes)... even if there is more than one person trying to get that last read.
 	//  jk, that's all impossible because pipes can't be arsed to check that that final drain event is a once-only.
 }

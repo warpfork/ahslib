@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
  * Purpose is simple: override KeyParameter so that copying the byte array of key material
  * on construction of the KeyParameter is not necessary.
  * </p>
- * 
+ *
  * <p>
  * The ability to wrap a byte array of key material directly gives the ability to build
  * crypto engines that use pointer equality on the byte array to rapidly detect if the
@@ -35,7 +35,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
  * waste time discarding the old key schedule and generating a new one that's exactly the
  * same. Why BC wasn't smart enough to do this itself I do not know.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class KeyParamMod extends KeyParameter {
@@ -43,9 +43,9 @@ public class KeyParamMod extends KeyParameter {
 		super(Primitives.EMPTY_BYTE);	// oh my GOD this is stupid
 		this.key = key;
 	}
-	
+
 	private byte[]	key;
-	
+
 	public byte[] getKey() {
 		return key;
 	}

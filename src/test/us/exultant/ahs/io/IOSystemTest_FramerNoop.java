@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -24,15 +24,15 @@ import java.nio.*;
 
 public class IOSystemTest_FramerNoop extends IOSystemTest_FramerBinary {
 	public static void main(String... $args) { new IOSystemTest_FramerNoop().run(); }
-	
+
 	protected boolean defineSupportsMultimessage() {
 		return false;
 	}
-	
+
 	protected ChannelReader<ByteBuffer> defineReader() {
 		return new NoopFrameReader();
 	}
-	
+
 	protected ChannelWriter<ByteBuffer> defineWriter() {
 		return new NoopFrameWriter();
 	}

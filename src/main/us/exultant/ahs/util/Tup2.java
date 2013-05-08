@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -24,17 +24,17 @@ public class Tup2<A, B> {
 		this.$a = $a;
 		this.$b = $b;
 	}
-	
+
 	public final A $a;
 	public final B $b;
-	
+
 	public A getA() { return $a; }
 	public B getB() { return $b; }
-	
+
 	public String toString() {
 		return "Tup2[$a=" + this.$a + ", $b=" + this.$b + "]";
 	}
-	
+
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -42,7 +42,7 @@ public class Tup2<A, B> {
 		result = prime * result + ((this.$b == null) ? 0 : this.$b.hashCode());
 		return result;
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (obj == null) return false;

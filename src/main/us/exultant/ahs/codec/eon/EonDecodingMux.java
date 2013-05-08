@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,25 +38,25 @@ import java.util.*;
  * {@link CodecImpl#encode(Object)} will not work, because it assumes you wish to encode
  * as the most specific type known.
  * </p>
- * 
+ *
  * <p>
  * Calling the <tt>enroll(*)</tt> functions of this class also calls the
  * <tt>putHook(*)</tt> methods on the parent codec. Encoding and decoding hooks for the
  * <tt>$FACE</tt> type are placed in the parent codec at construction time.
  * </p>
- * 
+ *
  * <p>
  * Once this mux is configured, all references to it can be safely discarded -- it will be
  * used internally by the parent codec in a transparent fashion.
  * </p>
- * 
+ *
  * <p>
  * Be aware that the decoding process for a muxed object mutates the given EonObject as
  * opposed to cloning it (specifically, it sets the {@link Eon#MAGICWORD_CLASS} field).
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class EonDecodingMux<$FACE> {
 	public EonDecodingMux(EonCodec $parent, Class<$FACE> $klass) {
@@ -65,11 +65,11 @@ public class EonDecodingMux<$FACE> {
 		this.$demux = new HashMap<String,Class<? extends $FACE>>();
 		initialize();
 	}
-	
+
 	private final Class<$FACE>				$klass;
 	private final EonCodec					$parent;
 	private final Map<String,Class<? extends $FACE>>	$demux;
-	
+
 	private void initialize() {
 		$parent.putHook($klass, new Dencoder<EonCodec,EonObject,$FACE>() {
 			public EonObject encode(EonCodec $codec, $FACE $x) throws TranslationException {
@@ -78,28 +78,28 @@ public class EonDecodingMux<$FACE> {
 				$eo.putKlass(EonDecodingMux.this.$klass);
 				return $eo;
 			}
-			
+
 			public $FACE decode(EonCodec $codec, EonObject $eo) throws TranslationException {
 				$eo.assertKlass(EonDecodingMux.this.$klass);
 				String $hint = $eo.getString(Eon.MAGICWORD_HINT);	// yes, this throws a translation exception if a hint isn't found.
 				Class<? extends $FACE> $t = $demux.get($hint);
-				if ($t == null) throw new TranslationException("Decoding dispatch hook not found for hint \"" + $hint + "\""); 
+				if ($t == null) throw new TranslationException("Decoding dispatch hook not found for hint \"" + $hint + "\"");
 				$eo.putKlass($hint);
 				return $parent.decode($eo, $t);
 			}
 		});
 	}
-	
+
 	public <$T extends $FACE> void enroll(Class<$T> $klass, final Encoder<EonCodec,EonObject,$T> $encoder, final Decoder<EonCodec,EonObject,$T> $decoder) {
 		if ($klass == null) throw new NullPointerException();
 		$parent.putHook($klass, $encoder);
 		$parent.putHook($klass, $decoder);
 		$demux.put(Eon.getKlass($klass), $klass);
 	}
-	
+
 	/**
-	 * Enrolls <tt>$dencoder</tt> as both the Encoder and Decoder for objects of type $klass.  This affects both the state of this EonDecodingMux, and also immediately 
-	 * 
+	 * Enrolls <tt>$dencoder</tt> as both the Encoder and Decoder for objects of type $klass.  This affects both the state of this EonDecodingMux, and also immediately
+	 *
 	 * @param $klass
 	 * @param $dencoder
 	 */

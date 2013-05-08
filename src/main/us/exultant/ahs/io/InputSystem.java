@@ -17,7 +17,7 @@ public class InputSystem<$MSG> {
 		) {
 		return null;	//TODO:AHS:IO: behavior for filesystem or other crap that doesn't match the SelectableChannel interface
 	}
-	
+
 	public static <$MSG, $CHAN extends SelectableChannel & ReadableByteChannel> InputSystem<$MSG> setup(WriteHead<$MSG> $sink, $CHAN $source, ChannelReader<$MSG> $framer) {
 		return setup(WorkManager.getDefaultScheduler(), IOManager.getDefaultSelectionSignaller(), $sink, $source, $framer);
 	}
@@ -38,9 +38,9 @@ public class InputSystem<$MSG> {
 		$wt.install($wf);
 		return new InputSystem<$MSG>($scheduler, $sink, $framer, $source, $wt, $wf);
 	}
-	
-	
-	
+
+
+
 	private InputSystem(WorkScheduler $scheduler, WriteHead<$MSG> $sink, ChannelReader<$MSG> $framer, Channel $channel, WorkTarget<$MSG> $worker, WorkFuture<$MSG> $future) {
 		this.$framer = $framer;
 		this.$channel = $channel;
@@ -49,28 +49,28 @@ public class InputSystem<$MSG> {
 		this.$future = $future;
 		this.$scheduler = $scheduler;
 	}
-	
+
 	/** System parameter. */
 	private final ChannelReader<$MSG>	$framer;
-	
+
 	private final Channel			$channel;
-	
+
 	/** System parameter.  Where we push our freshly read messages into. */
 	private final WriteHead<$MSG>		$sink;
-	
+
 	/** Always made by factory methods based on the channel type we get. */
 	private final WorkTarget<$MSG>		$worker;	//XXX:AHS:IO: actually not sure why we'd ever need this pointer.
-	
+
 	/** Always made by factory methods, since we often have things to do that are closely bound to the initial scheduling. */
 	private final WorkFuture<$MSG>		$future;
-	
+
 	/** System parameter.  Usually defaults to {@link WorkManager#getDefaultScheduler()}. */
 	private final WorkScheduler		$scheduler;
-	
+
 	public WorkFuture<$MSG> getFuture() {
 		return this.$future;
 	}
-	
+
 	public Channel getChannel() {
 		return $channel;
 	}

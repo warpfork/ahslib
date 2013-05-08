@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,13 +26,13 @@ import java.util.concurrent.*;
  * Used to specify timing parameters for scheduling tasks that are repeated or delayed
  * based on wall-clock time.
  * </p>
- * 
+ *
  * <p>
  * A task can be classed as {@code delayed}, {@code fixed-rate}, {@code fixed-delay}, or
  * {@code unclocked}. The first three categories are all "clock-based"; the last is
  * (obviously) "unclocked".
  * </p>
- * 
+ *
  * <p>
  * Unclocked tasks are scheduled by a {@link WorkScheduler} whenever the
  * {@link WorkTarget}'s {@link WorkTarget#isReady()} method allows, and will be repeated
@@ -62,148 +62,148 @@ import java.util.concurrent.*;
  * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable,long,long,TimeUnit)}.)
  * </ul>
  * </p>
- * 
+ *
  * <p>
  * Delays are always computed when the WorkScheduleParams object is created (and
  * thereafter for recurring tasks, when an execution finishes).
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public final class ScheduleParams {
 	/** This is a singleton that represents any schedule that is {@code unclocked}. */
 	public static final ScheduleParams	NOW	= new ScheduleParams(0, 0); // i can't decide whether to call this just "NOW" or "UNCLOCKED".  "ALWAYS" also seems borderline valid (which is what bothers me about "NOW" -- it doesn't capture the essense of recurrability).
-											
+
 	public static ScheduleParams makeNow() {
 		return NOW;
 	}
-	
+
 	public static ScheduleParams makeDelayed(long $delayMs) {
 		return makeDelayed($delayMs, TimeUnit.MILLISECONDS);
 	}
-	
+
 	public static ScheduleParams makeFixedRate(long $periodMs) {
 		return makeFixedRate(0, $periodMs, TimeUnit.MILLISECONDS);
 	}
-	
+
 	public static ScheduleParams makeFixedDelay(long $periodMs) {
 		return makeFixedDelay(0, $periodMs, TimeUnit.MILLISECONDS);
 	}
-	
+
 	public static ScheduleParams makeFixedRate(long $initialDelayMs, long $periodMs) {
 		return makeFixedRate($initialDelayMs, $periodMs, TimeUnit.MILLISECONDS);
 	}
-	
+
 	public static ScheduleParams makeFixedDelay(long $initialDelayMs, long $periodMs) {
 		return makeFixedDelay($initialDelayMs, $periodMs, TimeUnit.MILLISECONDS);
 	}
-	
+
 	public static ScheduleParams makeDelayed(long $delay, TimeUnit $unit) {
 		return makeDelayed($delay, $unit, false);
 	}
-	
+
 	public static ScheduleParams makeFixedRate(long $period, TimeUnit $unit) {
 		return makeFixedRate(0, $period, $unit, false);
 	}
-	
+
 	public static ScheduleParams makeFixedDelay(long $period, TimeUnit $unit) {
 		return makeFixedDelay(0, $period, $unit, false);
 	}
-	
+
 	public static ScheduleParams makeFixedRate(long $initialDelay, long $period, TimeUnit $unit) {
 		return makeFixedRate($initialDelay, $period, $unit, false);
 	}
-	
+
 	public static ScheduleParams makeFixedDelay(long $initialDelay, long $period, TimeUnit $unit) {
 		return makeFixedDelay($initialDelay, $period, $unit, false);
 	}
-	
+
 	public static ScheduleParams makeDelayed(long $startTime, TimeUnit $unit, boolean $startTimeIsAbsolute) {
 		return new ScheduleParams(
 				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
 				0
 		);
 	}
-	
+
 	public static ScheduleParams makeFixedRate(long $startTime, long $period, TimeUnit $unit, boolean $startTimeIsAbsolute) {
 		return new ScheduleParams(
 				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
 				$unit.toNanos($period)
 		);
 	}
-	
+
 	public static ScheduleParams makeFixedDelay(long $startTime, long $period, TimeUnit $unit, boolean $startTimeIsAbsolute) {
 		return new ScheduleParams(
 				($startTimeIsAbsolute ? 0 : System.nanoTime()) + $unit.toNanos($startTime),
 				-$unit.toNanos($period)
 		);
 	}
-		
-	
+
+
 	private ScheduleParams(long $ns, long $period) {
 		this.$time = $ns;
 		this.$period = $period;
 	}
-	
-	
-	
+
+
+
 	/** The time the task is enabled to execute in nanoTime units */
 	private long		$time;
-	
+
 	/**
 	 * Period in nanoseconds for repeating tasks. A positive value indicates
 	 * fixed-rate execution; a negative value indicates fixed-delay execution; a value
 	 * of 0 indicates a non-repeating task.
 	 */
 	private final long	$period;
-	
+
 	/**
 	 * Returns true if this scheduling request is not clock-based.
-	 * 
+	 *
 	 * @return true if unclocked
 	 */
 	public boolean isUnclocked() {
 		return $time == 0;
 	}
-	
+
 	/**
 	 * Returns true if this is a periodic (not a one-shot) scheduling request.
-	 * 
+	 *
 	 * @return true if periodic
 	 */
 	public boolean isPeriodic() {
 		return $period != 0;
 	}
-	
+
 	/**
 	 * Returns true if this is a fixed-rate action (as opposed to fixed-delay).
-	 * 
+	 *
 	 * @return true if fixed-rate
 	 */
 	public boolean isFixedRate() {
 		return $period > 0;
 	}
-	
+
 	/**
 	 * Returns the amount of time in nanoseconds before this action should become schedulable (or
 	 * negative if it already is).
-	 * 
+	 *
 	 * @return the amount of time before this action should become schedulable.
 	 */
 	public long getDelay() {
 		//if (isUnclocked()) return 0;	// i heard that getting synchronized nanotime can actually be a surprisingly heavy cost for jvms from a talk a jvm engineer for azul systems gave at a google conference.  either way, i like this being something consistent for unclocked tasks instead of being some arbitrary massively negative number.	// but then this is stupid.  there's no place i can imagine calling this without already having branched in the calling function on isClocked.
 		return ($time - System.nanoTime());
 	}
-	
+
 	/**
 	 * @return the time (in nanoTime units) when this task is no longer delayed.
 	 */
 	public long getNextRunTime() {
 		return $time;
 	}
-	
-	
+
+
 
 	/**
 	 * Sets the next time to run for a periodic task. {@link WorkScheduler}

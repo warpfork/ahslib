@@ -15,7 +15,7 @@ import java.nio.channels.*;
  * determine the blob, and the blob is wrapped in a ByteBuffer and returned as the result
  * of the translation.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class BinaryFrameReader implements ChannelReader<ByteBuffer> {

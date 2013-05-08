@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -24,9 +24,9 @@ import java.util.*;
 /**
  * Helper class to construct a type-safe chain of Translator instances at runtime that can
  * then act as a single coherent Translator from end to end.
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$FROM>
  * @param <$TO>
  */
@@ -73,12 +73,12 @@ public class TranslatorStack<$FROM, $TO> implements Translator<$FROM, $TO> {
 		$v.$dat.add($t5);
 		return $v;
 	}
-	
+
 	private TranslatorStack(int $size) {
 		$dat = new ArrayList<Translator<?,?>>($size);
 	}
 	private List<Translator<?,?>> $dat;
-	
+
 	@SuppressWarnings("unchecked")	// though runtime safety is unenforceable here because of generic type erasure, reasonable compilers enforce invariants at the factory methods.
 	public $TO translate($FROM $x) throws TranslationException {
 		Object $v = $x;

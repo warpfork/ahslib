@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,20 +26,20 @@ import java.util.concurrent.*;
  * Bridges the gap between {@link Callable} and WorkTarget. The work is ready any time
  * that it's not done.
  * </p>
- * 
+ *
  * <p>
  * If constructed in run-once mode, the WorkTarget will run exactly once when scheduled
  * with a {@link WorkScheduler}; otherwise if run-once is false the work will always be
  * ready and will never become done (to stop it, the {@link WorkFuture} must be cancelled
  * or it must throw an exception).
  * </p>
- * 
+ *
  * <p>
  * If you find yourself wanting to construct one of these with a null {@link Callable} and
  * then override the {@link #run()} method, perhaps you should just extend
  * {@link WorkTargetAdapterTriggerable}.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class WorkTargetWrapperCallable<$V> extends WorkTargetAdapterTriggerable<$V> {
@@ -51,9 +51,9 @@ public class WorkTargetWrapperCallable<$V> extends WorkTargetAdapterTriggerable<
 		if ($wrap == null) throw new NullPointerException();
 		this.$wrap = $wrap;
 	}
-	
+
 	private final Callable<$V>	$wrap;
-	
+
 	protected $V run() throws Exception {
 		$wrap.call();
 		return null;

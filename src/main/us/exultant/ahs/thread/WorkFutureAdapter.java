@@ -7,15 +7,15 @@ import java.util.concurrent.*;
  * common code as possible. (Mostly it implements all the status checking convenience
  * methods for you based on the return of {@link #getState()}, which you still must
  * provide when implemented the interface.)
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 abstract public class WorkFutureAdapter<$V> implements WorkFuture<$V> {
 	public boolean isCancelled() {
 		return getState() == State.CANCELLED;
 	}
-	
+
 	public boolean isDone() {
 		switch (getState()) {
 			case FINISHED:
@@ -26,7 +26,7 @@ abstract public class WorkFutureAdapter<$V> implements WorkFuture<$V> {
 				return false;
 		}
 	}
-	
+
 	public Boolean isFinishedGracefully() throws CancellationException {
 		switch (getState()) {
 			case FINISHED:

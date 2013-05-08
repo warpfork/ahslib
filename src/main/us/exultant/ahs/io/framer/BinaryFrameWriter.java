@@ -12,7 +12,7 @@ import java.nio.channels.*;
  * the channel look like a series of 4-byte signed integer lengths, followed by an
  * arbitrary blob of the size specified by the int.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class BinaryFrameWriter implements ChannelWriter<ByteBuffer> {

@@ -6,7 +6,7 @@ import java.nio.*;
 /** Like it says on the tin. */
 public class TranslatorToHex implements Translator<ByteBuffer,String> {
 	public static final TranslatorToHex INSTANCE = new TranslatorToHex();
-	
+
 	/**
 	 * @param $bytes
 	 *                a ByteBuffer to read between position and limit

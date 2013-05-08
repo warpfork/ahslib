@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ import us.exultant.ahs.codec.ebon.*;
 
 public class CodecEbonTest extends CodecEonTest {
 	public static void main(String... $args) { new CodecEbonTest().run(); }
-	
+
 	public CodecEbonTest() {
 		super(new EbonCodec());
 	}

@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,11 +27,11 @@ public class ByteVectorDencoder implements Dencoder<EonCodec,EonObject,ByteVecto
 	public static final Dencoder<EonCodec,EonObject,ByteVector> DENCODER = new ByteVectorDencoder();
 	public static final  Encoder<EonCodec,EonObject,ByteVector> ENCODER = DENCODER;
 	public static final  Decoder<EonCodec,EonObject,ByteVector> DECODER = DENCODER;
-	
+
 	public EonObject encode(EonCodec $codec, ByteVector $x) throws TranslationException {
 		return $codec.simple("ByV", null, $x.$d);
 	}
-	
+
 	public ByteVector decode(EonCodec $codec, EonObject $x) throws TranslationException {
 		$x.assertKlass("ByV");
 		return new ByteVector($x.getByteData());

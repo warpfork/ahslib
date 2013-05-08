@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ import java.util.concurrent.*;
  * desired or "select"-like functionality need be implemented across multiple ReadHead
  * instances. ReadHead is the complement of {@link WriteHead}.
  * </p>
- * 
+ *
  * <p>
  * Unlike other stream and channel interfaces, ReadHead intends to always be aligned to
  * something <i>meaningful</i> &mdash; though what exactly constitutes "meaningful" is
@@ -46,7 +46,7 @@ import java.util.concurrent.*;
  * manageably small. Thus, a binary transport with a ReadHead interface would typically be
  * designed to return ByteBuffer representing an entire frame of data.
  * </p>
- * 
+ *
  * <p>
  * Implementers of this interface could potentially be used to decorate an instance
  * {@link java.io.InputStream}, {@link java.util.concurrent.ConcurrentLinkedQueue},
@@ -56,14 +56,14 @@ import java.util.concurrent.*;
  * interfaces. Communication across sockets or to the filesystem is provided ready-made by
  * ReadHead implementations in the {@link us.exultant.ahs.io} package.
  * </p>
- * 
+ *
  * <p>
  * Implementers are typically expected to follow some sort of RAII (Resource Acquisition
  * Is Initialization) pattern, as no methods regarding opening or initializing are
  * provided by this interface, but there is absolutely no requirement that implementers do
  * so, and methods responsible for initialization may be as apt.
  * </p>
- * 
+ *
  * <p>
  * Implementers should avoid throwing OperationNotSupported exceptions from methods
  * relating to nonblocking reads if at all possible even when the underlying stream or
@@ -73,7 +73,7 @@ import java.util.concurrent.*;
  * class in the {@link us.exultant.ahs.thread} module of AHSlib is an ideal helper for
  * such a role.)
  * </p>
- * 
+ *
  * <p>
  * Note that the lack of methods for reading contiguous blocks; this is neither accidental
  * nor an oversight. The author asserts that if you find yourself with a desire for this
@@ -81,9 +81,9 @@ import java.util.concurrent.*;
  * solved by using a ReadHead with a generic type that it itself a generic List, or using
  * some other sort of object as a container for batches.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$T>
  */
 public interface ReadHead<$T> {
@@ -96,7 +96,7 @@ public interface ReadHead<$T> {
 	 * the final piece of data from an already-closed stream. In all situations, the
 	 * Listener is handed a reference to this ReadHead.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Despite the listener's intended purpose, it is critical to note that even if a
 	 * {@link #hasNext()} call is the first thing within the Listener's
@@ -106,7 +106,7 @@ public interface ReadHead<$T> {
 	 * ReadHead can result in another thread having pre-empted the Listener and
 	 * consumed the data before the Listener can respond.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * The Listener's {@link Listener#hear(Object) hear(ReadHead<$T>)} method will be
 	 * invoked from the thread that caused the state change, and as such must not be
@@ -119,7 +119,7 @@ public interface ReadHead<$T> {
 	 * those; you may find them extremely useful because they're able to deal with
 	 * such concepts of readiness very powerfully and efficiently).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Implementers typically call the listener's {@link Listener#hear(Object)} method
 	 * once per semantic event &mdash however, this is not required, and if multiple
@@ -135,25 +135,25 @@ public interface ReadHead<$T> {
 	 * {@link us.exultant.ahs.thread.WorkTarget#isReady()} by {@link #hasNext()} is a
 	 * useful idiom.)
 	 * </p>
-	 * 
+	 *
 	 * @param $el
 	 */
 	@Idempotent
 	@ThreadSafe
 	public void setListener(Listener<ReadHead<$T>> $el);
-	
+
 	/**
 	 * <p>
 	 * Blocking read. Elements that are read are removed from the stream.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * If multiple threads block on this concurrently, the choice of whether or not to
 	 * provide a guarantee of fairness is left up to the implementer. Regardless,
 	 * basic synchronicity must be maintained &mdash; there will be no double-reads,
 	 * null pointer exceptions, concurrent modification exceptions, or etc.
 	 * </p>
-	 * 
+	 *
 	 * @return next chunk of input, or null if there is no data available and the
 	 *         underlying stream has reached an {@code EOF} state. Some
 	 *         implementations may also choose to return null in the case that the
@@ -162,10 +162,10 @@ public interface ReadHead<$T> {
 	 */
 	@ThreadSafe
 	public $T read();
-	
+
 	/**
 	 * Nonblocking read. Elements that are read are removed from the stream.
-	 * 
+	 *
 	 * @return a chunk of input if possible, or null otherwise; null may indicate
 	 *         either <code>EOF</code> or simply nothing available at the time.
 	 *         {@link #isClosed()} should be used to determine the difference.
@@ -177,14 +177,14 @@ public interface ReadHead<$T> {
 	 * <p>
 	 * Blocking read with timeout. Elements that are read are removed from the stream.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * If multiple threads block on this concurrently, the choice of whether or not to
 	 * provide a guarantee of fairness is left up to the implementer. Regardless,
 	 * basic synchronicity must be maintained &mdash; there will be no double-reads,
 	 * null pointer exceptions, concurrent modification exceptions, or etc.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Since null is returned from this method both in the case of timeouts and
 	 * emptiness of a closed data source, if it is necessary to make sure all data has
@@ -198,7 +198,7 @@ public interface ReadHead<$T> {
 	 * {@link #isClosed()} check is made, which would result in that data being
 	 * unnoticed.
 	 * </p>
-	 * 
+	 *
 	 * @return next chunk of input, or null if the timeout elapses without a chunk
 	 *         becoming available, or null if there is no data available and the
 	 *         underlying stream has reached an {@code EOF} state. Some
@@ -208,13 +208,13 @@ public interface ReadHead<$T> {
 	 */
 	@ThreadSafe
 	public $T readSoon(long $timeout, TimeUnit $unit);
-	
+
 	/**
 	 * Tells whether or not input is immediately available to be read. If the ReadHead
 	 * is shared by multiple threads this should not be relied upon to determine if a
 	 * subsequent blocking call will return without waiting, since other threads may
 	 * have already pre-empted it.
-	 * 
+	 *
 	 * @return true if a chunk of input is stream to be read immediately; false
 	 *         otherwise. Similarly to {@link #readNow()}, a return of false may
 	 *         indicate either <code>EOF</code> or simply nothing available at the time.
@@ -223,7 +223,7 @@ public interface ReadHead<$T> {
 	@Nullipotent
 	@ThreadSafe
 	public boolean hasNext();
-	
+
 	/**
 	 * <p>
 	 * Blocks until the stream is closed, then returns its entire contents at once
@@ -234,7 +234,7 @@ public interface ReadHead<$T> {
 	 * receive a normal result, and the rest will receive empty lists (as will
 	 * subsequent invocations).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * <i>Note:</i> if you feel this behavior (waiting until the end of stream but
 	 * still allowing other reads) odd, consider the following points:
@@ -251,7 +251,7 @@ public interface ReadHead<$T> {
 	 * overhead, and contention to all calls.
 	 * </ol>
 	 * </p>
-	 * 
+	 *
 	 * @return a list containing one entry for each chunk of input following the last
 	 *         invocation of a read method that is available from the stream between
 	 *         the time of this method's invocation and the closing of the stream. The
@@ -265,18 +265,18 @@ public interface ReadHead<$T> {
 	 * @throws UnsupportedOperationException
 	 *                 if the underlying stream has no notion of closed or finished,
 	 *                 since this method is then not well defined.
-	 * 
+	 *
 	 */
 	@ThreadSafe
 	public List<$T> readAll() throws InterruptedException;
-	
+
 	/**
 	 * Immediately returns entire contents of this stream at once (minus, of course,
 	 * any entries that have already been read). Similarly to the blocking
 	 * {@link #readAll()} method, if multiple threads invoke this after the stream is
 	 * closed then the first will receive a normal result, and other threads and
 	 * subsequent invocations will receive empty lists.
-	 * 
+	 *
 	 * @return a list containing one entry for each chunk of input following the last
 	 *         invocation of a read method that is currently available from the
 	 *         stream. The list returned may have zero entries if there is no input
@@ -284,15 +284,15 @@ public interface ReadHead<$T> {
 	 */
 	@ThreadSafe
 	public List<$T> readAllNow();
-	
-	
+
+
 
 	/**
 	 * <p>
 	 * Returns the closure status of this ReadHead (in other words, whether or not
 	 * this buffer is capable of growing).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Note that if a ReadHead is semantically paired with a WriteHead (as in a the
 	 * two heads of a pipe, or the two endpoints of a network connections), their
@@ -302,7 +302,7 @@ public interface ReadHead<$T> {
 	 * implementators in any system that deals with semantically linked ReadHead and
 	 * WriteHead to see how they deal with synchronity in this situation.
 	 * </p>
-	 * 
+	 *
 	 * @return true if the ReadHead has internally reached some sort of
 	 *         <code>EOF</code> state; false otherwise. If true is ever returned, no
 	 *         subsequent invocations may return false (i.e. this method is
@@ -314,7 +314,7 @@ public interface ReadHead<$T> {
 	@Nullipotent
 	@ThreadSafe
 	public boolean isClosed();
-	
+
 	/**
 	 * <p>
 	 * Closes the underlying stream or channel. The semantics of this are not always
@@ -323,7 +323,7 @@ public interface ReadHead<$T> {
 	 * (and, in particular, reads blocking for stream completion) will return
 	 * following invocation of this function.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Implementers may choose to simply relay the "close" invocation to their
 	 * underlying stream or channel, and then nonetheless continue to pump that
@@ -335,7 +335,7 @@ public interface ReadHead<$T> {
 	 * required to return <code>true</code> immediately after <code>close()</code> is
 	 * called.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * In situations that bear resemblance to pipes (that is, a ReadHead is paired
 	 * with a WriteHead at some other position along the same underlying stream or
@@ -345,7 +345,7 @@ public interface ReadHead<$T> {
 	 * &mdash; namely, that the matching WriteHead (or equivalent) may find its stream
 	 * or channel to have become closed as well.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Only the first invocation of this function should have any effect; closing a
 	 * closed ReadHead is illogical (but should not throw exceptions).
@@ -355,21 +355,21 @@ public interface ReadHead<$T> {
 	@Idempotent
 	@ThreadSafe
 	public void close();
-	
+
 	/**
 	 * Signals whether or not a read may ever again return data. This method is
 	 * functionally identical to calling <code>(isClosed() && !hasNext())</code>, but
 	 * may be more efficient.
-	 * 
+	 *
 	 * @return false if it is possible for a read to return data in the future; true
 	 *         otherwise.
 	 */
 	@Nullipotent
 	@ThreadSafe
 	public boolean isExhausted();
-	
-	
-	
+
+
+
 	/** ReadHead that acts like <tt>/dev/zero</tt> (can always be read from, always returns null). */
 	public static class NoopAdapter<$T> implements ReadHead<$T> {
 		public void setListener(Listener<ReadHead<$T>> $el) {}

@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,7 @@ import java.lang.reflect.*;
 /**
  * Always respects the value given for classname encoding preferences as given in the
  * Encodable annotation.
- * 
+ *
  * @param <$T>
  */
 public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
@@ -37,7 +37,7 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 	public EonRAE(Class<$T> $class, String $selector) throws UnencodableException {
 		this.$class = $class;
 		this.$selector = $selector;
-		
+
 		// pick out and put in the semblance of a class name we want
 		// also, check if that class will allow itself to be encoded like this
 		Encodable $cenc = $class.getAnnotation(Encodable.class);
@@ -46,7 +46,7 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 		else {
 			if (!Arr.contains($cenc.styles(), $selector))
 				throw new UnencodableException("Class to be encoded must be annotated to accept the style that this Encoder is configured for (selected=\""+$selector+"\", accept="+Arr.toString($cenc.styles())+").");
-			
+
 			String $key = $cenc.value();
 			if ($key.equals(Encodable.NONE))
 				$classname = "";
@@ -59,17 +59,17 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 		// and finally check if we're just supposed to use the "all fields" shortcut
 		$allFields = $cenc.all_fields();
 	}
-	
+
 	private final Class<$T>	$class;
 	private final String	$selector;
 	private final String	$classname;
 	private final boolean	$allFields;
-	
+
 	public EonObject encode(EonCodec $codec, $T $x) throws TranslationException {
 		try {
 			EonObject $jo = $codec.newObj();
 			String $key;
-			
+
 			// put in the appropriate class name tag
 			if ($classname == null) {
 				$jo.putKlass($x);
@@ -78,7 +78,7 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 			} else {
 				$jo.putKlass($classname);
 			}
-			
+
 			// walk across fields and serialize the non-static ones
 			if ($allFields) {	// all of them, regardless of whether that particular field is annotated
 				for (Field $f : $class.getDeclaredFields()) {
@@ -89,8 +89,8 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 					if ($anno != null) {
 						if ($anno.value().isEmpty())
 							$key = $f.getName();
-						else $key = $anno.value(); 
-						
+						else $key = $anno.value();
+
 						encodeField($codec, $jo, $key, $f, $x);
 					} else {
 						encodeField($codec, $jo, $f.getName(), $f, $x);
@@ -106,20 +106,20 @@ public class EonRAE<$T> implements Encoder<EonCodec,EonObject,$T> {
 						if (Arr.contains($anno.selected(), $selector)) {
 							if ($anno.value().isEmpty())
 								$key = $f.getName();
-							else $key = $anno.value(); 
+							else $key = $anno.value();
 
 							encodeField($codec, $jo, $key, $f, $x);
 						}
 					}
 				}
 			}
-			
+
 			return $jo;
 		} catch (IllegalAccessException $e) {
 			throw new UnencodableException("reflection problem",$e);
 		}
 	}
-	
+
 	private void encodeField(EonCodec $codec, EonObject $eo, String $key, Field $f, $T $x) throws TranslationException, IllegalAccessException {
 		Class<?> $typo = $f.getType();
 		// i wish you could do a switch on anything that acts like a pointer

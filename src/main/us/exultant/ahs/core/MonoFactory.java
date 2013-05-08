@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ import us.exultant.ahs.anno.*;
  * instance <b>must</b> be idempotent and must consistently return a pointer to the same
  * object every time it is called).
  * </p>
- * 
+ *
  * <p>
  * Typical strategies for implementing a MonoFactory include the following:
  * <ul>
@@ -44,9 +44,9 @@ import us.exultant.ahs.anno.*;
  * The first option is inflexible without resorting to subclassing; the second option is
  * more flexible, but tends to result in substantial boilerplate code.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$T>
  */
 public interface MonoFactory<$T> extends Factory<$T> {

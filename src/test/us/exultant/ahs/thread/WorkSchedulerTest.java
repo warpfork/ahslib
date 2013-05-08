@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.*;
  * order to make a valid test case for any specific implementation of
  * {@link WorkScheduler}.
  * </p>
- * 
+ *
  * <p>
  * It's essential to run this test repeatedly for confidence in its success being no mere
  * series of false positives; threading is a fickle thing. And we're not talking about a
@@ -42,19 +42,19 @@ import java.util.concurrent.atomic.*;
  * i=0; while true; do i=$(math $i + 1); echo $i; date; java us.exultant.ahs.thread.WorkSchedulerFlexiblePriorityTest 2> lol; if [ "$?" -ne "0" ]; then break; fi; echo; done
  * </tt>
  * </p>
- * 
+ *
  * <p>
  * {@code DEPENDS: }
  * <ul>
  * <li>{@link DataPipeTest}
  * </ul>
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public abstract class WorkSchedulerTest extends TestCase {
-	
+
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestRunOnce());
@@ -74,30 +74,30 @@ public abstract class WorkSchedulerTest extends TestCase {
 		//$tests.add(new TestStopAndCompletionWait());	// this doesn't pass on a WS implementation that has a blocking stop method.
 		return $tests;
 	}
-	
+
 	private static final TestData	TD	= TestData.getFreshTestData();
-	
+
 	/** If this is a positive integer, we want that many threads.  A zero means that you can use your default (presumably threads=cores). */
 	protected abstract WorkScheduler makeScheduler(int $threads);
-	
+
 	/** Number of milliseconds which we'll consider as "<b>a</b>cceptably <b>o</b>ver<b>d</b>ue". */
 	// I'd really like to be able to set this lower, and in many practical use cases, you can.  However, I've observed that my computer will get very, very lazy about timestamps when it's under heavy load, and will in fact start returning them at only 10ms granularity!  So, I'm stuck with an AOD of anything less than 11 being quite unreasonable.
 	private final int TSCALE = 50;
-	
-	
-	
+
+
+
 	/** One runnable wrapped to be a one-shot WorkTarget. */
 	private class TestRunOnce extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			Work $w = new Work();
 			Future<?> $f = $ws.schedule(new WorkTargetWrapperRunnable($w), ScheduleParams.NOW);
-			
+
 			$f.get();
-			
+
 			assertEquals(999, $w.x);
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
@@ -108,17 +108,17 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 	}
-	
-	
+
+
 	/** Tests for a single firing of a completion listener that's assigned to a one-shot WorkTarget before the scheduler is launched. */
 	private class TestCompletionPreSubscribe extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0);
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			final Work $wt = new Work();
 			final WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable($wt), ScheduleParams.NOW);
-			
+
 			$wf.addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $lol) {
 					// demand an immediate response
@@ -132,30 +132,30 @@ public abstract class WorkSchedulerTest extends TestCase {
 				}
 			});
 			$ws.start();
-			
+
 			$wf.get();
-			
+
 			X.chill(5);	// some delay can be required here, because the get() method must be able to return without blocking before listeners are called.
 			assertEquals(1, $completionCalls.intValue());	//TODO:AHS:THREAD: fix this to use a countdownlatch
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
 		private class Work implements Runnable { public void run() {} }
 	}
-	
-	
+
+
 	/** Tests for a single firing of a completion listener that's assigned to a one-shot WorkTarget after it's been completed. */
 	private class TestCompletionPostSubscribe extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			final Work $wt = new Work();
 			final WorkFuture<Void> $wf = $ws.schedule(new WorkTargetWrapperRunnable($wt), ScheduleParams.NOW);
-			
+
 			$wf.get();
-			
+
 			$wf.addCompletionListener(new Listener<WorkFuture<?>>() {
 				public void hear(WorkFuture<?> $lol) {
 					// demand an immediate response
@@ -168,22 +168,22 @@ public abstract class WorkSchedulerTest extends TestCase {
 					catch (TimeoutException $e) { breakUnit($e); }
 				}
 			});
-			
+
 			assertEquals(1, $completionCalls.intValue());
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
 		private class Work implements Runnable { public void run() {} }
 	}
-	
-	
-	
+
+
+
 	/** Eight work targets, all always ready until they're done.
 	 *  Also performs completion signaling test. */
 	private class TestWtAlwaysReady extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			final AtomicInteger $completionCalls = new AtomicInteger(0);
 			Work[] $wt = new Work[8];
@@ -196,14 +196,14 @@ public abstract class WorkSchedulerTest extends TestCase {
 					$completionCalls.incrementAndGet();
 				}
 			});
-			
+
 			for (int $i = 0; $i < 8; $i++) $f[$i].get();
-			
+
 			for (int $i = 0; $i < 8; $i++) assertEquals(0, $wt[$i].x);
-			
+
 			X.chill(5);	// some delay can be required here, because the get() method must be able to return without blocking before listeners are called.
 			assertEquals(8, $completionCalls.intValue());
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
@@ -224,15 +224,15 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	/** Test two work targets, once of which must always follow the other (in other words, one is always ready, but the other changes readiness based on the progress of the first). */
 	public class TestNonblockingLeaderFollower extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
 		final int HIGH = 10000;
 		final int LOW = 100;
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			WorkLeader $w1 = new WorkLeader();
 			WorkFollower $w2 = new WorkFollower();
@@ -240,17 +240,17 @@ public abstract class WorkSchedulerTest extends TestCase {
 			WorkFuture<Void> $f2 = $ws.schedule($w2, ScheduleParams.NOW);
 			$w1.$followerFuture = $f2;
 			WorkFuture<Void> $f1 = $ws.schedule($w1, ScheduleParams.NOW);
-			
+
 			$f1.get();
 			$f2.get();
-			
+
 			assertTrue($w1.isDone());
 			assertFalse($w1.isReady());
 			assertTrue($w2.isDone());
 			assertFalse($w2.isReady());
 			assertEquals(LOW, $w2.x);
 			assertEquals(LOW, $w1.x);
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
@@ -297,28 +297,28 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestFinishWhileRunning extends TestCase.Unit {
 		private final WorkScheduler $ws = makeScheduler(0).start();
 		private final Pipe<String> $pipe = new DataPipe<String>();
-		
+
 		//XXX:AHS:THREAD: this really not a very smart test i think.  we should have one thread just constantly trying to finish a work target that's counting to 10.
 		public void call() throws InterruptedException, ExecutionException {
 			$pipe.sink().write(TD.s1);
 			$pipe.sink().write(TD.s2);
 			$pipe.sink().close();
-			
+
 			WorkFuture<String> $wf1 = $ws.schedule(new Work(), ScheduleParams.NOW);
 			WorkFuture<String> $wf2 = $ws.schedule(new Work(), ScheduleParams.makeDelayed(3));
-			
+
 			$log.trace("waiting for first future...");
 			String $lol = $wf1.get();
 			assertNotNull($lol);
 			$log.trace("first future returned "+$lol+"; waiting for second...");
 			assertEquals($lol == TD.s1 ? TD.s2 : TD.s1, $wf2.get());	// which ever one the first to finish didn't get, the second must remember.
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
@@ -341,9 +341,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	/** Tests that a piece of work that takes a long time to respond to a cancel still becomes cancelled, and also that it does not become cancelled until the thread doing work is clear of the area. */
 	private class TestCancelWhileRunning extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
@@ -363,14 +363,14 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		private class Work implements Runnable { public void run() { X.chill(TSCALE*3); $clear = true; } }
 	}
-	
-	
-	
+
+
+
 	/**  */
 	private class TestScheduleSingleDelayMany extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0);
 		public final int WTC = 8;
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			final int space = TSCALE*4;
 			WorkFuture<?>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
@@ -385,7 +385,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$log.trace("work scheduler starting...");
 			$ws.start();
 			$log.trace("work scheduler started.");
-			
+
 			long $startTime = X.time();
 			for (int $i = 1; $i < WTC; $i++) {
 				$wf[$i-1].get();
@@ -394,7 +394,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				assertTrue("task less than "+TSCALE+"ms overdue ($timeTaken="+$timeTaken+")", $timeTaken-TSCALE < $i*space);
 				assertFalse($wf[$i].isDone());
 			}
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
@@ -404,19 +404,19 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	/** One task with a fixed delay is scheduled to run 10 times, and is checked by another thread. */
 	private class TestScheduleFixedRate extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			Work $wt = new Work();
 			final int initialDelay = TSCALE*10;
 			final int repeatDelay = TSCALE*4;
 			WorkFuture<Integer> $wf = $ws.schedule($wt, ScheduleParams.makeFixedRate(initialDelay, repeatDelay));
-			
+
 			long $startTime = X.time();
 			long $targetTime = $startTime + initialDelay;
 			X.chillUntil($targetTime+TSCALE);
@@ -426,7 +426,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				assertEquals("check amount of work completed after repeating delay", $i, $wt.x);
 			}
 			assertEquals(0, $wf.get().intValue());
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
@@ -448,25 +448,25 @@ public abstract class WorkSchedulerTest extends TestCase {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	/** Similar to {@link TestNonblockingLeaderFollower}, but with many more WorkTargets than threads, and all drawing from the same input pipe (which will have been closed before the draining WorkTargets start).
-	 * 
+	 *
 	 * This is a very major test, since it deals with WorkTarget who have to notice their doneness and finish concurrently instead of at the completion of a normal run (probably).
-	 * 
+	 *
 	 * This also tests (if indirectly) consistent results from WorkTarget that receive concurrent finishes (but I'd recommend running it numerous times if you want to feel confident of that.  And by numerous times, I mean many thousands of times.).
 	 */
 	private class TestNonblockingManyWorkSingleSource extends TestCase.Unit {
 		protected WorkScheduler $ws = makeScheduler(0).start();
 		public final int HIGH = 1000;
 		public final int WTC = 32;
-		
+
 		protected final Pipe<Integer> $pipe = new DataPipe<Integer>();
 		protected final Work[] $wt = new Work[WTC];
 		@SuppressWarnings("unchecked")	// impossible to not suck in java.
 		protected final WorkFuture<Integer>[] $wf = Arr.newInstance(WorkFuture.class, WTC);
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			feedPipe();
 
@@ -476,9 +476,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 			$log.trace("scheduling work targets");
 			for (int $i = 0; $i < WTC; $i++)
 				$wf[$i] = $ws.schedule($wt[$i], ScheduleParams.NOW);
-			
-			configurePipe();	// this actually illustrates an important conundrum: one can't assign listeners until after we have the WorkFuture to make noise about... so if you want to be able to write (and possibly finish writing) concurrently with starting up new work to do reading, you actually require the ReadHead to send a "spurious" (that is, not triggered by any actual life-cycle event of write, close, or final read) event when you assign that Listener to it. 
-			
+
+			configurePipe();	// this actually illustrates an important conundrum: one can't assign listeners until after we have the WorkFuture to make noise about... so if you want to be able to write (and possibly finish writing) concurrently with starting up new work to do reading, you actually require the ReadHead to send a "spurious" (that is, not triggered by any actual life-cycle event of write, close, or final read) event when you assign that Listener to it.
+
 			$log.trace("waiting for work future completion");
 			boolean $wonOnce = false;
 			for (int $i = 0; $i < WTC; $i++) {
@@ -490,7 +490,7 @@ public abstract class WorkSchedulerTest extends TestCase {
 				}
 			}
 			assertTrue("Exactly one WorkTarget finished with the high value.", $wonOnce);
-			
+
 			breakCaseIfFailed();
 			$ws.stop(false);
 		}
@@ -525,9 +525,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		protected void configurePipe() {}
 	}
-	
-	
-	
+
+
+
 	/** Same as {@link TestNonblockingManyWorkSingleSource}, but the input pipe will be closed from the sink() thread when the source is already empty (resulting in a (probably) concurrent finish for the WorkTargets). */
 	private class TestNonblockingManyWorkSingleConcurrentSource extends TestNonblockingManyWorkSingleSource {
 		protected void feedPipe() {
@@ -537,10 +537,10 @@ public abstract class WorkSchedulerTest extends TestCase {
 					$log.trace("PIPE SIZE: "+$pipe.size()+"\nSCHEDULER STATUS:\n" + $bs.describe());
 				}
 			}, true, false, 100000), ScheduleParams.makeFixedDelay(100));
-			
+
 			$ws.schedule(new WorkTargetWrapperRunnable(new Runnable() { public void run() { TestNonblockingManyWorkSingleConcurrentSource.super.feedPipe(); } }), ScheduleParams.NOW);	// that was an incredibly satisfying line to write
 		}
-		
+
 		protected void configurePipe() {
 			// the earlier test didn't actually need to set the pipe listener because all the writes were done before any reading started, and so all of the work was always ready as long as it wasn't done.  now we're in an entirely different situation.
 			$pipe.source().setListener(new Listener<ReadHead<Integer>>() {
@@ -551,19 +551,19 @@ public abstract class WorkSchedulerTest extends TestCase {
 			});
 		}
 	}
-	
-	
-	
+
+
+
 	/** Test that when two tasks of different priority are scheduled, the higher priority goes first.
 	 *  A scheduler with a thread pool size of one is used. */
 	private class TestPrioritizedDuo extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(1);
-		
+
 		public void call() throws InterruptedException, ExecutionException {
 			WorkFuture<Void> $wf_low = $ws.schedule(new WorkTargetWrapperRunnable(new Work(), 10), ScheduleParams.NOW);
 			WorkFuture<Void> $wf_high = $ws.schedule(new WorkTargetWrapperRunnable(new Work(), 90000), ScheduleParams.NOW);
 			$ws.start();
-			
+
 			$wf_high.get();
 			X.chill(TSCALE*4);
 			assertFalse($wf_low.isDone());
@@ -571,12 +571,12 @@ public abstract class WorkSchedulerTest extends TestCase {
 
 			$ws.stop(false);
 		}
-		
+
 		private class Work implements Runnable { public void run() { X.chill(TSCALE*5); } }
 	}
-	
-	
-	
+
+
+
 	/** Test that the WorkFuture of a scheduled task comes back out of the WorkScheduler's completed() ReadHead. */
 	private class TestCompletion extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
@@ -590,9 +590,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		private class Work implements Runnable { public void run() {} }
 	}
-	
-	
-	
+
+
+
 	/** Test a WorkScheduler's completed() ReadHead becomes closed after the scheduler has been stopped. */
 	private class TestStopAndCompletionClose extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
@@ -602,9 +602,9 @@ public abstract class WorkSchedulerTest extends TestCase {
 			assertTrue("completed queue closed after stop", $ws.completed().isClosed());
 		}
 	}
-	
-	
-	
+
+
+
 	/** Test a WorkScheduler's completed() ReadHead becomes closed only after the scheduler has been stopped AND work in progress has completed. */
 	private class TestStopAndCompletionWait extends TestCase.Unit {
 		private WorkScheduler $ws = makeScheduler(0).start();
@@ -619,13 +619,13 @@ public abstract class WorkSchedulerTest extends TestCase {
 		}
 		private class Work implements Runnable { public void run() { X.chill(TSCALE); $clear = true; } }
 	}
-	
-	
-	
+
+
+
 	/**  */
 	private class TestBasic extends TestCase.Unit {
 		protected WorkScheduler $ws = makeScheduler(0).start();
-		
+
 		public void call() {
 			//TMPL
 			breakUnitIfFailed();

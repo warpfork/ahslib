@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -32,15 +32,15 @@ import java.util.*;
  * order of whichever is done first (which could be done by putting listeners on each
  * future, but this allows you to do it all in one thread).
  * </p>
- * 
+ *
  * <p>
  * If you want a WorkFuture that will represent the completion of all of a set of
  * WorkFutures (i.e. so that you can use the completion listener to fire once when all the
  * set of tasks is done), consider using {@link WorkFutureAggregate}.
  * </p>
- * 
+ *
  * <h3>Why doesn't this work with {@link java.util.concurrent.Future}?</h3>
- * 
+ *
  * <p>
  * Unfortunately, this could not be provided for Future as well as for WorkFuture, because
  * there is no ability to detect the completion of a Future in a nonblocking way without
@@ -49,7 +49,7 @@ import java.util.*;
  * </p>
  */
 //this is obscenely similar to ExecutorCompletionService.
-//note however that our semantics for close again come in handy here: 
+//note however that our semantics for close again come in handy here:
 //  there's a difference between a ExecutorCompletionService that returns null and a FuturePipe that's closed.
 //    The ECS tends to require that you load all your Futures into the ECS before you start polling them for completion so you can tell for sure when you're actually done;
 //    the FuturePipe supplies a thread-safe closing operation that deals with that problem and thus broadens the range of applications significantly.
@@ -59,24 +59,24 @@ public final class FuturePipe<$T> implements Pipe<WorkFuture<$T>> {
 	public ReadHead<WorkFuture<$T>> source() {
 		return $outbound.source();
 	}
-	
+
 	public WriteHead<WorkFuture<$T>> sink() {
 		return $inbound;
 	}
-	
+
 	public int size() {
 		return $outbound.size();
 	}
-	
+
 	private final WriteHead<WorkFuture<$T>> $inbound = new Sink();
 	private volatile boolean $allowMore = true;
 	private final Pipe<WorkFuture<$T>> $outbound = new DataPipe<WorkFuture<$T>>();
 	/** This is package-visible so we can use it in AggregateWorkFuture.  Synchronize at all times. */
 	final Set<WorkFuture<$T>> $held = new HashSet<WorkFuture<$T>>();
-	
+
 	private final class Sink implements WriteHead<WorkFuture<$T>> {
 		private Sink() {} // this should be a singleton per instance of the enclosing class
-		
+
 		public void write(WorkFuture<$T> $chunk) throws IllegalStateException {
 			synchronized ($held) {
 				if (isClosed()) throw new IllegalStateException("Pipe has been closed.");
@@ -84,22 +84,22 @@ public final class FuturePipe<$T> implements Pipe<WorkFuture<$T>> {
 				$chunk.addCompletionListener($lol);
 			}
 		}
-		
+
 		public void writeAll(Collection<? extends WorkFuture<$T>> $chunks) {
 			synchronized ($held) {
 				for (WorkFuture<$T> $chunk : $chunks)
 					write($chunk);
 			}
 		}
-		
+
 		public boolean hasRoom() {
 			return true;
 		}
-		
+
 		public boolean isClosed() {
 			return !$allowMore;	// so, note!  closure on the writehead side is DIFFERENT than closure on the readhead side for a FuturePipe!
 		}
-		
+
 		public void close() {
 			synchronized ($held) {	// synchronizing this is requisite for proper synchronous closure of the outbound pipe to be possible
 				$allowMore = false;
@@ -107,7 +107,7 @@ public final class FuturePipe<$T> implements Pipe<WorkFuture<$T>> {
 			}
 		}
 	}
-	
+
 	private final Listener<WorkFuture<?>> $lol = new Listener<WorkFuture<?>>() {
 		@SuppressWarnings("unchecked")	// casting our generic type back on to the WorkFuture is safe at runtime
 		public void hear(WorkFuture<?> $finished) {
