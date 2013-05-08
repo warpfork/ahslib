@@ -329,12 +329,12 @@ public class Arr {
 		return ByteBuffer.wrap($a).compareTo(ByteBuffer.wrap($b));	// a one liner... but makes much garbage.
 	}
 
-	//MAKEMORE
+	/** @Deprecated use {@link Strings#join(Collection, CharSequence)} instead. */
 	public static final String flatten(Object[] $r) {
 		return flatten($r, " ");
 	}
 
-	//MAKEMORE
+	/** @Deprecated use {@link Strings#join(Collection, CharSequence)} instead. */
 	public static final String flatten(Object[] $r, String $glue) {
 		StringBuilder $sb = new StringBuilder();
 		for (Object $s : $r)
