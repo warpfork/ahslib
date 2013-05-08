@@ -22,6 +22,7 @@ package us.exultant.ahs.iob;
 import us.exultant.ahs.util.*;
 import java.io.*;
 import java.net.*;
+import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
 
@@ -274,6 +275,35 @@ public class IOForge {
 		} finally {
 			if ($os != null) $os.close();
 		}
+	}
+
+	/** Copy a file.  If using a jvm >= 1.7, prefer the standard API: {@link java.nio.file.Files#copy(Path, Path, CopyOption[])}. */
+	@SuppressWarnings("javadoc")
+	public static void copyFile(File $in, File $out) throws IOException {
+		FileInputStream $ins = null;
+		try {
+			$ins = new FileInputStream($in);
+			FileChannel $inch = $ins.getChannel();
+			FileChannel $outch = null;
+			try {
+				$outch = new FileOutputStream($out).getChannel();
+				$inch.transferTo(0, $inch.size(), $outch);
+			} finally {
+				if ($outch != null) $outch.close();
+			}
+		} finally {
+			if ($ins != null) $ins.close();
+		}
+	}
+
+	/** Delete anything.  Recurse if directory. */
+	public static void delete(File $in) throws IOException {
+		if (!$in.exists())
+			return;
+		if ($in.isDirectory())
+			for (File $x : $in.listFiles())
+				delete($x);
+		$in.delete();
 	}
 
 	/**
