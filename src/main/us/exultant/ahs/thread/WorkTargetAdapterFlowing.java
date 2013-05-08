@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -28,9 +28,9 @@ import us.exultant.ahs.core.*;
  * Tasks that are more of a one-shot thing or feel like a callback are probably
  * better expressed using a {@link WorkTargetAdapterTriggerable}.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public abstract class WorkTargetAdapterFlowing<$IN, $OUT> implements WorkTarget<Void> {
 	/**
@@ -52,13 +52,13 @@ public abstract class WorkTargetAdapterFlowing<$IN, $OUT> implements WorkTarget<
 		$sink = $workSink;
 		$prio = $priority;
 	}
-	
-	/** Direct access to this field is not typically necessary or recommended, but is allowed in case for example a subclass should wish to close the stream. */ 
+
+	/** Direct access to this field is not typically necessary or recommended, but is allowed in case for example a subclass should wish to close the stream. */
 	protected final ReadHead<$IN>	$src;
 	/** Direct access to this field is not typically necessary or recommended, but is allowed in case for example a subclass should wish to close the stream. */
 	protected final WriteHead<$OUT>	$sink;
 	private final int		$prio;
-	
+
 	/**
 	 * This method attempts to read some data for working on, then if it is
 	 * available, passes control to the {@link #run(Object)} method which you
@@ -73,7 +73,7 @@ public abstract class WorkTargetAdapterFlowing<$IN, $OUT> implements WorkTarget<
 		return null;
 	}
 	protected abstract $OUT run($IN $chunk) throws Exception;
-	
+
 	/** @inheritDocs */
 	public final boolean isReady() { return $src.hasNext(); }
 	/** @inheritDocs */

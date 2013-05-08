@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@ import java.util.*;
  * either {@link us.exultant.ahs.codec.json.JsonObject} or
  * {@link us.exultant.ahs.codec.ebon.EbonObject} as your implementation.
  * </p>
- * 
+ *
  * <p>
  * There are advantages to using other factory-like classes to perform encoding and
  * decoding rather than simply having classes always be self-encoding and decoding. It
@@ -42,36 +42,36 @@ import java.util.*;
  * as preparing often used variables (and making life easier for HotSpot). Overall, it's
  * just a better example of MVC practice &mdash; a codec should be a C for any of your M.
  * </p>
- * 
+ *
  * @param <$CODE>
  *                The type of object used to represent the encoded version of the data. A
  *                typical example might be {@link us.exultant.ahs.codec.json.JsonObject}
  *                or {@link us.exultant.ahs.codec.ebon.EbonObject}.
- *                
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */	// if you try to change those @link annotations above to use import statements, compiling will break because of the module boundaries.
 public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Encoder<$CODEC, $CODE, $TARG> $encoder);
-	
+
 	public <$TARG, $SPEC extends $TARG> void putHook(Class<$SPEC> $datclrclass, Decoder<$CODEC, $CODE, $TARG> $decoder);
-	
+
 	public <$TARG> $CODE encode($TARG $datclr, Class<$TARG> $datclrclass) throws TranslationException;
-	
+
 	public <$TARG> $TARG decode($CODE $datenc, Class<$TARG> $datclrclass) throws TranslationException;
-	
-	
-	
-	
+
+
+
+
 	/**
 	 * <p>
 	 * This is a utility class for use in building the internals of codec
 	 * implementations. The putHook(*) and encode/decode methods of the Codec
 	 * interface align nicely with these dispatcher implementations.
 	 * </p>
-	 * 
+	 *
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
-	 * 
+	 *
 	 * @param <$C>
 	 *                The type of object used to represent the encoded version of the
 	 *                data. In practice, this should presumably match the $CODE
@@ -81,34 +81,34 @@ public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
         	public <$T, $S extends $T> void putHook(Class<$S> $c, Encoder<$CO,$C,$T> $e) {
         		$hooks.put($c, $e);
         	}
-        	
+
 		private Map<Class<?>,Encoder<$CO,$C,?>>	$hooks	= new HashMap<Class<?>,Encoder<$CO,$C,?>>();
 
 		@SuppressWarnings("unchecked")	// ...seriously?
-		public <$T> $C encode($CO $codec, $T $x) throws TranslationException { 
+		public <$T> $C encode($CO $codec, $T $x) throws TranslationException {
 			return encode($codec, $x, (Class<$T>)$x.getClass());
 		}
-		
+
 		@SuppressWarnings("unchecked")	// yes, the following method is technically unsafe.  at runtime, it should be absolutely reliable.
 		public <$T> $C encode($CO $codec, $T $x, Class<$T> $c) throws TranslationException {
 			Encoder<$CO,$C,$T> $hook = (Encoder<$CO,$C,$T>)$hooks.get($c);
-			if ($hook == null) throw new TranslationException("Encoding dispatch hook not found for " + $x.getClass().getName()); 
+			if ($hook == null) throw new TranslationException("Encoding dispatch hook not found for " + $x.getClass().getName());
 			return $hook.encode($codec, $x);
 		}
 	}
-	
-	
-	
-	
+
+
+
+
 	/**
 	 * <p>
 	 * This is a utility class for use in building the internals of codec
 	 * implementations. The putHook(*) and encode/decode methods of the Codec
 	 * interface align nicely with these dispatcher implementations.
 	 * </p>
-	 * 
+	 *
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
-	 * 
+	 *
 	 * @param <$C>
 	 *                The type of object used to represent the encoded version of the
 	 *                data. In practice, this should presumably match the $CODE
@@ -118,13 +118,13 @@ public interface Codec<$CODEC extends Codec<$CODEC, $CODE>, $CODE> {
         	public <$T, $S extends $T> void putHook(Class<$S> $c, Decoder<$CO,$C,$T> $d) {
         		$hooks.put($c, $d);
         	}
-        	
+
 		private Map<Class<?>,Decoder<$CO,$C,?>>	$hooks	= new HashMap<Class<?>,Decoder<$CO,$C,?>>();
-		
+
 		@SuppressWarnings("unchecked")	// yes, the following method is technically unsafe.  at runtime, it should be absolutely reliable.
 		public <$T> $T decode($CO $codec, $C $x, Class<$T> $c) throws TranslationException {
 			Decoder<$CO,$C,$T> $hook = (Decoder<$CO,$C,$T>)$hooks.get($c);
-			if ($hook == null) throw new TranslationException("Decoding dispatch hook not found for class " + $c.getCanonicalName()); 
+			if ($hook == null) throw new TranslationException("Decoding dispatch hook not found for class " + $c.getCanonicalName());
 			return $hook.decode($codec, $x);
 		}
 	}

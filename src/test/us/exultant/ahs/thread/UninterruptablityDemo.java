@@ -8,7 +8,7 @@ package us.exultant.ahs.thread;
  * its own accord; it will sit there happily eating up a whole core of your machine until
  * you forcibly terminate the process.
  * </p>
- * 
+ *
  * <p>
  * If there was any sort of blocking IO call or call to {@link Object#wait()} or its
  * family going on within the Runnable, those would cause an InterruptedException to be
@@ -19,9 +19,9 @@ package us.exultant.ahs.thread;
  * still stuck in an unpleasant situation where your interruption attempts are
  * ineffectual.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class UninterruptablityDemo {
 	public static void main(String... $args) {

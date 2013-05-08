@@ -11,14 +11,14 @@ class WorkTargetChannelCloser extends WorkTargetAdapterFollowup<Void> {
 		super($iosys.getFuture(), 0);
 		this.$channel = $iosys.getChannel();
 	}
-	
+
 	WorkTargetChannelCloser(OutputSystem<?> $iosys) {
 		super($iosys.getFuture(), 0);
 		this.$channel = $iosys.getChannel();
 	}
-	
+
 	private final Channel $channel;
-	
+
 	protected Void run() throws IOException {
 		assert new Loggar(LoggerFactory.getLogger(WorkTargetChannelCloser.class)).debug("closing channel {}", $channel);
 		$channel.close();

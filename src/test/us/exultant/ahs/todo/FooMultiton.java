@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -32,35 +32,35 @@ import java.util.concurrent.atomic.*;
 
 public class FooMultiton {
 	private static final Map<Object,FooMultiton>	instances	= new HashMap<Object,FooMultiton>();
-	
+
 	private FooMultiton() {
 		n.incrementAndGet();
 	}
 	public static final AtomicInteger n; static { n = new AtomicInteger(); }
-	
+
 	public static FooMultiton getInstance(Object key) {
 		// Our "per key" singleton
 		FooMultiton instance = instances.get(key);
-		
+
 		// if the instance has never been created ...
 		if (instance == null) {
 			synchronized (instances) {
-				// Check again, after having acquired the lock to make sure 
+				// Check again, after having acquired the lock to make sure
 				// the instance was not created meanwhile by another thread
 				instance = instances.get(key);
-				
+
 				if (instance == null) {
 					// Lazily create instance
 					instance = new FooMultiton();
-					
-					// Add it to map   
+
+					// Add it to map
 					instances.put(key, instance);
 				}
 			}
 		}
 		return instance;
 	}
-	
+
 	private static class Poke implements Runnable {
 		public void run() {
 			for (int i = 0; i < 10000000; i++) {
@@ -68,21 +68,21 @@ public class FooMultiton {
 			}
 		}
 	}
-	
+
 	public static void main(String... args) throws InterruptedException {
 		long tstart = System.currentTimeMillis();
-		
+
 		Thread[] threads = new Thread[4];
-		
+
 		for (int i = 0; i < threads.length; i++)
 			threads[i] = new Thread(new Poke());
 
 		for (int i = 0; i < threads.length; i++)
 			threads[i].start();
-		
+
 		for (int i = 0; i < threads.length; i++)
 			threads[i].join();
-		
+
 		long tend = System.currentTimeMillis();
 		System.out.println("Created "+FooMultiton.n.get()+" instances.");
 		System.out.println("Took "+(tend - tstart)+" ms.");

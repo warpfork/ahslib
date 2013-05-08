@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -36,19 +36,19 @@ import java.util.concurrent.locks.*;
  * whenever the pipe has a change in state nonblocking readers might wish to know of (i.e.
  * when it recieves new information, is closed, or becomes empty).
  * </p>
- * 
+ *
  * <p>
  * Requests that are blocking in nature are given fair ordering; nonblocking requests
  * disregard this entirely.
  * </p>
- * 
+ *
  * <p>
  * This Pipe will not accept nulls, and its WriteHead will throw a NullPointerException in
  * response to any attempt to write nulls.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public final class DataPipe<$T> implements Pipe<$T> {
 	/**
@@ -61,37 +61,37 @@ public final class DataPipe<$T> implements Pipe<$T> {
 		SINK = new Sink();
 		$lock = new ReentrantLock();
 	}
-	
+
 	/**
 	 * <p>
 	 * The source from which one reads data from the pipe.
 	 * </p>
 	 */
 	public final Source			SRC;
-	
+
 	/**
 	 * <p>
 	 * The sink to which one writes data into the pipe.
 	 * </p>
 	 */
 	public final Sink			SINK;
-	
+
 	/**
 	 * This Listener is triggered for every completed write operation and for close
 	 * operations.
 	 */
 	private volatile Listener<ReadHead<$T>>	$el;
-	
+
 	/**
 	 * This is the data-containing buffer itself.
 	 */
 	private final ConcurrentLinkedQueue<$T>	$queue;
-	
+
 	/**
 	 * The write lock.
 	 */
 	public final Lock			$lock;
-	
+
 	/**
 	 * <p>
 	 * We always update this semaphore so that it's a <i>minimal</i> value &mdash;
@@ -104,7 +104,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 	 * the head or tail of the queue are not likely to lead to drastic varation in the
 	 * number of permits available to the semphore).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * When write is locked, the number of permits in this semaphore cannot grow (but
 	 * it can still shrink, because the semaphore is used to synchronize and order
@@ -113,7 +113,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 	 * </p>
 	 */
 	private final ClosableSemaphore	$gate;
-	
+
 	/**
 	 * @return {@link #SRC}.
 	 */
@@ -127,33 +127,33 @@ public final class DataPipe<$T> implements Pipe<$T> {
 	public Sink sink() {
 		return SINK;
 	}
-	
+
 	/**
 	 * The minimal amount of work immediately available (see the documentation of {@link #$gate} for more details).
-	 * 
+	 *
 	 * @return the minimal amount of work immediately available.
 	 */
 	public int size() {
 		return $gate.availablePermits();
 	}
-	
-	
-	
+
+
+
 	/**
 	 * {@link DataPipe}'s internal implementation of ReadHead.
-	 * 
+	 *
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 *
 	 */
 	public final class Source implements ReadHead<$T> {
 		private Source() {} /* this should be a singleton per instance of the enclosing class */
-		
+
 		/**
 		 * <p>
 		 * Sets the Listener that will be triggered for completed write operations
 		 * on the matching {@link Sink} and upon close and exhaustion.
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * Note that this Listener MAY NOT under any circumstances throw an
 		 * exception. If it does so, it will NOT be propagated outside of the
@@ -164,7 +164,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 		 */
 		public void setListener(Listener<ReadHead<$T>> $el) {
 			DataPipe.this.$el = $el;
-			
+
 			// it's possible that there wasn't a listener before this, and we need to make sure we fire an event now in case there aren't any more writes forthcoming for a while (if indeed ever).
 			// this can be "spurious", since it doesn't actually come as news of a write, but it's terribly important not to ignore this.
 			boolean $mustSpur = false;
@@ -173,7 +173,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 			unlockWrite();	/* we prefer to release locks before we let the listener go on a tear, just as a matter of best/simplest practice. */
 			if ($mustSpur) invokeListener(DataPipe.this.$el);
 		}
-		
+
 		public $T read() {
 			if (isClosed()) {
 				return readNow();
@@ -188,14 +188,14 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				return $v;
 			}
 		}
-		
+
 		public $T readNow() {
 			boolean $one = $gate.tryAcquire();
 			checkForFinale();
 			if (!$one) return null;
 			return $queue.poll();
 		}
-		
+
 		public $T readSoon(long $timeout, TimeUnit $unit) {
 			boolean $one;
 			try {
@@ -207,16 +207,16 @@ public final class DataPipe<$T> implements Pipe<$T> {
 			if (!$one) return null;
 			return $queue.poll();
 		}
-		
+
 		public boolean hasNext() {
 			return $gate.availablePermits() > 0;
 		}
-		
+
 		public List<$T> readAll() throws InterruptedException {
 			waitForClose();
 			return readAllNow();
 		}
-		
+
 		/**
 		 * {@inheritDoc}
 		 */
@@ -237,11 +237,11 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				checkForFinale();
 			}
 		}
-		
+
 		public boolean isClosed() {
 			return $gate.isClosed();
 		}
-		
+
 		/**
 		 * Closes the pipe. No more data will be allowed to be written to this
 		 * Pipe's WriteHead. Any blocked {@link DataPipe.Source#readAll()} will return
@@ -260,32 +260,32 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				unlockWrite();
 			}
 			X.notifyAll($gate); // trigger the return of any final readAll calls
-			
+
 			// give our listener a chance to notice our closure.
 			invokeListener($el);
 		}
-		
+
 		private void waitForClose() throws InterruptedException {
 			synchronized ($gate) {
 				while (!isClosed())
 					$gate.wait();
 			}
 		}
-		
+
 		public boolean isExhausted() {
 			return $gate.isPermanentlyEmpty();
 		}
 	}
-	
+
 	public final class Sink implements WriteHead<$T> {
 		private Sink() {} // this should be a singleton per instance of the enclosing class
-		
+
 		/**
 		 * Writes a single chunk of data to this Sink. After the data is commited,
 		 * a permit is released and the data becomes available for reading from
 		 * the {@link Source}, and the pipe's listener is then notified of the
 		 * event (note: the listener is called using the writing thread).
-		 * 
+		 *
 		 * @throws IllegalStateException
 		 *                 if this Pipe is closed.
 		 * @throws NullPointerException
@@ -306,7 +306,7 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				if ($mustSpur) invokeListener($el);
 			}
 		}
-		
+
 		/**
 		 * <p>
 		 * Writes every element of the given collection to this Sink. All elements
@@ -319,14 +319,14 @@ public final class DataPipe<$T> implements Pipe<$T> {
 		 * of elements, then get nulls, and then later return to see the other
 		 * half of the group).
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * Even if a {@link NullPointerException} is thrown, partial progress may
 		 * have been made &mdash; chunks preceeding the cause of the exception
 		 * have already been written to the Pipe, and permits for those chunks are
 		 * released before the exception bubbles out.
 		 * </p>
-		 * 
+		 *
 		 * @throws IllegalStateException
 		 *                 if this Pipe is closed.
 		 * @throws NullPointerException
@@ -346,22 +346,22 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				if ($writes > 0) invokeListener($el);
 			}
 		}
-		
+
 		/**
 		 * Returns true. Pipe doesn't implement any capacity restrictions, so this
 		 * isn't really ever in question. isClosed is technically an unrelated
 		 * question.
-		 * 
+		 *
 		 * @return true
 		 */
 		public boolean hasRoom() {
 			return true;
 		}
-		
+
 		public boolean isClosed() {
 			return $gate.isClosed();
 		}
-		
+
 		/**
 		 * Closes the pipe. No more data will be allowed to be written to this
 		 * Pipe's WriteHead. Any blocked {@link DataPipe.Source#readAll()} will return
@@ -380,17 +380,17 @@ public final class DataPipe<$T> implements Pipe<$T> {
 	public void close() {
 		SRC.close();
 	}
-	
+
 	private final void lockWrite() {
 		$lock.lock();
 	}
-	
+
 	private final void unlockWrite() {
 		$lock.unlock();
 	}
-	
+
 	private final void invokeListener(Listener<ReadHead<$T>> $dated_el) {
-		if ($dated_el != null) 
+		if ($dated_el != null)
 			try {
 				$dated_el.hear(SRC);
 			} catch (Throwable $t) {
@@ -398,9 +398,9 @@ public final class DataPipe<$T> implements Pipe<$T> {
 				throw new MajorBug("utterly unreasonable exception occurred!",$t);
 			}
 	}
-	
-	
-	
+
+
+
 	private void checkForFinale() {
 		if ($gate.isPermanentlyEmpty()) {
 			// give our listener a chance to notice our final drain.

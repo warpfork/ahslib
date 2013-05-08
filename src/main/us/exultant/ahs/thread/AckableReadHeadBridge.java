@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -27,18 +27,18 @@ import java.util.concurrent.*;
  * Bridges a system that wants acks to a system that doesn't normally provide them. This
  * class wraps a ReadHead that deals with Ackable objects to automatically ack everything
  * as it reads it, and then exposes only the payload type.
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$PAYLOAD>
  */
 public class AckableReadHeadBridge<$PAYLOAD> implements ReadHead<$PAYLOAD> {
 	public AckableReadHeadBridge(ReadHead<Ackable<$PAYLOAD>> $ackableHead) {
 		$wrap = $ackableHead;
 	}
-	
+
 	ReadHead<Ackable<$PAYLOAD>>	$wrap;
-	
+
 	public void setListener(final Listener<ReadHead<$PAYLOAD>> $el) {
 		this.$wrap.setListener(new Listener<ReadHead<Ackable<$PAYLOAD>>>() {
 			public void hear(ReadHead<Ackable<$PAYLOAD>> $x) {
@@ -46,57 +46,57 @@ public class AckableReadHeadBridge<$PAYLOAD> implements ReadHead<$PAYLOAD> {
 			}
 		});
 	}
-	
+
 	public $PAYLOAD read() {
 		Ackable<$PAYLOAD> $x = this.$wrap.read();
 		$x.ack();
 		return $x.getPayload();
 	}
-	
+
 	public $PAYLOAD readNow() {
 		Ackable<$PAYLOAD> $x = this.$wrap.readNow();
 		$x.ack();
 		return $x.getPayload();
 	}
-	
+
 	public $PAYLOAD readSoon(long $timeout, TimeUnit $unit) {
 		Ackable<$PAYLOAD> $x = this.$wrap.readSoon($timeout, $unit);
 		$x.ack();
 		return $x.getPayload();
 	}
-	
+
 	public boolean hasNext() {
 		return this.$wrap.hasNext();
 	}
-	
+
 	public List<$PAYLOAD> readAll() throws InterruptedException {
 		List<Ackable<$PAYLOAD>> $xs = this.$wrap.readAll();
-		List<$PAYLOAD> $v = new ArrayList<$PAYLOAD>($xs.size()); 
+		List<$PAYLOAD> $v = new ArrayList<$PAYLOAD>($xs.size());
 		for (Ackable<$PAYLOAD> $x : $xs) {
 			$x.ack();
 			$v.add($x.getPayload());
 		}
 		return $v;
 	}
-	
+
 	public List<$PAYLOAD> readAllNow() {
 		List<Ackable<$PAYLOAD>> $xs = this.$wrap.readAllNow();
-		List<$PAYLOAD> $v = new ArrayList<$PAYLOAD>($xs.size()); 
+		List<$PAYLOAD> $v = new ArrayList<$PAYLOAD>($xs.size());
 		for (Ackable<$PAYLOAD> $x : $xs) {
 			$x.ack();
 			$v.add($x.getPayload());
 		}
 		return $v;
 	}
-	
+
 	public boolean isClosed() {
 		return this.$wrap.isClosed();
 	}
-	
+
 	public void close() {
 		this.$wrap.close();
 	}
-	
+
 	public boolean isExhausted() {
 		return this.$wrap.isExhausted();
 	}

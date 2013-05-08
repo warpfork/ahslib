@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -32,7 +32,7 @@ package us.exultant.ahs.crypto;
  * macs. Initialization of a CryptoContainer typically causes the allocation of one or
  * more ciphers.
  * </p>
- * 
+ *
  * <p>
  * Serialization of CryptoContainer instances includes only ciphertext fields (and
  * initialization vectors, if applicable), and never key material or cleartext. If the
@@ -40,18 +40,18 @@ package us.exultant.ahs.crypto;
  * for the CryptoContainer to throw an exception during subsequent serialization because
  * this state is unexpected.
  * </p>
- * 
+ *
  * <p>
  * Implementers are likely to cache a reference to the last key used as well as maintain a
  * cipher for both encryption and decryption; thus, they will typically be able to
  * automatically optimize cipher re-configuration when the same keys are used
  * consecutively.
  * </p>
- * 
+ *
  * <p>
  * Implementers should never be assumed to be thread safe.
  * </p>
- * 
+ *
  * <p>
  * These interfaces were not designed with "online" decryption in mind; i.e. developers
  * are expected to queue all ciphertext data packets before invoking decryption. It's the
@@ -59,10 +59,10 @@ package us.exultant.ahs.crypto;
  * is encrypting in multiple chunk/packets, since this removes ordering constraints
  * entirely and becomes trivially parallelizable.
  * </p>
- * 
- * 
+ *
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public interface CryptoContainer {
 	// the bummer about this interface is that we have no ability to declare actual prototypes for the wrap and unwrap functions, because they have totally different signatures between sym and asym systems, and often even per engine type.

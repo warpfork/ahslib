@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -36,7 +36,7 @@ import org.slf4j.*;
  * to complete.
  * </ul>
  * </p>
- * 
+ *
  * <p>
  * The fundamental unit of testing is a class, {@link Unit}. You specify one
  * {@link Unit#call()} method per unit, and that's where you run your test. You do
@@ -47,21 +47,21 @@ import org.slf4j.*;
  * state, you can express that quite precisely with class hierarchies, or reuse code
  * between some units without exposing it to the entire suite.
  * </p>
- * 
+ *
  * <p>
  * Logging is performed by SLF4J.
  * </p>
- * 
- * 
+ *
+ *
  * <h3>Control flow</h3>
- * 
+ *
  * <p>
  * You specify it. The {@link Unit}s in the List returned by the {@link #getUnits()}
  * method is what we'll run. No hokey annotations or reflection, the system just does
  * exactly what you tell it to with a plain old collection. The ordering of execution of
  * tests is clear and respected.
  * </p>
- * 
+ *
  * <p>
  * Normally, the entire {@link Unit#call()} method of the Unit will complete, and THEN
  * whether or not that Unit passed or failed will be formally concluded. In other words,
@@ -69,7 +69,7 @@ import org.slf4j.*;
  * be executed even if the first one doesn't pass. When one Unit fails, the rest will
  * still be executed.
  * </p>
- * 
+ *
  * <p>
  * If you want a test to stop, there are a couple things you can do:
  * <ul>
@@ -91,14 +91,14 @@ import org.slf4j.*;
  * not be run!
  * </ul>
  * </p>
- * 
+ *
  * <p>
  * Units of a test will not be multithreaded. If a project's tests benefit from
  * mulithreading, it is the designer that should declare this, and is not for the testing
  * system to presume. If you do want threading, see the notes under the Customizing
  * section.
  * </p>
- * 
+ *
  * <p>
  * At the end of test running, the vm will exit (i.e. {@link System#exit(int)} will be
  * invoked) with the codes described in the Reporting section below. A forceful exit like
@@ -107,32 +107,32 @@ import org.slf4j.*;
  * more pleasant and reliable. You may override this if you like; see the notes under the
  * Customizing section.
  * </p>
- * 
- * 
+ *
+ *
  * <h3>Reporting</h3>
- * 
+ *
  * <p>
  * By default, you'll get a nice little string of JSON on stdout (and it should be the
  * only thing on stdout, unless some other part of the program you're testing dumped
  * there); that JSON contains simple pass/fail counts.
  * </p>
- * 
+ *
  * <p>
  * In order to be easily useful in shell scripts, the program will exit with a status code
  * of 0 if all tests passed; 4 if any tests failed; and 5 if any tests failed so hard that
  * not all of the case ran.
  * </p>
- * 
- * 
+ *
+ *
  * <h3>Customizing</h3>
- * 
+ *
  * <p>
  * To change the reporting performed on exit, override the {@link #succeeded()},
  * {@link #failed()}, and {@link #aborted()}. Or, to just replace the JSON string that
  * provides the default summary report, just override {@link #exitMessage()} (the other
  * three methods call that).
  * </p>
- * 
+ *
  * <p>
  * If you want to thread your tests: the whole class does happen to implement
  * {@link Runnable}. The only other caveat is that you'll also want to override the
@@ -140,8 +140,8 @@ import org.slf4j.*;
  * data gathering you want rather than leaving them with their default behavior of exiting
  * the vm.
  * </p>
- * 
- * 
+ *
+ *
  * <h3>Why not JUnit? That's standard isn't it?</h3>
  * <p>
  * I believe JUnit is fundamentally flawed in several of its design choices.
@@ -168,10 +168,10 @@ import org.slf4j.*;
  * the core of AHSlib for a reason, and every other part of AHSlib will work happily
  * without this code being available at runtime.
  * </p>
- * 
- * 
+ *
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public abstract class TestCase implements Runnable {
 	/**
@@ -180,11 +180,11 @@ public abstract class TestCase implements Runnable {
 	public TestCase() {
 		this.$log = LoggerFactory.getLogger("TestCase."+Reflect.getShortClassName(this));
 	}
-	
+
 	public TestCase(Logger $log) {
 		this.$log = $log;
 	}
-	
+
 	/**
 	 * By default, this will always attempt to call {@link System#exit(int)} at the
 	 * end of running tests, exiting with 0 if all tests pass, 4 if any units have
@@ -195,19 +195,19 @@ public abstract class TestCase implements Runnable {
 	 */
 	public synchronized void run() {
 		List<Unit> $units = getUnits();	// list is assumed immutable on pain of death or idiocy
-		
+
 		$numUnits = $units.size();
 		$numUnitsRun = 0;
 		$numUnitsPassed = 0;
 		$numUnitsFailed = 0;
-		
+
 		for (int $i = 0; $i < $units.size(); $i++) {
 			Unit $unit = $units.get($i);
 			if ($unit == null) continue;
-			
+
 			try {
 				resetFailures();
-				
+
 				$log.info("TEST UNIT "+$unit.getName()+" STARTING...");
 				$numUnitsRun++;
 				$unit.call();
@@ -255,14 +255,14 @@ public abstract class TestCase implements Runnable {
 				}
 			}
 		}
-		
+
 		if ($numUnitsFailed > 0)
 			failed();
 		else
 			succeeded();
 	}
-	
-	
+
+
 	/**
 	 * <p>
 	 * Called when the entire test case finished with all units passing successfully.
@@ -275,7 +275,7 @@ public abstract class TestCase implements Runnable {
 		System.out.println(exitMessage());
 		System.exit(0);
 	}
-	
+
 	/**
 	 * <p>
 	 * Called when the entire test case finished, but at least one unit did not pass
@@ -288,7 +288,7 @@ public abstract class TestCase implements Runnable {
 		System.out.println(exitMessage());
 		System.exit(4);
 	}
-	
+
 	/**
 	 * <p>
 	 * Called when the entire test case is aborted (i.e. a unit throws an unexpected
@@ -296,7 +296,7 @@ public abstract class TestCase implements Runnable {
 	 * {@link #exitMessage()} to stdout followed by forceful termination of the
 	 * program via {@link System#exit(int)} with an exit code of 5.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Note that the entire test case is <b>not</b> considered aborted when a single
 	 * unit of the case fails or or aborted, and as such this method will not be
@@ -307,7 +307,7 @@ public abstract class TestCase implements Runnable {
 		System.out.println(exitMessage());
 		System.exit(5);
 	}
-	
+
 	protected String exitMessage() {
 		return "{\"#\":\"TESTCASE\",\n"+
 		"         \"numUnits\":"+$numUnits+",\n"+
@@ -316,17 +316,17 @@ public abstract class TestCase implements Runnable {
 		"   \"numUnitsFailed\":"+$numUnitsFailed+"\n"+
 		"}";
 	}
-	
+
 	protected final Logger	$log;
 	private int		$unitFailures;
 	private int		$numUnits;
 	private int		$numUnitsRun;
 	private int		$numUnitsPassed;
 	private int		$numUnitsFailed;
-	
+
 	public abstract List<Unit> getUnits();
-	
-	
+
+
 
 	/**
 	 * <p>
@@ -338,14 +338,14 @@ public abstract class TestCase implements Runnable {
 	 */
 	public abstract class Unit {
 		public abstract void call() throws Throwable;
-		
+
 		protected final Logger	$log = LoggerFactory.getLogger(TestCase.this.$log.getName()+"."+this.getName());
-		
+
 		public String getName() {
 			String[] $arrg = Primitives.Patterns.DOT.split(getClass().getCanonicalName());
 			return $arrg[$arrg.length-1];
 		}
-		
+
 		/**
 		 * If this returns null, any exception thrown from the {@link #call()}
 		 * method results in failure of the Unit and aborting of all further Units
@@ -356,30 +356,30 @@ public abstract class TestCase implements Runnable {
 		 */
 		public <$T extends Throwable> Class<$T> expectExceptionType() { return null; }
 		// this method often seems to cause warnings about unchecked conversion in subclasses even when the return type is obviously legitimate, but i'm unsure of why.
-		
-		
+
+
 		public final void breakUnitIfFailed() throws AssertionFailed {
 			if ($unitFailures > 0) throw new AssertionFailed("breaking: "+$unitFailures+" failures.");
 		}
 		public final void breakCaseIfFailed() throws AssertionFatal {
 			if ($unitFailures > 0) throw new AssertionFatal("breaking case: "+$unitFailures+" failures.");
 		}
-		
+
 		public final void breakUnit(String $message) throws AssertionFailed {
 			throw new AssertionFailed("breaking: "+$message);
 		}
 		public final void breakCase(String $message) throws AssertionFatal {
 			throw new AssertionFatal("breaking case: "+$message);
 		}
-		
+
 		public final void breakUnit(Throwable $message) throws AssertionFailed {
 			throw new AssertionFailed("breaking: "+$message);
 		}
 		public final void breakCase(Throwable $message) throws AssertionFatal {
 			throw new AssertionFatal("breaking case: "+$message);
 		}
-		
-		
+
+
 		////////////////
 		//  BOOLEAN
 		////////////////
@@ -407,8 +407,8 @@ public abstract class TestCase implements Runnable {
 			$log.debug(messagePass($label, $expected, $actual));
 			return true;
 		}
-		
-		
+
+
 		////////////////
 		//  Object
 		////////////////
@@ -483,8 +483,8 @@ public abstract class TestCase implements Runnable {
 				return false;
 			}
 		}
-		
-		
+
+
 		////////////////
 		//  String
 		////////////////
@@ -495,8 +495,8 @@ public abstract class TestCase implements Runnable {
 		public final boolean assertEquals(String $label, String $expected, String $actual) {
 			return assertEquals($label, (Object)$expected, (Object)$actual);
 		}
-		
-		
+
+
 		////////////////
 		//  INT
 		////////////////
@@ -524,8 +524,8 @@ public abstract class TestCase implements Runnable {
 			$log.debug(messagePass($label, $expected, $actual, $margin));
 			return true;
 		}
-		
-		
+
+
 		////////////////
 		//  LONG
 		////////////////
@@ -553,8 +553,8 @@ public abstract class TestCase implements Runnable {
 			$log.debug(messagePass($label, $expected, $actual, $margin));
 			return true;
 		}
-		
-		
+
+
 		////////////////
 		//  DOUBLE
 		////////////////
@@ -582,8 +582,8 @@ public abstract class TestCase implements Runnable {
 			$log.debug(messagePass($label, $expected, $actual, $margin));
 			return true;
 		}
-		
-		
+
+
 		////////////////
 		//  FLOAT
 		////////////////
@@ -611,8 +611,8 @@ public abstract class TestCase implements Runnable {
 			$log.debug(messagePass($label, $expected, $actual, $margin));
 			return true;
 		}
-		
-		
+
+
 		////////////////
 		//  BYTE
 		////////////////
@@ -622,8 +622,8 @@ public abstract class TestCase implements Runnable {
 		public final boolean assertEquals(String $label, byte[] $expected, byte[] $actual) {
 			return assertEquals($label, Strings.toHex($expected), Strings.toHex($actual));
 		}
-		
-		
+
+
 		////////////////
 		//  CHAR
 		////////////////
@@ -633,20 +633,20 @@ public abstract class TestCase implements Runnable {
 		public final boolean assertEquals(String $label, char[] $expected, char[] $actual) {
 			return assertEquals($label, Arr.toString($expected), Arr.toString($actual));
 		}
-		
-		
+
+
 		// Note!  You can not make methods like:
 		//	assertNotEquals(byte[] $a, byte[] $b) {
 		//		return !assertEquals($a, $b);
 		// because they'll still do the failure count and the log messages backwards inside.
 	}
-	
-	
-	
+
+
+
 	protected void resetFailures() {
 		$unitFailures = 0;
 	}
-	
+
 	// using autoboxing on primitives as much as these message functions do bothers me but it does save me a helluva lot of lines of code here and i am assuming you're not using any assertions inside of terribly tight loops (or if you are, you're eiter not using confirmation or not failing hundreds of thousands of times).
 	// it might be a clarity enhancement to do quotation marks around the actual and expected values depending on type, though, which i don't do right now.
 	static String messageFail(String $label, Object $expected, Object $actual) {
@@ -699,10 +699,10 @@ public abstract class TestCase implements Runnable {
 	}
 	// note that failure messages get wrapped in exceptions and then given to the logger (with a constant message of "assertion failed")
 	//  whereas success messages get passed to the logger as actual messages (with no exception attached).
-	//   this... might be a poor inconsistency, since i could see wanting to be able to report line numbers of successes outloud as well. 
-	
-	
-	
+	//   this... might be a poor inconsistency, since i could see wanting to be able to report line numbers of successes outloud as well.
+
+
+
 	private static class AssertionFailed extends Error {
 		public AssertionFailed() { super(); }
 		public AssertionFailed(String $arg0) { super($arg0); }
@@ -715,7 +715,7 @@ public abstract class TestCase implements Runnable {
 		public AssertionFatal(Throwable $arg0) { super($arg0); }
 		public AssertionFatal(String $arg0, Throwable $arg1) { super($arg0, $arg1); }
 	}
-	
+
 	//future work:
 	//   i think it should be more or less possible to provide an interface to retrofit ahs TestCase to JUnit, which would be handy for folks that like the ability integrate JUnit with eclipse plugins or the like.
 }

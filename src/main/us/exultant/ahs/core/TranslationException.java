@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -28,24 +28,24 @@ import java.io.*;
  * actually examples of TranslationException, and are often found as the "cause" of a
  * TranslationException. The same is true of virtually any kind of parsing error.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @see UnencodableException
- * 
+ *
  */
 public class TranslationException extends IOException {
 	public TranslationException() {
 		super();
 	}
-	
+
 	public TranslationException(String $arg0) {
 		super($arg0);
 	}
-	
+
 	public TranslationException(Throwable $arg0) {
 		super($arg0);
 	}
-	
+
 	public TranslationException(String $arg0, Throwable $arg1) {
 		super($arg0, $arg1);
 	}

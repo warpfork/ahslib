@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ import org.bouncycastle.crypto.params.*;
  * and generating a new one that's exactly the same. Why BC wasn't smart enough to do this
  * itself I do not know.
  * </p>
- * 
+ *
  * <p>
  * This same-key check is implemented as a pointer-equality check on the byte array in the
  * KeyParameter (which we presume is what CipherParameters is; if not, we let the BC AES
@@ -43,14 +43,14 @@ import org.bouncycastle.crypto.params.*;
  * probably think you gave it a new key, and boy are you going to be in for a sorry
  * surprise when you figure out what an idiot you were about pointers.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class AESEngineMod extends AESFastEngine {
 	// note incredibly lazy initialization here it?  we even check these before setting them!  it's fine, though: the worst that can happen if either one of these is unset or wrong is an unnecessary init of the cipher... and that's exactly what should be done if either of these are unset.
 	private byte[]	$lastKey;
 	private boolean	$lastEdMode;	// and can you believe they don't even bother to have a function for asking if it's in encrypt mode or not?!  jesus.
-					
+
 	public void init(boolean $forEncryption, CipherParameters $params) {
 		tryToHelp: {
 			if ($lastEdMode != $forEncryption)

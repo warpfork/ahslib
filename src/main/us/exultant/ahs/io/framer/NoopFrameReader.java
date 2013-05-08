@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ import java.nio.channels.*;
  * very good idea for network protocols unless you for some reason like shortlived
  * sockets.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public class NoopFrameReader implements ChannelReader<ByteBuffer> {

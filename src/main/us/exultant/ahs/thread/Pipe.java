@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,16 +26,16 @@ import us.exultant.ahs.core.*;
  * A Pipe is a type of {@link Flow} that refers exclusively to in-process flows, and as a
  * result can be expected to provide more information and operations.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public interface Pipe<$T> extends Flow<$T> {
 	/**
 	 * <p>
 	 * The minimal amount of entries which can be read immediately without blocking.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * (Note that the size method is not provided on the more broad {@link Flow} type
 	 * because flows may represent interprocess or network communications in which the
@@ -43,8 +43,8 @@ public interface Pipe<$T> extends Flow<$T> {
 	 * refers exclusively to in-process flows, it can be expected to provide more
 	 * information.)
 	 * </p>
-	 * 
-	 * 
+	 *
+	 *
 	 * @return the minimal amount of entries which can be read immediately without
 	 *         blocking.
 	 */

@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ import java.util.*;
 
 public class WaitTest extends TestCase {
 	public static void main() { new SanityTest().run(); }
-	
+
 	public List<Unit> getUnits() {
 		List<Unit> $tests = new ArrayList<Unit>();
 		$tests.add(new TestA());
@@ -35,9 +35,9 @@ public class WaitTest extends TestCase {
 		$tests.add(new TestC());
 		return $tests;
 	}
-	
-	
-	
+
+
+
 	private abstract class LoopedWaitTemplate extends TestCase.Unit {
 		public void wait(final int $pause_ms, final int $loop_times, final int $error_margin) {
 			long $start = X.time();
@@ -46,50 +46,50 @@ public class WaitTest extends TestCase {
 			assertEquals($start+($pause_ms*$loop_times), X.time(), $error_margin);
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestA extends LoopedWaitTemplate {
 		public void call() {
 			wait(50,10,10);
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestA2 extends LoopedWaitTemplate {
 		public void call() {
 			wait(50,10,3);
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestA3 extends LoopedWaitTemplate {
 		public void call() {
 			wait(50,10,1);
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestB extends LoopedWaitTemplate {
 		public void call() {
 			wait(20,20,2);
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestB10 extends LoopedWaitTemplate {
 		public void call() {
 			for (int $i = 0; $i < 10; $i++)
 				wait(20,20,2);
 		}
 	}
-	
-	
-	
+
+
+
 	private class TestC extends LoopedWaitTemplate {
 		public void call() {
 			wait(500,10,5);

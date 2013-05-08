@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -22,6 +22,7 @@ package us.exultant.ahs.iob;
 import us.exultant.ahs.util.*;
 import java.io.*;
 import java.net.*;
+import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
 
@@ -43,7 +44,7 @@ import java.util.*;
  * <li>Operations are always sensibly buffered.
  * </ul>
  * </p>
- * 
+ *
  * <p>
  * If you're looking for higher-powered APIs that do more powerful network stuff,
  * high-performance nonblocking operations, or better lend themselves to protocol
@@ -52,25 +53,25 @@ import java.util.*;
  * really small volumes of data where setting up a bigger infrastructure isn't worth the
  * time, or for use by Java novices who don't want to get into the more powerful APIs yet.
  * </p>
- * 
+ *
  * <p>
  * note: the difference between methods that read a "resource" and a read a "file" is
  * small. The former uses a classloader's concept of resolving paths; the latter looks
  * only in the exact path you give.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class IOForge {
 	/** This OutputStream is simply an effective /dev/null in portable java. */
 	public static final OutputStream silentOutputStream = new OutputStreamDiscard();
 	/** This PrintStream is simply an effective /dev/null in portable java. */
 	public static final PrintStream silentPrintStream = new PrintStream(new OutputStreamDiscard());
-	
+
 	private static final int CHUNK_SIZE = 8192;
-	
-	
+
+
 	/** Read an entire file into an array as raw bytes. */
 	public static byte[] readFileRaw(File $file) throws FileNotFoundException, IOException {
 		return readRaw(new FileInputStream($file));
@@ -131,9 +132,9 @@ public class IOForge {
 	public static String[] readResourceAsStringLines(String $resource, Charset $cs) throws FileNotFoundException, IOException {
 		return readStringLines(getResourceAsStream($resource), $cs);
 	}
-	
-	
-	
+
+
+
 	/** Read an input stream into an array as raw bytes.  Closes the input stream when done, even if IOException. */
 	public static byte[] readRaw(InputStream $ins) throws IOException {
 		try {
@@ -148,12 +149,12 @@ public class IOForge {
 			$ins.close();
 		}
 	}
-	
+
 	/** Read an entire input stream into a UTF-8 string. Closes the input stream when done, even if IOException. */
 	public static String readString(InputStream $ins) throws IOException {
 		return readString($ins, Strings.UTF_8);
 	}
-	
+
 	/** Read an entire input stream into a string.  Closes the input stream when done, even if IOException. */
 	public static String readString(InputStream $ins, Charset $cs) throws IOException {
 		try {
@@ -169,12 +170,12 @@ public class IOForge {
 			$ins.close();
 		}
 	}
-	
+
 	/** Read an entire file into an array of UTF-8 strings, one array entry for each line in the file.  (A 'line' is defined exactly as per {@link BufferedReader#readLine()}.)  Closes the input stream when done, even if IOException. */
 	public static String[] readStringLines(InputStream $ins) throws IOException {
 		return readStringLines($ins, Strings.UTF_8);
 	}
-	
+
 	/** Read an entire file into an array of strings, one array entry for each line in the file.  (A 'line' is defined exactly as per {@link BufferedReader#readLine()}.)  Closes the input stream when done, even if IOException. */
 	public static String[] readStringLines(InputStream $ins, Charset $cs) throws IOException {
 		try {
@@ -187,14 +188,14 @@ public class IOForge {
 			$ins.close();
 		}
 	}
-	
+
 	/** Returns an InputStream for the named resource (this is shorthand for accessing {@link ClassLoader#getResource(String)}).  If possible, the system classloader is used to resolve the resource; otherwise the classloader for the IOForge class is used. */
 	public static InputStream getResourceAsStream(String $resource) throws FileNotFoundException {
 		InputStream $ins = CL.getResourceAsStream($resource);
 		if ($ins == null) throw new FileNotFoundException();
 		return $ins;
 	}
-	
+
 	private static final ClassLoader CL;
 	static {
 		ClassLoader $cl;
@@ -205,7 +206,7 @@ public class IOForge {
 		}
 		CL = ($cl == null) ? IOForge.class.getClassLoader() : $cl;
 	};
-	
+
 	/**
 	 * <p>
 	 * Convenience method for times when you don't care about code quality and just
@@ -214,11 +215,11 @@ public class IOForge {
 	 * to catch an exception that you're going to throw up your hands in despair and
 	 * crash on anyway.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * In other words, this throws an Error if it can't give you the stream.
 	 * </p>
-	 * 
+	 *
 	 * @throws Error if FileNotFoundException.
 	 */
 	public static PrintStream makePrintStreamNoGuff(File $file) {
@@ -228,7 +229,7 @@ public class IOForge {
 			throw new Error($e);
 		}
 	}
-	
+
 	/** Write an array of raw bytes to a file. */
 	public static void saveFile(byte[] $bah, File $dest) throws IOException {
 		writeFile($bah, $dest, false);
@@ -264,7 +265,7 @@ public class IOForge {
 	}
 	private static void writeFile(String $bah, File $dest, boolean $append) throws IOException {
 		writeFile($bah, Strings.UTF_8, $dest, $append);
-		
+
 	}
 	private static void writeFile(String $bah, Charset $cs, File $dest, boolean $append) throws IOException {
 		OutputStreamWriter $os = null;
@@ -275,11 +276,40 @@ public class IOForge {
 			if ($os != null) $os.close();
 		}
 	}
-	
+
+	/** Copy a file.  If using a jvm >= 1.7, prefer the standard API: {@link java.nio.file.Files#copy(Path, Path, CopyOption[])}. */
+	@SuppressWarnings("javadoc")
+	public static void copyFile(File $in, File $out) throws IOException {
+		FileInputStream $ins = null;
+		try {
+			$ins = new FileInputStream($in);
+			FileChannel $inch = $ins.getChannel();
+			FileChannel $outch = null;
+			try {
+				$outch = new FileOutputStream($out).getChannel();
+				$inch.transferTo(0, $inch.size(), $outch);
+			} finally {
+				if ($outch != null) $outch.close();
+			}
+		} finally {
+			if ($ins != null) $ins.close();
+		}
+	}
+
+	/** Delete anything.  Recurse if directory. */
+	public static void delete(File $in) throws IOException {
+		if (!$in.exists())
+			return;
+		if ($in.isDirectory())
+			for (File $x : $in.listFiles())
+				delete($x);
+		$in.delete();
+	}
+
 	/**
 	 * Creates an {@link InputStream} that when read will return the bytes of the
 	 * given string in utf-8 encoding.
-	 * 
+	 *
 	 * @param $str
 	 * @return an input stream that will read off the bytes of the string in utf-8
 	 *         encoding
@@ -287,11 +317,11 @@ public class IOForge {
 	public static InputStream convertStringToInputStream(String $str) {
 		return convertStringToInputStream($str, Strings.UTF_8);
 	}
-	
+
 	public static InputStream convertStringToInputStream(String $str, Charset $cs) {
 		return new ByteArrayInputStream($str.getBytes($cs));
 	}
-	
+
 	/**
 	 * <p>
 	 * Shifts data from an {@link InputStream} to an {@link OutputStream}. The
@@ -299,12 +329,12 @@ public class IOForge {
 	 * is closed or the output stream rejects writes. Both streams are closed after
 	 * completion.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Useful for in situations like moving the data from a URL connection to a file
 	 * output, or redirection stdout of a forked process to our own stdout.
 	 * </p>
-	 * 
+	 *
 	 * @param $src
 	 * @param $sink
 	 * @throws IOException
@@ -321,7 +351,7 @@ public class IOForge {
 				$p += $k;
 			}
 		} finally {
-			// i'm unsure how i feel about having these here.  they almost always have to be repeated by the caller anyway (i.e. you still need a giant try/finally to close the input stream if you fail to open the output stream after you've already opened the input. 
+			// i'm unsure how i feel about having these here.  they almost always have to be repeated by the caller anyway (i.e. you still need a giant try/finally to close the input stream if you fail to open the output stream after you've already opened the input.
 			try {
 				$src.close();
 			} finally {
@@ -333,24 +363,24 @@ public class IOForge {
 	public static void shift(String $src, OutputStream $sink) throws IOException {
 		shift($src, Strings.UTF_8, $sink);
 	}
-	
+
 	public static void shift(String $src, Charset $cs, OutputStream $sink) throws IOException {
 		$sink.write($src.getBytes($cs));
 	}
-	
+
 	/**
 	 * <p>
 	 * Simple method to save information from http to the local filesystem. Binary
 	 * safe.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * There are almost always smarter ways to go about this, but if you're willing to
 	 * pay the price throwing a whole thread at doing nothing but wait for this for
 	 * the sake of simplicity and rapid application development, then this will do
 	 * just fine.
 	 * <p>
-	 * 
+	 *
 	 * @param $request
 	 *                URL pointing to the http path to save.
 	 * @param $dest
@@ -375,7 +405,7 @@ public class IOForge {
 			}
 		}
 	}
-	
+
 	public static String readUrlAsString(URL $request) throws IOException {
 		InputStream $in = null;
 		try {
@@ -387,7 +417,7 @@ public class IOForge {
 			if ($in != null) $in.close();
 		}
 	}
-	
+
 	public static byte[] readUrlRaw(URL $request) throws IOException {
 		InputStream $in = null;
 		try {
@@ -399,7 +429,7 @@ public class IOForge {
 			if ($in != null) $in.close();
 		}
 	}
-	
+
 	private static void checkErrorCode(URLConnection $conn) throws IOException {
 		if ($conn instanceof HttpURLConnection) {
 			int code = ((HttpURLConnection) $conn).getResponseCode();

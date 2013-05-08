@@ -12,7 +12,7 @@ public class SanityTestSelector {
 		if (!Thread.interrupted())
 			System.err.println("How the hell did you return if you weren't responding to the interrupt?");
 		System.err.println("ta-da!  You survived!  A single thread with preinterruption is fine.");
-		
+
 		final Selector selector = Selector.open();
 		final Thread selthread = new Thread() {
 			public void run() {

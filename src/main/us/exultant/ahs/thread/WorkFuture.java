@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ import java.util.concurrent.*;
  * Producer-Consumer pattern however you want, and the two sides don't even need to agree
  * on a threading strategy.
  * </p>
- * 
+ *
  * <p>
  * The most common appearance of a WorkFuture is cooperation with the
  * {@link WorkScheduler}, which produces a WorkFuture when a {@link WorkTarget} is
@@ -51,9 +51,9 @@ import java.util.concurrent.*;
  * obvious choice for a return type.
  * </ul>
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$V>
  *                the type of data that will be returned from the {@link #get()} method
  *                when the work this future represents becomes done.
@@ -61,53 +61,53 @@ import java.util.concurrent.*;
 public interface WorkFuture<$V> extends Future<$V> {
 	/**
 	 * Returns the instantaneous {@link State} of this work.
-	 * 
+	 *
 	 * @return the state
 	 */
 	@ThreadSafe
 	@Nullipotent
 	public State getState();
-	
+
 	/**
 	 * Returns the {@link ScheduleParams} that were used when scheduling this
 	 * WorkFuture.
-	 * 
+	 *
 	 * @return the {@link ScheduleParams} that were used when scheduling this
 	 *         WorkFuture.
 	 */
 	@ThreadSafe
 	@Nullipotent
 	public ScheduleParams getScheduleParams();
-	
+
 	/**
 	 * <p>
 	 * Checks whether or not this work is cancelled.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * After this method returns true, subsequent calls to both {@link #isCancelled()}
 	 * and {@link #isDone()} will always return true.
 	 * </p>
-	 * 
+	 *
 	 * @returns true if {@link #getState()} == {@link State#CANCELLED}, false
 	 *          otherwise.
 	 */
 	@ThreadSafe
 	@Nullipotent
 	public boolean isCancelled();
-	
+
 	/**
 	 * <p>
 	 * Checks whether or not this work is completed. Specifically, whether the state
 	 * of this work is {@link State#FINISHED} or {@link State#CANCELLED}.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * After this method returns true, subsequent calls to {@link #isDone()} will
 	 * always return true; and subsequent calls to {@link #get()} and
 	 * {@link #get(long, TimeUnit)} will return instantly.
 	 * </p>
-	 * 
+	 *
 	 * @returns true if {@link #getState()} is {@link State#CANCELLED} or
 	 *          {@link State#FINISHED}, false otherwise.
 	 */
@@ -120,11 +120,11 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * Checks whether or not this work is completed, and if so if it finished
 	 * gracefully or by throwing an exception.
 	 * </p>
-	 * 
+	 *
 	 * @throws CancellationException
 	 *                 if the work was cancelled (i.e. {@link #isCancelled()} is
 	 *                 true).
-	 * 
+	 *
 	 * @returns {@link Boolean#TRUE} if {@link #getState()} is {@link State#FINISHED}
 	 *          and {@link #get()} returns a value; {@link Boolean#FALSE} if
 	 *          {@link #getState()} is {@link State#FINISHED} and {@link #get()}
@@ -134,27 +134,27 @@ public interface WorkFuture<$V> extends Future<$V> {
 	@ThreadSafe
 	@Nullipotent
 	public Boolean isFinishedGracefully() throws CancellationException;
-	
+
 	/**
 	 * <p>
 	 * Gets the result of the work, blocking if the work is not yet complete or
 	 * cancelled. If the work is already complete or cancelled, the method will return
 	 * immediately without blocking or locking.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Once this method returns anything at all (or throws an ExecutionException or
 	 * CancellationException), it will always return (or throw) exactly that object.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * When this method returns (except by InterruptedException), it is guaranteed
 	 * that no thread is running the work. While this sounds obvious, it is worth
 	 * noting that it also applies if the work was cancelled: if a thread was running
 	 * the work when the cancel occurred then this method will wait for that thread to
-	 * leave the work. 
+	 * leave the work.
 	 * </p>
-	 * 
+	 *
 	 * @return the result of the work. (In the case that there is a {@link WorkTarget}
 	 *         associated with this WorkFuture, see the contract of
 	 *         {@link WorkTarget#call()} for more information about what this means
@@ -177,13 +177,13 @@ public interface WorkFuture<$V> extends Future<$V> {
 	@ThreadSafe
 	@Nullipotent
 	public $V get() throws InterruptedException, ExecutionException, CancellationException;
-	
+
 	/**
 	 * <p>
 	 * Exactly as per {@link #get()}, except one may limit the amount of time for one
 	 * is willing to wait for a result.
 	 * </p>
-	 * 
+	 *
 	 * @param $timeout
 	 *                the maximum time to wait
 	 * @param $unit
@@ -202,7 +202,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 	@ThreadSafe
 	@Nullipotent
 	public $V get(long $timeout, TimeUnit $unit) throws InterruptedException, ExecutionException, TimeoutException, CancellationException;
-	
+
 	/**
 	 * <p>
 	 * Attempts to cancel execution of this task. This attempt will fail if the task
@@ -214,7 +214,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * determines whether the thread executing this task should be
 	 * {@link Thread#interrupt() interrupted} in an attempt to stop the task.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Using this method to request cancellation of work is a non-blocking operation;
 	 * this method will always return immediately. If the method returned true, then
@@ -225,7 +225,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * have been running this work has exited the {@link WorkTarget#call()} method or
 	 * the relevant equivalent.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Note: the documentation of {@link Future#cancel(boolean)} is potentially
 	 * misleading. It states that the method should return "<tt>false</tt> if the task
@@ -237,19 +237,19 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * this one in that if several threads attempt to cancel a task concurrently, only
 	 * one of them should get a true return.
 	 * </p>
-	 * 
+	 *
 	 * @param $mayInterruptIfRunning
 	 *                true if the thread executing this task should be interrupted;
 	 *                otherwise, in-progress tasks are allowed to complete
 	 * @returns whether or not this thread was responsible for cancelling (i.e. if
 	 *          many threads are competing to trigger a transition to cancelling,
 	 *          exactly one of them will get a true return).
-	 * 
+	 *
 	 */
 	@ThreadSafe
 	@Idempotent
 	public boolean cancel(boolean $mayInterruptIfRunning);
-	
+
 	/**
 	 * Functions exactly as calling {@link WorkScheduler#update(WorkFuture)} with this
 	 * object on its parent scheduler.
@@ -257,7 +257,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 	@ThreadSafe
 	@Idempotent
 	public void update();
-	
+
 	/**
 	 * <p>
 	 * Adds a listener to this WorkFuture which will be called as soon as possible
@@ -265,11 +265,11 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 * normal completion, a deadly exception, or external cancellation). The listener
 	 * will be called exactly once (presuming of course that the task ever finishes).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This method may be called at any time from any thread.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * The listener should only perform very fast operations; any heavy lifting should
 	 * be performed in another thread which is triggered by this listener. The
@@ -281,14 +281,14 @@ public interface WorkFuture<$V> extends Future<$V> {
 	 */
 	@ThreadSafe
 	public void addCompletionListener(Listener<WorkFuture<?>> $completionListener);
-	
-	
-	
+
+
+
 	/**
 	 * <p>
 	 * Enumerates all possible states a piece of work may be in.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Note! While the documentation for each of these states may be defined in terms
 	 * of some function of a {@link WorkTarget}, it is critical to understand that
@@ -305,7 +305,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * {@link WorkScheduler}. It may transition to {@link #SCHEDULED},
 		 * {@link #CANCELLED}, or {@link #FINISHED}.
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * Note! This is <b>independent</b> of whether or not
 		 * {@link WorkTarget#isReady()} returns true at any given time! The
@@ -315,7 +315,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * recently noticed (typically during invocation of the
 		 * {@link WorkScheduler#update(WorkFuture)} method).
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * For some kinds of {@link WorkFuture} that do not directly represent a
 		 * {@link WorkTarget} scheduled with a {@link WorkScheduler} (such as an
@@ -368,7 +368,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * permanent. A <tt>FINISHED</tt> also guarantees that there is no thread
 		 * active within the work.
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * A piece of work that is <tt>FINISHED</tt> became so in one of two ways:
 		 * it either became finished "normally" via the
@@ -379,7 +379,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * finished when a run caused an exception to be thrown from the
 		 * {@link WorkTarget#call()} method.
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * A clarification of how promptly is "prompt" in the above paragraphs. It
 		 * is of course a relative term; the exact order of operations is as
@@ -408,7 +408,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * responsible for transitioning to {@link #CANCELLED} (no other
 		 * transitions are valid).
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * In theory, the period of time between a running work becoming
 		 * CANCELLING and then becoming CANCELLED is hoped to be infinitesimal. In
@@ -427,7 +427,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * library design and are the responsibility of the work's programmer to
 		 * avoid.
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * For some kinds of {@link WorkFuture} that do not directly represent a
 		 * {@link WorkTarget} scheduled with a {@link WorkScheduler} (such as an
@@ -455,7 +455,7 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * scheduled for execution and it is guaranteed that there is no thread
 		 * active within the work.
 		 * </p>
-		 * 
+		 *
 		 * <p>
 		 * Note that since the cancellation was the result of an external
 		 * operation rather than of the WorkTarget's own volition, the
@@ -465,12 +465,12 @@ public interface WorkFuture<$V> extends Future<$V> {
 		 * </p>
 		 */
 		CANCELLED;
-		
+
 		final static State[] values = State.values();
 	}
-	
-	
-	
+
+
+
 	public static class DelayComparator implements Comparator<WorkFuture<?>> {
 		public static final DelayComparator INSTANCE = new DelayComparator();
 

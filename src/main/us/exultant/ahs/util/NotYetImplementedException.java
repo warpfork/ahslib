@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -25,22 +25,22 @@ package us.exultant.ahs.util;
  * undefined or some such: a method throwing an ImBored exception generally means that
  * it's entirely possible to implement that method, but that it wasn't completed due to
  * time constraints.
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class NotYetImplementedException extends UnsupportedOperationException {
 	public NotYetImplementedException() {
 	}
-	
+
 	public NotYetImplementedException(String $message) {
 		super($message);
 	}
-	
+
 	public NotYetImplementedException(Throwable $cause) {
 		super($cause);
 	}
-	
+
 	public NotYetImplementedException(String $message, Throwable $cause) {
 		super($message, $cause);
 	}

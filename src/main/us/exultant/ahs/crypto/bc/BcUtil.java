@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -52,7 +52,7 @@ public class BcUtil {
 			$size += $bletch.length;
 		return invokeCipher($cipher, $size, $bletchley);
 	}
-	
+
 	private static byte[] invokeCipher(BufferedBlockCipher $cipher, int $size, byte[]... $bletchley) throws DataLengthException, IllegalStateException, InvalidCipherTextException {
 		$size = $cipher.getOutputSize($size);
 		byte[] $park = new byte[$size];
@@ -60,18 +60,18 @@ public class BcUtil {
 		for (byte[] $bletch : $bletchley)
 			$olen += $cipher.processBytes($bletch, 0, $bletch.length, $park, $olen);	// we're quite confident there's no DataLengthException from here, but there is a possibility on the next line.
 		$olen += $cipher.doFinal($park, $olen);							// there's no super easy way to tell in this context whether or not input must be block aligned.
-		
+
 		if ($olen < $size)	// $cipher.getOutputSize(*) lied to us!  now we have to make a new smaller array so we aren't returning evil nulls :(
 			Arr.copyFromBeginning($park, $olen);
-		
+
 		return $park;
 	}
-	
+
 	/**
 	 * Derives symmetric keys by hashing a given key along with a predictable nonce to
 	 * produce more keys of the same length. The derived keys are random unless the
 	 * base key and the nonce are known.
-	 * 
+	 *
 	 * @param $baseKey
 	 *                a symmetric key to derive more keys from.
 	 * @param $baseModified

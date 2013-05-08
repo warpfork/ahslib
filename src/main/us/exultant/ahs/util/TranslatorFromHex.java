@@ -5,8 +5,8 @@ import java.nio.*;
 
 /** Like it says on the tin. */
 public class TranslatorFromHex implements Translator<String,ByteBuffer> {
-	public static final TranslatorFromHex INSTANCE = new TranslatorFromHex(); 
-	
+	public static final TranslatorFromHex INSTANCE = new TranslatorFromHex();
+
 	/**
 	 * @param $hex
 	 *                a hexadecimal string
@@ -25,7 +25,7 @@ public class TranslatorFromHex implements Translator<String,ByteBuffer> {
 			$out[$i] = (byte) ((digit($in[$j++]) << 4) | digit($in[$j++]) & 0xFF);
 		return $v;
 	}
-	
+
 	private static final int digit(char $c) throws TranslationException {
 		final int $v = Character.digit($c, 16);
 		if ($v == -1) throw new TranslationException("invalid character for hexidecimal");

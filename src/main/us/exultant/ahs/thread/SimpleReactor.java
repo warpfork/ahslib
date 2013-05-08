@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -35,7 +35,7 @@ import us.exultant.ahs.core.*;
  * as you could create instability by end up slowing down operations that other parts of
  * the system expect to be nearly instantaneous.
  * </p>
- * 
+ *
  * <p>
  * Class hierarchy note: SimpleReactor does not implement {@code Listener<$T>}, despite
  * the signiture of the methods nearly matching. The reason for this is that this class is
@@ -43,9 +43,9 @@ import us.exultant.ahs.core.*;
  * purely internal triggers. Therefore it would not be appropriate to represent it as a
  * Listener.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$T>
  */
 public abstract class SimpleReactor<$T> {
@@ -53,20 +53,20 @@ public abstract class SimpleReactor<$T> {
 	 * <p>
 	 * Calls a Listener every time a piece of data becomes available to a ReadHead.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This is NOT the same as calling {@code $rh.setListener($handler)} &mdash; that
 	 * would cause the listener to be called every time there is a lifecycle event on
 	 * the ReadHead (and you may notice would also not be allowed by the type system,
 	 * since it is semantically quite different).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * {@link ReadHead#setListener(Listener)} will be called on the given ReadHead, so
 	 * the ReadHead must not already have another Listener set unless you don't mind
 	 * it being dislodged.
 	 * </p>
-	 * 
+	 *
 	 * @param $rh
 	 *                a ReadHead to attach a handler to
 	 * @param $handler
@@ -76,7 +76,7 @@ public abstract class SimpleReactor<$T> {
 	public static <$T> void bind(ReadHead<$T> $rh, Listener<$T> $handler) {
 		new Bridge<$T>($rh, $handler);
 	}
-	
+
 	public SimpleReactor(ReadHead<$T> $rh) {
 		$source = $rh;
 		$firedDone = false;
@@ -97,16 +97,16 @@ public abstract class SimpleReactor<$T> {
 			}
 		});
 	}
-	
+
 	private final ReadHead<$T>	$source;
 	private volatile boolean	$firedDone;
-	
+
 	protected abstract void hear($T $msg);
-	
+
 	protected void done() {}
-	
-	
-	
+
+
+
 	private static final class Bridge<$T> extends SimpleReactor<$T> {
 		public Bridge(ReadHead<$T> $rh, Listener<$T> $handler) {
 			super($rh);

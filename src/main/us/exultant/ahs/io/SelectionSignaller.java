@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -39,13 +39,13 @@ import org.slf4j.*;
  * system so it can work in the same pools and with the same tools as any systems based on
  * the AHSlib threading module.
  * </p>
- * 
+ *
  * <p>
  * There is a default global singleton instance of this available from
  * {@link IOManager#getDefaultSelectionSignaller()} that should be used in almost every
  * situation.
  * </p>
- * 
+ *
  * <p>
  * If you choose not to use the default global instance of this selector and instead
  * construct and schedule your own, there are a couple of caveats:
@@ -72,9 +72,9 @@ import org.slf4j.*;
  * versions of android).
  * </ul>
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 // in a perfect world, i'd like to be able to treat connection acceptance or whathaveyou has a separate priority than readability or whathaveyou.
 //   unfortunately the only way i can see to do that is by having completely separate selectors and taking it upon yourself to register things to them by category.  and eat your moar threads.
@@ -82,7 +82,7 @@ public class SelectionSignaller {
 	/**
 	 * Creates a new system default Selector back-end. Selects run with a timeout of 1
 	 * millisecond; the WorkTarget's priority is zero.
-	 * 
+	 *
 	 * This default timeout is a conservative choice: regardless of if planning to run
 	 * the WorkTargetSelector in a private thread or a WorkScheduler with pooling, the
 	 * 1 millisecond timeout won't kill you (it'll never leave a thread spinning at
@@ -92,11 +92,11 @@ public class SelectionSignaller {
 	public SelectionSignaller() {
 		this(1);
 	}
-	
+
 	/**
 	 * Creates a new system default Selector back-end. Selects run with a configurable
 	 * timeout; the WorkTarget's priority is zero.
-	 * 
+	 *
 	 * @param $selectionTimeout
 	 *                the number of milliseconds a select call should block for, or
 	 *                negative for completely nonblocking operation, or zero for
@@ -107,11 +107,11 @@ public class SelectionSignaller {
 	public SelectionSignaller(int $selectionTimeout) {
 		this(makeDefaultSelector(), $selectionTimeout, 0);
 	}
-	
+
 	/**
 	 * Creates a new system default Selector back-end. Select timeouts are
 	 * configurable, as is the WorkTarget's priority.
-	 * 
+	 *
 	 * @param $selectionTimeout
 	 *                the number of milliseconds a select call should block for, or
 	 *                negative for completely nonblocking operation, or zero for
@@ -123,7 +123,7 @@ public class SelectionSignaller {
 	public SelectionSignaller(int $selectionTimeout, int $workPriority) {
 		this(makeDefaultSelector(), $selectionTimeout, $workPriority);
 	}
-	
+
 	private static Selector makeDefaultSelector() {
 		try {
 			return Selector.open();
@@ -131,7 +131,7 @@ public class SelectionSignaller {
 			throw new Error("you have a seriously weird runtime.", $e);
 		}
 	}
-	
+
 	/**
 	 * Constructs a new WorkTargetSelector with your choice of back-end Selector,
 	 * timeouts on selects, and priority for the WorkTarget.
@@ -147,19 +147,19 @@ public class SelectionSignaller {
 			}
 		});
 	}
-	
+
 	public WorkFuture<Void> schedule(WorkScheduler $scheduler, ScheduleParams $when) {
 		return $scheduler.schedule(new Worker(), $when);
 	}
 
 	public static final Loggar logger = new Loggar(LoggerFactory.getLogger(SelectionSignaller.class.getName()));
 	public static final Loggar logger_ingress = new Loggar(LoggerFactory.getLogger(SelectionSignaller.class.getName()+".ingress"));
-	
+
 	private final Selector		$selector;
 	private final Pipe<Event>	$pipe;
 	private final int		$priority;
 	private final int		$timeout;
-	
+
 	private SelectionKey getKey(Event $evt) {
 		if ($evt.$chan != null) return $evt.$chan.keyFor($selector);
 		for (SelectionKey $k : $selector.keys()) {
@@ -169,12 +169,12 @@ public class SelectionSignaller {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Registers a Listener to be triggered by the selecting thread when this channel
 	 * has readable data. If called on a channel that already has a listener set for
 	 * this purpose, this new listener will replace that listener.
-	 * 
+	 *
 	 * @param $ch
 	 *                a readable channel. Note this this is a contractual thing rather
 	 *                than a strongly typed thing; this is unfortunate, but
@@ -189,12 +189,12 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing registerRead on {channel:{}; listener:{}}", $ch, $p);
 		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_READ));
 	}
-	
+
 	/**
 	 * Registers a Listener to be triggered by the selecting thread when this channel
 	 * is ready to accept data writes. If called on a channel that already has a
 	 * listener set for this purpose, this new listener will replace that listener.
-	 * 
+	 *
 	 * @param $ch
 	 *                a writable channel. Note this this is a contractual thing rather
 	 *                than a strongly typed thing; this is unfortunate, but
@@ -209,13 +209,13 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing registerWrite on {channel:{}; listener:{}}", $ch, $p);
 		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_WRITE));
 	}
-	
+
 	/**
 	 * Registers a Listener to be triggered by the selecting thread when this
 	 * ServerSocketChannel has new connections ready to accept. If called on a channel
 	 * that already has a listener set for this purpose, this new listener will
 	 * replace that listener.
-	 * 
+	 *
 	 * @param $ch
 	 *                a ServerSocketChannel channel
 	 * @param $p
@@ -227,7 +227,7 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing registerAccept on {channel:{}; listener:{}}", $ch, $p);
 		$pipe.sink().write(new Event_Reg($ch, $p, SelectionKey.OP_ACCEPT));
 	}
-	
+
 	/**
 	 * Stops selecting for read events on a channel and discards the presently set
 	 * Listener. Calling this method repeatedly will have no effect unless
@@ -239,7 +239,7 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing deregisterRead on {channel:{}}", $ch);
 		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_READ));
 	}
-	
+
 	/**
 	 * Stops selecting for writability events on a channel and discards the presently
 	 * set Listener. Calling this method repeatedly will have no effect unless
@@ -251,7 +251,7 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing deregisterWrite on {channel:{}}", $ch);
 		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_WRITE));
 	}
-	
+
 	/**
 	 * Using this form of the command is slower and will behave ambiguously if the
 	 * same pump object is attached to several channels. Consider using
@@ -264,7 +264,7 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing deregisterRead on {listener:{}}", $p);
 		$pipe.sink().write(new Event_Dereg($p, SelectionKey.OP_READ));
 	}
-	
+
 	/**
 	 * Using this form of the command is slower and will behave ambiguously if the
 	 * same pump object is attached to several channels. Consider using
@@ -277,7 +277,7 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing deregisterWrite on {listener:{}}", $p);
 		$pipe.sink().write(new Event_Dereg($p, SelectionKey.OP_WRITE));
 	}
-	
+
 	/**
 	 * Stops selecting for new connection availablity events on a server socket and
 	 * discards the presently set Listener. Calling this method repeatedly will have
@@ -290,7 +290,7 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing deregisterAccept on {channel:{}}", $ch);
 		$pipe.sink().write(new Event_Dereg($ch, SelectionKey.OP_ACCEPT));
 	}
-	
+
 	/**
 	 * Stops selecting for any and all events on a channel, discards all present
 	 * Listeners, and cancels it. This channel may never again be registered with this
@@ -302,16 +302,16 @@ public class SelectionSignaller {
 		assert logger_ingress.debug("queuing cancel on {channel:{}}", $ch);
 		$pipe.sink().write(new Event_Cancel($ch));
 	}
-	
-	
-	
+
+
+
 	private static abstract class Event {
 		protected Event(SelectableChannel $thing, Listener<SelectableChannel> $listener, int $ops) {
 			this.$chan = $thing;
 			this.$listener = $listener;
 			this.$ops = $ops;
 		}
-		
+
 		public final SelectableChannel			$chan;
 		public final Listener<SelectableChannel>	$listener;
 		public final int				$ops;
@@ -326,7 +326,7 @@ public class SelectionSignaller {
 		private Event_Dereg(Listener<SelectableChannel> $p, int $ops) {
 			super(null, $p, $ops);
 		}
-		
+
 		private Event_Dereg(SelectableChannel $ch, int $ops) {
 			super($ch, null, $ops);
 		}
@@ -335,14 +335,14 @@ public class SelectionSignaller {
 		private Event_Cancel(SelectableChannel $ch) {
 			super($ch, null, 0);
 		}
-		
+
 		private Event_Cancel(Listener<SelectableChannel> $p) {
 			super(null, $p, 0);
 		}
 	}
-	
-	
-	
+
+
+
 	private class Worker implements WorkTarget<Void> {
 		/**
 		 * This always returns true. I'm sorry. The core java api for {@link Selector}
@@ -352,22 +352,22 @@ public class SelectionSignaller {
 		public boolean isReady() {
 			return true;
 			//try {
-			//	return 
-			//		$selector.selectedKeys().isEmpty() ||		// i don't think this works, actually, because you have to call select() in order to get that key set to be updated by the OS.  Also: mind that if you DID use selectNow here, you'd have to change the $freshWorkExists boolean in the call method, because that optimization would no longer be valid. 
+			//	return
+			//		$selector.selectedKeys().isEmpty() ||		// i don't think this works, actually, because you have to call select() in order to get that key set to be updated by the OS.  Also: mind that if you DID use selectNow here, you'd have to change the $freshWorkExists boolean in the call method, because that optimization would no longer be valid.
 			//		$pipe.hasNext();
 			//} catch (ClosedSelectorException $e) {
 			//	return false;
 			//}
 		}
-		
+
 		public boolean isDone() {
 			return !$selector.isOpen();
 		}
-		
+
 		public int getPriority() {
 			return $priority;
 		}
-		
+
 		/**
 		 * <p>
 		 * This method cycles through three phases. In the first phase it blocks on the
@@ -383,7 +383,7 @@ public class SelectionSignaller {
 			assert logger.trace("selector doing registration processing...");
 			callRegistrationProcessing();
 			assert logger.trace("registration processing done");
-			
+
 			// PHASE TWO
 			// chill out
 			assert logger.trace("selector selecting...");
@@ -394,16 +394,16 @@ public class SelectionSignaller {
 				assert logger.info("selector interrupted!  forgetting about event disbatch and returning to scheduler immediately.");
 				return null;
 			}
-			
+
 			// PHASE THREE
 			// disbatch events to folks who're deserving
 			assert logger.trace("selector disbatching events...");
 			if ($freshWorkExists) callDisbatchEvents();
 			assert logger.trace("event disbatching done");
-			
+
 			return null;
 		}
-		
+
 		private int callSelect() {
 			try {
 				/* block until channel events, or wakeups triggered by the event pipe's listener, or thread interrupts. */
@@ -417,15 +417,15 @@ public class SelectionSignaller {
 				throw new Error($e);
 			}
 		}
-		
+
 		private void callDisbatchEvents() {
 			Iterator<SelectionKey> $itr = $selector.selectedKeys().iterator();
 			while ($itr.hasNext()) {
 				SelectionKey $k = $itr.next();
 				$itr.remove();
-				
+
 				if (!$k.isValid()) continue;
-				
+
 				final int $ops = $k.readyOps();
 				final SelectableChannel $ch = $k.channel();
 				assert logger.debug("dispatching ops:{} on channel:{}", $ops, $ch);
@@ -451,7 +451,7 @@ public class SelectionSignaller {
 				}
 			}
 		}
-		
+
 		private void callRegistrationProcessing() {
 			List<Event> $evts = $pipe.source().readAllNow();
 			for (Event $evt : $evts) {
@@ -502,14 +502,14 @@ public class SelectionSignaller {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	private class Attache {
 		public Listener<SelectableChannel>	$reader;
 		public Listener<SelectableChannel>	$writer;
 		public Listener<SelectableChannel>	$accepter;
-		
+
 		public void apply(Event $evt) {
 			switch ($evt.$ops) {
 				case SelectionKey.OP_READ:
@@ -525,7 +525,7 @@ public class SelectionSignaller {
 					throw new MajorBug("op type not supported");
 			}
 		}
-		
+
 		public boolean contains(Listener<SelectableChannel> $p) {
 			return ($reader == $p) || ($writer == $p) || ($accepter == $p);
 		}

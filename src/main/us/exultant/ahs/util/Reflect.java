@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,15 +26,15 @@ public class Reflect {
 		// this is obviously a medium-janky use of hashcodes.  however, these kind of string are only intended to rough debugging, and if you're ever trying to do something serious with them in the code itself you're a jackass.
 		return getShortClassName($obj)+"@"+Strings.padLeftToWidth(Strings.toHex(Primitives.byteArrayFromInt(System.identityHashCode($obj))), '0', 8);
 	}
-	
+
 	public static String getShortClassName(Object $obj) {
 		return getShortClassName($obj.getClass());
 	}
-	
+
 	public static String getShortClassName(Class<?> $class) {
 		return Strings.getPartAfterLast($class.getCanonicalName(),".");
 	}
-	
+
 	public static void vom(Class<?> $k) {
 		X.saye("CLASSN:: "+$k.getCanonicalName());
 		for (Constructor<?> $c : $k.getConstructors())

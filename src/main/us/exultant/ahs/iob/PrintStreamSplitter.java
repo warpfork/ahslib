@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ public class PrintStreamSplitter extends PrintStream {
 		super($a);
 		this.$b = $b;
 	}
-	
+
 	private PrintStream $b;
 
 	public PrintStream append(char $c) {
@@ -180,7 +180,7 @@ public class PrintStreamSplitter extends PrintStream {
 		super.println($x);
 		$b.println($x);
 	}
-	
+
 	public void write(byte[] $buf, int $off, int $len) {
 		super.write($buf, $off, $len);
 		$b.write($buf, $off, $len);

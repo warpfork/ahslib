@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -21,10 +21,10 @@ package us.exultant.ahs.core;
 
 public interface Translator<$FROM, $TO> {
 	public $TO translate($FROM $x) throws TranslationException;
-	
+
 	/**
 	 * Implements a no-op translator.
-	 * 
+	 *
 	 * @author Eric Myhre <tt>hash@exultant.us</tt>
 	 *
 	 * @param <$T>

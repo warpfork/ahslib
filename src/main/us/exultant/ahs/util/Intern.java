@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ import java.util.*;
  * Maintains a pool of "canonical" objects; similar to a generalized version of
  * {@link String#intern()}.
  * </p>
- * 
+ *
  * <p>
  * This implementation differs markedly from the pattern of {@link String#intern()} in
  * that it is not necessary to intern a piece of data merely to check if it is already
@@ -34,7 +34,7 @@ import java.util.*;
  * on arbitrary input data, since the size of permanently used memory will not grow unless
  * you explicitly ask it to.
  * </p>
- * 
+ *
  * <p>
  * One of the most <i>common</i> use cases for this functionality is checking if some
  * input data is of in a set of things known to be interesting. That is, the set of
@@ -46,7 +46,7 @@ import java.util.*;
  * {@link Object#equals(Object)} that provide more handy presets, like say an enum that
  * can be switch'd on).
  * </p>
- * 
+ *
  * <p>
  * The <i>general</i> use case for this is almost exactly the same as
  * {@link String#intern()} &mdash; it gives you the power to use extremely fast pointer
@@ -59,9 +59,9 @@ import java.util.*;
  * for cannonicalizability is sufficient makes the potential range of uses much less
  * restricted than {@link String#intern()}.
  * </p>
- * 
+ *
  * <h3>A fully worked example:</h3>
- * 
+ *
  * <p>
  * The specifics of exactly how useful this will be in some situations can be more complex
  * than readily visible at first glance. For example, suppose you have a HashMap that maps
@@ -73,7 +73,7 @@ import java.util.*;
  * you might have expected, and pretty great if your HashMap actually turns out to be
  * underloaded and balanced enough that you've usually got one or zero entries per bucket.
  * </p>
- * 
+ *
  * <p>
  * However, in the case of multiple entries in a bucket of the HashMap, or a request for a
  * string that isn't even in the map but still maps to a nonempty bucket, the automatic
@@ -81,7 +81,7 @@ import java.util.*;
  * equality check is still required on any strings in the target hash bucket that aren't
  * equal to the requested string.
  * </p>
- * 
+ *
  * <p>
  * This example demonstrates the somewhat bothersome fact that members of Java Collections
  * Framework tend not to be able to make as much use of the functionality that can be
@@ -100,9 +100,9 @@ import java.util.*;
  * pointer equality.
  * </ol>
  * </p>
- * 
+ *
  * <h3>A note on threading and multiple instances of Intern:</h3>
- * 
+ *
  * <p>
  * Intern instances are NOT thread-safe in any way. If you want thread-safe interning, it
  * can none the less be done, and even without synchronization(!). As long as you set up
@@ -111,9 +111,9 @@ import java.util.*;
  * everything works out fine: you get the same concept of interned objects across all the
  * threads with zero synchronization overhead.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$T>
  */
 public class Intern<$T> {
@@ -124,38 +124,38 @@ public class Intern<$T> {
 	public Intern() {
 		this((Comparator<$T>)null);
 	}
-	
+
 	/**
 	 * Beware that when using this form, a LOT of highly detailed assumptions are made
 	 * about the nature of equality check invocations and orderings in the
 	 * {@link HashMap} class. It is not inconcievable that a JVM using a standard
 	 * library other than Sun's will trip.
-	 * 
+	 *
 	 * @param $comp
 	 */
 	public Intern(Comparator<$T> $comp) {
 		$map = new HashMap<Object,$T>();
 		this.$comp = $comp;
 	}
-	
+
 	/**
 	 * Copy constructor. All interned objects are copied, as is the comparator if any
 	 * (which implies that comparators are expected to be reentrant).
-	 * 
+	 *
 	 * @param $toCopy
 	 */
 	public Intern(Intern<$T> $toCopy) {
 		this.$map = new HashMap<Object,$T>($toCopy.$map);
 		this.$comp = $toCopy.$comp;
 	}
-	
+
 	/**
 	 * Does it seem somewhat oddly inefficient to store a pointer to a thing indexed
 	 * by itself? Well, perhaps at first glance. But this is exactly the same kind of
 	 * abstraction used in the core library's {@link HashSet} implementation as well.
 	 */
 	protected final HashMap<Object,$T> $map;
-	
+
 	/**
 	 * If set, this causes a complicated idea to come into swing. We wrap an incoming
 	 * $x in something with a snazzy equals method based on this and use that on our
@@ -167,12 +167,12 @@ public class Intern<$T> {
 	 * guts of maps to make it work internally.
 	 */
 	private final Comparator<$T> $comp;
-	
+
 	/**
 	 * If something {@link Object#equals(Object)} to <tt>$x</tt> is not yet interned
 	 * here, then <tt>$x</tt> is interned and returned; else the already interned
 	 * object is returned.
-	 * 
+	 *
 	 * @param $x
 	 *                an object to return a cannonical reference to.
 	 * @return an object that is equal to the given object (and possibly the
@@ -197,11 +197,11 @@ public class Intern<$T> {
 			return $v;
 		}
 	}
-	
+
 	/**
 	 * If something {@link Object#equals(Object)} to <tt>$x</tt> is already interned
 	 * here, then that already interned object is returned; else null is returned.
-	 * 
+	 *
 	 * @param $x
 	 *                an object to return a cannonical reference to.
 	 * @return an object that is equal to the given object (and possibly the
@@ -215,12 +215,12 @@ public class Intern<$T> {
 		else
 			return $map.get($gw.wrap($x));
 	}
-	
+
 	// i cannot think of a situation where you could actually reasonably use this without massive peril of driving yourself insane.
 //	public $T unintern($T $x) {
 //		return $map.remove($x);
 //	}
-	
+
 	private class PutWrapper {
 		public PutWrapper($T $x) { if ($x == null) throw new NullPointerException(); this.$x = $x; }
 		private final $T $x;
@@ -242,14 +242,14 @@ public class Intern<$T> {
 			return ($comp.compare($x, $t) == 0);
 		}
 	}
-	
+
 	public static class Strings extends Intern<String> {
 		/**
 		 * If something {@link Object#equals(Object)} to <tt>$x</tt> is not yet
 		 * interned here, then the result of interning <tt>$x</tt> in the global
 		 * string pool (i.e. via {@link String#intern()}) is interned locally and
 		 * returned; else the already interned object is returned.
-		 * 
+		 *
 		 * @param $x
 		 *                an object to return a cannonical reference to.
 		 * @return an object that is equal to the given object (and possibly the
@@ -270,4 +270,3 @@ public class Intern<$T> {
 		}
 	}
 }
- 

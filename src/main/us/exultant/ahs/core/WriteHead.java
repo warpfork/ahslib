@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -27,14 +27,14 @@ import java.util.*;
  * Provides an interface to make file, network, and internal pipe operations all
  * transparently; WriteHead is the complement of {@link ReadHead}.
  * </p>
- * 
+ *
  * <p>
  * In keeping with the philosophy that the WriteHead and ReadHead interfaces are for
  * dealing with "semantically meaningful" chunks of information, WriteHead provides no
  * notion of "flush" that is typical of some other stream interfaces, as all chunks should
  * be meaningful enough to warrant "flushing" immediately upon write.
  * </p>
- * 
+ *
  * <p>
  * WriteHead are typically expected to do most of their operations in the current thread
  * and complete them before they return. In situations where this is untenable for some
@@ -42,7 +42,7 @@ import java.util.*;
  * should use a Pipe to create a buffer between the real, blocking WriteHead, and a much
  * softer WriteHead that returns as soon as it has committed its chunk to the buffer.
  * </p>
- * 
+ *
  * <p>
  * "Without blocking" for the purpose of this interface is a bit vague, and should be
  * taken more as "with minimal blocking as absolutely critical". For example, in
@@ -50,13 +50,13 @@ import java.util.*;
  * beyond normal disk access time; in the case of a network file system, there may still
  * be significant blocking for the disk access itself.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  */
 public interface WriteHead<$T> {
 	/**
 	 * Writes a chunk of data to a stream, returning when the write is complete.
-	 * 
+	 *
 	 * @param $chunk
 	 * @throws IllegalStateException
 	 *                 if the WriteHead has been closed.
@@ -65,20 +65,20 @@ public interface WriteHead<$T> {
 	 */
 	@ThreadSafe
 	public void write($T $chunk);
-	
+
 	/**
 	 * <p>
 	 * Writes a collection of data chunks to a stream, returning when the write is
 	 * complete.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * All elements added as a group in this way should be guaranteed to come out of a
 	 * paired ReadHead in the same order as the original ordering of the collection,
 	 * and shall not be intermingled with other objects; if an implementation does not
 	 * support this behavior, it should be documented loudly.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Some elements added as a group in this way may be made available to a paired
 	 * ReadHead before this call returns and before the entire group is added (so it
@@ -86,20 +86,20 @@ public interface WriteHead<$T> {
 	 * read half of the group of elements, then get nulls, and then later return to
 	 * see the other half of the group).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Though it is allowed for written objects to begin becoming available from a
 	 * paired ReadHead before this method returns, it is not necessary for the
 	 * listener on such a read head to be called as each of those objects become
 	 * available (though it may be).
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * If an exception is thrown in the middle of writing the collection of data, that
 	 * exception will bubble out of this method immediately and elements of the
 	 * collection that have not yet been written shall not be written as a result.
 	 * </p>
-	 * 
+	 *
 	 * @param $chunks
 	 * @throws IllegalStateException
 	 *                 if the WriteHead has been closed.
@@ -108,7 +108,7 @@ public interface WriteHead<$T> {
 	 */
 	@ThreadSafe
 	public void writeAll(Collection<? extends $T> $chunks);
-	
+
 	/**
 	 * This function allows for systems which contain some sort of limit on their
 	 * underlying stream to indicate to users that such a limit has been reached. Its
@@ -118,7 +118,7 @@ public interface WriteHead<$T> {
 	 * this to report on something like the state of fullness of the filesystem; that
 	 * should be done through other methods or by the throwing of an IOException
 	 * during a write that would overcommit.)
-	 * 
+	 *
 	 * @return true if an immediately subsequent (all standard caveats about the
 	 *         realisticness of "immediacy" in multithreading aside) call to write()
 	 *         will return immediately without blocking.
@@ -126,23 +126,23 @@ public interface WriteHead<$T> {
 	@Nullipotent
 	@ThreadSafe
 	public boolean hasRoom();
-	
+
 	/**
 	 * Reports whether or not the WriteHead is closed to the entry of data.
-	 * 
+	 *
 	 * @return true if the underlying stream is closed and writes are not possible.
 	 */
 	@Nullipotent
 	@ThreadSafe
 	public boolean isClosed();
-	
+
 	/**
 	 * <p>
 	 * Closes the underlying stream or channel. Invocations of write methods after
 	 * this close method should result in failure and the throwing of
 	 * IllegalStateException.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * In situations that bear resemblance to pipes (that is, a ReadHead is paired
 	 * with a WriteHead at some other position along the same underlying stream or
@@ -156,7 +156,7 @@ public interface WriteHead<$T> {
 	 * same machine or program), since layers of buffering can delay the movement of
 	 * the signal.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Only the first invocation of this function should have any effect; closing a
 	 * closed WriteHead is illogical (but should not throw exceptions).
@@ -165,9 +165,9 @@ public interface WriteHead<$T> {
 	@Idempotent
 	@ThreadSafe
 	public void close();
-	
-	
-	
+
+
+
 	/** WriteHead that acts like <tt>/dev/null</tt> (black-holes all information given to it). */
 	public static class NoopAdapter<$T> implements WriteHead<$T> {
 		/** Ignores you. */

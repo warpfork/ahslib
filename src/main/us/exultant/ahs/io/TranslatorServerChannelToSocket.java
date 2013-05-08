@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -30,12 +30,12 @@ public class TranslatorServerChannelToSocket implements Translator<ServerSocketC
 	 * impunity throughout the VM.
 	 */
 	public static final TranslatorServerChannelToSocket INSTANCE = new TranslatorServerChannelToSocket();
-	
+
 	/**
 	 * Attempts to accept a new SocketChannel from the given ServerSocketChannel. If
 	 * successful, the returned SocketChannel has been configured to non-blocking
 	 * mode; it has not been registered with any selectors.
-	 * 
+	 *
 	 * @param $ssc
 	 *                a ServerSocketChannel to draw from. If this Translator is to
 	 *                function nonblockingly, this must have already been placed in

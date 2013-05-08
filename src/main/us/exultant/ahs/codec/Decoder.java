@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,7 @@ package us.exultant.ahs.codec;
 import us.exultant.ahs.core.*;
 
 /**
- * 
+ *
  * <p>
  * Classes that support decoding are recommended to follow a pattern of providing an
  * Decoder implementer as a public static inner class of themselves, then make an instance
@@ -31,14 +31,14 @@ import us.exultant.ahs.core.*;
  * its client classes, and removes any possibility for ambiguity should it be the case
  * that some classes wish to provide multiple methods for decoding.
  * </p>
- * 
+ *
  * <p>
  * Unless a specific implementation states otherwise, the decode method is assumed to be
  * reentrant.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$TARG>
  *                The type of object to be produced by the decoding. A single complete
  *                codec system will typically require decoders of one $TARG type for each

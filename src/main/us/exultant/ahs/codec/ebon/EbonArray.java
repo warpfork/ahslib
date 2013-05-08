@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,39 +32,39 @@ import java.util.*;
  * bytes), so keys may not exceed 65536 bytes in length. No type coersion is allowed by
  * any of the methods that return stored values; when serialized, type is stored as one
  * byte for each field.  Strings are stored in the UTF-8 charset.
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class EbonArray implements EonArray {
 	public EbonArray() {
 		$arr = new ArrayList<Object>();
 	}
-	
+
 	public EbonArray(int $capacity) {
 		$arr = new ArrayList<Object>($capacity);
 	}
-	
+
 	private List<Object> $arr;
-	
+
 	public int size() {
 		return $arr.size();
 	}
-	
+
 	protected Object opt(int $index) {
 		return $arr.get($index);
 	}
-	
+
 	protected Object get(int $index) throws EbonException {
 		Object $o = opt($index);
 		if ($o == null) throw new EbonException("EbonArray[" + $index + "] not found.");
 		return $o;
 	}
-	
+
 	public void put(int $index, byte[] $val) {
 		$arr.add($index, $val);
 	}
-	
+
 	public byte[] getBytes(int $index) throws EbonException {
 		Object $x = get($index);
 		if ($x instanceof byte[]) {
@@ -73,11 +73,11 @@ public class EbonArray implements EonArray {
 			throw new EbonException("EbonArray[" + $index + "] is not a byte[].");
 		}
 	}
-	
+
 	public byte[] optBytes(int $index) {
 		return optBytes($index, null);
 	}
-	
+
 	public byte[] optBytes(int $index, byte[] $default) {
 		Object $x = opt($index);
 		if ($x == null)
@@ -87,11 +87,11 @@ public class EbonArray implements EonArray {
 		else
 			return $default;
 	}
-	
+
 	public void put(int $index, boolean $val) {
 		$arr.add($index, $val);
 	}
-	
+
 	public boolean getBoolean(int $index) throws EbonException {
 		Object $x = get($index);
 		if ($x instanceof Boolean) {
@@ -100,7 +100,7 @@ public class EbonArray implements EonArray {
 			throw new EbonException("EbonArray[" + $index + "] is not a Boolean.");
 		}
 	}
-	
+
 	public boolean optBoolean(int $index, boolean $default) {
 		Object $x = opt($index);
 		if ($x == null)
@@ -114,7 +114,7 @@ public class EbonArray implements EonArray {
 	public void put(int $index, double $val) {
 		$arr.add($index, $val);
 	}
-	
+
 	public double getDouble(int $index) throws EbonException {
 		Object $x = get($index);
 		if ($x instanceof Double) {
@@ -252,16 +252,16 @@ public class EbonArray implements EonArray {
 		else
 			return null;
 	}
-	
-	
-	
+
+
+
 	public byte[] serialize() throws EbonException {
 		ByteAccumulator $bah = new ByteAccumulator(128);
 		DataOutputStream $dou = new DataOutputStream($bah);
 		serialize($dou);
 		return ($bah.size() == $bah.getByteArray().length) ? $bah.getByteArray() : $bah.toByteArray();
 	}
-	
+
 	/**
 	 * Package-visible so EbonArray and EbonObject can play tag.
 	 * @param $dou
@@ -269,7 +269,7 @@ public class EbonArray implements EonArray {
 	 */
 	void serialize(DataOutputStream $dou) throws EbonException {
 		//SOMEDAY:AHS: wants me an ordered map that performs more like a linked list than that TreeMap thang -- i only ever want fifo traversal and a comparator for that is not my favorite idea.
-		
+
 		try {
 			$dou.writeByte((byte)'a');
 			final int $arrl = $arr.size();
@@ -306,14 +306,14 @@ public class EbonArray implements EonArray {
 				} else if ($x instanceof EbonArray) {
 					((EbonArray) $x).serialize($dou);
 				}
-			
+
 			}
 		} catch (IOException $e) {
 			// ought not happen.  we can't really get io exceptions from writing to an internal buffer we just declared...
 			throw new EbonException($e);
 		}
 	}
-	
+
 	public void deserialize(byte[] $bats) throws EbonException {
 		DataInputStream $din = new DataInputStream(new ByteArrayInputStream($bats));
 		byte $bat;
@@ -325,7 +325,7 @@ public class EbonArray implements EonArray {
 		if ('a' != $bat) throw new EbonException("An EbonArray serial must begin with 'a'.");
 		deserialize($din);
 	}
-	
+
 	void deserialize(DataInputStream $din) throws EbonException {
 		try {
 			final int $arrl = $din.readInt();

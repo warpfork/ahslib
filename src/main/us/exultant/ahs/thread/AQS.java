@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 /*
  * This code is inspired by and borrows heavily from code originally written
  * by Doug Lea with assistance from members of JCP JSR-166 Expert Group and
- * released to the public domain.  The author of this code gratefully 
+ * released to the public domain.  The author of this code gratefully
  * acknowledges their contributions to the field.
  */
 
@@ -35,7 +35,7 @@ import java.util.concurrent.locks.*;
  * libraries. It has been enhanced to allow more integers to be returned and passed
  * between internal calls, making more specialized functionality possible in subclasses;
  * otherwise, all of the core functionality is essentially the same.
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
  * @author Doug Lea
  */
@@ -45,12 +45,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * synchronization state of zero.
 	 */
 	protected AQS() {}
-	
-	
-	
+
+
+
 	/**
 	 * Wait queue node class.
-	 * 
+	 *
 	 * <p>
 	 * The wait queue is a variant of a "CLH" (Craig, Landin, and Hagersten) lock
 	 * queue. CLH locks are normally used for spinlocks. We instead use them for
@@ -63,31 +63,31 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * though. A thread may try to acquire if it is first in the queue. But being
 	 * first does not guarantee success; it only gives the right to contend. So the
 	 * currently released contender thread may need to rewait.
-	 * 
+	 *
 	 * <p>
 	 * To enqueue into a CLH lock, you atomically splice it in as new tail. To
 	 * dequeue, you just set the head field.
-	 * 
+	 *
 	 * <pre>
 	 *      +------+  prev +-----+       +-----+
 	 * head |      | <---- |     | <---- |     |  tail
 	 *      +------+       +-----+       +-----+
 	 * </pre>
-	 * 
+	 *
 	 * <p>
 	 * Insertion into a CLH queue requires only a single atomic operation on "tail",
 	 * so there is a simple atomic point of demarcation from unqueued to queued.
 	 * Similarly, dequeing involves only updating the "head". However, it takes a bit
 	 * more work for nodes to determine who their successors are, in part to deal with
 	 * possible cancellation due to timeouts and interrupts.
-	 * 
+	 *
 	 * <p>
 	 * The "prev" links (not used in original CLH locks), are mainly needed to handle
 	 * cancellation. If a node is cancelled, its successor is (normally) relinked to a
 	 * non-cancelled predecessor. For explanation of similar mechanics in the case of
 	 * spin locks, see the papers by Scott and Scherer at
 	 * http://www.cs.rochester.edu/u/scott/synchronization/
-	 * 
+	 *
 	 * <p>
 	 * We also use "next" links to implement blocking mechanics. The thread id for
 	 * each node is kept in its own node, so a predecessor signals the next node to
@@ -97,7 +97,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * the atomically updated "tail" when a node's successor appears to be null. (Or,
 	 * said differently, the next-links are an optimization so that we don't usually
 	 * need a backward scan.)
-	 * 
+	 *
 	 * <p>
 	 * Cancellation introduces some conservatism to the basic algorithms. Since we
 	 * must poll for cancellation of other nodes, we can miss noticing whether a
@@ -105,13 +105,13 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * successors upon cancellation, allowing them to stabilize on a new predecessor,
 	 * unless we can identify an uncancelled predecessor who will carry this
 	 * responsibility.
-	 * 
+	 *
 	 * <p>
 	 * CLH queues need a dummy header node to get started. But we don't create them on
 	 * construction, because it would be wasted effort if there is never contention.
 	 * Instead, the node is constructed and head and tail pointers are set upon first
 	 * contention.
-	 * 
+	 *
 	 * <p>
 	 * Threads waiting on Conditions use the same nodes, but use an additional link.
 	 * Conditions only need to link nodes in simple (non-concurrent) linked queues
@@ -119,7 +119,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * inserted into a condition queue. Upon signal, the node is transferred to the
 	 * main queue. A special value of status field is used to mark which queue a node
 	 * is on.
-	 * 
+	 *
 	 * <p>
 	 * Thanks go to Dave Dice, Mark Moir, Victor Luchangco, Bill Scherer and Michael
 	 * Scott, along with members of JSR-166 expert group, for helpful ideas,
@@ -130,7 +130,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		static final Node	SHARED		= new Node();
 		/** Marker to indicate a node is waiting in exclusive mode */
 		static final Node	EXCLUSIVE	= null;
-		
+
 		/** waitStatus value to indicate thread has cancelled */
 		static final int	CANCELLED	= 1;
 		/** waitStatus value to indicate successor's thread needs unparking */
@@ -142,7 +142,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 * unconditionally propagate
 		 */
 		static final int	PROPAGATE	= -3;
-		
+
 		/**
 		 * Status field, taking on only the values: SIGNAL: The successor of this
 		 * node is (or will soon be) blocked (via park), so the current node must
@@ -158,17 +158,17 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 * be propagated to other nodes. This is set (for head node only) in
 		 * doReleaseShared to ensure propagation continues, even if other
 		 * operations have since intervened. 0: None of the above
-		 * 
+		 *
 		 * The values are arranged numerically to simplify use. Non-negative
 		 * values mean that a node doesn't need to signal. So, most code doesn't
 		 * need to check for particular values, just for sign.
-		 * 
+		 *
 		 * The field is initialized to 0 for normal sync nodes, and CONDITION for
 		 * condition nodes. It is modified using CAS (or when possible,
 		 * unconditional volatile writes).
 		 */
 		volatile int		waitStatus;
-		
+
 		/**
 		 * Link to predecessor node that current node/thread relies on for
 		 * checking waitStatus. Assigned during enqueing, and nulled out (for sake
@@ -180,7 +180,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 * node.
 		 */
 		volatile Node		prev;
-		
+
 		/**
 		 * Link to the successor node that the current node/thread unparks upon
 		 * release. Assigned during enqueuing, adjusted when bypassing cancelled
@@ -193,13 +193,13 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 * make life easier for isOnSyncQueue.
 		 */
 		volatile Node		next;
-		
+
 		/**
 		 * The thread that enqueued this node. Initialized on construction and
 		 * nulled out after use.
 		 */
 		volatile Thread		thread;
-		
+
 		/**
 		 * Link to next node waiting on condition, or the special value SHARED.
 		 * Because condition queues are accessed only when holding in exclusive
@@ -209,19 +209,19 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 * field by using special value to indicate shared mode.
 		 */
 		Node			nextWaiter;
-		
+
 		/**
 		 * Returns true if node is waiting in shared mode
 		 */
 		final boolean isShared() {
 			return nextWaiter == SHARED;
 		}
-		
+
 		/**
 		 * Returns previous node, or throws NullPointerException if null. Use when
 		 * predecessor cannot be null. The null check could be elided, but is
 		 * present to help the VM.
-		 * 
+		 *
 		 * @return the predecessor of this node
 		 */
 		final Node predecessor() throws NullPointerException {
@@ -229,72 +229,72 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (p == null) throw new NullPointerException();
 			else return p;
 		}
-		
+
 		Node() { // Used to establish initial head or SHARED marker
 		}
-		
+
 		Node(Thread thread, Node mode) { // Used by addWaiter
 			this.nextWaiter = mode;
 			this.thread = thread;
 		}
-		
+
 		Node(Thread thread, int waitStatus) { // Used by Condition
 			this.waitStatus = waitStatus;
 			this.thread = thread;
 		}
 	}
-	
+
 	/**
 	 * Head of the wait queue, lazily initialized. Except for initialization, it is
 	 * modified only via method setHead. Note: If head exists, its waitStatus is
 	 * guaranteed not to be CANCELLED.
 	 */
 	private transient volatile Node	head;
-	
+
 	/**
 	 * Tail of the wait queue, lazily initialized. Modified only via method enq to add
 	 * new wait node.
 	 */
 	private transient volatile Node	tail;
-	
+
 	/**
 	 * The synchronization state.
 	 */
 	private volatile int		state;
-	
+
 	/**
 	 * Returns the current value of synchronization state. This operation has memory
 	 * semantics of a <tt>volatile</tt> read.
-	 * 
+	 *
 	 * @return current state value
 	 */
 	protected final int getState() {
 		return state;
 	}
-	
+
 	/**
 	 * Sets the value of synchronization state. This operation has memory semantics of
 	 * a <tt>volatile</tt> write.
-	 * 
+	 *
 	 * @param newState
 	 *                the new state value
 	 */
 	protected final void setState(int newState) {
 		state = newState;
 	}
-	
+
 	// Queuing utilities
-	
+
 	/**
 	 * The number of nanoseconds for which it is faster to spin rather than to use
 	 * timed park. A rough estimate suffices to improve responsiveness with very short
 	 * timeouts.
 	 */
 	static final long	spinForTimeoutThreshold	= 1000L;
-	
+
 	/**
 	 * Inserts node into queue, initializing if necessary. See picture above.
-	 * 
+	 *
 	 * @param node
 	 *                the node to insert
 	 * @return node's predecessor
@@ -313,10 +313,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			}
 		}
 	}
-	
+
 	/**
 	 * Creates and enqueues node for current thread and given mode.
-	 * 
+	 *
 	 * @param mode
 	 *                Node.EXCLUSIVE for exclusive, Node.SHARED for shared
 	 * @return the new node
@@ -335,12 +335,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		enq(node);
 		return node;
 	}
-	
+
 	/**
 	 * Sets head of queue to be node, thus dequeuing. Called only by acquire methods.
 	 * Also nulls out unused fields for sake of GC and to suppress unnecessary signals
 	 * and traversals.
-	 * 
+	 *
 	 * @param node
 	 *                the node
 	 */
@@ -349,10 +349,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		node.thread = null;
 		node.prev = null;
 	}
-	
+
 	/**
 	 * Wakes up node's successor, if one exists.
-	 * 
+	 *
 	 * @param node
 	 *                the node
 	 */
@@ -364,7 +364,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 */
 		int ws = node.waitStatus;
 		if (ws < 0) compareAndSetWaitStatus(node, ws, 0);
-		
+
 		/*
 		 * Thread to unpark is held in successor, which is normally
 		 * just the next node.  But if cancelled or apparently null,
@@ -379,7 +379,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		if (s != null) LockSupport.unpark(s.thread);
 	}
-	
+
 	/**
 	 * Release action for shared mode -- signal successor and ensure propagation.
 	 * (Note: For exclusive mode, release just amounts to calling unparkSuccessor of
@@ -410,11 +410,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			break;
 		}
 	}
-	
+
 	/**
 	 * Sets head of queue, and checks if successor may be waiting in shared mode, if
 	 * so propagating if either propagate > 0 or PROPAGATE status was set.
-	 * 
+	 *
 	 * @param node
 	 *                the node
 	 * @param propagate
@@ -443,36 +443,36 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (s == null || s.isShared()) doReleaseShared();
 		}
 	}
-	
+
 	// Utilities for various versions of acquire
-	
+
 	/**
 	 * Cancels an ongoing attempt to acquire.
-	 * 
+	 *
 	 * @param node
 	 *                the node
 	 */
 	private void cancelAcquire(Node node) {
 		// Ignore if node doesn't exist
 		if (node == null) return;
-		
+
 		node.thread = null;
-		
+
 		// Skip cancelled predecessors
 		Node pred = node.prev;
 		while (pred.waitStatus > 0)
 			node.prev = pred = pred.prev;
-		
+
 		// predNext is the apparent node to unsplice. CASes below will
 		// fail if not, in which case, we lost race vs another cancel
 		// or signal, so no further action is necessary.
 		Node predNext = pred.next;
-		
+
 		// Can use unconditional write instead of CAS here.
 		// After this atomic step, other Nodes can skip past us.
 		// Before, we are free of interference from other threads.
 		node.waitStatus = Node.CANCELLED;
-		
+
 		// If we are the tail, remove ourselves.
 		if (node == tail && compareAndSetTail(node, pred)) {
 			compareAndSetNext(pred, predNext, null);
@@ -486,16 +486,16 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			} else {
 				unparkSuccessor(node);
 			}
-			
+
 			node.next = node; // help GC
 		}
 	}
-	
+
 	/**
 	 * Checks and updates status for a node that failed to acquire. Returns true if
 	 * thread should block. This is the main signal control in all acquire loops.
 	 * Requires that pred == node.prev
-	 * 
+	 *
 	 * @param pred
 	 *                node's predecessor holding status
 	 * @param node
@@ -529,24 +529,24 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Convenience method to interrupt current thread.
 	 */
 	private static void selfInterrupt() {
 		Thread.currentThread().interrupt();
 	}
-	
+
 	/**
 	 * Convenience method to park and then check if interrupted
-	 * 
+	 *
 	 * @return {@code true} if interrupted
 	 */
 	private final boolean parkAndCheckInterrupt() {
 		LockSupport.park(this);
 		return Thread.interrupted();
 	}
-	
+
 	/*
 	 * Various flavors of acquire, varying in exclusive/shared and
 	 * control modes.  Each is mostly the same, but annoyingly
@@ -555,11 +555,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * cancel if tryAcquire throws exception) and other control, at
 	 * least not without hurting performance too much.
 	 */
-	
+
 	/**
 	 * Acquires in exclusive uninterruptible mode for thread already in queue. Used by
 	 * condition wait methods as well as acquire.
-	 * 
+	 *
 	 * @param node
 	 *                the node
 	 * @param arg
@@ -584,10 +584,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (failed) cancelAcquire(node);
 		}
 	}
-	
+
 	/**
 	 * Acquires in exclusive interruptible mode.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument
 	 */
@@ -609,10 +609,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (failed) cancelAcquire(node);
 		}
 	}
-	
+
 	/**
 	 * Acquires in exclusive timed mode.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument
 	 * @param nanosTimeout
@@ -643,10 +643,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (failed) cancelAcquire(node);
 		}
 	}
-	
+
 	/**
 	 * Acquires in shared uninterruptible mode.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument
 	 */
@@ -673,10 +673,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (failed) cancelAcquire(node);
 		}
 	}
-	
+
 	/**
 	 * Acquires in shared interruptible mode.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument
 	 */
@@ -701,10 +701,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (failed) cancelAcquire(node);
 		}
 	}
-	
+
 	/**
 	 * Acquires in shared timed mode.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument
 	 * @param nanosTimeout
@@ -738,23 +738,23 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (failed) cancelAcquire(node);
 		}
 	}
-	
+
 	// Main exported methods
-	
+
 	/**
 	 * Attempts to acquire in exclusive mode. This method should query if the state of
 	 * the object permits it to be acquired in the exclusive mode, and if so to
 	 * acquire it.
-	 * 
+	 *
 	 * <p>
 	 * This method is always invoked by the thread performing acquire. If this method
 	 * reports failure, the acquire method may queue the thread, if it is not already
 	 * queued, until it is signalled by a release from some other thread. This can be
 	 * used to implement method {@link Lock#tryLock()}.
-	 * 
+	 *
 	 * <p>
 	 * The default implementation throws {@link UnsupportedOperationException}.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument. This value is always the one passed to an
 	 *                acquire method, or is the value saved on entry to a condition
@@ -772,16 +772,16 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	protected boolean tryAcquire(int arg) {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	/**
 	 * Attempts to set the state to reflect a release in exclusive mode.
-	 * 
+	 *
 	 * <p>
 	 * This method is always invoked by the thread performing release.
-	 * 
+	 *
 	 * <p>
 	 * The default implementation throws {@link UnsupportedOperationException}.
-	 * 
+	 *
 	 * @param arg
 	 *                the release argument. This value is always the one passed to a
 	 *                release method, or the current state value upon entry to a
@@ -800,20 +800,20 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	protected boolean tryRelease(int arg) {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	/**
 	 * Attempts to acquire in shared mode. This method should query if the state of
 	 * the object permits it to be acquired in the shared mode, and if so to acquire
 	 * it.
-	 * 
+	 *
 	 * <p>
 	 * This method is always invoked by the thread performing acquire. If this method
 	 * reports failure, the acquire method may queue the thread, if it is not already
 	 * queued, until it is signalled by a release from some other thread.
-	 * 
+	 *
 	 * <p>
 	 * The default implementation throws {@link UnsupportedOperationException}.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument. This value is always the one passed to an
 	 *                acquire method, or is the value saved on entry to a condition
@@ -837,16 +837,16 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	protected int tryAcquireShared(int arg) {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	/**
 	 * Attempts to set the state to reflect a release in shared mode.
-	 * 
+	 *
 	 * <p>
 	 * This method is always invoked by the thread performing release.
-	 * 
+	 *
 	 * <p>
 	 * The default implementation throws {@link UnsupportedOperationException}.
-	 * 
+	 *
 	 * @param arg
 	 *                the release argument. This value is always the one passed to a
 	 *                release method, or the current state value upon entry to a
@@ -864,18 +864,18 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	protected boolean tryReleaseShared(int arg) {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	/**
 	 * Returns {@code true} if synchronization is held exclusively with respect to the
 	 * current (calling) thread. This method is invoked upon each call to a
 	 * non-waiting {@link ConditionObject} method. (Waiting methods instead invoke
 	 * {@link #release}.)
-	 * 
+	 *
 	 * <p>
 	 * The default implementation throws {@link UnsupportedOperationException}. This
 	 * method is invoked internally only within {@link ConditionObject} methods, so
 	 * need not be defined if conditions are not used.
-	 * 
+	 *
 	 * @return {@code true} if synchronization is held exclusively; {@code false}
 	 *         otherwise
 	 * @throws UnsupportedOperationException
@@ -884,14 +884,14 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	protected boolean isHeldExclusively() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	/**
 	 * Acquires in exclusive mode, ignoring interrupts. Implemented by invoking at
 	 * least once {@link #tryAcquire}, returning on success. Otherwise the thread is
 	 * queued, possibly repeatedly blocking and unblocking, invoking
 	 * {@link #tryAcquire} until success. This method can be used to implement method
 	 * {@link Lock#lock}.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument. This value is conveyed to
 	 *                {@link #tryAcquire} but is otherwise uninterpreted and can
@@ -900,7 +900,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	public final void acquire(int arg) {
 		if (!tryAcquire(arg) && acquireQueued(addWaiter(Node.EXCLUSIVE), arg)) selfInterrupt();
 	}
-	
+
 	/**
 	 * Acquires in exclusive mode, aborting if interrupted. Implemented by first
 	 * checking interrupt status, then invoking at least once {@link #tryAcquire},
@@ -908,7 +908,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * blocking and unblocking, invoking {@link #tryAcquire} until success or the
 	 * thread is interrupted. This method can be used to implement method
 	 * {@link Lock#lockInterruptibly}.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument. This value is conveyed to
 	 *                {@link #tryAcquire} but is otherwise uninterpreted and can
@@ -920,7 +920,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		if (Thread.interrupted()) throw new InterruptedException();
 		if (!tryAcquire(arg)) doAcquireInterruptibly(arg);
 	}
-	
+
 	/**
 	 * Attempts to acquire in exclusive mode, aborting if interrupted, and failing if
 	 * the given timeout elapses. Implemented by first checking interrupt status, then
@@ -929,7 +929,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * {@link #tryAcquire} until success or the thread is interrupted or the timeout
 	 * elapses. This method can be used to implement method
 	 * {@link Lock#tryLock(long, TimeUnit)}.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument. This value is conveyed to
 	 *                {@link #tryAcquire} but is otherwise uninterpreted and can
@@ -944,12 +944,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		if (Thread.interrupted()) throw new InterruptedException();
 		return tryAcquire(arg) || doAcquireNanos(arg, nanosTimeout);
 	}
-	
+
 	/**
 	 * Releases in exclusive mode. Implemented by unblocking one or more threads if
 	 * {@link #tryRelease} returns true. This method can be used to implement method
 	 * {@link Lock#unlock}.
-	 * 
+	 *
 	 * @param arg
 	 *                the release argument. This value is conveyed to
 	 *                {@link #tryRelease} but is otherwise uninterpreted and can
@@ -964,13 +964,13 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Acquires in shared mode, ignoring interrupts. Implemented by first invoking at
 	 * least once {@link #tryAcquireShared}, returning on success. Otherwise the
 	 * thread is queued, possibly repeatedly blocking and unblocking, invoking
 	 * {@link #tryAcquireShared} until success.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument. This value is conveyed to
 	 *                {@link #tryAcquireShared} but is otherwise uninterpreted and can
@@ -980,14 +980,14 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		int $response = tryAcquireShared(arg);
 		return ($response >= 0) ? $response : doAcquireShared(arg);
 	}
-	
+
 	/**
 	 * Acquires in shared mode, aborting if interrupted. Implemented by first checking
 	 * interrupt status, then invoking at least once {@link #tryAcquireShared},
 	 * returning on success. Otherwise the thread is queued, possibly repeatedly
 	 * blocking and unblocking, invoking {@link #tryAcquireShared} until success or
 	 * the thread is interrupted.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument This value is conveyed to
 	 *                {@link #tryAcquireShared} but is otherwise uninterpreted and can
@@ -1000,7 +1000,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		int $response = tryAcquireShared(arg);
 		return ($response >= 0) ? $response : doAcquireSharedInterruptibly(arg);
 	}
-	
+
 	/**
 	 * Attempts to acquire in shared mode, aborting if interrupted, and failing if the
 	 * given timeout elapses. Implemented by first checking interrupt status, then
@@ -1008,7 +1008,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * Otherwise, the thread is queued, possibly repeatedly blocking and unblocking,
 	 * invoking {@link #tryAcquireShared} until success or the thread is interrupted
 	 * or the timeout elapses.
-	 * 
+	 *
 	 * @param arg
 	 *                the acquire argument. This value is conveyed to
 	 *                {@link #tryAcquireShared} but is otherwise uninterpreted and can
@@ -1026,11 +1026,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		int $response = tryAcquireShared(arg);
 		return ($response >= 0) ? $response : doAcquireSharedNanos(arg, nanosTimeout);
 	}
-	
+
 	/**
 	 * Releases in shared mode. Implemented by unblocking one or more threads if
 	 * {@link #tryReleaseShared} returns true.
-	 * 
+	 *
 	 * @param arg
 	 *                the release argument. This value is conveyed to
 	 *                {@link #tryReleaseShared} but is otherwise uninterpreted and can
@@ -1044,45 +1044,45 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		return false;
 	}
-	
+
 	// Queue inspection methods
-	
+
 	/**
 	 * Queries whether any threads are waiting to acquire. Note that because
 	 * cancellations due to interrupts and timeouts may occur at any time, a
 	 * {@code true} return does not guarantee that any other thread will ever acquire.
-	 * 
+	 *
 	 * <p>
 	 * In this implementation, this operation returns in constant time.
-	 * 
+	 *
 	 * @return {@code true} if there may be other threads waiting to acquire
 	 */
 	public final boolean hasQueuedThreads() {
 		return head != tail;
 	}
-	
+
 	/**
 	 * Queries whether any threads have ever contended to acquire this synchronizer;
 	 * that is if an acquire method has ever blocked.
-	 * 
+	 *
 	 * <p>
 	 * In this implementation, this operation returns in constant time.
-	 * 
+	 *
 	 * @return {@code true} if there has ever been contention
 	 */
 	public final boolean hasContended() {
 		return head != null;
 	}
-	
+
 	/**
 	 * Returns the first (longest-waiting) thread in the queue, or {@code null} if no
 	 * threads are currently queued.
-	 * 
+	 *
 	 * <p>
 	 * In this implementation, this operation normally returns in constant time, but
 	 * may iterate upon contention if other threads are concurrently modifying the
 	 * queue.
-	 * 
+	 *
 	 * @return the first (longest-waiting) thread in the queue, or {@code null} if no
 	 *         threads are currently queued
 	 */
@@ -1090,7 +1090,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		// handle only fast path, else relay
 		return (head == tail) ? null : fullGetFirstQueuedThread();
 	}
-	
+
 	/**
 	 * Version of getFirstQueuedThread called when fastpath fails
 	 */
@@ -1106,7 +1106,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		Node h, s;
 		Thread st;
 		if (((h = head) != null && (s = h.next) != null && s.prev == head && (st = s.thread) != null) || ((h = head) != null && (s = h.next) != null && s.prev == head && (st = s.thread) != null)) return st;
-		
+
 		/*
 		 * Head's next field might not have been set yet, or may have
 		 * been unset after setHead. So we must check to see if tail
@@ -1114,7 +1114,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 * traversing from tail back to head to find first,
 		 * guaranteeing termination.
 		 */
-		
+
 		Node t = tail;
 		Thread firstThread = null;
 		while (t != null && t != head) {
@@ -1124,14 +1124,14 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		return firstThread;
 	}
-	
+
 	/**
 	 * Returns true if the given thread is currently queued.
-	 * 
+	 *
 	 * <p>
 	 * This implementation traverses the queue to determine presence of the given
 	 * thread.
-	 * 
+	 *
 	 * @param thread
 	 *                the thread
 	 * @return {@code true} if the given thread is on the queue
@@ -1144,7 +1144,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (p.thread == thread) return true;
 		return false;
 	}
-	
+
 	/**
 	 * Returns {@code true} if the apparent first queued thread, if one exists, is
 	 * waiting in exclusive mode. If this method returns {@code true}, and the current
@@ -1157,27 +1157,27 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		Node h, s;
 		return (h = head) != null && (s = h.next) != null && !s.isShared() && s.thread != null;
 	}
-	
+
 	/**
 	 * Queries whether any threads have been waiting to acquire longer than the
 	 * current thread.
-	 * 
+	 *
 	 * <p>
 	 * An invocation of this method is equivalent to (but may be more efficient than):
-	 * 
+	 *
 	 * <pre>
 	 * {@code
 	 * getFirstQueuedThread() != Thread.currentThread() &&
 	 * hasQueuedThreads()}
 	 * </pre>
-	 * 
+	 *
 	 * <p>
 	 * Note that because cancellations due to interrupts and timeouts may occur at any
 	 * time, a {@code true} return does not guarantee that some other thread will
 	 * acquire before the current thread. Likewise, it is possible for another thread
 	 * to win a race to enqueue after this method has returned {@code false}, due to
 	 * the queue being empty.
-	 * 
+	 *
 	 * <p>
 	 * This method is designed to be used by a fair synchronizer to avoid <a
 	 * href="AbstractQueuedSynchronizer#barging">barging</a>. Such a synchronizer's
@@ -1186,7 +1186,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * returns {@code true} (unless this is a reentrant acquire). For example, the
 	 * {@code tryAcquire} method for a fair, reentrant, exclusive mode synchronizer
 	 * might look like this:
-	 * 
+	 *
 	 * <pre>
 	 * protected boolean tryAcquire(int arg) {
 	 *   if (isHeldExclusively()) {
@@ -1199,7 +1199,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 *   }
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 * @return {@code true} if there is a queued thread preceding the current thread,
 	 *         and {@code false} if the current thread is at the head of the queue or
 	 *         the queue is empty
@@ -1214,16 +1214,16 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		Node s;
 		return h != t && ((s = h.next) == null || s.thread != Thread.currentThread());
 	}
-	
-	
+
+
 	// Instrumentation and monitoring methods
-	
+
 	/**
 	 * Returns an estimate of the number of threads waiting to acquire. The value is
 	 * only an estimate because the number of threads may change dynamically while
 	 * this method traverses internal data structures. This method is designed for use
 	 * in monitoring system state, not for synchronization control.
-	 * 
+	 *
 	 * @return the estimated number of threads waiting to acquire
 	 */
 	public final int getQueueLength() {
@@ -1233,7 +1233,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		return n;
 	}
-	
+
 	/**
 	 * Returns a collection containing threads that may be waiting to acquire. Because
 	 * the actual set of threads may change dynamically while constructing this
@@ -1241,7 +1241,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * the returned collection are in no particular order. This method is designed to
 	 * facilitate construction of subclasses that provide more extensive monitoring
 	 * facilities.
-	 * 
+	 *
 	 * @return the collection of threads
 	 */
 	public final Collection<Thread> getQueuedThreads() {
@@ -1252,12 +1252,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		return list;
 	}
-	
+
 	/**
 	 * Returns a collection containing threads that may be waiting to acquire in
 	 * exclusive mode. This has the same properties as {@link #getQueuedThreads}
 	 * except that it only returns those threads waiting due to an exclusive acquire.
-	 * 
+	 *
 	 * @return the collection of threads
 	 */
 	public final Collection<Thread> getExclusiveQueuedThreads() {
@@ -1270,12 +1270,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		return list;
 	}
-	
+
 	/**
 	 * Returns a collection containing threads that may be waiting to acquire in
 	 * shared mode. This has the same properties as {@link #getQueuedThreads} except
 	 * that it only returns those threads waiting due to a shared acquire.
-	 * 
+	 *
 	 * @return the collection of threads
 	 */
 	public final Collection<Thread> getSharedQueuedThreads() {
@@ -1288,13 +1288,13 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		}
 		return list;
 	}
-	
+
 	/**
 	 * Returns a string identifying this synchronizer, as well as its state. The
 	 * state, in brackets, includes the String {@code "State ="} followed by the
 	 * current value of {@link #getState}, and either {@code "nonempty"} or
 	 * {@code "empty"} depending on whether the queue is empty.
-	 * 
+	 *
 	 * @return a string identifying this synchronizer, as well as its state
 	 */
 	public String toString() {
@@ -1302,14 +1302,14 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		String q = hasQueuedThreads() ? "non" : "";
 		return super.toString() + "[State = " + s + ", " + q + "empty queue]";
 	}
-	
-	
+
+
 	// Internal support methods for Conditions
-	
+
 	/**
 	 * Returns true if a node, always one that was initially placed on a condition
 	 * queue, is now waiting to reacquire on sync queue.
-	 * 
+	 *
 	 * @param node
 	 *                the node
 	 * @return true if is reacquiring
@@ -1328,11 +1328,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 */
 		return findNodeFromTail(node);
 	}
-	
+
 	/**
 	 * Returns true if node is on sync queue by searching backwards from tail. Called
 	 * only when needed by isOnSyncQueue.
-	 * 
+	 *
 	 * @return true if present
 	 */
 	private boolean findNodeFromTail(Node node) {
@@ -1343,11 +1343,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			t = t.prev;
 		}
 	}
-	
+
 	/**
 	 * Transfers a node from a condition queue onto sync queue. Returns true if
 	 * successful.
-	 * 
+	 *
 	 * @param node
 	 *                the node
 	 * @return true if successfully transferred (else the node was cancelled before
@@ -1358,7 +1358,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		 * If cannot change waitStatus, the node has been cancelled.
 		 */
 		if (!compareAndSetWaitStatus(node, Node.CONDITION, 0)) return false;
-		
+
 		/*
 		 * Splice onto queue and try to set waitStatus of predecessor to
 		 * indicate that thread is (probably) waiting. If cancelled or
@@ -1370,11 +1370,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL)) LockSupport.unpark(node.thread);
 		return true;
 	}
-	
+
 	/**
 	 * Transfers node, if necessary, to sync queue after a cancelled wait. Returns
 	 * true if thread was cancelled before being signalled.
-	 * 
+	 *
 	 * @param node
 	 *                its node
 	 * @return true if cancelled before the node was signalled
@@ -1394,11 +1394,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			Thread.yield();
 		return false;
 	}
-	
+
 	/**
 	 * Invokes release with current state value; returns saved state. Cancels node and
 	 * throws exception on failure.
-	 * 
+	 *
 	 * @param node
 	 *                the condition node for this wait
 	 * @return previous sync state
@@ -1417,12 +1417,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (failed) node.waitStatus = Node.CANCELLED;
 		}
 	}
-	
+
 	// Instrumentation methods for conditions
-	
+
 	/**
 	 * Queries whether the given ConditionObject uses this synchronizer as its lock.
-	 * 
+	 *
 	 * @param condition
 	 *                the condition
 	 * @return <tt>true</tt> if owned
@@ -1433,14 +1433,14 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		if (condition == null) throw new NullPointerException();
 		return condition.isOwnedBy(this);
 	}
-	
+
 	/**
 	 * Queries whether any threads are waiting on the given condition associated with
 	 * this synchronizer. Note that because timeouts and interrupts may occur at any
 	 * time, a <tt>true</tt> return does not guarantee that a future <tt>signal</tt>
 	 * will awaken any threads. This method is designed primarily for use in
 	 * monitoring of the system state.
-	 * 
+	 *
 	 * @param condition
 	 *                the condition
 	 * @return <tt>true</tt> if there are any waiting threads
@@ -1455,14 +1455,14 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		if (!owns(condition)) throw new IllegalArgumentException("Not owner");
 		return condition.hasWaiters();
 	}
-	
+
 	/**
 	 * Returns an estimate of the number of threads waiting on the given condition
 	 * associated with this synchronizer. Note that because timeouts and interrupts
 	 * may occur at any time, the estimate serves only as an upper bound on the actual
 	 * number of waiters. This method is designed for use in monitoring of the system
 	 * state, not for synchronization control.
-	 * 
+	 *
 	 * @param condition
 	 *                the condition
 	 * @return the estimated number of waiting threads
@@ -1477,14 +1477,14 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		if (!owns(condition)) throw new IllegalArgumentException("Not owner");
 		return condition.getWaitQueueLength();
 	}
-	
+
 	/**
 	 * Returns a collection containing those threads that may be waiting on the given
 	 * condition associated with this synchronizer. Because the actual set of threads
 	 * may change dynamically while constructing this result, the returned collection
 	 * is only a best-effort estimate. The elements of the returned collection are in
 	 * no particular order.
-	 * 
+	 *
 	 * @param condition
 	 *                the condition
 	 * @return the collection of threads
@@ -1499,20 +1499,20 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		if (!owns(condition)) throw new IllegalArgumentException("Not owner");
 		return condition.getWaitingThreads();
 	}
-	
-	
-	
+
+
+
 	/**
 	 * Condition implementation for a {@link AQS} serving as
 	 * the basis of a {@link Lock} implementation.
-	 * 
+	 *
 	 * <p>
 	 * Method documentation for this class describes mechanics, not behavioral
 	 * specifications from the point of view of Lock and Condition users. Exported
 	 * versions of this class will in general need to be accompanied by documentation
 	 * describing condition semantics that rely on those of the associated
 	 * <tt>AbstractQueuedSynchronizer</tt>.
-	 * 
+	 *
 	 * <p>
 	 * This class is Serializable, but all fields are transient, so deserialized
 	 * conditions have no waiters.
@@ -1523,17 +1523,17 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		private transient Node		firstWaiter;
 		/** Last node of condition queue. */
 		private transient Node		lastWaiter;
-		
+
 		/**
 		 * Creates a new <tt>ConditionObject</tt> instance.
 		 */
 		public ConditionObject() {}
-		
+
 		// Internal methods
-		
+
 		/**
 		 * Adds a new waiter to wait queue.
-		 * 
+		 *
 		 * @return its new wait node
 		 */
 		private Node addConditionWaiter() {
@@ -1549,12 +1549,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			lastWaiter = node;
 			return node;
 		}
-		
+
 		/**
 		 * Removes and transfers nodes until hit non-cancelled one or null. Split
 		 * out from signal in part to encourage compilers to inline the case of no
 		 * waiters.
-		 * 
+		 *
 		 * @param first
 		 *                (non-null) the first node on condition queue
 		 */
@@ -1564,10 +1564,10 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 				first.nextWaiter = null;
 			} while (!transferForSignal(first) && (first = firstWaiter) != null);
 		}
-		
+
 		/**
 		 * Removes and transfers all nodes.
-		 * 
+		 *
 		 * @param first
 		 *                (non-null) the first node on condition queue
 		 */
@@ -1580,7 +1580,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 				first = next;
 			} while (first != null);
 		}
-		
+
 		/**
 		 * Unlinks cancelled waiter nodes from condition queue. Called only while
 		 * holding lock. This is called when cancellation occurred during
@@ -1606,13 +1606,13 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 				t = next;
 			}
 		}
-		
+
 		// public methods
-		
+
 		/**
 		 * Moves the longest-waiting thread, if one exists, from the wait queue
 		 * for this condition to the wait queue for the owning lock.
-		 * 
+		 *
 		 * @throws IllegalMonitorStateException
 		 *                 if {@link #isHeldExclusively} returns {@code false}
 		 */
@@ -1621,11 +1621,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			Node first = firstWaiter;
 			if (first != null) doSignal(first);
 		}
-		
+
 		/**
 		 * Moves all threads from the wait queue for this condition to the wait
 		 * queue for the owning lock.
-		 * 
+		 *
 		 * @throws IllegalMonitorStateException
 		 *                 if {@link #isHeldExclusively} returns {@code false}
 		 */
@@ -1634,7 +1634,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			Node first = firstWaiter;
 			if (first != null) doSignalAll(first);
 		}
-		
+
 		/**
 		 * Implements uninterruptible condition wait.
 		 * <ol>
@@ -1656,19 +1656,19 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			}
 			if (acquireQueued(node, savedState) || interrupted) selfInterrupt();
 		}
-		
+
 		/*
 		 * For interruptible waits, we need to track whether to throw
 		 * InterruptedException, if interrupted while blocked on
 		 * condition, versus reinterrupt current thread, if
 		 * interrupted while blocked waiting to re-acquire.
 		 */
-		
+
 		/** Mode meaning to reinterrupt on exit from wait */
 		private static final int	REINTERRUPT	= 1;
 		/** Mode meaning to throw InterruptedException on exit from wait */
 		private static final int	THROW_IE	= -1;
-		
+
 		/**
 		 * Checks for interrupt, returning THROW_IE if interrupted before
 		 * signalled, REINTERRUPT if after signalled, or 0 if not interrupted.
@@ -1676,7 +1676,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 		private int checkInterruptWhileWaiting(Node node) {
 			return Thread.interrupted() ? (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) : 0;
 		}
-		
+
 		/**
 		 * Throws InterruptedException, reinterrupts current thread, or does
 		 * nothing, depending on mode.
@@ -1685,7 +1685,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (interruptMode == THROW_IE) throw new InterruptedException();
 			else if (interruptMode == REINTERRUPT) selfInterrupt();
 		}
-		
+
 		/**
 		 * Implements interruptible condition wait.
 		 * <ol>
@@ -1713,7 +1713,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			unlinkCancelledWaiters();
 			if (interruptMode != 0) reportInterruptAfterWait(interruptMode);
 		}
-		
+
 		/**
 		 * Implements timed condition wait.
 		 * <ol>
@@ -1740,7 +1740,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 				}
 				LockSupport.parkNanos(this, nanosTimeout);
 				if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) break;
-				
+
 				long now = System.nanoTime();
 				nanosTimeout -= now - lastTime;
 				lastTime = now;
@@ -1750,7 +1750,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (interruptMode != 0) reportInterruptAfterWait(interruptMode);
 			return nanosTimeout - (System.nanoTime() - lastTime);
 		}
-		
+
 		/**
 		 * Implements absolute timed condition wait.
 		 * <ol>
@@ -1786,7 +1786,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (interruptMode != 0) reportInterruptAfterWait(interruptMode);
 			return !timedout;
 		}
-		
+
 		/**
 		 * Implements timed condition wait.
 		 * <ol>
@@ -1826,23 +1826,23 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			if (interruptMode != 0) reportInterruptAfterWait(interruptMode);
 			return !timedout;
 		}
-		
+
 		//  support for instrumentation
-		
+
 		/**
 		 * Returns true if this condition was created by the given synchronization
 		 * object.
-		 * 
+		 *
 		 * @return {@code true} if owned
 		 */
 		final boolean isOwnedBy(AQS sync) {
 			return sync == AQS.this;
 		}
-		
+
 		/**
 		 * Queries whether any threads are waiting on this condition. Implements
 		 * {@link AQS#hasWaiters}.
-		 * 
+		 *
 		 * @return {@code true} if there are any waiting threads
 		 * @throws IllegalMonitorStateException
 		 *                 if {@link #isHeldExclusively} returns {@code false}
@@ -1854,11 +1854,11 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			}
 			return false;
 		}
-		
+
 		/**
 		 * Returns an estimate of the number of threads waiting on this condition.
 		 * Implements {@link AQS#getWaitQueueLength}.
-		 * 
+		 *
 		 * @return the estimated number of waiting threads
 		 * @throws IllegalMonitorStateException
 		 *                 if {@link #isHeldExclusively} returns {@code false}
@@ -1871,12 +1871,12 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			}
 			return n;
 		}
-		
+
 		/**
 		 * Returns a collection containing those threads that may be waiting on
 		 * this Condition. Implements
 		 * {@link AQS#getWaitingThreads}.
-		 * 
+		 *
 		 * @return the collection of threads
 		 * @throws IllegalMonitorStateException
 		 *                 if {@link #isHeldExclusively} returns {@code false}
@@ -1893,7 +1893,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			return list;
 		}
 	}
-	
+
 //	/**
 //	 * Setup to support compareAndSet. We need to natively implement this here: For
 //	 * the sake of permitting future enhancements, we cannot explicitly subclass
@@ -1917,7 +1917,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 //	private static final long	tailOffset;
 //	private static final long	waitStatusOffset;
 //	private static final long	nextOffset;
-//	
+//
 //	static {
 //		try {
 //			stateOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("state"));
@@ -1925,17 +1925,17 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 //			tailOffset = unsafe.objectFieldOffset(AQS.class.getDeclaredField("tail"));
 //			waitStatusOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("waitStatus"));
 //			nextOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("next"));
-//			
+//
 //		} catch (Exception ex) {
 //			throw new Error(ex);
 //		}
 //	}
-//	
+//
 //	/**
 //	 * Atomically sets synchronization state to the given updated value if the current
 //	 * state value equals the expected value. This operation has memory semantics of a
 //	 * <tt>volatile</tt> read and write.
-//	 * 
+//	 *
 //	 * @param expect
 //	 *                the expected value
 //	 * @param update
@@ -1947,51 +1947,51 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 //		// See below for intrinsics setup to support this
 //		return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
 //	}
-//	
+//
 //	/**
 //	 * CAS head field. Used only by enq.
 //	 */
 //	private final boolean compareAndSetHead(Node update) {
 //		return unsafe.compareAndSwapObject(this, headOffset, null, update);
 //	}
-//	
+//
 //	/**
 //	 * CAS tail field. Used only by enq.
 //	 */
 //	private final boolean compareAndSetTail(Node expect, Node update) {
 //		return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
 //	}
-//	
+//
 //	/**
 //	 * CAS waitStatus field of a node.
 //	 */
 //	private static final boolean compareAndSetWaitStatus(Node node, int expect, int update) {
 //		return unsafe.compareAndSwapInt(node, waitStatusOffset, expect, update);
 //	}
-//	
+//
 //	/**
 //	 * CAS next field of a node.
 //	 */
 //	private static final boolean compareAndSetNext(Node node, Node expect, Node update) {
 //		return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
 //	}
-	
+
 	/*
 	 * NOTES ABOUT THIS JAZZ AND SECURITY MANAGERS
-	 * 
+	 *
 	 * AtomicReferenceFieldUpdater and similar classes fail spectacularly to work as desired under situations where classloaders get involved.
 	 * In particular, this can and will ruin your day when working with applets.
 	 * See this mail archive for a discussion: http://mail.openjdk.java.net/pipermail/security-dev/2010-April/001831.html
 	 * Conclusion seems to have been that this behavior is indeed buggy, but it's two years later and I still don't see it as fixed in the latest jdk releases, so we're going to have to work around.
-	 * 
+	 *
 	 * Also, contrary to what one might have momentarily hoped from reading the above mail archive, even making all the members in question 'public' does not in fact help.
-	 * 
+	 *
 	 * So, what we're stuck with is this: try to use ARFU; if it explodes... fall all the way back to synchronized blocks :(
-	 * 
+	 *
 	 * Back-of-the-envelope performance analysis suggests that:
 	 * - the "if-suck" branching compiles away nicely enough that the high-performance version is not measurably encumbered.
 	 * - the synchronized block fallback performs about 40% slower than the ARFU version.  Which is bad, but not world-rending.  This observation made with two threads reading and two threads writing to a DataPipe built with AQS; I wouldn't be surprised to hear it's worse with more threads.
-	 * 
+	 *
 	 */
 
 	static {
@@ -2021,7 +2021,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 	 * Atomically sets synchronization state to the given updated value if the current
 	 * state value equals the expected value. This operation has memory semantics of a
 	 * <tt>volatile</tt> read and write.
-	 * 
+	 *
 	 * @param expect
 	 *                the expected value
 	 * @param update
@@ -2038,7 +2038,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			}
 		return stateUpdater.compareAndSet(this, expect, update);
 	}
-	
+
 	/**
 	 * CAS head field. Used only by enq.
 	 */
@@ -2051,7 +2051,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			}
 		return headUpdater.compareAndSet(this, null, update);
 	}
-	
+
 	/**
 	 * CAS tail field. Used only by enq.
 	 */
@@ -2064,7 +2064,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			}
 		return tailUpdater.compareAndSet(this, expect, update);
 	}
-	
+
 	/**
 	 * CAS waitStatus field of a node.
 	 */
@@ -2077,7 +2077,7 @@ public abstract class AQS extends AbstractOwnableSynchronizer {
 			}
 		return waitStatusUpdater.compareAndSet(node, expect, update);
 	}
-	
+
 	/**
 	 * CAS next field of a node.
 	 */

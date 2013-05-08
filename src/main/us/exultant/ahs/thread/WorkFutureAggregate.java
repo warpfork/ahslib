@@ -1,6 +1,6 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
  *
  * AHSlib is free software: you can redistribute it and/or modify
@@ -32,9 +32,9 @@ import java.util.concurrent.*;
  * the tasks of a set are done, issue cancellations to all of the collected tasks, and
  * trigger scheduler updates in bulk.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  */
 public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 	public WorkFutureAggregate(Collection<WorkFuture<$T>> $futures) {
@@ -60,7 +60,7 @@ public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 			}
 		});
 	}
-	
+
 	private FuturePipe<$T> $pip;
 	/**
 	 * Generally speaking, if you're going to change this, you should synchronize on
@@ -78,19 +78,19 @@ public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 	 * contention not really an issue).
 	 */
 	private final List<Listener<WorkFuture<?>>>	$completionListeners;
-	
+
 	public WorkFuture.State getState() {
 		return $state;
 	}
-	
+
 	public ScheduleParams getScheduleParams() {
 		return ScheduleParams.NOW;
 	}
-	
+
 	/**
 	 * Returns when all of the aggregated WorkFutures have either finished or been
 	 * cancelled (or if this wait itself is interrupted).
-	 * 
+	 *
 	 * @throws InterruptedException
 	 *                 if this wait is interrupted (note, NOT if any of the aggregated
 	 *                 futures were interrupted)
@@ -114,7 +114,7 @@ public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 	/**
 	 * Returns when all of the aggregated WorkFutures have either finished or been
 	 * cancelled; or if this wait itself is interrupted or times out.
-	 * 
+	 *
 	 * @throws InterruptedException
 	 *                 if this wait is interrupted (note, NOT if any of the aggregated
 	 *                 futures were interrupted)
@@ -142,7 +142,7 @@ public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 		throw new TimeoutException();
 		// about returning lists: yeah, really cool idea... except for the whole exception thing and how you couldn't represent that.  well, unless you made a new struct for that.  which is an option, and kind of a cool one i suppose.  though once you crossed that line, it would seem almost strange for workfuture.get to itself not return such a struct instead of throwing execution exceptions.  and... that... yeah that's a big do not want i think.  i dunno, i suppose the heterogenous option wouldn't be too bad; after all, how often do you really want to *return* an exception instead of throwing one?  that would be just darn weird of you to do, and i think i'd be alright just documenting that as a "don't do it if you want AWF.get() to make sense".
 	}
-	
+
 	/**
 	 * <p>
 	 * Attempts to cancel execution of all of the individual tasks aggregated by this
@@ -154,7 +154,7 @@ public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 	 * <tt>get()</tt> method here shouldn't return until the <tt>get()</tt> method can
 	 * return immediately on every member is unbroken.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This method returns after issuing all cancels to aggregated tasks, but does not
 	 * wait for all tasks to acknowledge the cancel or otherwise become complete. This
@@ -166,7 +166,7 @@ public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 	 * {@link WorkFutureAggregate#get()} or
 	 * {@link WorkFutureAggregate#addCompletionListener(Listener)} in the usual ways.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Calling this method after this AggregateWorkFuture has become
 	 * <tt>CANCELLED</tt> or <tt>FINISHED</tt> is ignored and returns false. Calling
@@ -194,14 +194,14 @@ public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 			$held.cancel($mayInterruptIfRunning);
 		return true;
 	}
-	
+
 
 	/**
 	 * <p>
 	 * Invokes update for all of the individual tasks aggregated by this object that
 	 * are not yet completed.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * Note that if you have kept a the full set of WorkFuture that were aggregated
 	 * around elsewhere and you know that they all came from the same
@@ -219,14 +219,14 @@ public class WorkFutureAggregate<$T> extends WorkFutureAdapter<Void> {
 		for (WorkFuture<$T> $held : $helds)
 			$held.update();
 	}
-	
+
 	public void addCompletionListener(Listener<WorkFuture<?>> $completionListener) {
 		synchronized ($completionListeners) {
 			if (isDone()) $completionListener.hear(this);
 			else $completionListeners.add($completionListener);
 		}
 	}
-	
+
 	/** Called exactly once.  Called AFTER the transition to completion has already been completed. */
 	private void hearDone() {
 		synchronized ($completionListeners) {

@@ -7,7 +7,7 @@
  * is implemented by classes in the {@link us.exultant.ahs.codec.json} and
  * {@link us.exultant.ahs.codec.ebon} packages.
  * </p>
- * 
+ *
  * <p>
  * This package ships as part of the <code>Codec</code> module of AHSlib. The
  * {@link us.exultant.ahs.codec.eon Eon} package ships along with this package as part of

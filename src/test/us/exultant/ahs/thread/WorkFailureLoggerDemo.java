@@ -29,5 +29,5 @@ public class WorkFailureLoggerDemo {
 		LOG.info("chilling out for a moment... completion listeners fire *after* get() flips, so we don't want to exit before those have a chance");
 		X.chill(150);
 	}
-	private static final Logger LOG = LoggerFactory.getLogger(WorkFailureLoggerDemo.class); 
+	private static final Logger LOG = LoggerFactory.getLogger(WorkFailureLoggerDemo.class);
 }

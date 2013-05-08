@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 - 2013 Eric Myhre <http://exultant.us>
- * 
+ *
  * This file is part of AHSlib.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,7 +33,7 @@ import us.exultant.ahs.core.*;
  * serialization; entire stacks of Encoder interfaces might be chained together to
  * represent layered protocols, with the $CODE of one matching a $TARG of the next.
  * </p>
- * 
+ *
  * <p>
  * Classes that support encoding are recommended to follow a pattern of providing an
  * Encoder implementer as a public static inner class of themselves, then make an instance
@@ -43,21 +43,21 @@ import us.exultant.ahs.core.*;
  * its client classes, and removes any possibility for ambiguity should it be the case
  * that some classes wish to provide multiple methods for encoding.
  * </p>
- * 
+ *
  * <p>
  * Note that it is possible for a single class to implement the Encoder interface for
  * multiple $TARG types. This is not necessarily advisible, however; many will find it
  * more intuitive to keep a one-to-one correspondence between Encoder and Decoder
  * implementors (perhaps instead merging those interfaces into a single class).
  * </p>
- * 
+ *
  * <p>
  * Unless a specific implementation states otherwise, the encode method is assumed to be
  * reentrant.
  * </p>
- * 
+ *
  * @author Eric Myhre <tt>hash@exultant.us</tt>
- * 
+ *
  * @param <$TARG>
  *                The type of object to be encoded. A single, complete, bi-directional
  *                codec system will typically require decoders of one $TARG type for each
